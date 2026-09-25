@@ -4,8 +4,9 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Unreleased changes collect under `## Unreleased` and get a version heading at release time.
 
-## Unreleased
+## v0.1.9 (2026-09-26)
 
+- The window is redrawn by difference instead of rebuilt, which ends the flicker on hover and the clicks that were lost mid-redraw. Links to a page already open (the changelog, About) switch to that tab.
 - Update notice: while a newer version is found, downloading or ready, a status strip shows along the bottom of the window. "Restart to apply" installs it right away, "Later" hides it for that version; it still installs when MAYAK quits.
 - The update check runs right after start (without holding it up) and, when it fails, retries after five minutes, backing off to an hour. Release information comes through mayak.ich.sh, so GitHub's rate limit no longer gets in the way.
 - "What changed" opens this changelog instead of GitHub.
