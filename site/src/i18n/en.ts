@@ -1,7 +1,7 @@
 import type { Messages } from './ja'
 
 export const en: Messages = {
-  nav: { features: 'Features', start: 'Getting started', safety: 'Safety', download: 'Download', faq: 'FAQ', github: 'GitHub', language: 'Language', downloadButton: 'Download' },
+  nav: { features: 'Features', start: 'Getting started', safety: 'Safety', download: 'Download', faq: 'FAQ', github: 'GitHub', language: 'Language', downloadButton: 'Download', changelog: 'Changelog' },
   hero: {
     released: (version: string) => `MAYAK ${version} released`,
     lead: 'MAYAK is a companion for Escape from Tarkov. It reads only the screenshots and logs the game saves, and shows your position on the tarkov.dev map, your tasks and item info in a browser. It never touches the process or its memory.',
@@ -124,6 +124,11 @@ export const en: Messages = {
       { name: 'Google Fonts', url: 'https://fonts.google.com/', note: 'The typefaces on this page (Inter Tight, Noto Sans JP, JetBrains Mono). SIL Open Font License' },
     ],
     noticesNote: 'Item images and names are the property of Battlestate Games and are shown as tarkov.dev shows them. Escape from Tarkov and related names are trademarks of Battlestate Games. MAYAK is not affiliated with or endorsed by Battlestate Games, tarkov.dev or TarkovTracker.',
+  },
+  changelog: {
+    kicker: 'Changelog',
+    title: 'What changed in each version.',
+    lead: 'The app’s update notice opens this page for "What changed". The source is CHANGELOG.md in the repository (Japanese and English).',
   },
   footer: {
     tagline: 'The Escape from Tarkov companion that never touches the game.',

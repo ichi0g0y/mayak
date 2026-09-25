@@ -10,6 +10,7 @@ export function Footer() {
       links: [
         ['/#download', t.footer.download],
         [RELEASES_URL, t.footer.releases],
+        ['/changelog', t.nav.changelog],
         ['/license', t.footer.licensePage],
       ],
     },

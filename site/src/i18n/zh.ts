@@ -1,7 +1,7 @@
 import type { Messages } from './ja'
 
 export const zh: Messages = {
-  nav: { features: '功能', start: '快速上手', safety: '安全性', download: '下载', faq: '常见问题', github: 'GitHub', language: '语言', downloadButton: '下载' },
+  nav: { features: '功能', start: '快速上手', safety: '安全性', download: '下载', faq: '常见问题', github: 'GitHub', language: '语言', downloadButton: '下载', changelog: '更新日志' },
   hero: {
     released: (version: string) => `MAYAK ${version} 已发布`,
     lead: 'MAYAK 是 Escape from Tarkov 的辅助伴侣。它只读取游戏自己保存的截图和日志，就能在浏览器中显示你在 tarkov.dev 地图上的位置、任务和物品信息。它绝不触碰游戏进程或内存。',
@@ -124,6 +124,11 @@ export const zh: Messages = {
       { name: 'Google Fonts', url: 'https://fonts.google.com/', note: '本页使用的字体（Inter Tight、Noto Sans JP、JetBrains Mono）。SIL Open Font License' },
     ],
     noticesNote: '物品图片和名称归 Battlestate Games 所有，按 tarkov.dev 的显示方式呈现。Escape from Tarkov 及相关名称是 Battlestate Games 的商标。MAYAK 与 Battlestate Games、tarkov.dev、TarkovTracker 均无关联，也未获其认可。',
+  },
+  changelog: {
+    kicker: '更新日志',
+    title: '每个版本的变化。',
+    lead: '应用的更新提示会打开此页面。原文见仓库中的 CHANGELOG.md（英文和日文）。',
   },
   footer: {
     tagline: '绝不触碰游戏的 Escape from Tarkov 辅助伴侣。',

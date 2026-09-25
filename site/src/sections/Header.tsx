@@ -28,6 +28,7 @@ export function Header({ home = true }: { home?: boolean }) {
     [`${prefix}#start`, t.nav.start],
     [`${prefix}#safety`, t.nav.safety],
     [`${prefix}#faq`, t.nav.faq],
+    ['/changelog', t.nav.changelog],
   ]
   return (
     <header className={cn('fixed inset-x-0 top-0 z-20 transition-colors duration-300', scrolled ? 'bg-background/85 border-b backdrop-blur' : 'border-b border-transparent')}>

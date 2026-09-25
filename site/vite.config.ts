@@ -11,7 +11,10 @@ export default defineConfig({
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         license: fileURLToPath(new URL('./license.html', import.meta.url)),
+        changelog: fileURLToPath(new URL('./changelog.html', import.meta.url)),
       },
     },
   },
+  // The changelog page imports CHANGELOG.md from the repository root.
+  server: { fs: { allow: ['..'] } },
 })

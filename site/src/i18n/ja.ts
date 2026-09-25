@@ -1,5 +1,5 @@
 export const ja = {
-  nav: { features: '機能', start: 'はじめかた', safety: '安全性', download: 'ダウンロード', faq: 'FAQ', github: 'GitHub', language: '言語', downloadButton: 'ダウンロード' },
+  nav: { features: '機能', start: 'はじめかた', safety: '安全性', download: 'ダウンロード', faq: 'FAQ', github: 'GitHub', language: '言語', downloadButton: 'ダウンロード', changelog: '変更履歴' },
   hero: {
     released: (version: string) => `MAYAK ${version} を公開`,
     lead: 'MAYAK は Escape from Tarkov のコンパニオンです。ゲームが保存したスクリーンショットとログを読むだけで、tarkov.dev のマップ上の現在地、タスク、アイテム情報をブラウザに映します。プロセスやメモリには一切触れません。',
@@ -122,6 +122,11 @@ export const ja = {
       { name: 'Google Fonts', url: 'https://fonts.google.com/', note: 'このページの書体（Inter Tight、Noto Sans JP、JetBrains Mono）。SIL Open Font License' },
     ],
     noticesNote: 'アイテムの画像と名称は Battlestate Games の財産で、tarkov.dev が表示しているとおりに表示します。Escape from Tarkov および関連する名称は Battlestate Games の商標です。MAYAK は Battlestate Games、tarkov.dev、TarkovTracker のいずれとも提携・承認関係にありません。',
+  },
+  changelog: {
+    kicker: '変更履歴',
+    title: '各バージョンで変わったこと。',
+    lead: 'アプリの更新通知の「変更点」もこのページを開きます。日本語と英語の原文はリポジトリの CHANGELOG.md にあります。',
   },
   footer: {
     tagline: 'Escape from Tarkov のための、ゲームに触れないコンパニオン。',

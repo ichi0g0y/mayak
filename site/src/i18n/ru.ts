@@ -1,7 +1,7 @@
 import type { Messages } from './ja'
 
 export const ru: Messages = {
-  nav: { features: 'Функции', start: 'Начало работы', safety: 'Безопасность', download: 'Скачать', faq: 'FAQ', github: 'GitHub', language: 'Язык', downloadButton: 'Скачать' },
+  nav: { features: 'Функции', start: 'Начало работы', safety: 'Безопасность', download: 'Скачать', faq: 'FAQ', github: 'GitHub', language: 'Язык', downloadButton: 'Скачать', changelog: 'История изменений' },
   hero: {
     released: (version: string) => `Вышла MAYAK ${version}`,
     lead: 'MAYAK — компаньон для Escape from Tarkov. Он читает только скриншоты и логи, которые сохраняет сама игра, и показывает в браузере вашу позицию на карте tarkov.dev, задания и информацию о предметах. К процессу игры и его памяти он не прикасается.',
@@ -124,6 +124,11 @@ export const ru: Messages = {
       { name: 'Google Fonts', url: 'https://fonts.google.com/', note: 'Шрифты этой страницы (Inter Tight, Noto Sans JP, JetBrains Mono). SIL Open Font License' },
     ],
     noticesNote: 'Изображения и названия предметов принадлежат Battlestate Games и показываются так, как их показывает tarkov.dev. Escape from Tarkov и связанные названия — товарные знаки Battlestate Games. MAYAK не связан с Battlestate Games, tarkov.dev или TarkovTracker и не одобрен ими.',
+  },
+  changelog: {
+    kicker: 'История изменений',
+    title: 'Что изменилось в каждой версии.',
+    lead: 'Уведомление об обновлении в приложении открывает эту страницу. Исходный текст — CHANGELOG.md в репозитории (на английском и японском).',
   },
   footer: {
     tagline: 'Компаньон для Escape from Tarkov, который не прикасается к игре.',

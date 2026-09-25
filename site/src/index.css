@@ -151,3 +151,13 @@
     transition: none;
   }
 }
+
+/* The changelog, rendered from CHANGELOG.md. */
+.changelog h2 { margin-top: 2.5rem; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.01em; }
+.changelog h2:first-child { margin-top: 0; }
+.changelog h2 + p { margin-top: 0.5rem; }
+.changelog ul { margin-top: 0.75rem; padding-left: 1.25rem; list-style: disc; }
+.changelog li { margin: 0.4rem 0; line-height: 1.7; }
+.changelog li::marker { color: var(--primary); }
+.changelog code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.9em; padding: 0.05em 0.35em; border-radius: 0.3rem; background: var(--muted); }
+.changelog a { text-decoration: underline; text-underline-offset: 4px; }
