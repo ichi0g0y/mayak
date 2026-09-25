@@ -1,22 +1,22 @@
 // Page state (jotai): the display language and the latest GitHub release.
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
-import type { Lang } from './i18n'
+import { detectLang, isLang, type Lang } from './i18n/languages'
 
 const LANG_KEY = 'mayak-lang'
 
-function detectLang(): Lang {
+function initialLang(): Lang {
   try {
     const saved = localStorage.getItem(LANG_KEY)
-    if (saved === 'ja' || saved === 'en') return saved
+    if (isLang(saved)) return saved
   } catch {
     /* private mode */
   }
-  return /^ja\b/.test(navigator.language) ? 'ja' : 'en'
+  return detectLang(navigator.languages?.length ? navigator.languages : [navigator.language])
 }
 
-/** The display language, kept in localStorage. */
-export const langAtom = atomWithStorage<Lang>(LANG_KEY, detectLang(), undefined, { getOnInit: true })
+/** The display language: the browser's preferred one at first, then whatever the visitor picked. */
+export const langAtom = atomWithStorage<Lang>(LANG_KEY, initialLang(), undefined, { getOnInit: true })
 
 export const REPOSITORY = 'ichi0g0y/mayak'
 export const RELEASES_URL = `https://github.com/${REPOSITORY}/releases`
@@ -24,7 +24,7 @@ export const RELEASES_URL = `https://github.com/${REPOSITORY}/releases`
 export type Asset = { name: string; url: string; size: number }
 export type Release = { tag: string; version: string; name: string; url: string; publishedAt: string; assets: Asset[] }
 
-/** The Windows and Unix archives the release workflow publishes. */
+/** The installer and the archives the release workflow publishes. */
 export const ARCHIVES = {
   windowsInstaller: 'Mayak-Setup-windows-amd64.exe',
   windows: 'Mayak-windows-amd64.zip',

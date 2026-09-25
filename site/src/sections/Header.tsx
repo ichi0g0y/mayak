@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useAtom } from 'jotai'
 import { Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useT } from '@/i18n'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { isLang, languages, useT } from '@/i18n'
 import { langAtom, REPOSITORY } from '@/state'
 import { cn } from '@/lib/utils'
 
@@ -44,9 +45,19 @@ export function Header({ home = true }: { home?: boolean }) {
           </a>
         </nav>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')} aria-label={t.nav.lang} title={t.nav.lang}>
-            <Globe className="size-5" />
-          </Button>
+          <Select value={lang} onValueChange={(value) => isLang(value) && setLang(value)}>
+            <SelectTrigger size="sm" className="bg-transparent" aria-label={t.nav.language}>
+              <Globe className="size-4" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              {languages.map((language) => (
+                <SelectItem key={language.code} value={language.code} lang={language.html}>
+                  {language.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button asChild size="sm" className="font-semibold">
             <a href={`${prefix}#download`}>{t.nav.downloadButton}</a>
           </Button>

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useAtomValue } from 'jotai'
 import { langAtom } from './state'
+import { htmlLang } from './i18n'
 import { Header } from './sections/Header'
 import { Licenses } from './sections/Licenses'
 import { Footer } from './sections/Footer'
@@ -9,7 +10,7 @@ import { Footer } from './sections/Footer'
 export function LicensePage() {
   const lang = useAtomValue(langAtom)
   useEffect(() => {
-    document.documentElement.lang = lang
+    document.documentElement.lang = htmlLang(lang)
   }, [lang])
   return (
     <div>

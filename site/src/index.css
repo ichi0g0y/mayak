@@ -52,7 +52,7 @@
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: 'Inter Tight', 'Noto Sans JP', -apple-system, 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+  --font-sans: 'Inter Tight', 'Noto Sans JP', 'Noto Sans SC', -apple-system, 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
@@ -88,7 +88,8 @@
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.05;
-  &:lang(ja) {
+  &:lang(ja),
+  &:lang(zh) {
     font-weight: 900;
     letter-spacing: -0.01em;
     line-height: 1.2;

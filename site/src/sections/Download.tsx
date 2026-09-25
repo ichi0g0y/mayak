@@ -31,14 +31,15 @@ export function Download() {
   const platform = useAtomValue(platformAtom)
   const latest = release.state === 'hasData' ? release.data : undefined
   const checksums = findAsset(latest, ARCHIVES.checksums)
-  const cards: { key: Platform; title: string; body: string; untested: boolean; links: { asset: Asset | undefined; label: string }[] }[] = [
+  const cards: { key: Platform; title: string; body: string; steps: string[]; untested: boolean; links: { asset: Asset | undefined; label: string; primary?: boolean }[] }[] = [
     {
       key: 'windows',
       title: t.download.windows,
       body: t.download.windowsBody,
+      steps: t.download.windowsSteps,
       untested: false,
       links: [
-        { asset: findAsset(latest, ARCHIVES.windowsInstaller), label: t.download.installer },
+        { asset: findAsset(latest, ARCHIVES.windowsInstaller), label: t.download.installer, primary: true },
         { asset: findAsset(latest, ARCHIVES.windows), label: t.download.portable },
       ],
     },
@@ -46,13 +47,21 @@ export function Download() {
       key: 'mac',
       title: t.download.mac,
       body: t.download.macBody,
+      steps: t.download.macSteps,
       untested: true,
       links: [
-        { asset: findAsset(latest, ARCHIVES.macArm), label: t.download.appleSilicon },
-        { asset: findAsset(latest, ARCHIVES.macIntel), label: t.download.intel },
+        { asset: findAsset(latest, ARCHIVES.macArm), label: t.download.appleSilicon, primary: true },
+        { asset: findAsset(latest, ARCHIVES.macIntel), label: t.download.intel, primary: true },
       ],
     },
-    { key: 'linux', title: t.download.linux, body: t.download.linuxBody, untested: true, links: [{ asset: findAsset(latest, ARCHIVES.linux), label: ARCHIVES.linux }] },
+    {
+      key: 'linux',
+      title: t.download.linux,
+      body: t.download.linuxBody,
+      steps: t.download.linuxSteps,
+      untested: true,
+      links: [{ asset: findAsset(latest, ARCHIVES.linux), label: ARCHIVES.linux, primary: true }],
+    },
   ]
   const publishedAt = latest ? new Date(latest.publishedAt).toLocaleDateString(document.documentElement.lang === 'ja' ? 'ja-JP' : 'en-US') : ''
   const aside = (
@@ -71,20 +80,25 @@ export function Download() {
     <Section id="download" kicker={t.download.kicker} title={t.download.title} lead={t.download.lead} aside={aside}>
       <div className="grid gap-4 md:grid-cols-3">
         {cards.map((card, i) => {
-          const primary = card.key === platform
+          const mine = card.key === platform
           return (
-            <Reveal key={card.key} delay={i * 60} className={cn('panel flex flex-col p-6', primary && 'border-primary/50')}>
+            <Reveal key={card.key} delay={i * 60} className={cn('panel flex flex-col p-6', mine && 'border-primary/50')}>
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-xl font-bold">{card.title}</h3>
-                {primary && <Badge>{t.download.recommended}</Badge>}
+                {mine && <Badge>{t.download.recommended}</Badge>}
                 {card.untested && <Badge variant="outline">{t.download.untested}</Badge>}
               </div>
-              <p className="text-muted-foreground mt-2 flex-1 text-sm">{card.body}</p>
-              <div className="mt-5 grid gap-2">
-                {card.links.map((link, j) => (
-                  <AssetLink key={link.label} asset={link.asset} label={link.label} primary={primary && j === 0 && !!link.asset} />
+              <p className="text-muted-foreground mt-2 text-sm">{card.body}</p>
+              <div className="mt-4 grid gap-2">
+                {card.links.map((link) => (
+                  <AssetLink key={link.label} asset={link.asset} label={link.label} primary={link.primary && !!link.asset} />
                 ))}
               </div>
+              <ol className="text-muted-foreground mt-4 grid list-decimal gap-1.5 pl-5 text-xs leading-relaxed">
+                {card.steps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
             </Reveal>
           )
         })}
