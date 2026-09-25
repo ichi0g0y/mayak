@@ -234,6 +234,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - **ダウンロード**: リリースのアセットから、この OS と CPU 向けのアーカイブ（`Mayak-<version>-windows-amd64.zip`、`Mayak-<version>-darwin-arm64.tar.gz` など。名前は `update.ArchiveName`）と `SHA256SUMS.txt` を取り、チェックサムが一致したものだけを設定フォルダの `updates/` に展開します。アーカイブに無い OS なら「このOS向けのビルドはありません」になります。`autoUpdate` がオンなら見つけ次第、オフなら「ダウンロード」を押したときに始まります。展開先に `staged.json` が残っていれば次回起動時に引き継ぎ、現在の版より新しくなければ捨てます。
 - **適用**: 展開したファイルを実行ファイルと同じフォルダへ入れ替えます。置き換える前のファイルは `*.mayak-old` に改名してから新しいものを置くので、実行中の exe（Windows では上書きも削除もできない）でも差し替えられます。失敗したときは改名したファイルを元に戻します。`autoUpdate` がオンなら終了時（`shutdown` の最後）に自動で適用し、次回起動から新しい版になります。ステータスの「再起動して更新」を押すと、その場で適用してから新しい版を起動し、自分は終了します。
 - **再起動**: 新しいプロセスは環境変数 `MAYAK_UPDATE_WAIT_PID` で古いプロセスの終了を最大 30 秒待ってから起動します（二重起動防止と衝突しないため）。起動時には `*.mayak-old` を削除します。
+- **通知**: 新しい版が見つかる・ダウンロード中・準備完了のあいだ、シェルはツールバー行に固定トーストを出します（`shell.js` の `updateToastHTML`。ページのネイティブビューはシェルより上に重なるので、その下に置くと隠れる）。「再起動して適用」は `InstallUpdate`（適用して再起動）、「ダウンロード」は `DownloadUpdate`（`autoUpdate` がオフのとき）、「変更点」はリリースページ、「あとで」はその版のあいだだけ消します。適用しなくても終了時に入れ替わります。
 - **状態**: `GetUpdateStatus` と `update:status` イベント（`model.UpdateStatus`）。`state` は `idle`／`checking`／`current`／`available`／`downloading`（`progress` は %）／`ready`／`unsupported`／`error`。ログのカテゴリは `Update` です。
 
 インストーラーはユーザー単位のフォルダ（`%LOCALAPPDATA%\Programs\MAYAK`）に入れるので、そのままこの差し替えが動きます。インストール先に書き込めない場合（管理者権限が要るフォルダなど）は適用に失敗し、エラーがステータスとログに出ます。その場合はリリースページから手動で入れ替えてください。リリースの作り方は [開発ガイド](development.md#リリース) を参照してください。

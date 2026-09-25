@@ -10,6 +10,8 @@ let queue=Promise.resolve(),nativeQueue=Promise.resolve(),expiry;
 // While the shell shows an overlay (the tutorial), the native page views stay
 // hidden whatever else asks to show them; closing it shows the active tab again.
 let overlay=false;
+// The updater's state (model.UpdateStatus), for the shell's update toast.
+let updateStatus=null;
 const views=new Map();
 // Tabs whose page is loading, by view ID (not saved).
 const loadingViews=new Set();
@@ -32,7 +34,7 @@ function loadFavicon(url,refresh=false){
  go.BrowserFavicon(url,refresh).then(data=>{if(typeof data==='string'&&data.startsWith('data:image/')&&faviconData[url]!==data){faviconData[url]=data;update();}}).catch(()=>{});
 }
 
-const snapshot=()=>({...state,goonReport,bosses:bosses&&{...bosses,current:host?.map||''},screenshots:shotsAvailable()?{list:shots.list,thumbs:shots.thumbs,viewing:shots.viewing,full:shots.full[shots.viewing]||''}:null,loadingTabs:[...loadingViews],popup:popup&&{key:popup.key},faviconData,host:state.connection.mode==='local'?host:null,hostQuestSite,item,itemOpen,itemSearch,itemBusy,itemHistory,settingsSection:section,localHost:platform==='windows',connectionStatus:state.connection.mode==='local'?'connected':state.connection.mode==='off'?'off':peerState.phase==='connected'?'connected':'disconnected',peer:peerState,error});
+const snapshot=()=>({...state,update:updateStatus,goonReport,bosses:bosses&&{...bosses,current:host?.map||''},screenshots:shotsAvailable()?{list:shots.list,thumbs:shots.thumbs,viewing:shots.viewing,full:shots.full[shots.viewing]||''}:null,loadingTabs:[...loadingViews],popup:popup&&{key:popup.key},faviconData,host:state.connection.mode==='local'?host:null,hostQuestSite,item,itemOpen,itemSearch,itemBusy,itemHistory,settingsSection:section,localHost:platform==='windows',connectionStatus:state.connection.mode==='local'?'connected':state.connection.mode==='off'?'off':peerState.phase==='connected'?'connected':'disconnected',peer:peerState,error});
 const update=()=>notify(snapshot());
 const messageError=e=>{error=(state.language==='ja'?'操作を完了できませんでした: ':'Could not complete the action: ')+String(e?.message||e);update();};
 const native=(command,o)=>{const result=nativeQueue.then(()=>go.BrowserView(command,o));nativeQueue=result.catch(()=>{});return result;};
@@ -315,6 +317,10 @@ const ready=(async()=>{
  window.mayakDesktop.on('popup:closed',()=>void enqueue(async()=>{if(!popup||Date.now()-popup.openedAt<300)return;popupClosed={key:popup.key,at:Date.now()};popup=null;update();}));
  window.mayakDesktop.on('popup:action',type=>void enqueue(async()=>{if(type==='toTab')await perform('popupToTab');else if(type==='close')await perform('popupClose');}));
  window.mayakDesktop.on('browser:item',info=>void display({event:'browser:item',args:[info]}));
+ // The update toast follows the updater; a found, downloading or downloaded
+ // version shows until it is applied or put off.
+ window.mayakDesktop.on('update:status',next=>{updateStatus=next;update();});
+ go.GetUpdateStatus?.().then(next=>{updateStatus=next;update();}).catch(()=>{});
  // A new screenshot shows in the sidebar (and on the screenshot page).
  window.mayakDesktop.on('browser:screenshot',()=>void loadShots());
  void loadShots();
@@ -481,6 +487,9 @@ async function perform(type,data){
   void refreshItem(!!data?.auto);
   return snapshot();
  }
+ // Applying restarts the app and downloading takes a while: neither holds the queue.
+ case 'updateInstall':void go.InstallUpdate().catch(messageError);return snapshot();
+ case 'updateDownload':void go.DownloadUpdate().catch(messageError);return snapshot();
  case 'dismiss':error='';update();return snapshot();
  default:return snapshot();
  }

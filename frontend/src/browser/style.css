@@ -693,3 +693,10 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .pair-code output{font:600 30px/1.2 ui-monospace,"Cascadia Code",Consolas,monospace;letter-spacing:.14em;color:var(--text)}
 .peer-error{color:var(--danger,#e06c75)}
 .peer-manual{margin-top:18px}
+/* The update toast: over the toolbar row, which the shell owns (page views
+   are native windows above the shell, so a toast under them would be covered). */
+.toast.update{top:8px;bottom:auto;left:50%;right:auto;transform:translateX(-50%);max-width:min(720px,calc(100vw - 40px));padding:6px 8px 6px 14px;gap:8px;border-color:var(--accent);animation:none}
+.toast.update .update-text{white-space:nowrap}
+.toast.update button{flex:none;height:28px;padding:0 10px;font-size:12.5px}
+.update-progress{display:inline-block;width:90px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.update-progress i{display:block;height:100%;background:var(--accent)}
