@@ -19,7 +19,7 @@ const ja = {
     note: '無料・広告なし。インストーラーはなく、zip を展開して起動するだけです。',
   },
   features: {
-    kicker: '// 01  FEATURES',
+    kicker: 'Features',
     title: 'できること',
     lead: 'スクリーンショット 1 枚とログの読み取りだけで、ここまで自動化できます。',
     items: [
@@ -32,7 +32,7 @@ const ja = {
     ],
   },
   start: {
-    kicker: '// 02  GETTING STARTED',
+    kicker: 'Getting started',
     title: 'はじめかた',
     lead: '初めての人向けの手順です。5 分ほどで動きます。',
     steps: [
@@ -46,7 +46,7 @@ const ja = {
     tip: 'MAYAK は常駐させたままで大丈夫です。トレイに最小化して、監視は起動時に自動で始まります。',
   },
   safety: {
-    kicker: '// 03  SAFETY BOUNDARY',
+    kicker: 'Safety boundary',
     title: 'ゲームには触れません',
     lead: 'MAYAK が読むのは、ゲーム自身が保存したスクリーンショットとログ、ローカルの設定ファイル、公開 Web API だけです。',
     items: [
@@ -59,7 +59,7 @@ const ja = {
     note: 'それでもコンパニオンツールの利用が許容されるかどうかはご自身の判断です。ゲームの利用規約を確認のうえ、自己責任でお使いください。',
   },
   download: {
-    kicker: '// 04  DOWNLOAD',
+    kicker: 'Download',
     title: 'ダウンロード',
     lead: '最新版は GitHub Releases から配布しています。一度入れれば、以後の更新はアプリが自動で行います。',
     windows: 'Windows',
@@ -79,7 +79,7 @@ const ja = {
     published: (date: string) => `${date} 公開`,
   },
   faq: {
-    kicker: '// 05  FAQ',
+    kicker: 'FAQ',
     title: 'よくある質問',
     items: [
       { q: 'BAN の心配はありませんか？', a: 'MAYAK はゲームのプロセスに一切触れず、ゲームが自分で保存したファイル（スクリーンショットとログ）を読むだけです。メモリの読み取りや入力の自動化のような、アンチチートが検出する対象の動作はしていません。ただし、コンパニオンツールを許容するかどうかの最終判断はご自身で行ってください。' },
@@ -91,7 +91,7 @@ const ja = {
     ],
   },
   license: {
-    kicker: '// LICENSE & CREDITS',
+    kicker: 'License & credits',
     title: 'ライセンスとクレジット',
     lead: 'MAYAK はフリーソフトウェアです。使っているデータとソフトウェアの出典も示します。',
     appTitle: 'MAYAK — GNU General Public License v3.0',
@@ -134,7 +134,7 @@ const en: Messages = {
     note: 'Free, no ads. There is no installer: unzip and run.',
   },
   features: {
-    kicker: '// 01  FEATURES',
+    kicker: 'Features',
     title: 'What it does',
     lead: 'One screenshot and the game logs are enough for all of this.',
     items: [
@@ -147,7 +147,7 @@ const en: Messages = {
     ],
   },
   start: {
-    kicker: '// 02  GETTING STARTED',
+    kicker: 'Getting started',
     title: 'Getting started',
     lead: 'For first-time users. It takes about five minutes.',
     steps: [
@@ -161,7 +161,7 @@ const en: Messages = {
     tip: 'Leave MAYAK running. It minimizes to the tray and starts monitoring on launch.',
   },
   safety: {
-    kicker: '// 03  SAFETY BOUNDARY',
+    kicker: 'Safety boundary',
     title: 'It never touches the game',
     lead: 'MAYAK reads only the screenshots and logs the game saves, local settings files and public web APIs.',
     items: [
@@ -174,7 +174,7 @@ const en: Messages = {
     note: 'Whether a companion tool is acceptable to you is still your own call. Read the game’s terms and use MAYAK at your own risk.',
   },
   download: {
-    kicker: '// 04  DOWNLOAD',
+    kicker: 'Download',
     title: 'Download',
     lead: 'Releases are published on GitHub. Install once; the app updates itself from then on.',
     windows: 'Windows',
@@ -194,7 +194,7 @@ const en: Messages = {
     published: (date: string) => `Published ${date}`,
   },
   faq: {
-    kicker: '// 05  FAQ',
+    kicker: 'FAQ',
     title: 'Questions',
     items: [
       { q: 'Can this get me banned?', a: 'MAYAK never touches the game process; it only reads files the game saves itself (screenshots and logs). It does nothing an anti-cheat looks for, such as reading memory or automating input. Whether you use a companion tool at all is still your own decision.' },
@@ -206,7 +206,7 @@ const en: Messages = {
     ],
   },
   license: {
-    kicker: '// LICENSE & CREDITS',
+    kicker: 'License & credits',
     title: 'License and credits',
     lead: 'MAYAK is free software. The data and software it builds on are credited here.',
     appTitle: 'MAYAK — GNU General Public License v3.0',

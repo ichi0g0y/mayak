@@ -1,30 +1,30 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* shadcn/ui tokens: near-black, with the khaki of the mark as the primary
-   colour and a rust accent for warnings. */
+/* shadcn/ui tokens after the game's own UI: cold olive-black, dusty
+   khaki text, thin worn lines, square corners. */
 :root {
-  --background: oklch(0.08 0 0);
-  --foreground: oklch(0.93 0.012 95);
-  --card: oklch(0.13 0.004 100);
-  --card-foreground: oklch(0.93 0.012 95);
-  --popover: oklch(0.13 0.004 100);
-  --popover-foreground: oklch(0.93 0.012 95);
-  --primary: oklch(0.83 0.04 95);
-  --primary-foreground: oklch(0.15 0.015 100);
-  --secondary: oklch(0.2 0.005 100);
-  --secondary-foreground: oklch(0.93 0.012 95);
-  --muted: oklch(0.2 0.005 100);
-  --muted-foreground: oklch(0.66 0.012 95);
-  --accent: oklch(0.22 0.006 100);
-  --accent-foreground: oklch(0.93 0.012 95);
-  --destructive: oklch(0.6 0.16 30);
-  --border: oklch(0.24 0.006 100);
-  --input: oklch(0.24 0.006 100);
-  --ring: oklch(0.83 0.04 95 / 0.6);
-  --rust: oklch(0.65 0.15 40);
-  --olive: oklch(0.6 0.06 120);
-  --radius: 0.5rem;
+  --background: oklch(0.12 0.006 130);
+  --foreground: oklch(0.86 0.018 95);
+  --card: oklch(0.155 0.007 130);
+  --card-foreground: oklch(0.86 0.018 95);
+  --popover: oklch(0.155 0.007 130);
+  --popover-foreground: oklch(0.86 0.018 95);
+  --primary: oklch(0.78 0.045 95);
+  --primary-foreground: oklch(0.16 0.015 100);
+  --secondary: oklch(0.22 0.008 130);
+  --secondary-foreground: oklch(0.86 0.018 95);
+  --muted: oklch(0.22 0.008 130);
+  --muted-foreground: oklch(0.6 0.018 100);
+  --accent: oklch(0.24 0.01 130);
+  --accent-foreground: oklch(0.86 0.018 95);
+  --destructive: oklch(0.55 0.14 30);
+  --border: oklch(0.32 0.012 110 / 0.7);
+  --input: oklch(0.32 0.012 110 / 0.7);
+  --ring: oklch(0.78 0.045 95 / 0.5);
+  --rust: oklch(0.6 0.13 40);
+  --olive: oklch(0.58 0.06 125);
+  --radius: 0.125rem;
 }
 
 @theme inline {
@@ -48,13 +48,12 @@
   --color-ring: var(--ring);
   --color-rust: var(--rust);
   --color-olive: var(--olive);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 2px);
   --font-sans: 'Noto Sans JP', -apple-system, 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
-  --font-display: 'Black Ops One', 'Barlow Condensed', sans-serif;
-  --font-label: 'Barlow Condensed', 'Noto Sans JP', sans-serif;
+  --font-display: 'Rajdhani', 'Noto Sans JP', sans-serif;
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
   @keyframes accordion-down {
@@ -84,43 +83,36 @@
   }
 }
 
+/* The game's UI lettering: squarish, condensed, upper case, spaced. */
 @utility font-display {
   font-family: var(--font-display);
 }
 @utility font-label {
-  font-family: var(--font-label);
-  letter-spacing: 0.1em;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
-/* Corner brackets, as on a tactical display. */
-@utility bracket {
+/* A worn panel: a thin translucent edge, a faint lighter top line, no
+   rounding to speak of. */
+@utility panel {
   position: relative;
-  &::before,
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, oklch(1 0 0 / 0.025), transparent 40%), var(--card);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.05);
+}
+
+/* A label with a rule running off to the right, as on the game's panel headers. */
+@utility rule-after {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   &::after {
     content: '';
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    border-color: var(--primary);
-    border-style: solid;
-    opacity: 0.6;
-    pointer-events: none;
-    transition: opacity 0.3s;
-  }
-  &::before {
-    top: -1px;
-    left: -1px;
-    border-width: 2px 0 0 2px;
-  }
-  &::after {
-    bottom: -1px;
-    right: -1px;
-    border-width: 0 2px 2px 0;
-  }
-  &:hover::before,
-  &:hover::after {
-    opacity: 1;
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
   }
 }
 
@@ -134,14 +126,14 @@
   }
 }
 @keyframes hero-fade {
-  to { opacity: 0; transform: translateY(-40px) scale(0.96); }
+  to { opacity: 0; transform: translateY(-40px) scale(0.97); }
 }
 
 /* Scroll reveal (components/Reveal.tsx). */
 .reveal {
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transform: translateY(20px);
+  transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 .reveal.is-visible {
   opacity: 1;
@@ -157,8 +149,8 @@
 
 /* The scroll cue at the bottom of the hero. */
 @keyframes nudge {
-  0%, 100% { transform: translateY(0); opacity: 0.5; }
-  50% { transform: translateY(8px); opacity: 1; }
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(6px); opacity: 0.9; }
 }
 @utility nudge {
   animation: nudge 1.8s ease-in-out infinite;

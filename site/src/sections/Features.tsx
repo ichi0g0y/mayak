@@ -1,6 +1,5 @@
 import { Bell, Compass, MapPinned, Package, RefreshCw, ScanLine } from 'lucide-react'
 import { Reveal } from '@/components/Reveal'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useT } from '@/i18n'
 import { Section } from './Section'
 
@@ -10,22 +9,16 @@ export function Features() {
   const t = useT()
   return (
     <Section id="features" kicker={t.features.kicker} title={t.features.title} lead={t.features.lead}>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {t.features.items.map((item, i) => {
           const Icon = icons[i]
           return (
-            <Reveal key={item.title} delay={i * 80}>
-              <Card className="bracket bg-card/80 hover:border-primary/40 h-full transition-colors">
-                <CardHeader>
-                  <div className="bg-primary/10 text-primary mb-2 flex size-10 items-center justify-center rounded-md">
-                    <Icon className="size-5" />
-                  </div>
-                  <CardTitle className="text-base">{item.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{item.body}</p>
-                </CardContent>
-              </Card>
+            <Reveal key={item.title} delay={i * 70} className="panel hover:border-primary/40 flex h-full flex-col p-5 transition-colors">
+              <div className="flex items-center gap-3">
+                <Icon className="text-primary/80 size-5 shrink-0" />
+                <h3 className="font-semibold">{item.title}</h3>
+              </div>
+              <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{item.body}</p>
             </Reveal>
           )
         })}

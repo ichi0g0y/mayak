@@ -8,7 +8,7 @@ export function Safety() {
   return (
     <Section id="safety" kicker={t.safety.kicker} title={t.safety.title} lead={t.safety.lead}>
       <Reveal>
-        <div className="bracket bg-card/80 rounded-xl border p-6 sm:p-8">
+        <div className="panel p-6 sm:p-8">
           <ul className="grid gap-3 sm:grid-cols-2">
             {t.safety.items.map((item) => (
               <li key={item} className="flex items-start gap-3">

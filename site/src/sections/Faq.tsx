@@ -8,10 +8,10 @@ export function Faq() {
   return (
     <Section id="faq" kicker={t.faq.kicker} title={t.faq.title}>
       <Reveal>
-        <Accordion type="single" collapsible className="bg-card/80 rounded-xl border px-5">
+        <Accordion type="single" collapsible className="panel px-5">
           {t.faq.items.map((item, i) => (
             <AccordionItem key={item.q} value={`q${i}`}>
-              <AccordionTrigger className="text-base">{item.q}</AccordionTrigger>
+              <AccordionTrigger className="text-base hover:no-underline">{item.q}</AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">{item.a}</AccordionContent>
             </AccordionItem>
           ))}

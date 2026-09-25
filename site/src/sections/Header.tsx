@@ -32,7 +32,7 @@ export function Header({ home = true }: { home?: boolean }) {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <a href="/" className={cn('flex items-center gap-2.5 transition-opacity duration-300', scrolled ? 'opacity-100' : 'opacity-0')} aria-hidden={!scrolled}>
           <img src="/assets/mayak-mark.png" alt="" width={32} height={32} className="size-8" />
-          <span className="font-display text-primary text-lg tracking-[0.2em]">MAYAK</span>
+          <span className="font-label text-primary text-base">MAYAK</span>
         </a>
         <nav className="hidden items-center gap-5 text-sm md:flex">
           {links.map(([href, label]) => (

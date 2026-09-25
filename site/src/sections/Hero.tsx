@@ -17,10 +17,10 @@ export function Hero() {
           alt="MAYAK"
           width={512}
           height={512}
-          className="w-[min(72vw,520px,46svh)]"
+          className="w-[min(72vw,520px,46svh)] opacity-90"
           fetchPriority="high"
         />
-        <p className="font-label text-primary/80 mt-2 text-sm sm:text-base">{t.hero.kicker}</p>
+        <p className="font-label text-primary/70 mt-2 text-sm sm:text-base">{t.hero.kicker}</p>
         <p className="text-muted-foreground mt-6 max-w-xl text-base leading-relaxed sm:text-lg">{t.hero.lead}</p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Button size="lg" asChild className="h-12 px-7 text-base">
@@ -28,7 +28,7 @@ export function Hero() {
               <Download />
               {t.hero.download}
               {latest && (
-                <span className="text-primary-foreground/70 text-sm font-normal">
+                <span className="font-display text-primary-foreground/70 text-sm font-semibold tracking-wide">
                   v{latest.version}
                   {windows ? ` · ${formatSize(windows.size)}` : ''}
                 </span>
