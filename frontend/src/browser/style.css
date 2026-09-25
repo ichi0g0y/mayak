@@ -696,3 +696,7 @@ body[data-maximised=true] .resize-grip{display:none}
 .pair-code output{font:600 30px/1.2 ui-monospace,"Cascadia Code",Consolas,monospace;letter-spacing:.14em;color:var(--text)}
 .peer-error{color:var(--danger,#e06c75)}
 .peer-manual{margin-top:18px}
+/* With the item sidebar against the window's bottom edge, its scrollbar's
+   down arrow would sit under the resize corner; a short footer keeps the
+   scroll area above it and holds the corner grip. */
+body[data-item=right] .item-panel,body[data-item=bottom] .item-panel{padding-bottom:20px}

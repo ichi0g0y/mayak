@@ -19,7 +19,7 @@ import (
 // window to its edge. They hide while the window is maximised.
 
 const (
-	edgeWidth  = 6  // CSS px along the right and bottom edges
+	edgeWidth  = 5  // CSS px along the right and bottom edges
 	cornerSize = 18 // CSS px for the bottom-right square
 )
 
