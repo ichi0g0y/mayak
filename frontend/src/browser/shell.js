@@ -589,14 +589,15 @@ function tutorialHTML(){
  const nav=first?`<div><button data-action="tutorialSkip">${esc(t('tutLater'))}</button></div><div><button class="primary" data-action="tutorialNext">${esc(t('tutStart'))}</button></div>`
   :last?`<div></div><div><button data-action="tutorialBack">${esc(t('tutBack'))}</button><button class="primary" data-action="tutorialFinish">${esc(t('tutFinish'))}</button></div>`
   :`<div><button data-action="tutorialSkip">${esc(t('tutSkip'))}</button></div><div><button data-action="tutorialBack">${esc(t('tutBack'))}</button><button class="primary" data-action="tutorialNext">${esc(t('tutNext'))}</button></div>`;
- return `<div class="tutorial-backdrop"></div><section class="tutorial" role="dialog" aria-modal="true" aria-labelledby="tutorial-title"><p class="tutorial-kicker">${esc(t('tutStep'))} ${tutorialStep+1} / ${tutorialSteps.length}</p><h2 id="tutorial-title">${esc(title)}</h2>${body}<div class="tutorial-steps">${dots}</div><div class="tutorial-actions">${nav}</div></section>`;
+ return `<div class="tutorial-backdrop" data-action="tutorialSkip"></div><section class="tutorial" role="dialog" aria-modal="true" aria-labelledby="tutorial-title"><p class="tutorial-kicker">${esc(t('tutStep'))} ${tutorialStep+1} / ${tutorialSteps.length}</p><h2 id="tutorial-title">${esc(title)}</h2>${body}<div class="tutorial-steps">${dots}</div><div class="tutorial-actions">${nav}</div></section>`;
 }
 async function openTutorial(){
- tutorialOpen=true;tutorialStep=0;
- try{tutorialSettings=await window.mayakDesktop?.backend?.GetSettings?.();}catch{tutorialSettings=null;}
+ tutorialOpen=true;tutorialStep=0;tutorialSettings=null;
+ render();
  // The native web views sit above the shell; hide them while the overlay shows.
  await api.action('overlay',true);
- render();
+ try{tutorialSettings=await window.mayakDesktop?.backend?.GetSettings?.();}catch{tutorialSettings=null;}
+ if(tutorialOpen)render();
 }
 async function closeTutorial(){
  if(!tutorialOpen)return;
@@ -762,7 +763,7 @@ installTabDrag({
  over:tabOverBookmarks,
  dropElsewhere:id=>{clearBookmarkDrop();renderDeferred=false;void action('bookmarkTab',{id,before:tabBookmarkBefore});},
 });
-api.onState(next=>{state=next;render();if(!tutorialStarted){tutorialStarted=true;void loadVersion();if(!state.tutorialDone&&state.localHost)void openTutorial();}});
+api.onState(next=>{state=next;render();if(!tutorialStarted){tutorialStarted=true;void loadVersion();if(!state.tutorialDone&&state.localHost)setTimeout(()=>{if(!state.tutorialDone&&!tutorialOpen)void openTutorial();},1500);}});
 // Title bar behavior for the frameless window: double-click toggles maximise;
 // maximising by any means (snap, keyboard) updates the caption button.
 document.addEventListener('dblclick',event=>{if(getComputedStyle(event.target).getPropertyValue('--wails-draggable').trim()==='drag')void Window.ToggleMaximise().then(syncMaximised);});
