@@ -146,15 +146,3 @@
     transition: none;
   }
 }
-
-/* The scroll cue at the bottom of the hero. */
-@keyframes nudge {
-  0%, 100% { transform: translateY(0); opacity: 0.4; }
-  50% { transform: translateY(6px); opacity: 0.9; }
-}
-@utility nudge {
-  animation: nudge 1.8s ease-in-out infinite;
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}

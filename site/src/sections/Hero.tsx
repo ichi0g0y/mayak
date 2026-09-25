@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai'
-import { ChevronDown, Download, ExternalLink } from 'lucide-react'
+import { Download, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/i18n'
 import { ARCHIVES, findAsset, formatSize, RELEASES_URL, releaseLoadableAtom, REPOSITORY } from '@/state'
@@ -44,10 +44,6 @@ export function Hero() {
         </div>
         <p className="text-muted-foreground/80 mt-4 text-xs sm:text-sm">{t.hero.note}</p>
       </div>
-      <a href="#features" className="text-muted-foreground absolute bottom-5 flex flex-col items-center gap-1 text-xs" aria-label="Scroll">
-        <span className="font-label">scroll</span>
-        <ChevronDown className="nudge size-5" />
-      </a>
       <div className="from-background pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t to-transparent" aria-hidden="true" />
     </section>
   )
