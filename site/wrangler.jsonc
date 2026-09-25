@@ -1,0 +1,10 @@
+// Cloudflare Pages project for the landing page (public/, plain HTML, no
+// build step). `task site:deploy` publishes it, `task site:serve` previews
+// it. Create the project once with `wrangler pages project create mayak`
+// from this folder. The docs site is a separate project (../wrangler.jsonc).
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "mayak",
+  "compatibility_date": "2026-09-25",
+  "pages_build_output_dir": "public"
+}

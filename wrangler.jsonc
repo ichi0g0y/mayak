@@ -1,7 +1,7 @@
 // Cloudflare Pages project for the docs site (docs/, built by mdBook into
-// build/docs-site). `task docs:deploy` builds and publishes it; sign in
-// once with `wrangler login` (or set CLOUDFLARE_API_TOKEN) and create the
-// project with `wrangler pages project create mayak-docs`.
+// build/docs-site). `task docs:deploy` builds and publishes it. Sign in
+// once with `wrangler login` (or set CLOUDFLARE_API_TOKEN). The landing
+// page is a separate project (site/wrangler.jsonc).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mayak-docs",

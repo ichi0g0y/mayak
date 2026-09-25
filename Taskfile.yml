@@ -105,6 +105,20 @@ tasks:
       - task: docs:build
       - wrangler pages deploy
 
+  # The landing page (site/public, plain HTML): a separate Cloudflare Pages
+  # project, "mayak" (site/wrangler.jsonc).
+  site:serve:
+    summary: Preview the landing page locally
+    dir: site
+    cmds:
+      - wrangler pages dev public
+
+  site:deploy:
+    summary: Publish the landing page to Cloudflare Pages
+    dir: site
+    cmds:
+      - wrangler pages deploy
+
   dev:
     summary: Run with hot reload (Go changes rebuild and restart the app; WebUI changes reload via Vite)
     cmds:

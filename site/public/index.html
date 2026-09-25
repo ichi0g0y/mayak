@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ja" data-lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MAYAK — Escape from Tarkov companion</title>
+  <meta name="description" content="MAYAK は Escape from Tarkov のスクリーンショットとログだけを読んで、tarkov.dev のマップとタスク、アイテム情報を同期するコンパニオンアプリです。ゲームには一切触れません。">
+  <meta property="og:title" content="MAYAK — Escape from Tarkov companion">
+  <meta property="og:description" content="スクリーンショットとログだけでマップ・タスク・アイテムを同期。ゲームには触れない EFT コンパニオン。">
+  <meta property="og:image" content="assets/mayak-mark.png">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#1f1e1d">
+  <link rel="icon" href="assets/mayak-mark.png" type="image/png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="#"><img src="assets/mayak-mark.png" alt="" width="32" height="32"><span>MAYAK</span></a>
+    <nav>
+      <a href="#features" data-t="navFeatures">機能</a>
+      <a href="#how" data-t="navHow">使い方</a>
+      <a href="#safety" data-t="navSafety">安全性</a>
+      <a href="https://mayak-docs.pages.dev/" data-t="navDocs">仕様書</a>
+      <a href="https://github.com/ichi0g0y/mayak" rel="noopener">GitHub</a>
+      <button type="button" class="lang" id="lang-toggle" aria-label="Switch language">EN</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="glow" aria-hidden="true"></div>
+      <img class="mark" src="assets/mayak-mark.png" alt="MAYAK" width="112" height="112">
+      <h1>MAYAK</h1>
+      <p class="lead" data-t="lead">Escape from Tarkov のスクリーンショットとログだけを読んで、マップ・タスク・アイテムをブラウザに同期するコンパニオン。ゲームのプロセスには一切触れません。</p>
+      <div class="cta">
+        <a class="button primary" id="download" href="https://github.com/ichi0g0y/mayak/releases/latest">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1Z"/></svg>
+          <span data-t="downloadWindows">Windows 版をダウンロード</span>
+          <small id="download-meta"></small>
+        </a>
+        <a class="button" href="https://github.com/ichi0g0y/mayak/releases/latest" data-t="allReleases">すべてのリリース</a>
+      </div>
+      <p class="fineprint" id="other-platforms" data-t="otherPlatforms">macOS / Linux 版は受信専用クライアントとしてビルドしていますが、動作は未検証です。</p>
+    </section>
+
+    <section id="features" class="section">
+      <h2 data-t="featuresTitle">できること</h2>
+      <div class="grid">
+        <article class="card">
+          <h3 data-t="f1Title">マップ上の位置を同期</h3>
+          <p data-t="f1Body">スクリーンショットのファイル名に含まれる座標と向きを読み取り、tarkov.dev のマップ上のマーカーを動かします。マップはログから自動判定します。</p>
+        </article>
+        <article class="card">
+          <h3 data-t="f2Title">タスク画面を認識</h3>
+          <p data-t="f2Body">タスク一覧のスクリーンショットから選択中のタスク名をローカル OCR で読み取り、tarkov.dev や Wiki の該当ページを開きます。</p>
+        </article>
+        <article class="card">
+          <h3 data-t="f3Title">アイテム情報を表示</h3>
+          <p data-t="f3Body">アイテム詳細ウィンドウを撮るだけで、価格やトレーダー、必要なタスク・ハイドアウトをアプリ内のアイテム欄に表示します。</p>
+        </article>
+        <article class="card">
+          <h3 data-t="f4Title">TarkovTracker と同期</h3>
+          <p data-t="f4Body">EFT の通知ログからタスクの開始・失敗・完了を検知し、PvP / Season / PvE のプロフィールごとに TarkovTracker へ送ります。</p>
+        </article>
+        <article class="card">
+          <h3 data-t="f5Title">レイドの通知</h3>
+          <p data-t="f5Body">マッチ成立、レイド開始、ランスルー終了のタイマーをログから検知して、好きな音で知らせます。</p>
+        </article>
+        <article class="card">
+          <h3 data-t="f6Title">自動アップデート</h3>
+          <p data-t="f6Body">GitHub Releases の新しい版を自動で確認し、チェックサムを検証したうえで終了時に入れ替えます。日本語と英語の UI に対応。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="how" class="section">
+      <h2 data-t="howTitle">使い方は 3 ステップ</h2>
+      <ol class="steps">
+        <li><strong data-t="s1Title">Remote ID を登録</strong><span data-t="s1Body">tarkov.dev のマップで Remote Control を有効にし、表示された ID を MAYAK に入れます。同じ PC のブラウザなら自動検出できます。</span></li>
+        <li><strong data-t="s2Title">フォルダを指定</strong><span data-t="s2Body">EFT の Screenshots と Logs フォルダを選びます。インストール先からの自動検出にも対応しています。</span></li>
+        <li><strong data-t="s3Title">ゲーム内で PrintScreen</strong><span data-t="s3Body">あとは普通に遊ぶだけ。保存されたスクリーンショットを MAYAK が検知して処理します。ゲームへの入力は送りません。</span></li>
+      </ol>
+    </section>
+
+    <section id="safety" class="section">
+      <h2 data-t="safetyTitle">ゲームには触れません</h2>
+      <p class="lead small" data-t="safetyLead">MAYAK が読むのは、ゲーム自身が保存したスクリーンショットとログ、ローカルの設定ファイル、公開 Web API だけです。</p>
+      <ul class="checks">
+        <li data-t="sa1">プロセスメモリの読み取り、DLL インジェクション、フック、パケットキャプチャは行いません</li>
+        <li data-t="sa2">ゲームへのキー入力・マウス操作の自動化は行いません</li>
+        <li data-t="sa3">スクリーンショットはアップロードしません。OCR と画像解析はすべてローカルで実行します</li>
+        <li data-t="sa4">TarkovTracker の API キーは Windows の DPAPI で暗号化して保存します</li>
+        <li data-t="sa5">ソースコードは GPL-3.0 で公開しています</li>
+      </ul>
+      <p class="fineprint" data-t="safetyNote">それでもコンパニオンツールの利用が許容されるかどうかはご自身の判断です。ゲームの利用規約を確認のうえ、自己責任でお使いください。</p>
+    </section>
+
+    <section id="requirements" class="section">
+      <h2 data-t="reqTitle">動作環境</h2>
+      <ul class="plain">
+        <li data-t="req1">Windows 11(WebView2 Runtime が必要。通常はインストール済み）</li>
+        <li data-t="req2">Escape from Tarkov のスクリーンショットとログのフォルダへの読み取りアクセス</li>
+        <li data-t="req3">OCR は同梱の Tesseract で動きます。Windows OCR を使う場合は英語の言語パックが必要です</li>
+        <li data-t="req4">インストーラーはありません。zip を展開して Mayak.exe を起動してください</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p data-t="footerCredit">ゲームデータは <a href="https://tarkov.dev/" rel="noopener">tarkov.dev</a>、進捗は <a href="https://tarkovtracker.org/" rel="noopener">TarkovTracker</a> の API を使っています。Escape from Tarkov は Battlestate Games の商標です。MAYAK は Battlestate Games、tarkov.dev、TarkovTracker とは無関係の個人プロジェクトです。</p>
+    <p><a href="https://github.com/ichi0g0y/mayak" rel="noopener">GitHub</a> · <a href="https://mayak-docs.pages.dev/" data-t="footerDocs">仕様書</a> · <a href="https://github.com/ichi0g0y/mayak/blob/main/LICENSE" rel="noopener">GPL-3.0</a></p>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>

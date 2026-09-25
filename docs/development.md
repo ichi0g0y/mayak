@@ -169,6 +169,7 @@ Wails 本体はフォークせず公式モジュールを使います。
 
 - `client/`: 以前の Electron クライアントの残骸（無視対象の依存・ビルド出力のみ）。現在のアプリにもビルドにも関係しません
 - `docs/`: この mdBook（`book.toml`、`SUMMARY.md`）と英語の開発メモ
+- `site/`: ランディングページ（`public/` の素の HTML・CSS・JS。ビルド工程なし）と Cloudflare Pages の設定
 
 ## Task
 
@@ -187,6 +188,7 @@ Wails 本体はフォークせず公式モジュールを使います。
 | `task release:archive` | `build/bin` をリリース用アーカイブと SHA-256 にする（`build/dist/`、`tools/release`）。`TARGET_ARCH=amd64` で CPU を指定 |
 | `task docs:build` / `docs:serve` | mdBook で `docs/` を `build/docs-site` に組む／ライブリロード付きで確認する |
 | `task docs:deploy` | ドキュメントサイトを組んで Cloudflare Pages に公開する（`wrangler pages deploy`、設定は `wrangler.jsonc`） |
+| `task site:serve` / `site:deploy` | ランディングページ（`site/public`）をローカルで確認する／Cloudflare Pages に公開する（設定は `site/wrangler.jsonc`） |
 | `task dev` | 依存インストール → ホットリロード付き開発モード（下記）。アプリを起動する |
 | `task build:dev` | `dev` が使う開発ビルド。バインディング生成、Tesseract 同梱、`production` タグなしで `build/bin/Mayak-dev.exe` |
 | `task check:offline` | アプリを開かない検証。全パッケージのコンパイル、`TestBrowser*`、bun のテスト |
@@ -227,9 +229,16 @@ Wails 本体はフォークせず公式モジュールを使います。
 
 macOS／Linux のビルドは CI でコンパイルしているだけで、動作は検証していません（[プラットフォーム](#プラットフォーム)）。
 
-### ドキュメントサイト
+### ドキュメントサイトとランディングページ
 
-`docs/` は mdBook で `build/docs-site` に組み、Cloudflare Pages（プロジェクト名 `mayak-docs`、`wrangler.jsonc`）に公開します。初回だけ `wrangler login` でサインインし（CI なら `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID`）、`wrangler pages project create mayak-docs` でプロジェクトを作ります。その後は `task docs:deploy` で公開できます。
+Cloudflare Pages のプロジェクトは 2 つです。どちらも初回だけ `wrangler login` でサインインします（CI なら `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID`）。wrangler はリポジトリ内で使ってください（Node はプロジェクトの `mise.toml` でだけ有効です）。
+
+| プロジェクト | 内容 | 設定 | 公開 |
+| --- | --- | --- | --- |
+| `mayak-docs` | この仕様書。mdBook で `docs/` を `build/docs-site` に組む | `wrangler.jsonc` | `task docs:deploy` |
+| `mayak` | ランディングページ。`site/public` の素の HTML で、ビルド工程なし。ダウンロードボタンは GitHub の latest リリースから版と Windows 版 zip の URL を取る。日本語で書き、英語は `main.js` の辞書で切り替える | `site/wrangler.jsonc` | `task site:deploy`（確認は `task site:serve`） |
+
+プロジェクトが無ければ `wrangler pages project create <名前>` で作ります（ランディングページは `site/` の中で実行）。
 
 ## テスト
 
