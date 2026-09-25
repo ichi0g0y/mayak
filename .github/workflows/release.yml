@@ -49,6 +49,10 @@ jobs:
       - name: Build
         env:
           GOARCH: ${{ matrix.goarch || '' }}
+          # Go turns cgo off when GOARCH differs from the host's; the
+          # Intel build on the Apple silicon runner needs it on (clang
+          # targets x86_64 with -arch, which the go tool passes).
+          CGO_ENABLED: ${{ matrix.goarch && '1' || '' }}
         run: task build ${{ startsWith(github.ref, 'refs/tags/') && format('VERSION={0}', github.ref_name) || '' }}
 
       - name: Archive
