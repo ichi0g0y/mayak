@@ -17,7 +17,7 @@ export function App() {
     document.documentElement.lang = lang
   }, [lang])
   return (
-    <div className="grain">
+    <div>
       <Header />
       <Hero />
       <main className="mx-auto max-w-6xl px-4 sm:px-6">

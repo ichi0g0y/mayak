@@ -11,14 +11,13 @@ export function Hero() {
   const windows = findAsset(latest, ARCHIVES.windows)
   return (
     <section className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden px-4 pt-20 pb-24 text-center">
-      <div className="beam" aria-hidden="true" />
       <div className="hero-fade relative flex flex-col items-center">
         <img
           src="/assets/mayak-logo-white.png"
           alt="MAYAK"
           width={512}
           height={512}
-          className="w-[min(72vw,520px,46svh)] drop-shadow-[0_0_60px_rgba(212,204,178,0.18)]"
+          className="w-[min(72vw,520px,46svh)]"
           fetchPriority="high"
         />
         <p className="font-label text-primary/80 mt-2 text-sm sm:text-base">{t.hero.kicker}</p>

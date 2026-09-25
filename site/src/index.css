@@ -124,36 +124,6 @@
   }
 }
 
-/* Film grain over the whole page. */
-@utility grain {
-  &::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    pointer-events: none;
-    opacity: 0.05;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-}
-
-/* The lighthouse beam behind the hero logo: a slow sweep, faded at the edges. */
-@utility beam {
-  position: absolute;
-  inset: -40%;
-  pointer-events: none;
-  background: conic-gradient(from 0deg, transparent 0deg 300deg, oklch(0.83 0.04 95 / 0.22) 340deg, oklch(0.83 0.04 95 / 0.32) 352deg, transparent 360deg);
-  mask-image: radial-gradient(closest-side, black 20%, transparent 72%);
-  animation: sweep 14s linear infinite;
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-    opacity: 0.6;
-  }
-}
-@keyframes sweep {
-  to { transform: rotate(360deg); }
-}
-
 /* The hero fades and shrinks as the page scrolls past it (where scroll
    timelines exist; elsewhere it just scrolls away). */
 @utility hero-fade {
