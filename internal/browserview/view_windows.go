@@ -27,6 +27,7 @@ type nativeManager struct {
 	closed  bool
 	active  string
 	showing bool
+	edges   []*resizeEdge
 }
 
 var subclassDLL = windows.NewLazySystemDLL("comctl32.dll")
@@ -69,11 +70,6 @@ func init() {
 	})
 }
 
-// resizeHandle is the strip, in CSS pixels, kept free of the page views along
-// the right and bottom edges so the shell can resize the frameless window
-// there; shell.js gives the Wails runtime the same width.
-const resizeHandle = 8
-
 func (m *Manager) resize() {
 	dpi := w32.GetDpiForWindow(w32.HWND(m.native.hwnd))
 	if dpi == 0 {
@@ -82,6 +78,7 @@ func (m *Manager) resize() {
 	if v := m.native.views[m.native.active]; v != nil {
 		m.place(v, dpi)
 	}
+	m.layoutResizeEdges()
 }
 
 // place sizes v to its area of the window without changing its visibility.
@@ -91,17 +88,13 @@ func (m *Manager) place(v *nativeView, dpi uint) {
 		return
 	}
 	left, top := v.options.Left*int(dpi)/96, v.options.Top*int(dpi)/96
-	// The window is frameless and the shell resizes it from its edges, so leave
-	// the resize strip free on the right and bottom unless maximised.
-	border := 0
-	if !w32.IsZoomed(w32.HWND(m.native.hwnd)) {
-		border = resizeHandle * int(dpi) / 96
-	}
-	right, bottom := max(border, v.options.Right*int(dpi)/96), max(border, v.options.Bottom*int(dpi)/96)
+	right, bottom := v.options.Right*int(dpi)/96, v.options.Bottom*int(dpi)/96
 	width, height := max(0, int(bounds.Right)-left-right), max(0, int(bounds.Bottom)-top-bottom)
 	// A separate clipped child HWND keeps the site's input surface and z-order
 	// independent from Wails' full-window shell controller during live resize.
+	// The resize edges (resize_windows.go) stay above it.
 	w32.SetWindowPos(v.host, w32.HWND_TOP, left, top, width, height, w32.SWP_NOACTIVATE)
+	m.raiseResizeEdges()
 	v.chromium.ResizeWithBounds(&edge.Rect{Right: int32(width), Bottom: int32(height)})
 }
 func (m *Manager) command(command string, o Options) error {
@@ -126,6 +119,7 @@ func (m *Manager) command(command string, o Options) error {
 			}
 			m.native.hwnd = hwnd
 			managers[hwnd] = m
+			m.createResizeEdges()
 		}
 		views := m.native.views
 		v := views[o.ID]
@@ -301,6 +295,7 @@ func (m *Manager) closeNative() {
 		w32.DestroyWindow(v.host)
 		delete(m.native.views, id)
 	}
+	m.destroyResizeEdges()
 	if m.native.hwnd != 0 {
 		removeSubclass.Call(m.native.hwnd, subclassProc, 0x524c)
 		delete(managers, m.native.hwnd)

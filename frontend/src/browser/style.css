@@ -688,10 +688,6 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .about-links{display:flex;flex-wrap:wrap;gap:8px}
 .about-links button{display:inline-flex;align-items:center;gap:8px}
 .about-links button .icon{width:16px;height:16px}
-/* With the item sidebar at the window's right edge, its scrollbar would sit in
-   the 8px strip that resizes the window; the panel keeps that strip clear. */
-body[data-item=right]:not([data-nav=right]) .item-panel{padding-right:8px}
-body[data-item=right]:not([data-nav=right]) .item-body{padding-right:0}
 /* A grip marks the window's bottom-right corner as the place to resize. */
 .resize-grip{position:fixed;right:3px;bottom:3px;width:11px;height:11px;z-index:62;pointer-events:none;opacity:.55;background:radial-gradient(circle,var(--muted) 1px,transparent 1.4px) 0 0/4px 4px;clip-path:polygon(100% 0,100% 100%,0 100%)}
 body[data-maximised=true] .resize-grip{display:none}

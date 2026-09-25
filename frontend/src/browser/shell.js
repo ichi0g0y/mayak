@@ -7,8 +7,8 @@ import {bestSale,price,age,chartSeries,chartPath,itemPanelWidths,clampItemPanel,
 // Wails arms edge resizing of the frameless window from the page: on every mouse
 // move its runtime reads these flags by their dotted names, but the Go side
 // serialises them nested, so its 5px default applied and the edges barely
-// responded. Use the 8px Windows gives its own frames. The page views leave
-// the same strip free (resizeHandle in internal/browserview/view_windows.go).
+// responded. Use the 8px Windows gives its own frames. The right and bottom
+// edges under the page views are handled natively (internal/browserview/resize_windows.go).
 const resizeHandle=8;
 if(window._wails?.flags)Object.assign(window._wails.flags,{'system.resizeHandleWidth':resizeHandle,'system.resizeHandleHeight':resizeHandle});
 const api=window.mayak;
