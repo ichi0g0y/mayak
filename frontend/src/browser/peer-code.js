@@ -1,6 +1,9 @@
 const PREFIX='MAYAK1.';
 const MAX_AGE=10*60*1000;
 const DEFAULT_STUN='stun:stun.cloudflare.com:3478';
+// The pairing relay (site/worker/index.js) that parks an invitation under an
+// 8-digit code for ten minutes so the two PCs need not copy the long codes.
+const PAIR_RELAY='https://mayak.ich.sh/api/pair';
 function iceServers(value=DEFAULT_STUN){
   if(!value)return [];
   // No TURN configuration, credentials, or implicit relay fallback.
@@ -19,4 +22,4 @@ function decode(code,now=Date.now()){
   let value;try{value=JSON.parse(atob(code.slice(PREFIX.length).replace(/-/g,'+').replace(/_/g,'/')));}catch{throw new Error('invalid-or-expired-code');}
   return validate(value,now);
 }
-export {encode,decode,iceServers,DEFAULT_STUN,MAX_AGE};
+export {encode,decode,iceServers,DEFAULT_STUN,MAX_AGE,PAIR_RELAY};

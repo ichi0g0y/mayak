@@ -1,16 +1,24 @@
 // Cloudflare Worker "mayak": the landing page as static assets (site/dist,
 // built by `bun run build`), served at https://mayak.ich.sh (the custom
 // domain is created on deploy; the zone ich.sh lives in the same account)
-// and at mayak.ichi0g0y.workers.dev. `task site:deploy` builds and
-// publishes it; sign in once with `wrangler login`.
+// and at mayak.ichi0g0y.workers.dev, plus the pairing relay under /api/pair
+// (worker/index.js, a Durable Object per code). `task site:deploy` builds
+// and publishes it; sign in once with `wrangler login`.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mayak",
+  "main": "worker/index.js",
   "compatibility_date": "2026-09-25",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "404-page"
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
   },
+  "durable_objects": {
+    "bindings": [{ "name": "PAIR", "class_name": "PairRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PairRoom"] }],
   "routes": [{ "pattern": "mayak.ich.sh", "custom_domain": true }],
   "workers_dev": true
 }

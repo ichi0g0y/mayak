@@ -2,7 +2,7 @@ import * as AppService from '../../bindings/github.com/local/mayak/internal/app/
 import {Events,Clipboard} from '@wailsio/runtime';
 import {itemInfo,clampItemPanel,clampItemPanelHeight,historyPoints,names} from './item.js';
 import {browserSections,hostSections,mapTabID,randomUUID,bookmarkGroup,clampSidebar,rememberFavicon,hostname,defaults,restore,webURL,pageURL,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal} from './state.js';
-import {encode,decode,iceServers} from './peer-code.js';
+import {encode,decode,iceServers,PAIR_RELAY} from './peer-code.js';
 import './transport.js';
 
 let state,go,platform,returnTo='',remoteID='',host=null,hostQuestSite='tarkov-dev',popup=null,item=null,restoredItem=null,itemOpen=false,itemSearch={query:'',results:[]},searchSeq=0,itemBusy=false,itemHistory=null,notify=()=>{},focusAddress=()=>{},section='appearance',error='',peerState={phase:'idle'},invite=null;
@@ -196,19 +196,50 @@ async function loadHistory(again=false){
  try{next={id,mode,points:historyPoints(await go.BrowserItemHistory(mode,id))};}catch{next={id,mode,points:itemHistory?.points||[],failed:true};}
  if(item?.id===id&&item.mode===mode){itemHistory=next;update();}
 }
-const peer=new globalThis.MayakPeer({onState:next=>{peerState={...peerState,...next,busy:false};if(next.phase==='connected'){peerState.code='';clearTimeout(expiry);}update();},onMessage:message=>void display(message,true)});
-function closePeer(){clearTimeout(expiry);invite=null;peer.close();peerState={phase:'idle'};update();}
+// The pairing relay: the Host parks its invitation under an 8-digit code and
+// polls for the answer; the other PC fetches the invitation by that code and
+// posts its answer. The relay is optional: the long codes can still be
+// exchanged by hand, and a relay error leaves that path open.
+async function relay(method,path,body){
+ const res=await fetch(PAIR_RELAY+path,{method,headers:body?{'content-type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined,cache:'no-store'});
+ if(res.status===204)return null;
+ if(!res.ok)throw new Error(res.status===404?'pair-code-not-found':'relay-unavailable');
+ return res.json();
+}
+let pairPoll=0;
+function stopPairPoll(){clearInterval(pairPoll);pairPoll=0;}
+function forgetPairCode(){const code=peerState.pairCode;if(code)void relay('DELETE','/'+code).catch(()=>{});}
+function startPairPoll(code){
+ stopPairPoll();
+ pairPoll=setInterval(async()=>{
+  if(peerState.pairCode!==code||peerState.phase!=='waiting-answer'){stopPairPoll();return;}
+  try{const got=await relay('GET','/'+code+'/answer');if(got?.answer){stopPairPoll();await pairing('peerAnswer',got.answer);}}catch{}
+ },2000);
+}
+const peer=new globalThis.MayakPeer({onState:next=>{peerState={...peerState,...next,busy:false};if(next.phase==='connected'){peerState.code='';stopPairPoll();forgetPairCode();clearTimeout(expiry);}update();},onMessage:message=>void display(message,true)});
+function closePeer(){stopPairPoll();forgetPairCode();clearTimeout(expiry);invite=null;peer.close();peerState={phase:'idle'};update();}
 async function pairing(type,data){
  if(peerState.busy)return snapshot();
  if(type==='peerClose'){closePeer();return snapshot();}
  if(type==='peerCopy'){await Clipboard.SetText(peerState.code||'');return snapshot();}
- peerState={...peerState,busy:true,phase:type==='peerAnswer'?'connecting':'gathering',code:''};update();
+ if(type==='peerCopyPair'){await Clipboard.SetText(peerState.pairCode||'');return snapshot();}
+ const pairCode=type==='peerAnswer'?peerState.pairCode||'':'';
+ peerState={...peerState,busy:true,phase:type==='peerAnswer'?'connecting':'gathering',code:'',pairCode,relayError:''};update();
  try{
   if(type==='peerInvite'){
    if(platform!=='windows'||state.connection.mode!=='local')throw new Error('host-required');
    const sdp=await peer.offer({iceServers:iceServers(state.connection.stun)});
    invite={version:1,type:'offer',id:randomUUID(),createdAt:Date.now(),sdp};
    peerState={role:'sender',phase:'waiting-answer',code:encode(invite)};
+   try{const posted=await relay('POST','',{invite:peerState.code});peerState.pairCode=posted.code;startPairPoll(posted.code);}
+   catch(e){peerState.relayError=String(e?.message||e);}
+  }else if(type==='peerJoin'){
+   if(state.connection.mode!=='webrtc')throw new Error('receiver-required');
+   const digits=String(data||'').replace(/\D/g,'');if(digits.length!==8)throw new Error('pair-code-invalid');
+   const fetched=await relay('GET','/'+digits);const offer=decode(fetched?.invite);if(offer.type!=='offer')throw new Error('offer-required');
+   const sdp=await peer.answer({iceServers:iceServers(state.connection.stun),sdp:offer.sdp});
+   const answer=encode({...offer,type:'answer',sdp});await relay('PUT','/'+digits,{answer});
+   invite=offer;peerState={role:'receiver',phase:'waiting-host',code:answer,pairCode:digits};
   }else if(type==='peerAccept'){
    if(state.connection.mode!=='webrtc')throw new Error('receiver-required');
    const offer=decode(data);if(offer.type!=='offer')throw new Error('offer-required');
@@ -216,10 +247,10 @@ async function pairing(type,data){
    invite=offer;peerState={role:'receiver',phase:'waiting-host',code:encode({...offer,type:'answer',sdp})};
   }else if(type==='peerAnswer'){
    const answer=decode(data);if(!invite||answer.type!=='answer'||answer.id!==invite.id||answer.createdAt!==invite.createdAt)throw new Error('answer-mismatch');
-   await peer.acceptAnswer({sdp:answer.sdp});peerState={role:'sender',phase:'connecting'};
+   await peer.acceptAnswer({sdp:answer.sdp});peerState={role:'sender',phase:'connecting',pairCode};
   }
   clearTimeout(expiry);if(invite)expiry=setTimeout(()=>{if(peerState.phase!=='connected'){peer.close();peerState={phase:'failed',reason:'invite-expired'};update();}},Math.max(0,600000-(Date.now()-invite.createdAt)));
- }catch(e){peer.close();peerState={phase:'failed'};messageError(e);}
+ }catch(e){stopPairPoll();peer.close();peerState={phase:'failed'};messageError(e);}
  update();return snapshot();
 }
 const ready=(async()=>{

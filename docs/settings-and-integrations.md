@@ -279,12 +279,14 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 
 ### WebRTC ペアリング
 
-`frontend/src/browser/peer-code.js` と `transport.js` が担当します。シグナリングサーバーは使わず、コードを手動で交換します。
+`frontend/src/browser/peer-code.js` と `transport.js` が担当します。offer と answer の交換は、既定では 8 桁の接続コードで `https://mayak.ich.sh/api/pair`（`site/worker/index.js`、コードごとの Durable Object）を経由し、手動でも交換できます。
 
-1. Host（`local`）が「招待コードを作成」を押すと、offer を作成して ICE の収集（最大 10 秒）を待ちます。
-2. 招待コードを受信側に渡します。コードの形式は `MAYAK1.` + base64url(JSON `{version:1,type,id,createdAt,sdp}`) です。
-3. 受信側（`webrtc`）が招待コードを貼り付けて応答コードを作成し、Host に返します。
-4. Host が応答コードを貼り付けると接続します。応答の `id` と `createdAt` は招待と一致している必要があります。
+1. Host（`local`）が「接続コードを発行」を押すと、offer を作成して ICE の収集（最大 10 秒）を待ち、招待コードを `POST /api/pair` に預けて 8 桁の接続コードを受け取ります。以後 2 秒ごとに `GET /api/pair/<code>/answer` で応答を待ちます（`peerInvite`）。
+2. 受信側（`webrtc`）は接続コードを入力します。`GET /api/pair/<code>` で招待コードを取り、応答コードを作って `PUT /api/pair/<code>` に置きます（`peerJoin`）。
+3. Host が応答を受け取ると `peerAnswer` と同じ手順で接続し、`DELETE /api/pair/<code>` で中継を消します。中継が使えないとき（`relayError`）や「コードを手動で交換する」を開いたときは、従来どおり招待コードと応答コードをコピーして渡します（`peerAccept` → `peerAnswer`）。
+4. コードの形式は `MAYAK1.` + base64url(JSON `{version:1,type,id,createdAt,sdp}`) です。応答の `id` と `createdAt` は招待と一致している必要があります。
+
+- **中継サーバー**: 招待と応答の文字列だけを、接続コードごとに 10 分間保持します（`MAYAK1.` で始まる 100000 文字以内のものだけ受け付け、応答は一度だけ）。接続の中身は通りません。8 桁は総当たりに強くはないので、10 分の有効期限と「先に届いた応答を受け付ける」以上の保護はありません。
 
 - **期限**: 招待コードは 10 分で失効します。接続の待ち時間は、送信側が 45 秒、受信側が 120 秒です。
 - **検証**: SDP は `m=application` のみを許可し、sha-256 fingerprint を必須とします。音声・映像の m 行と relay 候補を含むものは拒否します。コードの長さは 100000 文字までです。
