@@ -18,7 +18,7 @@ export function Footer() {
           <a href={`https://github.com/${REPOSITORY}/issues`} rel="noopener" className="hover:text-foreground">
             {t.footer.issues}
           </a>
-          <a href="/license.html" className="hover:text-foreground">
+          <a href="/license" className="hover:text-foreground">
             {t.footer.licensePage}
           </a>
           <a href="https://tarkov.dev/" rel="noopener" className="hover:text-foreground">

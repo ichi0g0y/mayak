@@ -91,7 +91,7 @@ const ja = {
     ],
   },
   license: {
-    kicker: '// 06  LICENSE & CREDITS',
+    kicker: '// LICENSE & CREDITS',
     title: 'ライセンスとクレジット',
     lead: 'MAYAK はフリーソフトウェアです。使っているデータとソフトウェアの出典も示します。',
     appTitle: 'MAYAK — GNU General Public License v3.0',
@@ -206,7 +206,7 @@ const en: Messages = {
     ],
   },
   license: {
-    kicker: '// 06  LICENSE & CREDITS',
+    kicker: '// LICENSE & CREDITS',
     title: 'License and credits',
     lead: 'MAYAK is free software. The data and software it builds on are credited here.',
     appTitle: 'MAYAK — GNU General Public License v3.0',
