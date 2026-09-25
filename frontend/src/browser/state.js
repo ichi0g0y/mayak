@@ -63,10 +63,12 @@ function restoreItemPanel(raw){
 // The sidebar can be resized between these widths (logical pixels).
 const sidebarWidths={min:180,max:420,default:224};
 const clampSidebar=value=>Number.isFinite(value)?Math.round(Math.min(sidebarWidths.max,Math.max(sidebarWidths.min,value))):sidebarWidths.default;
-function defaults() { return {version:1,bookmarkRevision,language:'ja',clock:'24',layout:'vertical',sidebarSide:'left',sidebarCollapsed:false,bookmarksCollapsed:false,screenshotsCollapsed:false,bossesView:'full',bossMap:'',bossMode:'',sidebarWidth:224,itemPanelWidth:320,itemPanelHeight:280,itemDock:'right',itemPanel:{open:false,id:'',mode:''},favicons:{},bookmarkView:'grid',theme:'mayak-dark',adblock:true,taskMode:'new',questSite:'host',connection:{mode:'local',stun:DEFAULT_STUN},bookmarks:structuredClone(defaultBookmarks),tabs:[mapTab(),trackerTab(),{id:'settings',kind:'settings'}],active:mapTabID}; }
+function defaults() { return {version:1,bookmarkRevision,language:'ja',tutorialDone:false,clock:'24',layout:'vertical',sidebarSide:'left',sidebarCollapsed:false,bookmarksCollapsed:false,screenshotsCollapsed:false,bossesView:'full',bossMap:'',bossMode:'',sidebarWidth:224,itemPanelWidth:320,itemPanelHeight:280,itemDock:'right',itemPanel:{open:false,id:'',mode:''},favicons:{},bookmarkView:'grid',theme:'mayak-dark',adblock:true,taskMode:'new',questSite:'host',connection:{mode:'local',stun:DEFAULT_STUN},bookmarks:structuredClone(defaultBookmarks),tabs:[mapTab(),trackerTab(),{id:'settings',kind:'settings'}],active:mapTabID}; }
 function restore(raw={}) {
   const state=defaults();
   state.bookmarkRevision=bookmarkRevision;
+  // The first-run tutorial (shell.js) shows until it is finished or skipped.
+  state.tutorialDone=raw.tutorialDone===true;
   state.language=raw.language==='en'?'en':'ja'; state.layout=raw.layout==='horizontal'?'horizontal':'vertical';state.sidebarSide=raw.sidebarSide==='right'?'right':'left';
   // The settings choose the tab sidebar's place in one: left, right or top.
   if(['left','right','top'].includes(raw.navPosition)){state.layout=raw.navPosition==='top'?'horizontal':'vertical';if(raw.navPosition!=='top')state.sidebarSide=raw.navPosition;}
@@ -193,6 +195,6 @@ function goHome(state,id) {
 function openLocal(state,kind) {let tab=state.tabs.find(t=>t.kind===kind);if(!tab){tab={id:randomUUID(),kind};state.tabs.push(tab);}state.active=tab.id;return tab;}
 // Settings sections: the browser's own, then the Host's (its settings page in a
 // frame, which shows the section named in its URL hash).
-const browserSections=['appearance','tasks','adblock','connection'];
+const browserSections=['appearance','tasks','adblock','connection','about'];
 const hostSections=['status','logs','folders','recognition','remote','tracker','sounds','startup','debug'];
 export {browserSections,hostSections,randomUUID,mapTabID,trackerTabID,themes,bookmarkGroups,bookmarkGroup,rememberFavicon,hostname,sidebarWidths,clampSidebar,defaults,restore,webURL,pageURL,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,sites};

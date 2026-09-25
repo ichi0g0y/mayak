@@ -7,6 +7,9 @@ import './transport.js';
 
 let state,go,platform,returnTo='',remoteID='',host=null,hostQuestSite='tarkov-dev',popup=null,item=null,restoredItem=null,itemOpen=false,itemSearch={query:'',results:[]},searchSeq=0,itemBusy=false,itemHistory=null,notify=()=>{},focusAddress=()=>{},section='appearance',error='',peerState={phase:'idle'},invite=null;
 let queue=Promise.resolve(),nativeQueue=Promise.resolve(),expiry;
+// While the shell shows an overlay (the tutorial), the native page views stay
+// hidden whatever else asks to show them; closing it shows the active tab again.
+let overlay=false;
 const views=new Map();
 // Tabs whose page is loading, by view ID (not saved).
 const loadingViews=new Set();
@@ -85,7 +88,7 @@ async function openPopup(next){
 }
 async function show(){
  const tab=state.tabs.find(t=>t.id===state.active);
- if(tab?.kind!=='web'){await native('hideAll',{id:'shell'});return;}
+ if(overlay||tab?.kind!=='web'){await native('hideAll',{id:'shell'});return;}
  const previous=views.get(tab.id);
  await native('show',{id:tab.id,url:viewURL(tab),...bounds(tab),background:pageBackground()});
  if(previous&&previous!==tab.url)await native('navigate',{id:tab.id,url:viewURL(tab)});
@@ -97,8 +100,8 @@ async function persist(){
  // Until a restored item has loaded, the saved one is kept.
  const shown=item||restoredItem;
  const itemPanel={open:itemOpen,id:shown?.id||'',mode:shown?.mode||''};
- const {version,bookmarkRevision,language,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,bookmarkView,favicons,theme,adblock,taskMode,questSite,bookmarks,tabs,active}=state;
- await go.BrowserSave(JSON.stringify({version,bookmarkRevision,language,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,itemPanel,bookmarkView,favicons,theme,adblock,taskMode,questSite,bookmarks,tabs,active,connection:{mode:state.connection.mode,stun:state.connection.stun}}));
+ const {version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,bookmarkView,favicons,theme,adblock,taskMode,questSite,bookmarks,tabs,active}=state;
+ await go.BrowserSave(JSON.stringify({version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,itemPanel,bookmarkView,favicons,theme,adblock,taskMode,questSite,bookmarks,tabs,active,connection:{mode:state.connection.mode,stun:state.connection.stun}}));
 }
 async function changed(){update();await persist();void show().catch(messageError);}
 function enqueue(fn){const result=queue.then(fn);queue=result.catch(messageError);return result.catch(()=>snapshot());}
@@ -332,7 +335,7 @@ async function perform(type,data){
  case 'home':goHome(state,tab?.id);break;
  case 'bookmarkTab':bookmarkTab(state,data?.id,data?.before??null);break;
  // A shell menu that reaches over the page hides the native page view meanwhile.
- case 'overlay':if(data)await native('hideAll',{id:'shell'});else await show();return snapshot();
+ case 'overlay':overlay=!!data;await show();return snapshot();
  case 'sidebarWidth':state.sidebarWidth=clampSidebar(data);await show();return snapshot();
  case 'itemPanelWidth':state.itemPanelWidth=clampItemPanel(data);await show();return snapshot();
  case 'itemPanelHeight':state.itemPanelHeight=clampItemPanelHeight(data);await show();return snapshot();
@@ -354,7 +357,7 @@ async function perform(type,data){
  case 'pin':togglePin(state,data);break;
  case 'move':moveTab(state,data?.id,data?.before??null);break;
  case 'preferences':{
-  const next=restore({...state,...data});state.language=next.language;state.layout=next.layout;state.sidebarSide=next.sidebarSide;state.theme=next.theme;state.clock=next.clock;state.sidebarCollapsed=next.sidebarCollapsed;state.bookmarksCollapsed=next.bookmarksCollapsed;state.screenshotsCollapsed=next.screenshotsCollapsed;state.bossesView=next.bossesView;state.bossMap=next.bossMap;state.bossMode=next.bossMode;if(data&&'bossMode' in data)void loadBosses();if(data&&'language' in data)void loadBosses();state.sidebarWidth=next.sidebarWidth;state.itemPanelWidth=next.itemPanelWidth;state.itemPanelHeight=next.itemPanelHeight;state.itemDock=next.itemDock;state.bookmarkView=next.bookmarkView;state.taskMode=next.taskMode;state.questSite=next.questSite;
+  const next=restore({...state,...data});state.language=next.language;state.tutorialDone=next.tutorialDone;state.layout=next.layout;state.sidebarSide=next.sidebarSide;state.theme=next.theme;state.clock=next.clock;state.sidebarCollapsed=next.sidebarCollapsed;state.bookmarksCollapsed=next.bookmarksCollapsed;state.screenshotsCollapsed=next.screenshotsCollapsed;state.bossesView=next.bossesView;state.bossMap=next.bossMap;state.bossMode=next.bossMode;if(data&&'bossMode' in data)void loadBosses();if(data&&'language' in data)void loadBosses();state.sidebarWidth=next.sidebarWidth;state.itemPanelWidth=next.itemPanelWidth;state.itemPanelHeight=next.itemPanelHeight;state.itemDock=next.itemDock;state.bookmarkView=next.bookmarkView;state.taskMode=next.taskMode;state.questSite=next.questSite;
   // Blocking applies to new requests; reload so the visible page matches the setting.
   if(next.adblock!==state.adblock){state.adblock=next.adblock;await go.BrowserSetAdblock(state.adblock);if(tab?.kind==='web')await native('reload',{id:tab.id});}
   break;

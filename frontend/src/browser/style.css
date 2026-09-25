@@ -315,7 +315,8 @@ body[data-sidebar=collapsed] .layout-dock{flex-direction:column;justify-content:
 .item-titlebar{flex:none;height:48px;display:flex;align-items:center;gap:2px;padding:0 10px;--wails-draggable:drag}
 .item-titlebar .item-button{align-self:center;width:30px;height:30px}
 .item-titlebar .item-button.selected{background:var(--selected);color:var(--text)}
-.item-body{flex:1;min-height:0;overflow:auto;padding:4px 16px 20px;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
+/* The thin scrollbar takes 11px of the right side; the padding keeps both text edges 16px in. */
+.item-body{flex:1;min-height:0;overflow:auto;padding:4px 5px 20px 16px;scrollbar-width:thin;scrollbar-gutter:stable;scrollbar-color:var(--border-strong) transparent}
 [data-layout=horizontal] .item-panel{top:48px}
 body[data-nav=right][data-item=right] .item-panel{top:48px;right:var(--sidebar-width)}
 body[data-item=left] .item-panel{right:auto;left:var(--nav-left);box-shadow:inset -1px 0 var(--border)}
@@ -660,3 +661,30 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .section-actions{display:flex;align-items:center;gap:2px}
 [data-layout=horizontal] .section-actions{display:contents}
 [data-layout=horizontal] .goon-report-open,body[data-sidebar=collapsed] .goon-report-open{display:none}
+/* The first-run tutorial overlay (shell.js). It has no entrance animation:
+   while a web tab is active the shell's animations do not advance, and a
+   fade-in stayed frozen on its first, transparent frame. */
+.tutorial-backdrop{position:fixed;inset:0;z-index:60;background:color-mix(in srgb,var(--bg) 72%,transparent)}
+.tutorial{position:fixed;z-index:61;isolation:isolate;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 40px));max-height:calc(100vh - 40px);overflow:auto;padding:22px 26px 20px;border:1px solid var(--border-strong);border-radius:14px;background:var(--raised);color:var(--text);box-shadow:0 20px 60px var(--shadow)}
+.tutorial-kicker{margin:0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tutorial h2{margin:6px 0 10px;font-size:18px;line-height:1.35}
+.tutorial p{margin:0 0 10px;font-size:13px;line-height:1.65}
+.tutorial p.hint{color:var(--muted)}
+.tutorial>button{display:inline-flex;align-items:center;gap:8px;margin-top:4px}
+.tutorial>button .icon{width:16px;height:16px}
+.tutorial-status{display:grid;gap:6px;margin:12px 0;padding:10px 12px;border-radius:10px;background:var(--surface-2);font-size:12px}
+.tutorial-status code{font:12px ui-monospace,"Cascadia Code",Consolas,monospace;overflow-wrap:anywhere}
+.tutorial-steps{display:flex;gap:6px;margin:18px 0 4px}
+.tutorial-steps i{width:8px;height:8px;border-radius:50%;background:var(--border-strong)}
+.tutorial-steps i.on{background:var(--accent)}
+.tutorial-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:14px}
+.tutorial-actions div{display:flex;gap:8px}
+/* About section. */
+.about-head{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.about-head img{width:56px;height:56px;border-radius:14px}
+.about-head h2{margin:0;font-size:20px;letter-spacing:.04em}
+.about-version{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
+.about>p{margin:0 0 12px;font-size:13px;line-height:1.65}
+.about-links{display:flex;flex-wrap:wrap;gap:8px}
+.about-links button{display:inline-flex;align-items:center;gap:8px}
+.about-links button .icon{width:16px;height:16px}

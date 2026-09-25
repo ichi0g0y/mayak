@@ -54,6 +54,9 @@ func updateStagingDir() string {
 
 func (a *App) updateClient() *update.Client { return update.NewClient(version.UserAgent()) }
 
+// GetVersion is the running build's version, empty in development.
+func (a *App) GetVersion() string { return version.Current() }
+
 // GetUpdateStatus returns the update's state for the settings page.
 func (a *App) GetUpdateStatus() model.UpdateStatus {
 	a.update.mu.Lock()

@@ -69,6 +69,11 @@ func init() {
 	})
 }
 
+// resizeHandle is the strip, in CSS pixels, kept free of the page views along
+// the right and bottom edges so the shell can resize the frameless window
+// there; shell.js gives the Wails runtime the same width.
+const resizeHandle = 8
+
 func (m *Manager) resize() {
 	dpi := w32.GetDpiForWindow(w32.HWND(m.native.hwnd))
 	if dpi == 0 {
@@ -87,10 +92,10 @@ func (m *Manager) place(v *nativeView, dpi uint) {
 	}
 	left, top := v.options.Left*int(dpi)/96, v.options.Top*int(dpi)/96
 	// The window is frameless and the shell resizes it from its edges, so leave
-	// the resize border free on the right and bottom unless maximised.
+	// the resize strip free on the right and bottom unless maximised.
 	border := 0
 	if !w32.IsZoomed(w32.HWND(m.native.hwnd)) {
-		border = (w32.GetSystemMetrics(w32.SM_CXSIZEFRAME) + 1) * int(dpi) / 96
+		border = resizeHandle * int(dpi) / 96
 	}
 	right, bottom := max(border, v.options.Right*int(dpi)/96), max(border, v.options.Bottom*int(dpi)/96)
 	width, height := max(0, int(bounds.Right)-left-right), max(0, int(bounds.Bottom)-top-bottom)

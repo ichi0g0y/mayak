@@ -279,6 +279,13 @@ export function GetUpdateStatus(): $CancellablePromise<model$0.UpdateStatus> {
     });
 }
 
+/**
+ * GetVersion is the running build's version, empty in development.
+ */
+export function GetVersion(): $CancellablePromise<string> {
+    return $Call.ByID(3467524218);
+}
+
 export function ImportTrackerToken(token: string): $CancellablePromise<void> {
     return $Call.ByID(3326162070, token);
 }
