@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAtom } from 'jotai'
-import { ExternalLink, Languages } from 'lucide-react'
+import { ExternalLink, Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/i18n'
 import { langAtom, REPOSITORY } from '@/state'
@@ -49,9 +49,8 @@ export function Header({ home = true }: { home?: boolean }) {
             <ExternalLink className="size-3.5" />
           </a>
         </nav>
-        <Button variant="outline" size="sm" className="bg-transparent" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')} aria-label="Switch language">
-          <Languages />
-          {t.nav.lang}
+        <Button variant="ghost" size="icon" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')} aria-label={t.nav.lang} title={t.nav.lang}>
+          <Globe className="size-5" />
         </Button>
       </div>
     </header>
