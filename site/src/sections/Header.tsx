@@ -1,12 +1,22 @@
+import { useEffect, useState } from 'react'
 import { useAtom } from 'jotai'
 import { ExternalLink, Languages } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/i18n'
 import { langAtom, REPOSITORY } from '@/state'
+import { cn } from '@/lib/utils'
 
 export function Header() {
   const t = useT()
   const [lang, setLang] = useAtom(langAtom)
+  // Transparent over the hero, solid once the page scrolls.
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
   const links: [string, string][] = [
     ['#features', t.nav.features],
     ['#start', t.nav.start],
@@ -16,9 +26,9 @@ export function Header() {
     ['#license', t.nav.license],
   ]
   return (
-    <header className="bg-background/80 sticky top-0 z-20 border-b backdrop-blur">
+    <header className={cn('fixed inset-x-0 top-0 z-20 transition-colors duration-300', scrolled ? 'bg-background/85 border-b backdrop-blur' : 'border-b border-transparent')}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <a href="#" className="flex items-center gap-2.5">
+        <a href="#" className={cn('flex items-center gap-2.5 transition-opacity duration-300', scrolled ? 'opacity-100' : 'opacity-0')} aria-hidden={!scrolled}>
           <img src="/assets/mayak-logo-white.png" alt="" width={36} height={36} className="size-9" />
           <span className="font-display text-primary text-lg tracking-[0.2em]">MAYAK</span>
         </a>
@@ -37,7 +47,7 @@ export function Header() {
             <ExternalLink className="size-3.5" />
           </a>
         </nav>
-        <Button variant="outline" size="sm" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')} aria-label="Switch language">
+        <Button variant="outline" size="sm" className="bg-transparent" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')} aria-label="Switch language">
           <Languages />
           {t.nav.lang}
         </Button>

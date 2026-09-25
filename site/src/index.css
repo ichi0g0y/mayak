@@ -1,29 +1,29 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* shadcn/ui tokens, dark only: charcoal and olive with the khaki of the
-   mark as the primary colour and a rust accent for highlights. */
+/* shadcn/ui tokens: near-black, with the khaki of the mark as the primary
+   colour and a rust accent for warnings. */
 :root {
-  --background: oklch(0.17 0.008 120);
-  --foreground: oklch(0.93 0.015 95);
-  --card: oklch(0.21 0.009 120);
-  --card-foreground: oklch(0.93 0.015 95);
-  --popover: oklch(0.21 0.009 120);
-  --popover-foreground: oklch(0.93 0.015 95);
-  --primary: oklch(0.82 0.04 95);
-  --primary-foreground: oklch(0.2 0.02 100);
-  --secondary: oklch(0.27 0.01 120);
-  --secondary-foreground: oklch(0.93 0.015 95);
-  --muted: oklch(0.27 0.01 120);
-  --muted-foreground: oklch(0.68 0.015 95);
-  --accent: oklch(0.3 0.012 120);
-  --accent-foreground: oklch(0.93 0.015 95);
+  --background: oklch(0.08 0 0);
+  --foreground: oklch(0.93 0.012 95);
+  --card: oklch(0.13 0.004 100);
+  --card-foreground: oklch(0.93 0.012 95);
+  --popover: oklch(0.13 0.004 100);
+  --popover-foreground: oklch(0.93 0.012 95);
+  --primary: oklch(0.83 0.04 95);
+  --primary-foreground: oklch(0.15 0.015 100);
+  --secondary: oklch(0.2 0.005 100);
+  --secondary-foreground: oklch(0.93 0.012 95);
+  --muted: oklch(0.2 0.005 100);
+  --muted-foreground: oklch(0.66 0.012 95);
+  --accent: oklch(0.22 0.006 100);
+  --accent-foreground: oklch(0.93 0.012 95);
   --destructive: oklch(0.6 0.16 30);
-  --border: oklch(0.32 0.012 110);
-  --input: oklch(0.32 0.012 110);
-  --ring: oklch(0.82 0.04 95 / 0.6);
-  --rust: oklch(0.62 0.15 40);
-  --olive: oklch(0.55 0.06 120);
+  --border: oklch(0.24 0.006 100);
+  --input: oklch(0.24 0.006 100);
+  --ring: oklch(0.83 0.04 95 / 0.6);
+  --rust: oklch(0.65 0.15 40);
+  --olive: oklch(0.6 0.06 120);
   --radius: 0.5rem;
 }
 
@@ -77,11 +77,10 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background-image:
-      radial-gradient(900px 500px at 50% -10%, oklch(0.82 0.04 95 / 0.09), transparent 70%),
-      linear-gradient(oklch(1 0 0 / 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, oklch(1 0 0 / 0.025) 1px, transparent 1px);
-    background-size: auto, 48px 48px, 48px 48px;
+  }
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
   }
 }
 
@@ -90,7 +89,7 @@
 }
 @utility font-label {
   font-family: var(--font-label);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -105,8 +104,9 @@
     height: 14px;
     border-color: var(--primary);
     border-style: solid;
-    opacity: 0.7;
+    opacity: 0.6;
     pointer-events: none;
+    transition: opacity 0.3s;
   }
   &::before {
     top: -1px;
@@ -118,9 +118,81 @@
     right: -1px;
     border-width: 0 2px 2px 0;
   }
+  &:hover::before,
+  &:hover::after {
+    opacity: 1;
+  }
 }
 
-/* A faint scanline sweep behind the hero. */
-@utility scanlines {
-  background-image: repeating-linear-gradient(0deg, transparent 0 3px, oklch(1 0 0 / 0.02) 3px 4px);
+/* Film grain over the whole page. */
+@utility grain {
+  &::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+/* The lighthouse beam behind the hero logo: a slow sweep, faded at the edges. */
+@utility beam {
+  position: absolute;
+  inset: -40%;
+  pointer-events: none;
+  background: conic-gradient(from 0deg, transparent 0deg 300deg, oklch(0.83 0.04 95 / 0.22) 340deg, oklch(0.83 0.04 95 / 0.32) 352deg, transparent 360deg);
+  mask-image: radial-gradient(closest-side, black 20%, transparent 72%);
+  animation: sweep 14s linear infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+@keyframes sweep {
+  to { transform: rotate(360deg); }
+}
+
+/* The hero fades and shrinks as the page scrolls past it (where scroll
+   timelines exist; elsewhere it just scrolls away). */
+@utility hero-fade {
+  @supports (animation-timeline: scroll()) {
+    animation: hero-fade linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 90vh;
+  }
+}
+@keyframes hero-fade {
+  to { opacity: 0; transform: translateY(-40px) scale(0.96); }
+}
+
+/* Scroll reveal (components/Reveal.tsx). */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* The scroll cue at the bottom of the hero. */
+@keyframes nudge {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(8px); opacity: 1; }
+}
+@utility nudge {
+  animation: nudge 1.8s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }

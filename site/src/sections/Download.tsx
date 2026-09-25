@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useT } from '@/i18n'
 import { ARCHIVES, findAsset, formatSize, platformAtom, RELEASES_URL, releaseLoadableAtom, type Asset, type Platform } from '@/state'
 import { cn } from '@/lib/utils'
+import { Reveal } from '@/components/Reveal'
 import { Section } from './Section'
 
 function AssetButton({ asset, label, primary }: { asset: Asset | undefined; label: string; primary?: boolean }) {
@@ -59,7 +60,8 @@ export function Download() {
           const Icon = card.icon
           const primary = card.key === platform
           return (
-            <Card key={card.key} className={cn('bg-card/70', primary && 'bracket border-primary/50')}>
+            <Reveal key={card.key} delay={cards.indexOf(card) * 80}>
+            <Card className={cn('bg-card/80 h-full', primary && 'bracket border-primary/50')}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <Icon className="text-primary size-6" />
@@ -75,6 +77,7 @@ export function Download() {
                 ))}
               </CardContent>
             </Card>
+            </Reveal>
           )
         })}
       </div>
