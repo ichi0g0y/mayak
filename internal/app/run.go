@@ -19,6 +19,7 @@ import (
 // and icon is the tray icon (build/appicon.png).
 func Run(assets fs.FS, icon []byte) error {
 	trayIcon = icon
+	raisePriority()
 	// After an update, the version being replaced is still quitting: wait for
 	// it (the app runs as a single instance), then drop the files it kept.
 	restarted := update.WaitForPreviousInstance(30 * time.Second)
