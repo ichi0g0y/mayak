@@ -54,17 +54,55 @@ func (r Release) Asset(name string) (Asset, bool) {
 	return Asset{}, false
 }
 
-// ArchiveName is the release asset built for an OS and CPU:
-// Mayak-windows-amd64.zip, Mayak-darwin-arm64.tar.gz, Mayak-linux-amd64.tar.gz.
-func ArchiveName(goos, goarch string) string {
-	if goos == "windows" {
-		return "Mayak-" + goos + "-" + goarch + ".zip"
+// versionLabel is the version as it appears in asset names: the tag without
+// its "v" (0.1.6, or 0.1.5-3-g1a2b3c4 for a build between tags).
+func versionLabel(version string) string {
+	label := strings.TrimPrefix(strings.TrimSpace(version), "v")
+	if label == "" {
+		return "0.0.0"
 	}
-	return "Mayak-" + goos + "-" + goarch + ".tar.gz"
+	return label
+}
+
+func archiveExt(goos string) string {
+	if goos == "windows" {
+		return ".zip"
+	}
+	return ".tar.gz"
+}
+
+// ArchiveName is the release archive built for an OS and CPU:
+// Mayak-0.1.6-windows-amd64.zip, Mayak-0.1.6-darwin-arm64.tar.gz.
+func ArchiveName(version, goos, goarch string) string {
+	return "Mayak-" + versionLabel(version) + "-" + goos + "-" + goarch + archiveExt(goos)
+}
+
+// InstallerName is the Windows installer: Mayak-Setup-0.1.6-windows-amd64.exe.
+func InstallerName(version string) string {
+	return "Mayak-Setup-" + versionLabel(version) + "-windows-amd64.exe"
+}
+
+// ImageName is the macOS disk image: Mayak-0.1.6-darwin-arm64.dmg.
+func ImageName(version, goarch string) string {
+	return "Mayak-" + versionLabel(version) + "-darwin-" + goarch + ".dmg"
+}
+
+// IsArchive reports whether name is the archive for an OS and CPU, whatever
+// version it carries; releases before 0.1.6 named it without one.
+func IsArchive(name, goos, goarch string) bool {
+	return strings.HasPrefix(name, "Mayak-") && !strings.HasPrefix(name, "Mayak-Setup-") &&
+		strings.HasSuffix(name, "-"+goos+"-"+goarch+archiveExt(goos))
 }
 
 // Archive returns the release's archive for this OS and CPU.
-func (r Release) Archive() (Asset, bool) { return r.Asset(ArchiveName(runtime.GOOS, runtime.GOARCH)) }
+func (r Release) Archive() (Asset, bool) {
+	for _, asset := range r.Assets {
+		if IsArchive(asset.Name, runtime.GOOS, runtime.GOARCH) {
+			return asset, true
+		}
+	}
+	return Asset{}, false
+}
 
 // Client reads releases from the GitHub API.
 type Client struct {

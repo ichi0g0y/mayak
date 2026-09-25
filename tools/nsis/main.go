@@ -53,7 +53,7 @@ func main() {
 		log.Fatal(err)
 	}
 	core, display := versions(*version)
-	target := filepath.Join(*out, "Mayak-Setup-windows-amd64.exe")
+	target := filepath.Join(*out, update.InstallerName(*version))
 	defines := map[string]string{
 		"VERSION":        core,
 		"VERSION4":       core + ".0",

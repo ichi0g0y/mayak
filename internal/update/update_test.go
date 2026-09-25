@@ -162,7 +162,7 @@ func TestStageFromServer(t *testing.T) {
 	} else {
 		archive = tarGzArchive(t, files)
 	}
-	name := ArchiveName(runtime.GOOS, runtime.GOARCH)
+	name := ArchiveName("v9.9.9", runtime.GOOS, runtime.GOARCH)
 	sum := sha256.Sum256(archive)
 	var server *httptest.Server
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -262,5 +262,34 @@ func TestWaitForPreviousInstance(t *testing.T) {
 	t.Setenv(waitEnv, "x")
 	if WaitForPreviousInstance(time.Second) {
 		t.Error("accepted a non-numeric pid")
+	}
+}
+
+func TestAssetNames(t *testing.T) {
+	if got := ArchiveName("v0.1.6", "windows", "amd64"); got != "Mayak-0.1.6-windows-amd64.zip" {
+		t.Fatalf("archive name %q", got)
+	}
+	if got := ArchiveName("v0.1.5-3-g1a2b3c4", "darwin", "arm64"); got != "Mayak-0.1.5-3-g1a2b3c4-darwin-arm64.tar.gz" {
+		t.Fatalf("archive name %q", got)
+	}
+	if got := InstallerName("v0.1.6"); got != "Mayak-Setup-0.1.6-windows-amd64.exe" {
+		t.Fatalf("installer name %q", got)
+	}
+	if got := ImageName("0.1.6", "amd64"); got != "Mayak-0.1.6-darwin-amd64.dmg" {
+		t.Fatalf("image name %q", got)
+	}
+	// Archives with and without a version in the name are both recognised;
+	// the installer and other platforms are not.
+	for name, want := range map[string]bool{
+		"Mayak-0.1.6-windows-amd64.zip": true, "Mayak-windows-amd64.zip": true,
+		"Mayak-Setup-0.1.6-windows-amd64.exe": false, "Mayak-0.1.6-linux-amd64.tar.gz": false, "SHA256SUMS.txt": false,
+	} {
+		if got := IsArchive(name, "windows", "amd64"); got != want {
+			t.Fatalf("IsArchive(%q) = %v", name, got)
+		}
+	}
+	release := Release{Assets: []Asset{{Name: "SHA256SUMS.txt"}, {Name: "Mayak-0.1.6-" + runtime.GOOS + "-" + runtime.GOARCH + archiveExt(runtime.GOOS)}}}
+	if asset, ok := release.Archive(); !ok || asset.Name != release.Assets[1].Name {
+		t.Fatalf("Archive() = %+v, %v", asset, ok)
 	}
 }

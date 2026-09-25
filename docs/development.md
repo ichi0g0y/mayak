@@ -100,7 +100,7 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `cmd/ocrharvest` | スクリーンショットから、複数エンジンの読みが一致したタイトル画像をラベル付きで収集 |
 | `tools/tessbundle` | UB Mannheim 版から同梱用 Tesseract ランタイムを作る（必要な DLL だけコピーし、デバッグ情報を除去） |
 | `tools/release` | `build/bin` をリリース用アーカイブ（`build/dist/Mayak-<os>-<arch>.zip` / `.tar.gz`）に固め、SHA-256 を書く。`build/dist` にインストーラーがあればその SHA-256 も書く（[リリース](#リリース)） |
-| `tools/nsis` | Windows のインストーラー（`build/windows/nsis/mayak.nsi`）を `build/dist/Mayak-Setup-windows-amd64.exe` に組む。`makensis` が無ければ NSIS の配布 zip をチェックサム検証付きで `build/nsis-cache` に一度だけ取得する |
+| `tools/nsis` | Windows のインストーラー（`build/windows/nsis/mayak.nsi`）を `build/dist/Mayak-Setup-<version>-windows-amd64.exe` に組む。`makensis` が無ければ NSIS の配布 zip をチェックサム検証付きで `build/nsis-cache` に一度だけ取得する |
 | `tools/ocrtrain` | Tesseract LSTM 学習データの生成（手順は `tools/ocrtrain/README.md` と [ocr-training.md](ocr-training.md)） |
 | `tools/capture-window.ps1` | MAYAK のウィンドウを PNG に保存する PowerShell スクリプト |
 
@@ -226,11 +226,11 @@ Wails 本体はフォークせず公式モジュールを使います。
 2. `v1.2.3` の形のタグを打って push します: `git tag -a v1.2.3 -m "MAYAK 1.2.3" && git push origin v1.2.3`
 3. `.github/workflows/release.yml` が Windows（amd64）、macOS（arm64、amd64）、Linux（amd64）で `task build VERSION=v1.2.3` と `task release:archive` を実行し（Windows では間に `task installer`。macOS では `release:archive` が `Mayak.app` を組んで ad-hoc 署名し、`hdiutil` で `Mayak-darwin-<arch>.dmg` も作る）、`SHA256SUMS.txt` を付けてリリースを公開します。リリースノートは GitHub が自動生成します。
 
-アーカイブの名前（`Mayak-windows-amd64.zip`、`Mayak-darwin-arm64.tar.gz`、`Mayak-darwin-amd64.tar.gz`、`Mayak-linux-amd64.tar.gz`）と `SHA256SUMS.txt` は `internal/update` が探すものなので変えないでください。Windows のアーカイブには `Mayak.exe`、`tesseract/`、`THIRD_PARTY_NOTICES.txt` が、ほかには `Mayak` と `THIRD_PARTY_NOTICES.txt` がルートに入ります。プレリリース（`prerelease` にチェック）とドラフトは「latest」に含まれないため、自動アップデートの対象になりません。
+アーカイブの名前（`Mayak-0.1.6-windows-amd64.zip`、`Mayak-0.1.6-darwin-arm64.tar.gz`、`Mayak-0.1.6-darwin-amd64.tar.gz`、`Mayak-0.1.6-linux-amd64.tar.gz`。バージョンは `internal/update` の `ArchiveName` が付け、更新側は `IsArchive` でバージョンを問わず OS と CPU の接尾辞で選ぶ）と `SHA256SUMS.txt` は `internal/update` が探すものなので変えないでください。Windows のアーカイブには `Mayak.exe`、`tesseract/`、`THIRD_PARTY_NOTICES.txt` が、ほかには `Mayak` と `THIRD_PARTY_NOTICES.txt` がルートに入ります。プレリリース（`prerelease` にチェック）とドラフトは「latest」に含まれないため、自動アップデートの対象になりません。
 
 ### Windows インストーラー
 
-`Mayak-Setup-windows-amd64.exe`（`build/windows/nsis/mayak.nsi`、NSIS 3）はランディングページが案内する主な配布物で、zip はポータブル版兼自動アップデート用です。インストーラーの動きは次のとおりです。
+`Mayak-Setup-<version>-windows-amd64.exe`（`build/windows/nsis/mayak.nsi`、NSIS 3）はランディングページが案内する主な配布物で、zip はポータブル版兼自動アップデート用です。インストーラーの動きは次のとおりです。
 
 - ユーザー単位（`%LOCALAPPDATA%\Programs\MAYAK`）にインストールし、管理者権限を求めません。このフォルダなら `internal/update` の差し替えがそのまま動きます。
 - 起動中の MAYAK は単一起動のミューテックス（`com.ichi0g0y.mayak-sim`）で検出し、終了を求めます。それでも残っていた `Mayak.exe` は上書きではなく `.mayak-old` に改名してから置きます（アプリが次回起動時に消します）。
@@ -240,7 +240,7 @@ Wails 本体はフォークせず公式モジュールを使います。
 - 表示言語は Windows の言語に従い、日本語と英語を用意しています。
 - 署名はありません。初回実行時に SmartScreen の警告が出ますが、インストール後の `Mayak.exe` にはインターネット由来の印が付かないため、以後の起動で警告は出ません。
 
-サイレント実行: `Mayak-Setup-windows-amd64.exe /S /D=C:\path`（`/D` は最後、引用符なし）、アンインストールは `uninstall.exe /S`。
+サイレント実行: `Mayak-Setup-0.1.6-windows-amd64.exe /S /D=C:\path`（`/D` は最後、引用符なし）、アンインストールは `uninstall.exe /S`。
 
 macOS／Linux のビルドは CI でコンパイルしているだけで、動作は検証していません（[プラットフォーム](#プラットフォーム)）。
 

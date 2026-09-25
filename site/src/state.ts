@@ -27,14 +27,14 @@ export const SPONSORS_URL = 'https://github.com/sponsors/ichi0g0y'
 export type Asset = { name: string; url: string; size: number }
 export type Release = { tag: string; version: string; name: string; url: string; publishedAt: string; assets: Asset[] }
 
-/** The installer and the archives the release workflow publishes. */
+/** The installer and the archives the release workflow publishes; the names carry the version (Mayak-Setup-0.1.6-windows-amd64.exe). */
 export const ARCHIVES = {
-  windowsInstaller: 'Mayak-Setup-windows-amd64.exe',
-  windows: 'Mayak-windows-amd64.zip',
-  macArm: 'Mayak-darwin-arm64.dmg',
-  macIntel: 'Mayak-darwin-amd64.dmg',
-  linux: 'Mayak-linux-amd64.tar.gz',
-  checksums: 'SHA256SUMS.txt',
+  windowsInstaller: /^Mayak-Setup-.*-windows-amd64\.exe$/,
+  windows: /^Mayak-.*-windows-amd64\.zip$/,
+  macArm: /^Mayak-.*-darwin-arm64\.dmg$/,
+  macIntel: /^Mayak-.*-darwin-amd64\.dmg$/,
+  linux: /^Mayak-.*-linux-amd64\.tar\.gz$/,
+  checksums: /^SHA256SUMS\.txt$/,
 } as const
 
 async function fetchLatest(): Promise<Release> {
@@ -69,9 +69,9 @@ releaseLoadableAtom.onMount = (set) => {
     .catch((error: unknown) => set({ state: 'hasError', error }))
 }
 
-/** The release asset of that name, when the release has loaded. */
-export function findAsset(release: Release | undefined, name: string): Asset | undefined {
-  return release?.assets.find((a) => a.name === name)
+/** The release asset whose name matches, when the release has loaded. */
+export function findAsset(release: Release | undefined, pattern: RegExp): Asset | undefined {
+  return release?.assets.find((a) => pattern.test(a.name))
 }
 
 export function formatSize(bytes: number): string {

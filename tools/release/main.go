@@ -1,6 +1,6 @@
 // Command release packs the built app (build/bin) into the archive a GitHub
 // release carries for this OS and CPU, named as internal/update expects
-// (Mayak-windows-amd64.zip, Mayak-darwin-arm64.tar.gz, ...), and writes its
+// (Mayak-0.1.6-windows-amd64.zip, Mayak-0.1.6-darwin-arm64.tar.gz, ...), and writes its
 // SHA-256 beside it. The release workflow joins those into SHA256SUMS.txt.
 //
 // Windows archives hold Mayak.exe, the bundled Tesseract runtime and the
@@ -38,7 +38,7 @@ func main() {
 	icon := flag.String("icon", "build/appicon.png", "the app icon, for the macOS bundle")
 	dmg := flag.Bool("dmg", true, "on macOS, also build Mayak.app and a disk image (needs hdiutil)")
 	flag.Parse()
-	name := update.ArchiveName(*goos, *goarch)
+	name := update.ArchiveName(*version, *goos, *goarch)
 	entries := []string{"THIRD_PARTY_NOTICES.txt"}
 	if *goos == "windows" {
 		entries = append(entries, "Mayak.exe", "tesseract")
@@ -74,7 +74,7 @@ func main() {
 			log.Fatal(err)
 		}
 		if *dmg {
-			image := filepath.Join(*out, "Mayak-darwin-"+*goarch+".dmg")
+			image := filepath.Join(*out, update.ImageName(*version, *goarch))
 			if err := buildDMG(staging, image); err != nil {
 				log.Fatal(err)
 			}

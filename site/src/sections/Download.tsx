@@ -60,7 +60,7 @@ export function Download() {
       body: t.download.linuxBody,
       steps: t.download.linuxSteps,
       untested: true,
-      links: [{ asset: findAsset(latest, ARCHIVES.linux), label: ARCHIVES.linux, primary: true }],
+      links: [{ asset: findAsset(latest, ARCHIVES.linux), label: findAsset(latest, ARCHIVES.linux)?.name ?? 'tar.gz', primary: true }],
     },
   ]
   const publishedAt = latest ? new Date(latest.publishedAt).toLocaleDateString(document.documentElement.lang === 'ja' ? 'ja-JP' : 'en-US') : ''

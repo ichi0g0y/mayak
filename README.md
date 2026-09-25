@@ -19,10 +19,10 @@ Get the latest release from [mayak.ich.sh](https://mayak.ich.sh) or the [release
 
 | Platform | File | Notes |
 | --- | --- | --- |
-| Windows 11 (64-bit; Windows 10 should work but is untested) | `Mayak-Setup-windows-amd64.exe` | Per-user installer, no administrator rights. SmartScreen warns once because the build is unsigned: **More info → Run anyway**. Updates are automatic afterwards. |
-| Windows, portable | `Mayak-windows-amd64.zip` | Unzip and run `Mayak.exe`. |
-| macOS (Apple Silicon / Intel) | `Mayak-darwin-arm64.dmg` / `Mayak-darwin-amd64.dmg` | Preview. Open the disk image and drag Mayak.app to Applications. Unsigned: right-click → Open the first time (or System Settings → Privacy & Security → Open Anyway). Receive-only client for maps and tasks. |
-| Linux (x86-64) | `Mayak-linux-amd64.tar.gz` | Preview. Receive-only client; needs WebKitGTK. |
+| Windows 11 (64-bit; Windows 10 should work but is untested) | `Mayak-Setup-x.y.z-windows-amd64.exe` | Per-user installer, no administrator rights. SmartScreen warns once because the build is unsigned: **More info → Run anyway**. Updates are automatic afterwards. |
+| Windows, portable | `Mayak-x.y.z-windows-amd64.zip` | Unzip and run `Mayak.exe`. |
+| macOS (Apple Silicon / Intel) | `Mayak-x.y.z-darwin-arm64.dmg` / `Mayak-x.y.z-darwin-amd64.dmg` | Preview. Open the disk image and drag Mayak.app to Applications. Unsigned: right-click → Open the first time (or System Settings → Privacy & Security → Open Anyway). Receive-only client for maps and tasks. |
+| Linux (x86-64) | `Mayak-x.y.z-linux-amd64.tar.gz` | Preview. Receive-only client; needs WebKitGTK. |
 
 `SHA256SUMS.txt` lists the checksum of every file. MAYAK checks GitHub Releases for a newer version at start and every 6 hours, downloads it in the background, verifies the checksum and installs it when it quits (Settings → Startup → Automatic updates).
 
@@ -63,7 +63,7 @@ cd mayak
 mise install
 task dev          # the app with hot reload
 task build        # build/bin/Mayak.exe
-task installer    # build/dist/Mayak-Setup-windows-amd64.exe
+task installer    # build/dist/Mayak-Setup-<version>-windows-amd64.exe
 task dev:web      # the landing page at http://127.0.0.1:5173
 go test ./...
 ```
