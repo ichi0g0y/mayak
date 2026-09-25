@@ -10,10 +10,33 @@
 // is deleted once the connection is made or when it expires. The relay
 // never sees the connection itself: after the exchange the PCs talk
 // directly, encrypted.
+//
+// /api/release hands the page the latest GitHub release, cached for five
+// minutes, so visitors do not each call api.github.com, whose anonymous
+// limit (60 requests an hour per IP) a shared or busy address exhausts.
+// An optional GITHUB_TOKEN secret raises that limit for the Worker itself.
 
 const TTL_MS = 10 * 60 * 1000;
 const MAX_BODY = 100000;
 const CODE_PREFIX = 'MAYAK1.';
+const RELEASE_API = 'https://api.github.com/repos/ichi0g0y/mayak/releases/latest';
+const RELEASE_TTL = 300;
+
+async function latestRelease(env) {
+  const headers = { accept: 'application/vnd.github+json', 'user-agent': 'mayak-site (https://mayak.ich.sh)' };
+  if (env.GITHUB_TOKEN) headers.authorization = `Bearer ${env.GITHUB_TOKEN}`;
+  const upstream = await fetch(RELEASE_API, { headers, cf: { cacheTtl: RELEASE_TTL, cacheEverything: true } });
+  if (!upstream.ok) return json({ error: 'github', status: upstream.status }, 502);
+  const data = await upstream.json();
+  const body = {
+    tag_name: data.tag_name,
+    name: data.name,
+    html_url: data.html_url,
+    published_at: data.published_at,
+    assets: (data.assets || []).map((a) => ({ name: a.name, browser_download_url: a.browser_download_url, size: a.size })),
+  };
+  return new Response(JSON.stringify(body), { status: 200, headers: { ...cors, 'content-type': 'application/json', 'cache-control': `public, max-age=${RELEASE_TTL}` } });
+}
 
 const cors = {
   'access-control-allow-origin': '*',
@@ -104,6 +127,7 @@ export default {
     const url = new URL(request.url);
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
     if (request.method === 'OPTIONS') return empty(204);
+    if (url.pathname === '/api/release') return request.method === 'GET' ? latestRelease(env) : json({ error: 'method' }, 405);
     const match = url.pathname.match(/^\/api\/pair(?:\/(\d{8})(\/answer)?)?$/);
     if (!match) return json({ error: 'not-found' }, 404);
     const [, code] = match;

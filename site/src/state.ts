@@ -37,10 +37,14 @@ export const ARCHIVES = {
   checksums: /^SHA256SUMS\.txt$/,
 } as const
 
+/** The latest release: from the site's own Worker (cached, so visitors do not spend GitHub's per-IP limit), or GitHub directly when that is not there (the dev server). */
 async function fetchLatest(): Promise<Release> {
-  const response = await fetch(`https://api.github.com/repos/${REPOSITORY}/releases/latest`, {
-    headers: { Accept: 'application/vnd.github+json' },
-  })
+  let response = await fetch('/api/release', { headers: { Accept: 'application/json' } }).catch(() => undefined)
+  if (!response?.ok || !response.headers.get('content-type')?.includes('json')) {
+    response = await fetch(`https://api.github.com/repos/${REPOSITORY}/releases/latest`, {
+      headers: { Accept: 'application/vnd.github+json' },
+    })
+  }
   if (!response.ok) throw new Error(`GitHub: ${response.status}`)
   const data = (await response.json()) as {
     tag_name: string
