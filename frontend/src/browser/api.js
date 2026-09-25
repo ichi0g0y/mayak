@@ -16,7 +16,7 @@ let overlay=false;
 // so the bar takes its own row (bounds() lifts the pages by it) rather than
 // floating over them, where it would be covered.
 let updateStatus=null,updateDismissed='';
-const updateBarHeight=28;
+const updateBarHeight=32;
 function updateBarVisible(){const u=updateStatus;return !!(u&&['available','downloading','ready'].includes(u.state)&&u.latest&&u.latest!==updateDismissed);}
 const views=new Map();
 // Tabs whose page is loading, by view ID (not saved).
