@@ -2,6 +2,7 @@ import { useAtomValue } from 'jotai'
 import { ArrowRight, Download } from 'lucide-react'
 import { useT } from '@/i18n'
 import { ARCHIVES, findAsset, formatSize, RELEASES_URL, releaseLoadableAtom } from '@/state'
+import { useDirectDownload } from '@/hooks/useDirectDownload'
 
 /** The first screen: the logo, one line of what MAYAK is, and the installer. */
 export function Hero() {
@@ -10,11 +11,12 @@ export function Hero() {
   const latest = release.state === 'hasData' ? release.data : undefined
   const installer = findAsset(latest, ARCHIVES.windowsInstaller)
   const version = latest ? `v${latest.version}` : ''
+  const direct = useDirectDownload()
   return (
     <section className="relative flex min-h-svh flex-col items-center justify-center px-4 pt-20 pb-16 text-center">
       <div className="hero-fade flex w-full flex-col items-center">
         <img src="/assets/mayak-logo-white.png" alt="MAYAK" width={512} height={512} className="w-[min(72vw,520px,46svh)] opacity-90" fetchPriority="high" />
-        <a href={latest?.url ?? RELEASES_URL} rel="noopener" className="mt-2 inline-flex items-center gap-3 font-mono text-xs tracking-[0.14em] uppercase">
+        <a href={direct.href} download={direct.download} className="mt-2 inline-flex items-center gap-3 font-mono text-xs tracking-[0.14em] uppercase">
           <span className="bg-primary text-primary-foreground px-1.5 py-0.5 font-bold">NEW</span>
           <span className="text-muted-foreground">{latest ? t.hero.released(version) : 'Escape from Tarkov companion'}</span>
           <ArrowRight className="text-muted-foreground size-3.5" />

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { isLang, languages, useT } from '@/i18n'
 import { langAtom, REPOSITORY } from '@/state'
+import { useDirectDownload } from '@/hooks/useDirectDownload'
 import { cn } from '@/lib/utils'
 
 /** The top bar. On the home page it is transparent over the logo and turns
@@ -21,6 +22,7 @@ export function Header({ home = true }: { home?: boolean }) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [home])
   const prefix = home ? '' : '/'
+  const direct = useDirectDownload()
   const links: [string, string][] = [
     [`${prefix}#features`, t.nav.features],
     [`${prefix}#start`, t.nav.start],
@@ -59,7 +61,7 @@ export function Header({ home = true }: { home?: boolean }) {
             </SelectContent>
           </Select>
           <Button asChild size="sm" className="font-semibold">
-            <a href={`${prefix}#download`}>{t.nav.downloadButton}</a>
+            <a href={direct.asset ? direct.href : `${prefix}${direct.href.startsWith('#') ? direct.href : '#download'}`} download={direct.download}>{t.nav.downloadButton}</a>
           </Button>
         </div>
       </div>
