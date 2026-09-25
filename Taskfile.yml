@@ -77,6 +77,16 @@ tasks:
     cmds:
       - 'go build -p 2 -buildvcs=false {{if ne .DEV "true"}}-tags production{{end}} -ldflags="{{if ne .DEV "true"}}-s -w {{end}}{{.VERSION_LDFLAGS}}" -o build/bin/Mayak .'
 
+  # The Windows installer (build/windows/nsis/mayak.nsi): per user, no
+  # administrator rights, Start menu shortcut, uninstaller. tools/nsis uses
+  # an installed makensis or fetches the portable NSIS once into
+  # build/nsis-cache.
+  installer:
+    summary: Build the Windows installer into build/dist
+    platforms: [windows]
+    cmds:
+      - 'go run ./tools/nsis -version {{.VERSION}} -bin build/bin -out build/dist'
+
   # The archive a GitHub release carries for this OS (build/dist), named as
   # the app's updater expects (internal/update), with its SHA-256 beside it.
   # The release workflow (.github/workflows/release.yml) runs this on every

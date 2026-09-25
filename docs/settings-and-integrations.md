@@ -235,7 +235,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - **再起動**: 新しいプロセスは環境変数 `MAYAK_UPDATE_WAIT_PID` で古いプロセスの終了を最大 30 秒待ってから起動します（二重起動防止と衝突しないため）。起動時には `*.mayak-old` を削除します。
 - **状態**: `GetUpdateStatus` と `update:status` イベント（`model.UpdateStatus`）。`state` は `idle`／`checking`／`current`／`available`／`downloading`（`progress` は %）／`ready`／`unsupported`／`error`。ログのカテゴリは `Update` です。
 
-インストール先に書き込めない場合（管理者権限が要るフォルダなど）は適用に失敗し、エラーがステータスとログに出ます。その場合はリリースページから手動で入れ替えてください。リリースの作り方は [開発ガイド](development.md#リリース) を参照してください。
+インストーラーはユーザー単位のフォルダ（`%LOCALAPPDATA%\Programs\MAYAK`）に入れるので、そのままこの差し替えが動きます。インストール先に書き込めない場合（管理者権限が要るフォルダなど）は適用に失敗し、エラーがステータスとログに出ます。その場合はリリースページから手動で入れ替えてください。リリースの作り方は [開発ガイド](development.md#リリース) を参照してください。
 
 ## TarkovTracker 連携
 

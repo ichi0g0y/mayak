@@ -43,3 +43,4 @@ Thumbs.db
 # Landing page (site/)
 /site/node_modules/
 /site/dist/
+/build/nsis-cache/

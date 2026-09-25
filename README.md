@@ -99,7 +99,7 @@ task frontend:build
 go test ./...
 ```
 
-Release: tag a commit `vX.Y.Z` and push the tag. The Release workflow builds every platform and publishes the archives with `SHA256SUMS.txt`; running copies of MAYAK pick the release up from there. See [docs/development.md](docs/development.md#リリース).
+Release: tag a commit `vX.Y.Z` and push the tag. The Release workflow builds every platform and publishes the Windows installer (`Mayak-Setup-windows-amd64.exe`, per user, no administrator rights) and the archives with `SHA256SUMS.txt`; running copies of MAYAK pick the release up from there. See [docs/development.md](docs/development.md#リリース).
 
 ## Usage
 

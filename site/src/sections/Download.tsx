@@ -27,7 +27,17 @@ export function Download() {
   const latest = release.state === 'hasData' ? release.data : undefined
   const checksums = findAsset(latest, ARCHIVES.checksums)
   const cards: { key: Platform; icon: typeof Monitor; title: string; body: string; untested: boolean; buttons: { asset: Asset | undefined; label: string }[] }[] = [
-    { key: 'windows', icon: Monitor, title: t.download.windows, body: t.download.windowsBody, untested: false, buttons: [{ asset: findAsset(latest, ARCHIVES.windows), label: ARCHIVES.windows }] },
+    {
+      key: 'windows',
+      icon: Monitor,
+      title: t.download.windows,
+      body: t.download.windowsBody,
+      untested: false,
+      buttons: [
+        { asset: findAsset(latest, ARCHIVES.windowsInstaller), label: t.download.installer },
+        { asset: findAsset(latest, ARCHIVES.windows), label: t.download.portable },
+      ],
+    },
     {
       key: 'mac',
       icon: Laptop,
@@ -72,8 +82,8 @@ export function Download() {
               <h3 className="font-display mt-3 text-xl font-semibold tracking-wide">{card.title}</h3>
               <p className="text-muted-foreground mt-1 text-sm">{card.body}</p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {card.buttons.map((button) => (
-                  <AssetButton key={button.label} asset={button.asset} label={button.label} primary={primary} />
+                {card.buttons.map((button, j) => (
+                  <AssetButton key={button.label} asset={button.asset} label={button.label} primary={primary && j === 0} />
                 ))}
               </div>
             </Reveal>

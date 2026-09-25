@@ -61,14 +61,18 @@ func main() {
 		os.Remove(target)
 		log.Fatal(err)
 	}
-	sum, err := fileSHA256(target)
-	if err != nil {
-		log.Fatal(err)
+	// The installer (tools/nsis), when it was built, gets its checksum too.
+	installers, _ := filepath.Glob(filepath.Join(*out, "Mayak-Setup-*.exe"))
+	for _, path := range append([]string{target}, installers...) {
+		sum, err := fileSHA256(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := os.WriteFile(path+".sha256", []byte(sum+"  "+filepath.Base(path)+"\n"), 0o644); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("%s  %s\n", sum, path)
 	}
-	if err := os.WriteFile(target+".sha256", []byte(sum+"  "+name+"\n"), 0o644); err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("%s  %s\n", sum, target)
 }
 
 // walk calls visit for every regular file under the entries, with the

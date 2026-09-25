@@ -26,6 +26,7 @@ export type Release = { tag: string; version: string; name: string; url: string;
 
 /** The Windows and Unix archives the release workflow publishes. */
 export const ARCHIVES = {
+  windowsInstaller: 'Mayak-Setup-windows-amd64.exe',
   windows: 'Mayak-windows-amd64.zip',
   macArm: 'Mayak-darwin-arm64.tar.gz',
   macIntel: 'Mayak-darwin-amd64.tar.gz',

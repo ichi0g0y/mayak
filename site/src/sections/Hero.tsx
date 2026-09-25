@@ -8,7 +8,8 @@ export function Hero() {
   const t = useT()
   const release = useAtomValue(releaseLoadableAtom)
   const latest = release.state === 'hasData' ? release.data : undefined
-  const windows = findAsset(latest, ARCHIVES.windows)
+  // The installer, or the zip while a release has none.
+  const windows = findAsset(latest, ARCHIVES.windowsInstaller) ?? findAsset(latest, ARCHIVES.windows)
   return (
     <section className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden px-4 pt-20 pb-24 text-center">
       <div className="hero-fade relative flex flex-col items-center">
@@ -24,7 +25,7 @@ export function Hero() {
         <p className="text-muted-foreground mt-6 max-w-xl text-base leading-relaxed sm:text-lg">{t.hero.lead}</p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Button size="lg" asChild className="h-12 px-7 text-base">
-            <a href={windows?.url ?? `${RELEASES_URL}/latest`} download={windows ? ARCHIVES.windows : undefined}>
+            <a href={windows?.url ?? `${RELEASES_URL}/latest`} download={windows?.name}>
               <Download />
               {t.hero.download}
               {latest && (
