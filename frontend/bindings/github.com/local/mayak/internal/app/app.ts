@@ -199,6 +199,16 @@ export function BrowserView(command: string, v: browserview$0.Options): $Cancell
     return $Call.ByID(2681710815, command, v);
 }
 
+/**
+ * CheckForUpdates asks GitHub for the latest release now. With autoUpdate
+ * on, a newer release starts downloading.
+ */
+export function CheckForUpdates(): $CancellablePromise<model$0.UpdateStatus> {
+    return $Call.ByID(3891257649).then(($result: any) => {
+        return $$createType10($result);
+    });
+}
+
 export function ChooseLogsDirectory(): $CancellablePromise<string> {
     return $Call.ByID(4164457643);
 }
@@ -220,41 +230,64 @@ export function DiscoverTrackerProfiles(): $CancellablePromise<void> {
 }
 
 /**
+ * DownloadUpdate downloads the release the last check found.
+ */
+export function DownloadUpdate(): $CancellablePromise<void> {
+    return $Call.ByID(1204715875);
+}
+
+/**
  * GameLanguages are the game languages MAYAK reads (settings' choices):
  * English and those in internal/locale.
  */
 export function GameLanguages(): $CancellablePromise<string[]> {
     return $Call.ByID(241665187).then(($result: any) => {
-        return $$createType10($result);
+        return $$createType11($result);
     });
 }
 
 export function GetLogs(): $CancellablePromise<model$0.LogEntry[]> {
     return $Call.ByID(3489936509).then(($result: any) => {
-        return $$createType12($result);
+        return $$createType13($result);
     });
 }
 
 export function GetSettings(): $CancellablePromise<config$0.Settings> {
     return $Call.ByID(1576393379).then(($result: any) => {
-        return $$createType13($result);
+        return $$createType14($result);
     });
 }
 
 export function GetStatus(): $CancellablePromise<model$0.Status> {
     return $Call.ByID(1528916376).then(($result: any) => {
-        return $$createType14($result);
+        return $$createType15($result);
     });
 }
 
 export function GetTrackerHistoryBreakpoints(accountID: string, profileID: string, mode: string): $CancellablePromise<model$0.TrackerHistoryBreakpoint[]> {
     return $Call.ByID(547782838, accountID, profileID, mode).then(($result: any) => {
-        return $$createType16($result);
+        return $$createType17($result);
+    });
+}
+
+/**
+ * GetUpdateStatus returns the update's state for the settings page.
+ */
+export function GetUpdateStatus(): $CancellablePromise<model$0.UpdateStatus> {
+    return $Call.ByID(2737290697).then(($result: any) => {
+        return $$createType10($result);
     });
 }
 
 export function ImportTrackerToken(token: string): $CancellablePromise<void> {
     return $Call.ByID(3326162070, token);
+}
+
+/**
+ * InstallUpdate puts the downloaded release in place and restarts into it.
+ */
+export function InstallUpdate(): $CancellablePromise<void> {
+    return $Call.ByID(598684024);
 }
 
 export function OpenDebugDirectory(): $CancellablePromise<void> {
@@ -347,10 +380,11 @@ const $$createType6 = $models.ItemSearchHit.createFrom;
 const $$createType7 = $Create.Array($$createType6);
 const $$createType8 = $models.ScreenshotEntry.createFrom;
 const $$createType9 = $Create.Array($$createType8);
-const $$createType10 = $Create.Array($Create.Any);
-const $$createType11 = model$0.LogEntry.createFrom;
-const $$createType12 = $Create.Array($$createType11);
-const $$createType13 = config$0.Settings.createFrom;
-const $$createType14 = model$0.Status.createFrom;
-const $$createType15 = model$0.TrackerHistoryBreakpoint.createFrom;
-const $$createType16 = $Create.Array($$createType15);
+const $$createType10 = model$0.UpdateStatus.createFrom;
+const $$createType11 = $Create.Array($Create.Any);
+const $$createType12 = model$0.LogEntry.createFrom;
+const $$createType13 = $Create.Array($$createType12);
+const $$createType14 = config$0.Settings.createFrom;
+const $$createType15 = model$0.Status.createFrom;
+const $$createType16 = model$0.TrackerHistoryBreakpoint.createFrom;
+const $$createType17 = $Create.Array($$createType16);

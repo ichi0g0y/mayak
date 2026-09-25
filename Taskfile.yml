@@ -3,6 +3,12 @@ version: '3'
 vars:
   WAILS: go run github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.24
   DEV: '{{.DEV | default "false"}}'
+  # The version linked into the binary (internal/version): the release tag
+  # (`task build VERSION=v0.1.0`, as the release workflow does), or git's
+  # description of the commit after the last tag (v0.1.0-3-g1a2b3c4).
+  VERSION:
+    sh: git describe --tags --match "v*" --always 2>/dev/null || echo dev
+  VERSION_LDFLAGS: '-X github.com/local/mayak/internal/version.Version={{.VERSION}}'
 
 tasks:
   bindings:
@@ -61,15 +67,43 @@ tasks:
   build:windows:
     cmds:
       - task: syso
-      - 'go build -p 2 -buildvcs=false {{if ne .DEV "true"}}-tags production -ldflags="-s -w -H windowsgui"{{end}} -o build/bin/Mayak.exe .'
+      - 'go build -p 2 -buildvcs=false {{if ne .DEV "true"}}-tags production{{end}} -ldflags="{{if ne .DEV "true"}}-s -w -H windowsgui {{end}}{{.VERSION_LDFLAGS}}" -o build/bin/Mayak.exe .'
 
   build:darwin:
     cmds:
-      - 'go build -p 2 -buildvcs=false {{if ne .DEV "true"}}-tags production{{end}} -o build/bin/Mayak .'
+      - 'go build -p 2 -buildvcs=false {{if ne .DEV "true"}}-tags production{{end}} -ldflags="{{if ne .DEV "true"}}-s -w {{end}}{{.VERSION_LDFLAGS}}" -o build/bin/Mayak .'
 
   build:linux:
     cmds:
-      - 'go build -p 2 -buildvcs=false {{if ne .DEV "true"}}-tags production{{end}} -o build/bin/Mayak .'
+      - 'go build -p 2 -buildvcs=false {{if ne .DEV "true"}}-tags production{{end}} -ldflags="{{if ne .DEV "true"}}-s -w {{end}}{{.VERSION_LDFLAGS}}" -o build/bin/Mayak .'
+
+  # The archive a GitHub release carries for this OS (build/dist), named as
+  # the app's updater expects (internal/update), with its SHA-256 beside it.
+  # The release workflow (.github/workflows/release.yml) runs this on every
+  # platform after `task build` and publishes the results.
+  release:archive:
+    summary: Pack build/bin into the release archive for this OS and CPU
+    cmds:
+      - 'go run ./tools/release -bin build/bin -out build/dist -arch {{.TARGET_ARCH | default ARCH}}'
+
+  # The docs site (docs/): mdBook builds it into build/docs-site, wrangler
+  # publishes it to Cloudflare Pages (wrangler.jsonc). Sign in once with
+  # `wrangler login` and create the project with
+  # `wrangler pages project create mayak-docs`.
+  docs:build:
+    cmds:
+      - mdbook build docs
+
+  docs:serve:
+    summary: Preview the docs site with live reload
+    cmds:
+      - mdbook serve docs
+
+  docs:deploy:
+    summary: Build the docs site and publish it to Cloudflare Pages
+    cmds:
+      - task: docs:build
+      - wrangler pages deploy
 
   dev:
     summary: Run with hot reload (Go changes rebuild and restart the app; WebUI changes reload via Vite)
@@ -84,7 +118,7 @@ tasks:
       - task: bindings
       - task: tesseract:bundle
       - task: syso
-      - 'go build -p 2 -buildvcs=false -o build/bin/Mayak-dev{{exeExt}} .'
+      - 'go build -p 2 -buildvcs=false -ldflags="{{.VERSION_LDFLAGS}}" -o build/bin/Mayak-dev{{exeExt}} .'
 
   check:offline:
     summary: Compile Go and run isolated browser state tests without opening the application

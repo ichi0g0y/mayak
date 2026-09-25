@@ -10,6 +10,24 @@ type LogEntry struct {
 	Message   string    `json:"message"`
 }
 
+// UpdateStatus is the state of the check for a newer MAYAK on GitHub
+// Releases (internal/app/app_update.go). State is idle, checking, current,
+// available, downloading (Progress in percent), ready (downloaded, installed
+// on quit or restart), unsupported (no build for Platform) or error.
+type UpdateStatus struct {
+	Current     string `json:"current"`
+	Latest      string `json:"latest"`
+	State       string `json:"state"`
+	Progress    int    `json:"progress"`
+	Platform    string `json:"platform"`
+	ReleaseURL  string `json:"releaseUrl"`
+	ReleaseName string `json:"releaseName"`
+	Notes       string `json:"notes"`
+	PublishedAt string `json:"publishedAt"`
+	CheckedAt   string `json:"checkedAt"`
+	LastError   string `json:"lastError"`
+}
+
 type Position struct {
 	X          float64 `json:"x"`
 	Y          float64 `json:"y"`

@@ -56,9 +56,12 @@ type Settings struct {
 	StartMinimized        bool   `json:"startMinimized"`
 	// MinimizeToTray removes the taskbar entry when the window is minimized;
 	// CloseToTray keeps the app running in the tray when it is closed.
-	MinimizeToTray   bool `json:"minimizeToTray"`
-	CloseToTray      bool `json:"closeToTray"`
-	LaunchAtStartup  bool `json:"launchAtStartup"`
+	MinimizeToTray  bool `json:"minimizeToTray"`
+	CloseToTray     bool `json:"closeToTray"`
+	LaunchAtStartup bool `json:"launchAtStartup"`
+	// AutoUpdate checks GitHub Releases for a newer MAYAK, downloads it in
+	// the background and installs it when MAYAK quits.
+	AutoUpdate       bool `json:"autoUpdate"`
 	WindowX          int  `json:"windowX"`
 	WindowY          int  `json:"windowY"`
 	WindowWidth      int  `json:"windowWidth"`
@@ -87,7 +90,7 @@ type WindowState struct {
 }
 
 func defaults() Settings {
-	return Settings{Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: true, QuestSoundEnabled: true, ErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430}
+	return Settings{Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: true, QuestSoundEnabled: true, ErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, AutoUpdate: true}
 }
 func path() (string, error) {
 	d, err := os.UserConfigDir()

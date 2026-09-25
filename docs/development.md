@@ -11,8 +11,10 @@ MAYAK は Go + Wails v3（`v3.0.0-beta.24` 固定）で作られた Windows 向�
 | [Task](https://taskfile.dev/)（または `wails3 task`） | `Taskfile.yml` の実行 |
 | bun | フロントエンドの依存インストール、Vite の実行、`bun test` |
 | 7-Zip（`C:\Program Files\7-Zip\7z.exe`） | `task tesseract:bundle` がインストーラーを実行せずに展開するため |
+| mdBook | `docs/` を `build/docs-site` に組む（`task docs:build`、`task docs:serve`） |
+| Node.js と wrangler | ドキュメントサイトを Cloudflare Pages に公開する（`task docs:deploy`）。Node は wrangler を動かすためだけに入れる |
 
-`mise install` で `mise.toml` のツールが入ります。mise の shims フォルダ（Windows では `%LOCALAPPDATA%\mise\shims`）を PATH に入れておくと、どのシェルからでもこのバージョンが使われます。Node.js は不要です。`task dev` は最初に `bun install --frozen-lockfile` を実行するので、新しいワークツリーでもそのまま起動できます。
+`mise install` で `mise.toml` のツールが入ります（mdBook、Node、wrangler も含みます）。mise の shims フォルダ（Windows では `%LOCALAPPDATA%\mise\shims`）を PATH に入れておくと、どのシェルからでもこのバージョンが使われます。アプリとフロントエンドのビルドに Node.js は使いません（wrangler を動かすためだけに入ります）。`task dev` は最初に `bun install --frozen-lockfile` を実行するので、新しいワークツリーでもそのまま起動できます。
 
 Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.24` を固定バージョンで呼び出します。フロントエンドの `@wailsio/runtime` も同じ `3.0.0-beta.24` に揃えています。
 
@@ -80,6 +82,8 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `tracker` | TarkovTracker API クライアント |
 | `trackerlog` | EFT ログからのアカウント／プロファイル／モードの検出と履歴 |
 | `trackerstore` | TarkovTracker キーとプロファイル割り当ての保存（Windows では DPAPI で保護） |
+| `update` | GitHub Releases からの自動アップデート: 最新リリースの取得、semver の比較、チェックサム検証付きのダウンロードと展開、実行中のファイルの差し替え、新しい版での再起動（[設定と連携](settings-and-integrations.md#自動アップデート)） |
+| `version` | ビルドに埋め込む版（`task build` が `-ldflags -X` で設定。未設定なら `dev`） |
 | `watcher` | スクリーンショットフォルダの監視（`fsnotify`） |
 
 認識処理の詳細は [recognition.md](recognition.md) を参照してください。
@@ -96,6 +100,7 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `cmd/ocreval` | 認識デバッグデータ（`Mayak-Debug`）で OCR エンジンを比較評価 |
 | `cmd/ocrharvest` | スクリーンショットから、複数エンジンの読みが一致したタイトル画像をラベル付きで収集 |
 | `tools/tessbundle` | UB Mannheim 版から同梱用 Tesseract ランタイムを作る（必要な DLL だけコピーし、デバッグ情報を除去） |
+| `tools/release` | `build/bin` をリリース用アーカイブ（`build/dist/Mayak-<os>-<arch>.zip` / `.tar.gz`）に固め、SHA-256 を書く（[リリース](#リリース)） |
 | `tools/ocrtrain` | Tesseract LSTM 学習データの生成（手順は `tools/ocrtrain/README.md` と [ocr-training.md](ocr-training.md)） |
 | `tools/capture-window.ps1` | MAYAK のウィンドウを PNG に保存する PowerShell スクリプト |
 
@@ -177,8 +182,11 @@ Wails 本体はフォークせず公式モジュールを使います。
 | `task tesseract:bundle` | `build/bin/tesseract` に同梱 Tesseract を作る（Windows のみ）。固定版の UB Mannheim インストーラーをチェックサム検証付きで一度だけ取得し、`eng,jpn` と `build/tessdata` のモデルを入れる。入力が変わらなければスキップ |
 | `task build` | `frontend:build` → `tesseract:bundle` → `notices` → `build:{{OS}}`。アプリは起動しない |
 | `task notices` | `build/bin/THIRD_PARTY_NOTICES.txt` を生成する。exe にリンクされる Go モジュールとフロントエンドの依存のライセンス文、同梱の OCR データ、実行時に取得するフィルタリストの出典（`tools/notices`） |
-| `task build:windows` | `.syso` 生成と `go build`。`DEV=true` でなければ `-tags production -ldflags="-s -w -H windowsgui"` で `build/bin/Mayak.exe` を出力 |
-| `task build:darwin` / `build:linux` | `production` タグ付きで `build/bin/Mayak` を出力 |
+| `task build:windows` | `.syso` 生成と `go build`。`DEV=true` でなければ `-tags production -ldflags="-s -w -H windowsgui"` で `build/bin/Mayak.exe` を出力。版（`VERSION`、既定は `git describe --tags`）を `internal/version` に埋め込む |
+| `task build:darwin` / `build:linux` | `production` タグ付きで `build/bin/Mayak` を出力（版の埋め込みは同じ） |
+| `task release:archive` | `build/bin` をリリース用アーカイブと SHA-256 にする（`build/dist/`、`tools/release`）。`TARGET_ARCH=amd64` で CPU を指定 |
+| `task docs:build` / `docs:serve` | mdBook で `docs/` を `build/docs-site` に組む／ライブリロード付きで確認する |
+| `task docs:deploy` | ドキュメントサイトを組んで Cloudflare Pages に公開する（`wrangler pages deploy`、設定は `wrangler.jsonc`） |
 | `task dev` | 依存インストール → ホットリロード付き開発モード（下記）。アプリを起動する |
 | `task build:dev` | `dev` が使う開発ビルド。バインディング生成、Tesseract 同梱、`production` タグなしで `build/bin/Mayak-dev.exe` |
 | `task check:offline` | アプリを開かない検証。全パッケージのコンパイル、`TestBrowser*`、bun のテスト |
@@ -206,6 +214,22 @@ Wails 本体はフォークせず公式モジュールを使います。
 - primary コマンドは Windows では `cmd.exe` 経由で実行されるため、パスはバックスラッシュで書きます。
 - `third_party/` の変更は監視されません。go-webview2 フォークを変更したら `task dev` を再起動します。
 - `task dev`、`task run`、`wails3 dev` はアプリを起動します。下記の制約に注意してください。
+
+## リリース
+
+配布物は GitHub Releases です。アプリはそこから自分自身を更新します（[設定と連携](settings-and-integrations.md#自動アップデート)）。
+
+1. `build/config.yml` と `build/windows/info.json` の版を上げてコミットします。
+2. `v1.2.3` の形のタグを打って push します: `git tag -a v1.2.3 -m "MAYAK 1.2.3" && git push origin v1.2.3`
+3. `.github/workflows/release.yml` が Windows（amd64）、macOS（arm64、amd64）、Linux（amd64）で `task build VERSION=v1.2.3` と `task release:archive` を実行し、`SHA256SUMS.txt` を付けてリリースを公開します。リリースノートは GitHub が自動生成します。
+
+アーカイブの名前（`Mayak-windows-amd64.zip`、`Mayak-darwin-arm64.tar.gz`、`Mayak-darwin-amd64.tar.gz`、`Mayak-linux-amd64.tar.gz`）と `SHA256SUMS.txt` は `internal/update` が探すものなので変えないでください。Windows のアーカイブには `Mayak.exe`、`tesseract/`、`THIRD_PARTY_NOTICES.txt` が、ほかには `Mayak` と `THIRD_PARTY_NOTICES.txt` がルートに入ります。プレリリース（`prerelease` にチェック）とドラフトは「latest」に含まれないため、自動アップデートの対象になりません。
+
+macOS／Linux のビルドは CI でコンパイルしているだけで、動作は検証していません（[プラットフォーム](#プラットフォーム)）。
+
+### ドキュメントサイト
+
+`docs/` は mdBook で `build/docs-site` に組み、Cloudflare Pages（プロジェクト名 `mayak-docs`、`wrangler.jsonc`）に公開します。初回だけ `wrangler login` でサインインし（CI なら `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID`）、`wrangler pages project create mayak-docs` でプロジェクトを作ります。その後は `task docs:deploy` で公開できます。
 
 ## テスト
 

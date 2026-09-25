@@ -1,5 +1,6 @@
 # Wails and frontend output
 /build/bin/
+/build/dist/
 /build/tesseract-cache/
 /frontend/dist/
 /frontend/node_modules/

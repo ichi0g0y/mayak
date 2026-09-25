@@ -93,6 +93,12 @@ export class Settings {
     "minimizeToTray": boolean;
     "closeToTray": boolean;
     "launchAtStartup": boolean;
+
+    /**
+     * AutoUpdate checks GitHub Releases for a newer MAYAK, downloads it in
+     * the background and installs it when MAYAK quits.
+     */
+    "autoUpdate": boolean;
     "windowX": number;
     "windowY": number;
     "windowWidth": number;
@@ -235,6 +241,9 @@ export class Settings {
         }
         if (!("launchAtStartup" in $$source)) {
             this["launchAtStartup"] = false;
+        }
+        if (!("autoUpdate" in $$source)) {
+            this["autoUpdate"] = false;
         }
         if (!("windowX" in $$source)) {
             this["windowX"] = 0;

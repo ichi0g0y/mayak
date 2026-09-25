@@ -3,10 +3,13 @@ package app
 import (
 	"io/fs"
 	"sync"
+	"time"
 
 	"github.com/local/mayak/internal/appdir"
 	"github.com/local/mayak/internal/browserview"
 	"github.com/local/mayak/internal/config"
+	"github.com/local/mayak/internal/update"
+	"github.com/local/mayak/internal/version"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 )
@@ -16,10 +19,19 @@ import (
 // and icon is the tray icon (build/appicon.png).
 func Run(assets fs.FS, icon []byte) error {
 	trayIcon = icon
+	// After an update, the version being replaced is still quitting: wait for
+	// it (the app runs as a single instance), then drop the files it kept.
+	restarted := update.WaitForPreviousInstance(30 * time.Second)
+	if dir, err := update.InstallDir(); err == nil {
+		update.CleanupOld(dir)
+	}
 	// The data folder of the app's earlier name (RaidLens) moves to Mayak
 	// before anything reads it.
 	moved, moveErr := appdir.Migrate()
 	service := NewApp()
+	if restarted {
+		service.addLog("Info", "Update", "Restarted into MAYAK "+version.Current())
+	}
 	if moveErr != nil {
 		service.addLog("Warn", "Application", "Could not move the RaidLens data folder to Mayak: "+moveErr.Error())
 	} else if moved {

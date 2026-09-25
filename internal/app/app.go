@@ -116,6 +116,8 @@ type App struct {
 	doneOnce          sync.Once
 	quitting          atomic.Bool
 	analysisSequence  atomic.Uint64
+	// update is the newer release being fetched (app_update.go).
+	update updateState
 }
 
 const recognitionSoundCooldown = 3 * time.Second
@@ -155,6 +157,7 @@ func (a *App) startup(ctx context.Context) {
 		_ = config.Save(a.settings)
 	}
 	a.browserClient.Store(a.browserStartsAsClient())
+	a.startUpdateChecks()
 
 	if a.browserClient.Load() {
 		return
@@ -249,6 +252,8 @@ func (a *App) shutdown(context.Context) {
 	if a.browserViews != nil {
 		a.browserViews.Close()
 	}
+	// Last, so nothing above runs on files that are no longer this version's.
+	a.applyStagedUpdateOnExit()
 }
 
 func (a *App) beforeClose(ctx context.Context) bool {
@@ -816,6 +821,7 @@ func (a *App) SaveSettings(s config.Settings) error {
 	oldGameMode := a.settings.GameMode
 	oldLogs := a.settings.LogsDirectory
 	oldLaunchAtStartup := a.settings.LaunchAtStartup
+	oldAutoUpdate := a.settings.AutoUpdate
 	oldLanguage := a.settings.Language
 	oldCleanup, oldRetainCount, oldRetainHours := a.settings.ScreenshotCleanup, a.settings.ScreenshotRetainCount, a.settings.ScreenshotRetainHours
 	monitoring := a.status.Monitoring
@@ -840,6 +846,9 @@ func (a *App) SaveSettings(s config.Settings) error {
 	}
 	if oldGameMode != s.GameMode {
 		go func() { _ = a.refreshCatalog(false) }()
+	}
+	if !oldAutoUpdate && s.AutoUpdate {
+		go func() { _, _ = a.checkForUpdates(true) }()
 	}
 	if oldLanguage != s.Language {
 		a.setTrayLanguage(s.Language)
@@ -868,6 +877,7 @@ func (a *App) PersistSettings(s config.Settings) error {
 	s = normalizeSettings(s)
 	a.mu.Lock()
 	oldLaunchAtStartup := a.settings.LaunchAtStartup
+	oldAutoUpdate := a.settings.AutoUpdate
 	oldTrackerEnabled := a.settings.TarkovTrackerEnabled
 	oldGameMode := a.settings.GameMode
 	oldCleanup, oldRetainCount, oldRetainHours := a.settings.ScreenshotCleanup, a.settings.ScreenshotRetainCount, a.settings.ScreenshotRetainHours
@@ -892,6 +902,9 @@ func (a *App) PersistSettings(s config.Settings) error {
 	}
 	if oldGameMode != s.GameMode {
 		go func() { _ = a.refreshCatalog(false) }()
+	}
+	if !oldAutoUpdate && s.AutoUpdate {
+		go func() { _, _ = a.checkForUpdates(true) }()
 	}
 	if oldCleanup != s.ScreenshotCleanup || oldRetainCount != s.ScreenshotRetainCount || oldRetainHours != s.ScreenshotRetainHours {
 		go a.runScreenshotMaintenance()

@@ -14,5 +14,6 @@ export {
     TrackerHistoryBreakpoint,
     TrackerKeySummary,
     TrackerProfileSummary,
-    TrackerStatus
+    TrackerStatus,
+    UpdateStatus
 } from "./models.js";

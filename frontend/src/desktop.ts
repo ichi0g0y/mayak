@@ -12,10 +12,10 @@ export const desktop = (window.parent as Window & {mayakDesktop: DesktopBridge})
 export const EventsOn = desktop.on
 export const BrowserOpenURL = desktop.openURL
 export const {
-  AnalyzeLatestScreenshot, AutoDetectEFTDirectories, AutoDetectRemoteID,
+  AnalyzeLatestScreenshot, AutoDetectEFTDirectories, AutoDetectRemoteID, CheckForUpdates,
   ChooseLogsDirectory, ChooseScreenshotDirectory, ChooseSoundFile, ClearLogs,
-  DiscoverTrackerProfiles, GameLanguages, GetLogs, GetSettings, GetStatus, GetTrackerHistoryBreakpoints,
-  ImportTrackerToken, OpenDebugDirectory, OpenLogsDirectory, OpenScreenshotDirectory,
+  DiscoverTrackerProfiles, DownloadUpdate, GameLanguages, GetLogs, GetSettings, GetStatus, GetTrackerHistoryBreakpoints, GetUpdateStatus,
+  ImportTrackerToken, InstallUpdate, OpenDebugDirectory, OpenLogsDirectory, OpenScreenshotDirectory,
   PersistSettings, PreviewSound, RefreshCatalog, OpenQuestPage, OpenHideoutDiagnostics,
   RefreshTracker, RemoveTrackerKey, RefreshTrackerKeyNames, SaveSettings,
   SetTrackerProfileKey, StartMonitoring, StopMonitoring, SyncTrackerHistory, TestRemote,

@@ -53,6 +53,7 @@ Screenshots are not uploaded. OCR and image analysis run locally. Optional recog
 - Per-alert local WAV or MP3 assignment with built-in sound fallback
 - In-app structured log viewer with level filtering, search, and JSON Lines persistence
 - Japanese and English UI
+- Automatic updates from GitHub Releases on Windows, macOS and Linux (checksum-verified, installed on quit or on demand; can be turned off)
 - Persistent settings, window size, and window position
 - Optional Windows startup, manual or automatic monitoring, minimized launch, and system-tray behavior
 - React, TypeScript, Radix UI, and shadcn-style components
@@ -60,7 +61,7 @@ Screenshots are not uploaded. OCR and image analysis run locally. Optional recog
 ## Requirements
 
 - Windows 11
-- [mise](https://mise.jdx.dev/), which installs the Go, bun, and Task versions pinned in `mise.toml`
+- [mise](https://mise.jdx.dev/), which installs the Go, bun, and Task versions pinned in `mise.toml` (and mdBook, Node and wrangler for the docs site)
 - Wails CLI v3.0.0-beta.24
 - WebView2 Runtime
 - Windows English OCR language pack when using Windows OCR
@@ -97,6 +98,8 @@ Run tests:
 task frontend:build
 go test ./...
 ```
+
+Release: tag a commit `vX.Y.Z` and push the tag. The Release workflow builds every platform and publishes the archives with `SHA256SUMS.txt`; running copies of MAYAK pick the release up from there. See [docs/development.md](docs/development.md#リリース).
 
 ## Usage
 

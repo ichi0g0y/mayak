@@ -767,6 +767,73 @@ export class TrackerStatus {
     }
 }
 
+/**
+ * UpdateStatus is the state of the check for a newer MAYAK on GitHub
+ * Releases (internal/app/app_update.go). State is idle, checking, current,
+ * available, downloading (Progress in percent), ready (downloaded, installed
+ * on quit or restart), unsupported (no build for Platform) or error.
+ */
+export class UpdateStatus {
+    "current": string;
+    "latest": string;
+    "state": string;
+    "progress": number;
+    "platform": string;
+    "releaseUrl": string;
+    "releaseName": string;
+    "notes": string;
+    "publishedAt": string;
+    "checkedAt": string;
+    "lastError": string;
+
+    /** Creates a new UpdateStatus instance. */
+    constructor($$source: Partial<UpdateStatus> = {}) {
+        if (!("current" in $$source)) {
+            this["current"] = "";
+        }
+        if (!("latest" in $$source)) {
+            this["latest"] = "";
+        }
+        if (!("state" in $$source)) {
+            this["state"] = "";
+        }
+        if (!("progress" in $$source)) {
+            this["progress"] = 0;
+        }
+        if (!("platform" in $$source)) {
+            this["platform"] = "";
+        }
+        if (!("releaseUrl" in $$source)) {
+            this["releaseUrl"] = "";
+        }
+        if (!("releaseName" in $$source)) {
+            this["releaseName"] = "";
+        }
+        if (!("notes" in $$source)) {
+            this["notes"] = "";
+        }
+        if (!("publishedAt" in $$source)) {
+            this["publishedAt"] = "";
+        }
+        if (!("checkedAt" in $$source)) {
+            this["checkedAt"] = "";
+        }
+        if (!("lastError" in $$source)) {
+            this["lastError"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new UpdateStatus instance from a string or object.
+     */
+    static createFrom($$source: any = {}): UpdateStatus {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new UpdateStatus($$parsedSource as Partial<UpdateStatus>);
+    }
+}
+
 // Private type creation functions
 const $$createType0 = catalog$0.HideoutLevel.createFrom;
 const $$createType1 = $Create.Array($$createType0);

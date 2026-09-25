@@ -30,6 +30,7 @@ injection, hooks, packet capture, and automated input to EFT are out of scope.
 | Task-screen recognition | Complete for current presets | Character and trader layouts use cropped local OCR and fuzzy matching |
 | Item inspection recognition | Initial coverage | Movable item detail windows use content anchors and local OCR |
 | Tray, startup, and window state | Complete | Single instance, tray restore, startup, bounds, and settings persist |
+| Update check and self-update | Complete | GitHub Releases API; optional automatic check and download, checksum-verified, installed on quit or by an explicit restart; manual check when automatic updates are off |
 | Japanese/English app UI | Complete | All current settings and status labels are localized |
 
 ## Remaining parity work
@@ -46,7 +47,6 @@ injection, hooks, packet capture, and automated input to EFT are out of scope.
 | Media pause/resume | Use Windows media controls without inspecting EFT | Explicit opt-in; only sessions paused by MAYAK are resumed |
 | Delete position screenshots | Delete only successfully processed raid-position screenshots | Off by default, exact-path validation, retention option, and recoverability warning |
 | Always on top | Wails window option | Setting applies live and persists |
-| Update check | GitHub Releases API | Manual and optional startup checks; no silent install |
 | Control-binding validation | Read EFT control settings written to logs/files | Warn when the position-screenshot binding cannot produce metadata |
 
 ## Deliberate differences
