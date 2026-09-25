@@ -122,5 +122,9 @@ export const en: Messages = {
     issues: 'Report an issue',
     tarkovDev: 'tarkov.dev',
     tracker: 'TarkovTracker',
+    support: 'Support',
+    coffee: 'Buy Me a Coffee',
+    sponsors: 'GitHub Sponsors',
+    supportNote: 'MAYAK is free and stays free. If you like it, buy me a coffee.',
   },
 }

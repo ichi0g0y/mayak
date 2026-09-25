@@ -1,5 +1,6 @@
+import { Coffee } from 'lucide-react'
 import { useT } from '@/i18n'
-import { RELEASES_URL, REPOSITORY } from '@/state'
+import { COFFEE_URL, RELEASES_URL, REPOSITORY, SPONSORS_URL } from '@/state'
 
 export function Footer() {
   const t = useT()
@@ -21,16 +22,32 @@ export function Footer() {
         ['https://tarkovtracker.org/', t.footer.tracker],
       ],
     },
+    {
+      title: t.footer.support,
+      links: [
+        [COFFEE_URL, t.footer.coffee],
+        [SPONSORS_URL, t.footer.sponsors],
+      ],
+    },
   ]
   return (
     <footer className="border-t">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-2.5">
             <img src="/assets/mayak-mark.png" alt="" width={24} height={24} className="size-6" />
             <span className="font-extrabold tracking-tight">MAYAK</span>
           </div>
           <p className="text-muted-foreground mt-3 max-w-sm text-sm">{t.footer.tagline}</p>
+          <a
+            href={COFFEE_URL}
+            rel="noopener"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 mt-5 inline-flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm font-semibold transition-colors"
+          >
+            <Coffee className="size-4" />
+            {t.footer.coffee}
+          </a>
+          <p className="text-muted-foreground mt-2 max-w-sm text-xs">{t.footer.supportNote}</p>
           <p className="text-muted-foreground mt-6 max-w-md text-xs leading-relaxed">{t.footer.credit}</p>
           <p className="text-muted-foreground mt-3 font-mono text-xs">© {new Date().getFullYear()} MAYAK contributors · GPL-3.0</p>
         </div>

@@ -1,168 +1,93 @@
 <p align="center"><img src="docs/assets/mayak-mark.png" width="96" alt="MAYAK"></p>
 
-# MAYAK
+<h1 align="center">MAYAK</h1>
 
-The full specification (in Japanese) is in [docs/](docs/index.md), kept as
-Markdown for reference. The landing page lives in [site/](site/).
+<p align="center">
+  An Escape from Tarkov companion that never touches the game.<br>
+  It reads the screenshots and logs the game saves, and keeps the tarkov.dev map, your tasks and item info in sync in a browser.
+</p>
 
-The [TarkovMonitor feature-parity checklist](docs/tarkovmonitor-parity.md) tracks
-the supported behavior and the remaining safe, log-based integrations.
+<p align="center">
+  <a href="https://mayak.ich.sh"><b>mayak.ich.sh</b></a> ·
+  <a href="https://github.com/ichi0g0y/mayak/releases/latest">Download</a> ·
+  <a href="https://buymeacoffee.com/ichi0g0y">Buy Me a Coffee</a>
+</p>
 
-Game data (items, maps, traders, tasks, hideout stations, level data and base Scav
-cooldown) is fetched from tarkov.dev per progression mode. A shared catalog warms
-when EFT's mode is detected, checks for changes every 5 minutes (downloading only
-resources that changed), and retains validated
-last-known-good data under the user's MAYAK configuration directory for offline
-use. The Status tab shows counts, mode and last retrieval time, and provides a
-manual refresh. Catalog retrieval does not synchronize hideout progress or player
-levels to TarkovTracker.
+## Download
 
-MAYAK is a local Windows companion for Escape from Tarkov. It watches screenshots created by the game and uses public web interfaces to keep a browser map in sync without interacting with the game process.
+Get the latest release from [mayak.ich.sh](https://mayak.ich.sh) or the [releases page](https://github.com/ichi0g0y/mayak/releases/latest).
 
-The current proof of concept supports three workflows:
+| Platform | File | Notes |
+| --- | --- | --- |
+| Windows 11 / 10 (64-bit) | `Mayak-Setup-windows-amd64.exe` | Per-user installer, no administrator rights. SmartScreen warns once because the build is unsigned: **More info → Run anyway**. Updates are automatic afterwards. |
+| Windows, portable | `Mayak-windows-amd64.zip` | Unzip and run `Mayak.exe`. |
+| macOS (Apple Silicon / Intel) | `Mayak-darwin-arm64.tar.gz` / `Mayak-darwin-amd64.tar.gz` | Preview. Receive-only client for maps and tasks. If macOS blocks it, right-click → Open. |
+| Linux (x86-64) | `Mayak-linux-amd64.tar.gz` | Preview. Receive-only client; needs WebKitGTK. |
 
-- Position screenshots: parse coordinates and orientation embedded in the filename, detect the active map from EFT logs, and update the player marker on tarkov.dev.
-- Tasks screenshots: detect supported Tasks screen layouts, OCR the selected quest name locally, match it against current quest data, and navigate tarkov.dev to the closest supported task or map view.
-- Item inspection screenshots: locate the movable inspection window, OCR its title locally, and match it against the current tarkov.dev item catalog without opening a browser over the game.
+`SHA256SUMS.txt` lists the checksum of every file. MAYAK checks GitHub Releases for a newer version at start and every 6 hours, downloads it in the background, verifies the checksum and installs it when it quits (Settings → Startup → Automatic updates).
+
+## What it does
+
+- **Position on the map.** Press EFT's screenshot key in a raid: the coordinates and heading in the file name move your marker on the tarkov.dev map. Map and floor are detected from the logs and the coordinates.
+- **Tasks screen.** Screenshot the task list and local OCR reads the selected task, then opens it on tarkov.dev or the wiki. English and Japanese game text.
+- **Item inspection.** Screenshot an item window and the item panel shows flea and trader prices, price history, and the tasks and hideout stations that need it.
+- **TarkovTracker sync.** Task started, failed and completed events from the notification logs go to TarkovTracker, per PvP, Season and PvE profile. Past logs can be synced in one go.
+- **Raid alerts.** Sounds for match found, raid start and the run-through timer, with custom WAV / MP3 files.
+- **Built-in browser.** tarkov.dev, TarkovTracker and the wiki in tabs, with ad blocking.
+- Japanese and English UI, tray, autostart, automatic updates.
 
 ## Safety boundary
 
-MAYAK only reads files created by EFT, local application settings, and public web APIs. It does not read process memory, inject DLLs, hook the game, sniff network traffic, or automate game input.
+MAYAK only reads files created by EFT, local application settings and public web APIs. It does not read process memory, inject DLLs, hook the game, sniff network traffic or automate game input. Screenshots are not uploaded; OCR and image analysis run locally. TarkovTracker API keys are stored encrypted with Windows DPAPI.
 
-Screenshots are not uploaded. OCR and image analysis run locally. Optional recognition archives are stored under `Screenshots/Mayak-Debug` with the source image, crop, and a JSON metadata file. Optional retention cleanup is disabled by default and only removes image files directly inside the configured Screenshots directory; it never removes the debug archive.
+Whether a companion tool is acceptable to you is your own call: read the game's terms and use MAYAK at your own risk. MAYAK is not affiliated with Battlestate Games, tarkov.dev or TarkovTracker.
 
-## Features
+## Setup
 
-- Passive screenshot monitoring with stable-file detection and deduplication
-- EFT coordinate, quaternion, direction, and floor-aware position updates
-- Raid-state and map detection from ordinary EFT logs
-- Multi-account TarkovTracker task synchronization for Normal PvP, Seasonal PvP, and PvE profiles
-- Existing EFT log scan and explicit API-key assignment per account, profile, and mode
-- Automatic task started, failed, and completed updates from EFT notification logs
-- Per-mode TarkovTracker API tokens protected with Windows DPAPI
-- tarkov.dev Remote Control over WebSocket
-- Multiple Remote IDs with independent map/position and task-display routing
-- Optional automatic tarkov.dev map navigation when a raid starts
-- Automatic tarkov.dev Remote ID discovery for local Chrome, Edge, and Brave profiles
-- Multiple 2560×1440 English Tasks screen layouts
-- Windows OCR with optional Tesseract support
-- Fuzzy quest-name matching against current tarkov.dev data
-- Position-independent item inspection detection and fuzzy item-name matching
-- Local success and error sounds with volume controls
-- Optional match-found, raid-start, and run-through timer sound alerts from EFT logs
-- Per-alert local WAV or MP3 assignment with built-in sound fallback
-- In-app structured log viewer with level filtering, search, and JSON Lines persistence
-- Japanese and English UI
-- Automatic updates from GitHub Releases on Windows, macOS and Linux (checksum-verified, installed on quit or on demand; can be turned off)
-- Persistent settings, window size, and window position
-- Optional Windows startup, manual or automatic monitoring, minimized launch, and system-tray behavior
-- React, TypeScript, Radix UI, and shadcn-style components
+1. Run the installer (or unzip the portable build) and start MAYAK.
+2. Check the EFT Screenshots and Logs folders under Settings → Folders; they are detected automatically when possible.
+3. On the tarkov.dev map, enable Remote Control and enter the Remote ID (browsers on the same PC are detected automatically).
+4. In EFT, bind Settings → Controls → Screenshot to a key you can reach in a fight (the default is PrintScreen). Only EFT's own screenshots carry coordinates.
+5. Optional: create a TarkovTracker API token (GP and WP) on its [settings page](https://tarkovtracker.org/settings#api) and assign it to the profile MAYAK finds in the logs.
 
-## Requirements
-
-- Windows 11
-- [mise](https://mise.jdx.dev/), which installs the Go, bun, and Task versions pinned in `mise.toml` (and Node and wrangler, which only publish the landing page)
-- Wails CLI v3.0.0-beta.24
-- WebView2 Runtime
-- Windows English OCR language pack when using Windows OCR
-
-The Windows Host includes a native tab workspace; macOS/Linux are receive-only
-Clients. Their native implementations still require platform build/runtime checks.
-See [Wails v3 migration notes](docs/wails-v3-migration.md).
+The full guide is on [mayak.ich.sh](https://mayak.ich.sh).
 
 ## Development
 
-Install Wails if needed:
-
-```powershell
-go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.24
-```
-
-Clone and run:
+Requirements: Windows 11, [mise](https://mise.jdx.dev/) (installs the pinned Go, bun, Task, Node and wrangler from `mise.toml`), 7-Zip for the bundled Tesseract, WebView2 Runtime.
 
 ```powershell
 git clone https://github.com/ichi0g0y/mayak.git
 cd mayak
-wails3 dev
-```
-
-Build:
-
-```powershell
-wails3 task build
-```
-
-Run tests:
-
-```powershell
-task frontend:build
+mise install
+task dev          # the app with hot reload
+task build        # build/bin/Mayak.exe
+task installer    # build/dist/Mayak-Setup-windows-amd64.exe
+task dev:web      # the landing page at http://127.0.0.1:5173
 go test ./...
 ```
 
-Release: tag a commit `vX.Y.Z` and push the tag. The Release workflow builds every platform and publishes the Windows installer (`Mayak-Setup-windows-amd64.exe`, per user, no administrator rights) and the archives with `SHA256SUMS.txt`; running copies of MAYAK pick the release up from there. See [docs/development.md](docs/development.md#リリース).
+- `internal/` holds the app: recognition, log parsing, catalog, tracker sync, the updater (`internal/update`) and the Wails bindings (`internal/app`).
+- `frontend/` is the app's React UI; `site/` is the landing page (React, Tailwind, shadcn/ui, jotai), published to Cloudflare with `task site:deploy`.
+- `docs/` is the specification in Japanese, kept as Markdown for reference. Start with [docs/index.md](docs/index.md); [docs/development.md](docs/development.md) covers the repository layout, tasks, tests and the release flow.
 
-## Usage
+Release: tag a commit `vX.Y.Z` and push the tag. The Release workflow builds every platform, publishes the installer and the archives with `SHA256SUMS.txt`, and running copies of MAYAK update themselves from there.
 
-1. Open tarkov.dev in a browser and enable Remote Control.
-2. Enter the displayed Remote ID in MAYAK, or use automatic detection when the browser is on the same PC.
-3. Select the EFT Screenshots and Logs directories, or use automatic folder detection.
-4. Save the settings and leave MAYAK running.
-5. Use PrintScreen in EFT. MAYAK processes the resulting file without sending input to the game.
+## Support
 
-### TarkovTracker synchronization
+MAYAK is free and stays free. If it helps your raids, [buy me a coffee](https://buymeacoffee.com/ichi0g0y) or [sponsor on GitHub](https://github.com/sponsors/ichi0g0y). Bugs and ideas go to the [issues](https://github.com/ichi0g0y/mayak/issues).
 
-Create API tokens on the [TarkovTracker settings page](https://tarkovtracker.org/settings#api). Each token needs Get Progress (`GP`) and Write Progress (`WP`) permissions. MAYAK scans existing EFT logs for account/profile/mode identities. Assign each Normal PvP (`PVP_`), Seasonal PvP (`SZN_`), or PvE (`PVE_`) key to the matching detected profile in Settings. Unassigned keys are never used for synchronization.
-
-MAYAK reads `Session mode`, selected account/profile, and `ChatMessageReceived` task notifications from EFT's application/output logs. It sends task started, failed, and completed state changes only when the complete account, profile, and mode binding matches the active EFT session. Multiple EFT accounts and multiple profiles in the same mode remain isolated. Saved tokens are kept outside `settings.json` and encrypted for the current Windows user with DPAPI.
-
-Position metadata is ignored unless the EFT logs confirm an active raid. Tasks screen detection takes priority so menu screenshots containing stale coordinate metadata are not treated as live positions.
-
-The run-through alert uses one user-configurable duration for all maps (7:10 by default). Its timer starts only for PMC and PvE raids; short Scav start timing and reconnects are excluded.
-
-## Project layout
-
-```text
-MAYAK/
-├─ main.go                  embeds the frontend and tray icon, starts internal/app
-├─ internal/app/            Wails bindings and application lifecycle
-├─ frontend/src/            React and TypeScript UI
-├─ internal/config/         persistent local settings
-├─ internal/eftdetect/      EFT directory discovery
-├─ internal/logdetect/      raid-state and map detection
-├─ internal/itemdetect/     movable item inspection window detection
-├─ internal/itemapi/        item catalog client
-├─ internal/itemmatch/      OCR-tolerant item matching
-├─ internal/ocr/            local OCR adapters
-├─ internal/position/       screenshot filename and direction parser
-├─ internal/questapi/       quest catalog client
-├─ internal/questmatch/     normalized fuzzy matching
-├─ internal/remote/         tarkov.dev WebSocket client and payloads
-├─ internal/remoteid/       local browser Remote ID discovery
-├─ internal/sound/          local notification sounds
-├─ internal/taskdetect/     Tasks screen layouts and crops
-├─ internal/tracker/        TarkovTracker API client
-├─ internal/trackerlog/     EFT profile and task-event log parser
-├─ internal/trackerstore/   per-mode DPAPI-protected token storage
-└─ internal/watcher/        screenshot watcher and stable-file gate
-```
-
-## Compatibility
-
-MAYAK is an independent community project designed to interoperate with public EFT file formats and public tarkov.dev services. Escape from Tarkov and related names are trademarks of Battlestate Games. MAYAK is not affiliated with or endorsed by Battlestate Games, tarkov.dev or TarkovTracker.
-
-MAYAK only reads files the game writes; it never touches the game process. Whether a companion tool is acceptable to you is nevertheless your own call: read the game's terms and use MAYAK at your own risk.
-
-## Data sources and credits
+## Credits
 
 - Game data (items, maps, traders, tasks, hideout, boss and Goons sightings) comes from the free, community-run [tarkov.dev API](https://tarkov.dev/api/). Map and position sync uses tarkov.dev Remote Control. Item images and names are Battlestate Games' property, shown as tarkov.dev shows them.
 - Task progress sync uses the [TarkovTracker API](https://tarkovtracker.org/) with API tokens you create there.
-- The task list is completed from the [Escape from Tarkov Wiki](https://escapefromtarkov.fandom.com/) category index. Wiki content is licensed [CC BY-NC-SA](https://www.fandom.com/licensing).
-- The built-in browser's ad blocking uses [EasyList and EasyPrivacy](https://easylist.to/) (GPLv3 / CC BY-SA 3.0, by the EasyList authors) and the [AdGuard Japanese filter](https://github.com/AdguardTeam/AdguardFilters) (GPLv3), downloaded on first use.
-- OCR uses [Tesseract](https://github.com/tesseract-ocr/tesseract) (Apache-2.0) from the [UB Mannheim](https://github.com/UB-Mannheim/tesseract) build, with models derived from `tessdata_best`, or Windows OCR.
+- The task list is completed from the [Escape from Tarkov Wiki](https://escapefromtarkov.fandom.com/) (CC BY-NC-SA).
+- Ad blocking in the built-in browser uses [EasyList and EasyPrivacy](https://easylist.to/) (GPLv3 / CC BY-SA 3.0) and the [AdGuard Japanese filter](https://github.com/AdguardTeam/AdguardFilters) (GPLv3).
+- OCR uses [Tesseract](https://github.com/tesseract-ocr/tesseract) (Apache-2.0) from the [UB Mannheim](https://github.com/UB-Mannheim/tesseract) build with models derived from `tessdata_best`, or Windows OCR.
 - Color themes are based on the [Catppuccin](https://catppuccin.com/), [Nord](https://www.nordtheme.com/), [Dracula](https://draculatheme.com/), Gruvbox, Tokyo Night and [Solarized](https://ethanschoonover.com/solarized/) palettes.
+
+Escape from Tarkov and related names are trademarks of Battlestate Games.
 
 ## License
 
-MAYAK is free software under the [GNU General Public License v3.0](LICENSE).
-
-`task build` writes `build/bin/THIRD_PARTY_NOTICES.txt`, the licenses of the Go modules and frontend packages in the binary, the bundled OCR data, and the filter lists above; ship it next to `Mayak.exe`.
+MAYAK is free software under the [GNU General Public License v3.0](LICENSE). `task build` writes `build/bin/THIRD_PARTY_NOTICES.txt` with the licenses of everything in the binary and beside it; it ships with every release.

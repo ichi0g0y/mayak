@@ -43,7 +43,7 @@ Unicode true
 !define MUTEX "com.ichi0g0y.mayak-sim"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\MAYAK"
 !define RUN_KEY "Software\Microsoft\Windows\CurrentVersion\Run"
-!define SITE "https://mayak.ichi0g0y.workers.dev"
+!define SITE "https://mayak.ich.sh"
 !define REPO "https://github.com/ichi0g0y/mayak"
 
 Name "${PRODUCT}"

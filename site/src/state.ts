@@ -20,6 +20,9 @@ export const langAtom = atomWithStorage<Lang>(LANG_KEY, initialLang(), undefined
 
 export const REPOSITORY = 'ichi0g0y/mayak'
 export const RELEASES_URL = `https://github.com/${REPOSITORY}/releases`
+export const SITE_URL = 'https://mayak.ich.sh'
+export const COFFEE_URL = 'https://buymeacoffee.com/ichi0g0y'
+export const SPONSORS_URL = 'https://github.com/sponsors/ichi0g0y'
 
 export type Asset = { name: string; url: string; size: number }
 export type Release = { tag: string; version: string; name: string; url: string; publishedAt: string; assets: Asset[] }

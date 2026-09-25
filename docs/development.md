@@ -248,7 +248,7 @@ macOS／Linux のビルドは CI でコンパイルしているだけで、動�
 
 `site/` は Vite + React + TypeScript のページで、Tailwind v4 と shadcn/ui（`src/components/ui`）、状態は jotai（`src/state.ts`: 表示言語と最新リリース）で作っています。文言は `src/i18n/`（`ja.ts` が型の基準、`en.ts`、`ru.ts`、`de.ts`、`zh.ts`）に 5 言語で持ち、初回はブラウザの `navigator.languages` から選び、ヘッダーのドロップダウンで切り替えて `localStorage` に保存します（`<html lang>` も追従）。ダウンロードボタンは GitHub の latest リリース（`releases/latest` API）から版と各 OS のアーカイブの URL・サイズを取り、取れないときはリリース一覧へのリンクになります。
 
-Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker 名 `mayak`）として公開します。初回だけ `wrangler login` でサインインし（CI なら `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID`）、あとは `task site:deploy`（`bun run build` → `wrangler deploy`）です。wrangler はリポジトリ内で使ってください（Node はプロジェクトの `mise.toml` でだけ有効です）。仕様書（`docs/`）は公開しません。
+Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker 名 `mayak`）として公開し、独自ドメイン https://mayak.ich.sh（`routes` の `custom_domain`。ゾーン `ich.sh` は同じアカウント）と mayak.ichi0g0y.workers.dev で配信します。初回だけ `wrangler login` でサインインし（CI なら `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID`）、あとは `task site:deploy`（`bun run build` → `wrangler deploy`）です。wrangler はリポジトリ内で使ってください（Node はプロジェクトの `mise.toml` でだけ有効です）。仕様書（`docs/`）は公開しません。
 
 ## テスト
 

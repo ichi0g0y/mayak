@@ -122,5 +122,9 @@ export const zh: Messages = {
     issues: '反馈问题',
     tarkovDev: 'tarkov.dev',
     tracker: 'TarkovTracker',
+    support: '支持',
+    coffee: 'Buy Me a Coffee',
+    sponsors: 'GitHub Sponsors',
+    supportNote: 'MAYAK 免费，并将一直免费。如果喜欢，请我喝杯咖啡吧。',
   },
 }

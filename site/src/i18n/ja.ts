@@ -120,6 +120,10 @@ export const ja = {
     issues: '不具合の報告',
     tarkovDev: 'tarkov.dev',
     tracker: 'TarkovTracker',
+    support: 'サポート',
+    coffee: 'Buy Me a Coffee',
+    sponsors: 'GitHub Sponsors',
+    supportNote: 'MAYAK は無料で、これからも無料です。気に入ったらコーヒーを 1 杯おごってください。',
   },
 }
 
