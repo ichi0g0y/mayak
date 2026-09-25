@@ -27,17 +27,14 @@ export const en: Messages = {
   },
   start: {
     kicker: 'Getting started',
-    title: 'Up and running in five minutes.',
-    lead: 'For first-time users. Follow the steps in order.',
+    title: 'That is the whole setup.',
+    lead: 'Install it and the app walks you through the rest. Only the first step has anything to trip over.',
     steps: [
-      { title: 'Run the installer', body: 'Download Mayak-Setup-windows-amd64.exe from the button above and run it. It needs no administrator rights and installs into your user folder.' },
-      { title: 'If SmartScreen warns, choose "Run anyway"', body: 'The first time, Windows may say "Windows protected your PC". Click "More info", then "Run anyway". MAYAK is an unsigned open-source app; the source is on GitHub. Later starts show no warning.' },
-      { title: 'Check the folders', body: 'On start MAYAK looks for the EFT Screenshots and Logs folders. Check them under Settings → Folders; if they were not found, pick them by hand.' },
-      { title: 'Put the screenshot key within reach', body: 'In EFT go to Settings → Controls → "Screenshot". The default is PrintScreen, which is hard to reach mid-fight, so bind it to a mouse side button or a free key near your left hand. Only screenshots taken with EFT’s own function carry coordinates; Steam or Windows screenshots do not.' },
-      { title: 'Press that key in a raid. That is all', body: 'Keep the map tab open in MAYAK’s built-in browser and your position follows with no setup. On one PC with several monitors you never need to connect to tarkov.dev yourself. Screenshot the Tasks screen or an item window and that info appears in the built-in browser too.' },
-      { title: '(Optional) Another PC or your usual browser', body: 'Open the tarkov.dev map in that browser and click the connect button at the bottom left. Chrome, Edge and Brave on the same PC are detected automatically under Settings → tarkov.dev; from another PC or a tablet, type the Remote ID it shows.' },
+      { title: 'Install', body: 'Run Mayak-Setup-windows-amd64.exe from the download button; no admin rights needed. If Windows shows "Windows protected your PC" the first time, click "More info" and then "Run anyway". It appears for any unsigned open-source app. On macOS, open the dmg, drag Mayak.app to Applications and right-click → Open the first time.' },
+      { title: 'Start it and follow the guide', body: 'On the first start a tutorial opens and walks through the EFT folders, the screenshot key, the map, use from another PC and TarkovTracker. It is always available again under Settings → Appearance.' },
+      { title: 'In a raid, just press the screenshot key', body: 'The map tab follows your position. Screenshot the Tasks screen or an item window and that information appears too.' },
     ],
-    tip: 'Leave MAYAK running. It minimizes to the tray and starts monitoring on launch.',
+    tip: 'Leave MAYAK running. It minimizes to the tray and starts monitoring automatically on launch.',
   },
   tracker: {
     kicker: 'TarkovTracker',

@@ -11,12 +11,9 @@ import { Section } from './Section'
 /** The screenshots beside each step; a missing file is skipped. */
 function stepImages(lang: Lang): Record<number, string[]> {
   return {
-    1: [shared('setup-1.png')],
-    2: [shared('setup-2.png')],
-    3: [localized(lang, 'setup-3.png')],
-    4: [shared('setup-4.png')],
-    5: [localized(lang, 'setup-5.png'), localized(lang, 'setup-5-2.png')],
-    6: [localized(lang, 'setup-6.png')],
+    1: [shared('setup-2.png')],
+    2: [localized(lang, 'tutorial-1.png'), localized(lang, 'tutorial-3.png')],
+    3: [localized(lang, 'setup-5.png')],
   }
 }
 
