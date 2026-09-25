@@ -85,11 +85,11 @@ func (m *Manager) command(command string, o Options) error {
 			}
 			v = &nativeView{ptr, h}
 			views[o.ID] = v
-			v.action("navigate", o.URL, 0, 0, 0)
+			v.action("navigate", o.URL, 0, 0, 0, 0)
 		}
 		if command == "show" || command == "hideAll" {
 			for _, other := range views {
-				other.action("hide", "", 0, 0, 0)
+				other.action("hide", "", 0, 0, 0, 0)
 			}
 		}
 		if v != nil && command != "hideAll" {
@@ -109,7 +109,7 @@ func (m *Manager) close() {
 		}
 		m.native.closed = true
 		for id, v := range m.native.views {
-			v.action("close", "", 0, 0, 0)
+			v.action("close", "", 0, 0, 0, 0)
 			v.handle.Delete()
 			delete(m.native.views, id)
 		}
