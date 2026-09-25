@@ -1,14 +1,24 @@
+import { useEffect, useState } from 'react'
 import { ExternalLink, KeyRound } from 'lucide-react'
 import { Reveal } from '@/components/Reveal'
 import { useT } from '@/i18n'
 import { Section } from './Section'
 
+/** The real TarkovTracker settings screen, when public/screenshots/tracker.png exists. */
+const screenshot = '/screenshots/tracker.png'
+
 /** Linking TarkovTracker: what it is, the three steps, and the caveats. */
 export function Tracker() {
   const t = useT()
+  const [hasImage, setHasImage] = useState(false)
+  useEffect(() => {
+    const image = new Image()
+    image.onload = () => setHasImage(true)
+    image.src = screenshot
+  }, [])
   return (
     <Section id="tracker" kicker={t.tracker.kicker} title={t.tracker.title} lead={t.tracker.lead}>
-      <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+      <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-14">
         <Reveal>
           <ol className="grid gap-5">
             {t.tracker.steps.map((step, i) => (
@@ -23,9 +33,7 @@ export function Tracker() {
             {t.tracker.openSettings}
             <ExternalLink className="size-3.5" />
           </a>
-        </Reveal>
-        <Reveal delay={80}>
-          <div className="panel p-6">
+          <div className="panel mt-8 p-5">
             <h3 className="font-bold">{t.tracker.noteTitle}</h3>
             <ul className="text-muted-foreground mt-3 grid gap-2.5 text-sm leading-relaxed">
               {t.tracker.notes.map((note) => (
@@ -34,6 +42,13 @@ export function Tracker() {
             </ul>
           </div>
         </Reveal>
+        {hasImage && (
+          <Reveal delay={80} className="hidden lg:block">
+            <figure className="panel sticky top-24 overflow-hidden">
+              <img src={screenshot} alt="" className="block w-full" />
+            </figure>
+          </Reveal>
+        )}
       </div>
     </Section>
   )

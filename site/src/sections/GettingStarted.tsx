@@ -41,7 +41,8 @@ export function GettingStarted() {
   }, [steps.length])
 
   const anyImage = Object.values(available).some(Boolean)
-  const shown = available[active] ? active : Object.keys(available).map(Number).find((i) => available[i] && i <= active)
+  // A step without a screenshot keeps the previous one; the caption names its step.
+  const shown = [...Array(active + 1).keys()].reverse().find((i) => available[i])
   return (
     <Section id="start" kicker={t.start.kicker} title={t.start.title} lead={t.start.lead}>
       <div className={cn('grid gap-10', anyImage && 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-14')}>
