@@ -146,10 +146,11 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 
 | セクション | 内容 |
 |---|---|
-| `appearance` | 表示言語、テーマ |
+| `appearance` | 表示言語、テーマ、時刻表示、タブとアイテム情報の位置、「チュートリアルを表示」 |
 | `tasks` | Host 上（`local`）では Host の `questSite` を直接編集する（`hostQuestSite` アクション。シェルの `questSite` は `host` に戻る）。Client では `questSite`（「Host の設定に従う」を含む）。どちらでも `taskMode` を設定する |
 | `adblock` | 有効化のチェックボックス。EasyList、EasyPrivacy、AdGuard 日本語フィルタを使う。tarkov.dev は対象外 |
 | `connection` | 接続方法（`local` は Windows のみ / `webrtc` / `off`）、WebRTC のペアリング、STUN サーバー |
+| `about` | 名前とバージョン（`GetVersion`。開発ビルドでは「開発ビルド」）、公式サイト・ソースコード・リリースノートへのリンク、ライセンスとクレジット |
 
 - 以前、ブラウザ側で `questSite` を選んでいた場合は、Windows の Host で起動したときに一度だけ Host の `questSite` へ移し、ブラウザ側を `host` に戻します。
 - タブの配置は、ツールバーのボタン（`toggleLayout`）でも切り替えられます。

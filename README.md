@@ -44,7 +44,7 @@ Whether a companion tool is acceptable to you is your own call: read the game's 
 
 ## Setup
 
-1. Run the installer (or unzip the portable build) and start MAYAK.
+1. Run the installer (or unzip the portable build) and start MAYAK. On the first start it walks you through the steps below; the guide can be reopened under Settings → Appearance.
 2. Check the EFT Screenshots and Logs folders under Settings → Folders; they are detected automatically when possible.
 3. In EFT, bind Settings → Controls → Screenshot to a key you can reach in a fight (the default is PrintScreen). Only EFT's own screenshots carry coordinates.
 4. Press that key in a raid. The map tab in MAYAK's built-in browser follows your position with no further setup; on one PC with a second monitor that is all you need.

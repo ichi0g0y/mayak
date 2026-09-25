@@ -19,9 +19,10 @@ let copied=false,windowTheme='',renderDeferred=false;
 // installing. It shows on the Host until it is finished or skipped
 // (state.tutorialDone) and can be reopened from the appearance settings.
 let tutorialOpen=false,tutorialStep=0,tutorialSettings=null,tutorialStarted=false;
-// The build's version, for the About section; empty in development.
+// The build's version, for the About section; empty in development. The
+// desktop bridge (api.js) exists once the first state arrives, so it loads then.
 let appVersion='';
-void window.mayakDesktop?.backend?.GetVersion?.().then(v=>{appVersion=v||'';if(state)render();}).catch(()=>{});
+async function loadVersion(){try{appVersion=(await window.mayakDesktop?.backend?.GetVersion?.())||'';}catch{}if(appVersion)render();}
 const words={
   ja:{home:'ホーム',settings:'設定',menu:'メニュー',off:'受信OFF',back:'戻る',forward:'進む',reload:'再読み込み',address:'URLを入力',open:'開く',close:'閉じる',pin:'固定',unpin:'固定解除',newTab:'新しいタブ',welcome:'レイドの準備を、ここから。',intro:'マップ、タスク、調べものを一つのウインドウに。',maps:'マップ',tasks:'タスク攻略',items:'アイテム',progress:'進捗管理',other:'その他',addBookmark:'ブックマークを追加',edit:'編集',delete:'削除',name:'名前',url:'URL',group:'分類',done:'確定',cancel:'キャンセル',empty:'ブックマークを追加して、よく使うサイトをまとめましょう。',client:'ブラウザ設定',host:'Host設定・ログ',appearance:'表示',language:'表示言語',layout:'タブの配置',vertical:'左サイドバー',horizontal:'上部の横並び',recognition:'タスクの自動表示',taskMode:'検出したタスクを開く方法',reuse:'同じタブを更新',new:'新しいタブを追加',questSite:'表示するサイト',hostChoice:'Hostの設定に従う',official:'公式Wiki',japanese:'日本語Wiki',taskHelp:'表示中のタスクは、上のサイト選択で英語Wiki・日本語Wikiを切り替えられます。固定したタブは自動更新の対象外です。',connection:'Host接続',mode:'接続方法',local:'このPCで検出する',disabled:'接続しない',localHelp:'このPCの検出結果をタブに表示します。',bookmarkHelp:'カードをクリックして開く。名前と分類は編集できます。',tabHelp:'ドラッグで順序変更',dismiss:'閉じる',searchWiki:'Wiki内で検索',pinHelp:'固定中'},
   en:{home:'Home',settings:'Settings',menu:'Menu',off:'Receiving off',back:'Back',forward:'Forward',reload:'Reload',address:'Enter a URL',open:'Open',close:'Close',pin:'Pin',unpin:'Unpin',newTab:'New tab',welcome:'Get ready for your next raid.',intro:'Maps, tasks and research, together in one window.',maps:'Maps',tasks:'Task guides',items:'Items',progress:'Progress',other:'Other',addBookmark:'Add bookmark',edit:'Edit',delete:'Delete',name:'Name',url:'URL',group:'Category',done:'Done',cancel:'Cancel',empty:'Add bookmarks to keep your useful sites together.',client:'Browser settings',host:'Host settings & logs',appearance:'Appearance',language:'Language',layout:'Tab placement',vertical:'Left sidebar',horizontal:'Across the top',recognition:'Automatic task navigation',taskMode:'Open recognized tasks',reuse:'Reuse the task tab',new:'Add a new tab',questSite:'Website',hostChoice:'Follow Host setting',official:'Official Wiki',japanese:'Japanese Wiki',taskHelp:'Switch the current task between English and Japanese wikis using the website selector above. Pinned tabs are never replaced automatically.',connection:'Host connection',mode:'Connection mode',local:'Detect on this computer',disabled:'No connection',localHelp:'Show detections from this computer in tabs.',bookmarkHelp:'Click a card to open it. Names and categories are editable.',tabHelp:'Drag to reorder',dismiss:'Dismiss',searchWiki:'Search this Wiki',pinHelp:'Pinned'},
@@ -761,7 +762,7 @@ installTabDrag({
  over:tabOverBookmarks,
  dropElsewhere:id=>{clearBookmarkDrop();renderDeferred=false;void action('bookmarkTab',{id,before:tabBookmarkBefore});},
 });
-api.onState(next=>{state=next;render();if(!tutorialStarted){tutorialStarted=true;if(!state.tutorialDone&&state.localHost)void openTutorial();}});
+api.onState(next=>{state=next;render();if(!tutorialStarted){tutorialStarted=true;void loadVersion();if(!state.tutorialDone&&state.localHost)void openTutorial();}});
 // Title bar behavior for the frameless window: double-click toggles maximise;
 // maximising by any means (snap, keyboard) updates the caption button.
 document.addEventListener('dblclick',event=>{if(getComputedStyle(event.target).getPropertyValue('--wails-draggable').trim()==='drag')void Window.ToggleMaximise().then(syncMaximised);});
