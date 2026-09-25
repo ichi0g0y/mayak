@@ -124,7 +124,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | キー | 既定値 | 取り得る値 / 意味 |
 |---|---|---|
 | `language` | `"ja"` | `ja` / `en`。シェルの表示言語（Host 設定にも反映） |
-| `theme` | `"claude-dark"` | `system`（OS の明暗に合わせて `claude-light` / `claude-dark`）, `claude-dark`, `claude-light`, `catppuccin-latte`, `catppuccin-frappe`, `catppuccin-macchiato`, `catppuccin-mocha`, `nord`, `dracula`, `gruvbox-dark`, `tokyo-night`, `solarized-dark`, `solarized-light` |
+| `theme` | `"mayak-dark"` | `system`（OS の明暗に合わせて `mayak-light` / `mayak-dark`）, `mayak-dark`, `mayak-light`, `catppuccin-latte`, `catppuccin-frappe`, `catppuccin-macchiato`, `catppuccin-mocha`, `nord`, `dracula`, `gruvbox-dark`, `tokyo-night`, `solarized-dark`, `solarized-light` |
 | `layout` | `"vertical"` | `vertical`（左サイドバー）/ `horizontal`（上部に横並び） |
 | `sidebarCollapsed` | `false` | サイドバーを折りたたむ |
 | `sidebarWidth` | `224` | 180–420 に収める |

@@ -34,11 +34,18 @@ tasks:
     cmds:
       - go run ./tools/tessbundle -fetch -out build/bin/tesseract -lang eng,jpn -tessdata build/tessdata/eft.traineddata,build/tessdata/eftjpn.traineddata
 
+  # The licenses of everything in the binary and beside it, for the people
+  # who get Mayak.exe (tools/notices).
+  notices:
+    cmds:
+      - go run ./tools/notices -out build/bin/THIRD_PARTY_NOTICES.txt
+
   build:
     summary: Build the Wails v3 application without launching it
     cmds:
       - task: frontend:build
       - task: tesseract:bundle
+      - task: notices
       - task: 'build:{{OS}}'
 
   # Windows resources (icon, manifest, version info) that go build links in.

@@ -121,7 +121,7 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 | `itemPanel` | `{open, id, mode}`。アイテムサイドバーの開閉と表示中のアイテム |
 | `bookmarkView` | `grid`（既定）/ `list` |
 | `favicons` | ホスト名 → ファビコン URL（最大 200 件） |
-| `theme` | `claude-dark`（既定）。`system` と 12 種のテーマ |
+| `theme` | `mayak-dark`（既定）。`system` と 12 種のテーマ |
 | `adblock` | `true` |
 | `taskMode` | `new`（既定）/ `reuse` |
 | `questSite` | `host`（既定）/ `tarkov-dev` / `official-wiki` / `japanese-wiki` |

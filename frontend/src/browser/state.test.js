@@ -96,11 +96,12 @@ test('recognized tasks open in a new tab by default, but a saved reuse choice is
   assert.notEqual(a.id,b.id);
 });
 
-test('theme defaults to Claude Dark and rejects unknown themes', () => {
-  assert.equal(defaults().theme, 'claude-dark');
+test('theme defaults to MAYAK Dark, maps the earlier names and rejects unknown themes', () => {
+  assert.equal(defaults().theme, 'mayak-dark');
   assert.equal(restore({theme:'catppuccin-mocha'}).theme, 'catppuccin-mocha');
   assert.equal(restore({theme:'system'}).theme, 'system');
-  assert.equal(restore({theme:'neon'}).theme, 'claude-dark');
+  assert.equal(restore({theme:'neon'}).theme, 'mayak-dark');
+  assert.equal(restore({theme:'claude-light'}).theme, 'mayak-light');
 });
 
 test('tabs reorder before a tab or to the end, never past the fixed map', () => {

@@ -145,8 +145,21 @@ MAYAK/
 
 ## Compatibility
 
-MAYAK is an independent community project designed to interoperate with public EFT file formats and public tarkov.dev services. Escape from Tarkov and related names are trademarks of Battlestate Games. MAYAK is not affiliated with or endorsed by Battlestate Games or tarkov.dev.
+MAYAK is an independent community project designed to interoperate with public EFT file formats and public tarkov.dev services. Escape from Tarkov and related names are trademarks of Battlestate Games. MAYAK is not affiliated with or endorsed by Battlestate Games, tarkov.dev or TarkovTracker.
+
+MAYAK only reads files the game writes; it never touches the game process. Whether a companion tool is acceptable to you is nevertheless your own call: read the game's terms and use MAYAK at your own risk.
+
+## Data sources and credits
+
+- Game data (items, maps, traders, tasks, hideout, boss and Goons sightings) comes from the free, community-run [tarkov.dev API](https://tarkov.dev/api/). Map and position sync uses tarkov.dev Remote Control. Item images and names are Battlestate Games' property, shown as tarkov.dev shows them.
+- Task progress sync uses the [TarkovTracker API](https://tarkovtracker.org/) with API tokens you create there.
+- The task list is completed from the [Escape from Tarkov Wiki](https://escapefromtarkov.fandom.com/) category index. Wiki content is licensed [CC BY-NC-SA](https://www.fandom.com/licensing).
+- The built-in browser's ad blocking uses [EasyList and EasyPrivacy](https://easylist.to/) (GPLv3 / CC BY-SA 3.0, by the EasyList authors) and the [AdGuard Japanese filter](https://github.com/AdguardTeam/AdguardFilters) (GPLv3), downloaded on first use.
+- OCR uses [Tesseract](https://github.com/tesseract-ocr/tesseract) (Apache-2.0) from the [UB Mannheim](https://github.com/UB-Mannheim/tesseract) build, with models derived from `tessdata_best`, or Windows OCR.
+- Color themes are based on the [Catppuccin](https://catppuccin.com/), [Nord](https://www.nordtheme.com/), [Dracula](https://draculatheme.com/), Gruvbox, Tokyo Night and [Solarized](https://ethanschoonover.com/solarized/) palettes.
 
 ## License
 
-[MIT](LICENSE)
+MAYAK is free software under the [GNU General Public License v3.0](LICENSE).
+
+`task build` writes `build/bin/THIRD_PARTY_NOTICES.txt`, the licenses of the Go modules and frontend packages in the binary, the bundled OCR data, and the filter lists above; ship it next to `Mayak.exe`.

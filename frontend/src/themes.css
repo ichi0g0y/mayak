@@ -1,9 +1,9 @@
 /* Color themes shared by the browser shell and the Host settings page.
    The shell sets <html data-theme>; "system" is resolved there to
-   claude-light or claude-dark. Every color in the UI derives from these
+   mayak-light or mayak-dark. Every color in the UI derives from these
    tokens, so a theme only has to define this list. */
 :root,
-[data-theme="claude-dark"] {
+[data-theme="mayak-dark"] {
   color-scheme: dark;
   --bg: #262624; --sidebar: #1f1e1d; --surface: #2b2a28; --surface-2: #30302e; --raised: #353431;
   --hover: #2c2b29; --selected: #343330; --border: #353430; --border-strong: #403f3b;
@@ -12,7 +12,7 @@
   --success: #8fd19e; --danger: #f08c7e; --warn: #e7c07f; --info: #818cf8;
   --shadow: #000000aa;
 }
-[data-theme="claude-light"] {
+[data-theme="mayak-light"] {
   color-scheme: light;
   --bg: #faf9f5; --sidebar: #f5f4ed; --surface: #ffffff; --surface-2: #f0eee6; --raised: #ffffff;
   --hover: #f0eee6; --selected: #e8e6dc; --border: #e8e6dc; --border-strong: #d1cfc5;

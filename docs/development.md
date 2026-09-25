@@ -175,7 +175,8 @@ Wails 本体はフォークせず公式モジュールを使います。
 | `task frontend:install` | `bun install --frozen-lockfile` |
 | `task frontend:build` | バインディング生成 → 依存インストール → `bun --bun run build`（`tsc && vite build`） |
 | `task tesseract:bundle` | `build/bin/tesseract` に同梱 Tesseract を作る（Windows のみ）。固定版の UB Mannheim インストーラーをチェックサム検証付きで一度だけ取得し、`eng,jpn` と `build/tessdata` のモデルを入れる。入力が変わらなければスキップ |
-| `task build` | `frontend:build` → `tesseract:bundle` → `build:{{OS}}`。アプリは起動しない |
+| `task build` | `frontend:build` → `tesseract:bundle` → `notices` → `build:{{OS}}`。アプリは起動しない |
+| `task notices` | `build/bin/THIRD_PARTY_NOTICES.txt` を生成する。exe にリンクされる Go モジュールとフロントエンドの依存のライセンス文、同梱の OCR データ、実行時に取得するフィルタリストの出典（`tools/notices`） |
 | `task build:windows` | `.syso` 生成と `go build`。`DEV=true` でなければ `-tags production -ldflags="-s -w -H windowsgui"` で `build/bin/Mayak.exe` を出力 |
 | `task build:darwin` / `build:linux` | `production` タグ付きで `build/bin/Mayak` を出力 |
 | `task dev` | 依存インストール → ホットリロード付き開発モード（下記）。アプリを起動する |
