@@ -2,8 +2,8 @@
 
 # MAYAK
 
-The full specification (in Japanese) is in [docs/](docs/index.md); build it as
-a site with [mdBook](https://rust-lang.github.io/mdBook/): `mdbook serve docs`.
+The full specification (in Japanese) is in [docs/](docs/index.md), kept as
+Markdown for reference. The landing page lives in [site/](site/).
 
 The [TarkovMonitor feature-parity checklist](docs/tarkovmonitor-parity.md) tracks
 the supported behavior and the remaining safe, log-based integrations.
@@ -61,7 +61,7 @@ Screenshots are not uploaded. OCR and image analysis run locally. Optional recog
 ## Requirements
 
 - Windows 11
-- [mise](https://mise.jdx.dev/), which installs the Go, bun, and Task versions pinned in `mise.toml` (and mdBook, Node and wrangler for the docs site)
+- [mise](https://mise.jdx.dev/), which installs the Go, bun, and Task versions pinned in `mise.toml` (and Node and wrangler, which only publish the landing page)
 - Wails CLI v3.0.0-beta.24
 - WebView2 Runtime
 - Windows English OCR language pack when using Windows OCR

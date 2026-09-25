@@ -1,0 +1,637 @@
+<!DOCTYPE HTML>
+<html lang="ja" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>設定と連携 - MAYAK 仕様書</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-a0128e09.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9bee80de.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">MAYAK 仕様書</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ichi0g0y/mayak" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="設定と連携"><a class="header" href="#設定と連携">設定と連携</a></h1>
+<p>MAYAK の設定は保存場所の異なる 2 系統に分かれています。</p>
+<ul>
+<li><strong>Host 設定</strong>: Go 側の <code>internal/config.Settings</code>。<code>settings.json</code> に保存され、React の設定ページ（<code>frontend/src/main.tsx</code>）で編集します。このページはブラウザシェルの設定タブ内に <code>&lt;iframe id="host-settings"&gt;</code>（<code>/settings.html#&lt;section&gt;</code>）として埋め込まれます。</li>
+<li><strong>ブラウザ設定</strong>: シェル側の状態（<code>frontend/src/browser/state.js</code>）。<code>browser.json</code> に保存されます。</li>
+</ul>
+<p>画面上では両者を区別せず、1 つの設定タブのサイドバーにまとめて表示します（シェルの詳細は <a href="browser-shell.html">browser-shell.md</a> を参照）。</p>
+<h2 id="設定画面の構成"><a class="header" href="#設定画面の構成">設定画面の構成</a></h2>
+<p>設定タブのサイドバーは <code>shell.js</code> の <code>settingsGroups</code> の順に並びます。Host のセクション（<code>hostSections</code>）は、Windows 上で動いているときだけ表示されます（接続方法は問いません）。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>グループ</th><th>セクション キー</th><th>表示名 (ja)</th><th>提供元</th></tr>
+</thead>
+<tbody>
+<tr><td>一般</td><td><code>appearance</code></td><td>表示</td><td>ブラウザ</td></tr>
+<tr><td></td><td><code>startup</code></td><td>起動とウィンドウ</td><td>Host</td></tr>
+<tr><td></td><td><code>sounds</code></td><td>通知</td><td>Host</td></tr>
+<tr><td>ゲーム</td><td><code>folders</code></td><td>フォルダと保存</td><td>Host</td></tr>
+<tr><td></td><td><code>recognition</code></td><td>ゲームと認識</td><td>Host</td></tr>
+<tr><td></td><td><code>tasks</code></td><td>タスクの開き方</td><td>ブラウザ</td></tr>
+<tr><td>連携</td><td><code>remote</code></td><td>tarkov.dev 連携</td><td>Host</td></tr>
+<tr><td></td><td><code>tracker</code></td><td>TarkovTracker</td><td>Host</td></tr>
+<tr><td></td><td><code>connection</code></td><td>他のPCとの接続</td><td>ブラウザ</td></tr>
+<tr><td>ブラウザ</td><td><code>adblock</code></td><td>広告ブロック</td><td>ブラウザ</td></tr>
+<tr><td>状態と診断</td><td><code>status</code></td><td>ステータス</td><td>Host</td></tr>
+<tr><td></td><td><code>logs</code></td><td>ログ</td><td>Host</td></tr>
+<tr><td></td><td><code>debug</code></td><td>デバッグ</td><td>Host</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>Host 側のページは URL ハッシュでセクションを切り替えます。ハッシュが変わると、保留中の保存を待ってから <code>GetSettings()</code> で設定を読み直します。</li>
+<li>シェルの表示言語（<code>&lt;html lang&gt;</code>）が変わると、Host 設定の <code>language</code> にも反映されます。テーマも同一オリジンの iframe に適用されます。</li>
+</ul>
+<h2 id="host-設定-internalconfigsettings"><a class="header" href="#host-設定-internalconfigsettings">Host 設定 (<code>internal/config.Settings</code>)</a></h2>
+<h3 id="保存の仕組み"><a class="header" href="#保存の仕組み">保存の仕組み</a></h3>
+<ul>
+<li>保存先: <code>%APPDATA%\Mayak\settings.json</code>（<code>os.UserConfigDir()</code> 配下）</li>
+<li>書き込みは一時ファイル経由のアトミック置換（パーミッション <code>0600</code>）です。書き込み前に、有効な JSON であれば直前の内容を <code>settings.json.bak</code> に退避します。</li>
+<li>読み込み時に JSON が壊れていれば <code>.bak</code> から復元し、それも失敗した場合は既定値を使います。</li>
+<li>設定ページは項目を変更するたびに <code>PersistSettings</code> を呼んで即時保存します。実行中のサービスは再起動しません。明示的な保存（エラー時の「再試行」）は <code>SaveSettings</code> を使い、監視中にフォルダが変わった場合はウォッチャーも張り替えます。</li>
+<li>どちらの保存でも <code>normalizeSettings</code> が値を補正します。また <code>keepWindowSettings</code> により、<code>windowX/Y/Width/Height/Configured</code>、<code>browserRemoteId</code>、<code>ocrDefaultRevision</code> はフロントエンドから上書きできません。</li>
+<li><code>launchAtStartup</code> の変更は保存より先にレジストリへ適用され、保存に失敗すると元に戻します。</li>
+</ul>
+<h3 id="マイグレーション"><a class="header" href="#マイグレーション">マイグレーション</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>対象</th><th>内容</th></tr>
+</thead>
+<tbody>
+<tr><td><code>minimizeToTray</code> → <code>closeToTray</code></td><td><code>closeToTray</code> キーが無い古いファイルでは <code>closeToTray = minimizeToTray</code> とする（以前は <code>minimizeToTray</code> が「閉じる」も兼ねていたため）</td></tr>
+<tr><td><code>remoteId</code> → <code>remoteTargets</code></td><td><code>remoteTargets</code> が空で <code>remoteId</code> があれば、<code>{id, name:"Remote 1", map:true, tasks:true}</code> の 1 件に変換する。保存後の <code>remoteId</code> は常に先頭ターゲットの ID</td></tr>
+<tr><td><code>ocrDefaultRevision</code></td><td><code>&lt; 1</code> のとき、<code>ocrEngine:"windows"</code> を Tesseract が使えれば <code>tesseract</code> に一度だけ移行し、<code>1</code> を記録する</td></tr>
+<tr><td>OCR フォールバック</td><td><code>ocrEngine</code> が <code>tesseract</code> で <code>tesseractPath</code> が空なのに、同梱版も PATH 上の <code>tesseract</code> も無い場合は <code>windows</code> にする</td></tr>
+<tr><td><code>browserRemoteId</code></td><td>12 文字 <code>[A-Z0-9]</code> でなければ起動時に生成する（以前の 4 文字の ID も作り直す）</td></tr>
+<tr><td><code>map</code></td><td><code>laboratory</code>→<code>the-lab</code>、<code>labyrinth</code>→<code>the-labyrinth</code>、<code>factory4_night</code>→<code>night-factory</code></td></tr>
+<tr><td>フォルダ</td><td><code>screenshotDirectory</code> / <code>logsDirectory</code> が空なら、起動時に <code>eftdetect</code> で自動検出した値を入れる</td></tr>
+<tr><td>ウィンドウ位置</td><td><code>window.json</code> が未設定で旧 <code>windowConfigured</code> が真なら、旧 <code>windowX/Y/Width/Height</code> を初期位置に使う</td></tr>
+</tbody>
+</table>
+</div>
+<p>起動時の補正で内容が変わった場合は、その場で保存し直します（<code>settings.json</code> の読み込みに失敗した場合は保存しません）。<code>ocrDefaultRevision</code>、OCR フォールバック、フォルダの補正は Host として起動したときだけ行います。</p>
+<h3 id="全項目と既定値"><a class="header" href="#全項目と既定値">全項目と既定値</a></h3>
+<p>既定値は <code>config.defaults()</code> の値です。記載の無い項目はゼロ値（<code>""</code> / <code>false</code> / <code>0</code> / 空配列）です。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>キー</th><th>既定値</th><th>意味 / 補正</th></tr>
+</thead>
+<tbody>
+<tr><td><code>language</code></td><td><code>"ja"</code></td><td>Host UI とトレイメニューの言語。<code>ja</code> / <code>en</code> 以外は <code>ja</code></td></tr>
+<tr><td><code>gameLanguage</code></td><td><code>""</code>（→ <code>"auto"</code>）</td><td>OCR に使うゲーム言語。<code>auto</code>、<code>en</code>、または <code>internal/locale</code> の言語のみ</td></tr>
+<tr><td><code>questSite</code></td><td><code>""</code>（→ <code>"tarkov-dev"</code>）</td><td>タスクを開くサイト。<code>tarkov-dev</code> / <code>official-wiki</code> / <code>japanese-wiki</code></td></tr>
+<tr><td><code>screenshotDirectory</code></td><td><code>""</code></td><td>EFT の Screenshots フォルダ（<code>filepath.Clean</code> 済み）</td></tr>
+<tr><td><code>logsDirectory</code></td><td><code>""</code></td><td>EFT の Logs フォルダ</td></tr>
+<tr><td><code>remoteId</code></td><td><code>""</code></td><td>旧形式の Remote Control ID。互換用</td></tr>
+<tr><td><code>remoteTargets</code></td><td><code>[]</code></td><td>tarkov.dev Remote Control の送信先。<code>{id, name, map, tasks}</code>。空 ID と重複 ID は除去し、名前が空なら <code>Remote N</code></td></tr>
+<tr><td><code>browserRemoteId</code></td><td>自動生成</td><td>内蔵ブラウザのマップビュー用 Remote Control ID（12 文字）</td></tr>
+<tr><td><code>map</code></td><td><code>""</code></td><td>マップ未検出時に使うマップ。空なら自動</td></tr>
+<tr><td><code>gameMode</code></td><td><code>"auto"</code></td><td><code>auto</code> / <code>regular</code> / <code>pve</code> / <code>pvp-season</code>。変更するとカタログを再取得</td></tr>
+<tr><td><code>ocrEngine</code></td><td><code>"tesseract"</code></td><td><code>tesseract</code> / <code>windows</code>。それ以外は <code>tesseract</code></td></tr>
+<tr><td><code>tesseractPath</code></td><td><code>""</code></td><td>Tesseract 実行ファイルのパス（空なら同梱版または PATH）</td></tr>
+<tr><td><code>ocrDefaultRevision</code></td><td><code>0</code></td><td>OCR 既定値移行の記録（内部用）</td></tr>
+<tr><td><code>debug</code></td><td><code>false</code></td><td>デバッグ表示（crop プレビュー、候補、Hideout 診断）</td></tr>
+<tr><td><code>saveRecognitionDebug</code></td><td><code>false</code></td><td>認識データを <code>Screenshots\Mayak-Debug</code> に保存する</td></tr>
+<tr><td><code>screenshotCleanup</code></td><td><code>false</code></td><td>古いスクリーンショットを自動で削除する</td></tr>
+<tr><td><code>screenshotRetainCount</code></td><td><code>500</code></td><td>残す最大枚数。範囲は 0–100000 で、0 はこの条件を使わない</td></tr>
+<tr><td><code>screenshotRetainHours</code></td><td><code>168</code></td><td>保持時間（時間）。範囲は 0–87600 で、0 はこの条件を使わない</td></tr>
+<tr><td><code>soundsEnabled</code></td><td><code>true</code></td><td>通知音のマスタースイッチ</td></tr>
+<tr><td><code>questSoundEnabled</code> / <code>questSoundPath</code></td><td><code>true</code> / <code>""</code></td><td>クエスト認識に成功したときの音</td></tr>
+<tr><td><code>errorSoundEnabled</code> / <code>errorSoundPath</code></td><td><code>true</code> / <code>""</code></td><td>認識エラーや接続エラーのときの音</td></tr>
+<tr><td><code>matchFoundSoundEnabled</code> / <code>matchFoundSoundPath</code></td><td><code>false</code> / <code>""</code></td><td>マッチ成立時の音</td></tr>
+<tr><td><code>raidStartSoundEnabled</code> / <code>raidStartSoundPath</code></td><td><code>false</code> / <code>""</code></td><td>レイド開始時の音</td></tr>
+<tr><td><code>runThroughSoundEnabled</code> / <code>runThroughSoundPath</code></td><td><code>false</code> / <code>""</code></td><td>ランスルー時間が過ぎたときの音</td></tr>
+<tr><td><code>runThroughSeconds</code></td><td><code>430</code></td><td>ランスルー時間（秒）。1–3599 の範囲外なら 430</td></tr>
+<tr><td><code>questItemsSoundEnabled</code> / <code>questItemsSoundPath</code></td><td><code>false</code> / <code>""</code></td><td>レイド開始時にタスクアイテムの確認を促す音</td></tr>
+<tr><td><code>restartTasksSoundEnabled</code> / <code>restartTasksSoundPath</code></td><td><code>false</code> / <code>""</code></td><td>失敗したタスクがあるとき、レイド開始時に鳴らす音</td></tr>
+<tr><td><code>hideoutErrorNotifications</code> / <code>hideoutErrorSoundPath</code></td><td><code>false</code> / <code>""</code></td><td>Hideout 操作の失敗を通知する</td></tr>
+<tr><td><code>soundVolume</code></td><td><code>28</code></td><td>音量（0–100 に丸める）</td></tr>
+<tr><td><code>autoStartMonitoring</code></td><td><code>true</code></td><td>起動時に監視を開始する</td></tr>
+<tr><td><code>openMapOnRaidStart</code></td><td><code>true</code></td><td>レイド開始時に tarkov.dev を現在のマップに切り替える</td></tr>
+<tr><td><code>navigateMapOnPositionScreenshot</code></td><td><code>true</code></td><td>位置スクリーンショットの送信後、そのマップに切り替える</td></tr>
+<tr><td><code>tarkovTrackerEnabled</code></td><td><code>false</code></td><td>TarkovTracker との同期</td></tr>
+<tr><td><code>startMinimized</code></td><td><code>false</code></td><td>最小化した状態で起動する（「起動とウィンドウ」）。ウインドウの位置を復元したあとで最小化し、<code>minimizeToTray</code> が真ならトレイに入る</td></tr>
+<tr><td><code>minimizeToTray</code></td><td><code>false</code></td><td>最小化したときにウィンドウを隠し、タスクバーから消す</td></tr>
+<tr><td><code>closeToTray</code></td><td><code>false</code></td><td>閉じるボタンでは終了せず、トレイに常駐する</td></tr>
+<tr><td><code>launchAtStartup</code></td><td><code>false</code></td><td><code>HKCU\Software\Microsoft\Windows\CurrentVersion\Run</code> に登録する</td></tr>
+<tr><td><code>autoUpdate</code></td><td><code>true</code></td><td>GitHub Releases の新しい版を自動で確認・ダウンロードし、終了時に適用する（<a href="#自動アップデート">自動アップデート</a>）</td></tr>
+<tr><td><code>windowX</code> / <code>windowY</code> / <code>windowWidth</code> / <code>windowHeight</code> / <code>windowConfigured</code></td><td><code>0</code> / <code>false</code></td><td>旧形式のウィンドウ位置。現在は <code>window.json</code> を使う</td></tr>
+</tbody>
+</table>
+</div>
+<p>効果音のパスはトリムと <code>filepath.Clean</code> を通します。空のときは組み込み音を使い、ファイルの再生に失敗した場合も組み込み音にフォールバックします。</p>
+<h3 id="設定ページのセクション別の項目"><a class="header" href="#設定ページのセクション別の項目">設定ページのセクション別の項目</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>セクション</th><th>項目</th><th>操作</th></tr>
+</thead>
+<tbody>
+<tr><td><code>folders</code></td><td><code>screenshotDirectory</code>, <code>logsDirectory</code>, <code>screenshotCleanup</code>（オンのとき <code>screenshotRetainCount</code> と <code>screenshotRetainHours</code> を表示）</td><td>自動検出（<code>AutoDetectEFTDirectories</code>）、フォルダ選択</td></tr>
+<tr><td><code>recognition</code></td><td><code>gameMode</code>, <code>gameLanguage</code>（選択肢は「自動」と Go の <code>GameLanguages()</code> が返す言語。表示名は <code>main.tsx</code> の <code>languageNames</code>）, <code>ocrEngine</code>, <code>tesseractPath</code>（<code>tesseract</code> のときのみ表示）</td><td>—</td></tr>
+<tr><td><code>remote</code></td><td><code>remoteTargets</code>（名前、ID、役割「マップ」「タスク」）, <code>map</code>, <code>openMapOnRaidStart</code>, <code>navigateMapOnPositionScreenshot</code></td><td>追加、ブラウザからの ID 自動検出（<code>AutoDetectRemoteID</code>）、接続テスト（<code>TestRemote</code>）</td></tr>
+<tr><td><code>tracker</code></td><td><code>tarkovTrackerEnabled</code>、トークンの取り込み、保存済みキー、既知プロフィールへのキーの割り当て、過去ログの同期</td><td>ログからプロフィールを探す、tarkovtracker.org の API 設定を開く</td></tr>
+<tr><td><code>sounds</code></td><td><code>soundsEnabled</code>。オンのとき、各通知（Hideout エラー、クエスト認識成功、認識・接続エラー、マッチ成立、レイド開始、ランスルー終了、タスクアイテム確認、失敗タスクの再開確認）の ON/OFF・音声ファイル・リセット・試聴、ランスルー時間（分・秒。ランスルー終了の通知がオンのときだけ表示）、<code>soundVolume</code></td><td><code>ChooseSoundFile</code>, <code>PreviewSound</code></td></tr>
+<tr><td><code>startup</code></td><td><code>launchAtStartup</code>, <code>startMinimized</code>, <code>autoStartMonitoring</code>, <code>minimizeToTray</code>, <code>closeToTray</code>, <code>autoUpdate</code></td><td>—</td></tr>
+<tr><td><code>status</code></td><td>表示のみ: Remote 接続状態、現在のマップ、レイド状態、スクリーンショット種別、TarkovTracker の状態、最後の検出結果、カタログの状態、アップデートの状態</td><td>最新スクリーンショットの解析、TarkovTracker の更新、カタログの更新、タスクページを開く、更新の確認・ダウンロード・再起動して更新、リリースノートを開く</td></tr>
+<tr><td><code>logs</code></td><td>表示のみ（<a href="#ログ">ログ</a> を参照）</td><td>フォルダを開く、ログの消去</td></tr>
+<tr><td><code>debug</code></td><td><code>debug</code>, <code>saveRecognitionDebug</code>。<code>debug</code> がオンのときは Hideout 診断フォルダ、候補一覧、crop、目標も表示</td><td><code>OpenHideoutDiagnostics</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="ブラウザ設定シェル側"><a class="header" href="#ブラウザ設定シェル側">ブラウザ設定（シェル側）</a></h2>
+<p><code>state.js</code> の <code>defaults()</code> と <code>restore()</code> で決まります。<code>persist()</code> が保存するのは下表の項目だけで、WebRTC の招待コードや UI のエラーは保存しません。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>キー</th><th>既定値</th><th>取り得る値 / 意味</th></tr>
+</thead>
+<tbody>
+<tr><td><code>language</code></td><td><code>"ja"</code></td><td><code>ja</code> / <code>en</code>。シェルの表示言語（Host 設定にも反映）</td></tr>
+<tr><td><code>theme</code></td><td><code>"mayak-dark"</code></td><td><code>system</code>（OS の明暗に合わせて <code>mayak-light</code> / <code>mayak-dark</code>）, <code>mayak-dark</code>, <code>mayak-light</code>, <code>catppuccin-latte</code>, <code>catppuccin-frappe</code>, <code>catppuccin-macchiato</code>, <code>catppuccin-mocha</code>, <code>nord</code>, <code>dracula</code>, <code>gruvbox-dark</code>, <code>tokyo-night</code>, <code>solarized-dark</code>, <code>solarized-light</code></td></tr>
+<tr><td><code>layout</code></td><td><code>"vertical"</code></td><td><code>vertical</code>（左サイドバー）/ <code>horizontal</code>（上部に横並び）</td></tr>
+<tr><td><code>sidebarCollapsed</code></td><td><code>false</code></td><td>サイドバーを折りたたむ</td></tr>
+<tr><td><code>sidebarWidth</code></td><td><code>224</code></td><td>180–420 に収める</td></tr>
+<tr><td><code>bookmarksCollapsed</code></td><td><code>false</code></td><td>サイドバーのブックマーク欄を折りたたむ</td></tr>
+<tr><td><code>bookmarkView</code></td><td><code>"grid"</code></td><td><code>grid</code> / <code>list</code></td></tr>
+<tr><td><code>itemPanelWidth</code> / <code>itemPanel</code></td><td><code>320</code> / <code>{open:false,id:"",mode:""}</code></td><td>アイテム欄の幅と、再起動後に復元する状態（<a href="item-panel.html">item-panel.md</a>）</td></tr>
+<tr><td><code>adblock</code></td><td><code>true</code></td><td>広告ブロック。切り替えると表示中のページを再読み込みする</td></tr>
+<tr><td><code>taskMode</code></td><td><code>"new"</code></td><td>検出したタスクの開き方。<code>new</code>（新しいタブを追加）/ <code>reuse</code>（固定していないタスクタブを更新）</td></tr>
+<tr><td><code>questSite</code></td><td><code>"host"</code></td><td><code>host</code>（Host の設定に従う）/ <code>tarkov-dev</code> / <code>official-wiki</code> / <code>japanese-wiki</code></td></tr>
+<tr><td><code>connection</code></td><td><code>{mode:"local", stun:"stun:stun.cloudflare.com:3478"}</code></td><td>接続方法と STUN サーバー（<a href="#host--client-モード">Host / Client モード</a>）</td></tr>
+<tr><td><code>bookmarks</code> / <code>bookmarkRevision</code></td><td>既定のブックマーク / <code>2</code></td><td>最大 100 件。revision 1 でブックマークを追加し、revision 2 で TarkovTracker を <code>.org</code> に移行</td></tr>
+<tr><td><code>favicons</code></td><td><code>{}</code></td><td>ホスト名ごとのアイコン URL（最大 200 件）</td></tr>
+<tr><td><code>tabs</code> / <code>active</code></td><td>マップ、TarkovTracker、設定 / <code>map</code></td><td>固定タブ <code>map</code> と <code>tracker</code> は常に先頭。タブは最大 80 個</td></tr>
+</tbody>
+</table>
+</div>
+<p>ウィンドウの位置とサイズは <code>window.json</code> に保存し、<code>browser.json</code> には持ちません（旧形式の <code>window</code> キーは読み込まず、次の保存で消えます）。</p>
+<h3 id="セクション別の項目"><a class="header" href="#セクション別の項目">セクション別の項目</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>セクション</th><th>内容</th></tr>
+</thead>
+<tbody>
+<tr><td><code>appearance</code></td><td>表示言語、テーマ</td></tr>
+<tr><td><code>tasks</code></td><td>Host 上（<code>local</code>）では Host の <code>questSite</code> を直接編集する（<code>hostQuestSite</code> アクション。シェルの <code>questSite</code> は <code>host</code> に戻る）。Client では <code>questSite</code>（「Host の設定に従う」を含む）。どちらでも <code>taskMode</code> を設定する</td></tr>
+<tr><td><code>adblock</code></td><td>有効化のチェックボックス。EasyList、EasyPrivacy、AdGuard 日本語フィルタを使う。tarkov.dev は対象外</td></tr>
+<tr><td><code>connection</code></td><td>接続方法（<code>local</code> は Windows のみ / <code>webrtc</code> / <code>off</code>）、WebRTC のペアリング、STUN サーバー</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>以前、ブラウザ側で <code>questSite</code> を選んでいた場合は、Windows の Host で起動したときに一度だけ Host の <code>questSite</code> へ移し、ブラウザ側を <code>host</code> に戻します。</li>
+<li>タブの配置は、ツールバーのボタン（<code>toggleLayout</code>）でも切り替えられます。</li>
+</ul>
+<h2 id="監視"><a class="header" href="#監視">監視</a></h2>
+<ul>
+<li><strong>開始</strong>: <code>autoStartMonitoring</code> が真で <code>screenshotDirectory</code> が設定済みなら、起動時に <code>StartMonitoring()</code> を呼びます。手動ではシェル上部のモニターボタンで開始・停止します。</li>
+<li><strong>条件</strong>: Windows の Host モード（<code>local</code>）でのみ動作します。Client モードに切り替えると監視を止め、進行中の解析と Remote 接続も閉じます。</li>
+<li><strong>Screenshots フォルダ</strong>: <code>watcher</code> で新しい画像を検知し、認識処理に回します（<a href="recognition.html">recognition.md</a>）。処理済みの記録（<code>processed-screenshot.json</code>）が無い場合は、起動時に既存の最新ファイルを処理済みとして記録するため、再処理しません。</li>
+<li><strong>Logs フォルダ</strong>: 次の 3 つの検出器を起動します。
+<ul>
+<li><code>logdetect</code>: マップ、マッチ成立、レイド開始・終了、待ち時間、ランスルー時間</li>
+<li><code>trackerlog</code>: EFT のプロフィール検出、タスクの状態変化</li>
+<li><code>hideoutlog</code>: Hideout 操作の結果</li>
+</ul>
+</li>
+<li>監視中に Logs フォルダが変わると、検出器を張り替えます（<code>SaveSettings</code> のとき）。</li>
+<li><strong>スクリーンショットの自動削除</strong>: 解析のたびに加えて、Host のバックグラウンドで 30 分ごとに実行します。対象は Screenshots 直下の画像だけで、<code>Mayak-Debug</code> は削除しません。</li>
+</ul>
+<h3 id="シェル上の状態表示"><a class="header" href="#シェル上の状態表示">シェル上の状態表示</a></h3>
+<p>サイドバーの上部（横並びレイアウトではタブ列の右端）に 2 つのインジケーターを表示します。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>表示</th><th>状態</th></tr>
+</thead>
+<tbody>
+<tr><td>Host アイコン（<code>mode-status</code>）</td><td><code>host</code>（<code>local</code>・Host モード）/ <code>linked</code>（Client で WebRTC 接続済み）/ <code>unlinked</code>（Client で未接続）/ <code>off</code>（受信 OFF）。ツールチップには「Hostモード · このPCで検出する」や「Clientモード · 直接接続中」などを表示する</td></tr>
+<tr><td>監視ドット（<code>monitor-toggle</code>）</td><td>Windows の Host のときだけ表示する。<code>on</code> クラスで監視中を示す。ツールチップは「監視中/監視停止中 · マップ · レイド中/外 · TarkovTracker: 状態 · クリックで開始/停止」。クリックで <code>StartMonitoring</code> / <code>StopMonitoring</code> を呼ぶ</td></tr>
+</tbody>
+</table>
+</div>
+<p>状態は Host が送る <code>status:update</code> イベント（<code>monitoring</code>、<code>currentMap</code>、<code>raidActive</code>、<code>tracker.connection</code>）から更新します。</p>
+<h2 id="通知"><a class="header" href="#通知">通知</a></h2>
+<h3 id="トースト設定ページ右下"><a class="header" href="#トースト設定ページ右下">トースト（設定ページ右下）</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>種類</th><th>表示条件</th><th>消え方</th></tr>
+</thead>
+<tbody>
+<tr><td>保存成功</td><td>自動保存の完了</td><td>2 秒で消える</td></tr>
+<tr><td>保存失敗</td><td><code>PersistSettings</code> / <code>SaveSettings</code> のエラー</td><td>次の保存が成功するまで残る（× は無い）。「再試行」ボタン付き</td></tr>
+<tr><td>通知（成功）</td><td>各操作の成功メッセージ</td><td>3 秒で消える</td></tr>
+<tr><td>通知（エラー）</td><td>各操作の失敗</td><td>× で閉じるまで残る</td></tr>
+<tr><td>Hideout 警告</td><td><code>hideout:alert</code> イベント</td><td>× で閉じるまで残る</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="通知音"><a class="header" href="#通知音">通知音</a></h3>
+<ul>
+<li>すべての音は <code>soundsEnabled</code> と各項目のスイッチの両方が真のときだけ鳴ります。音量は共通の <code>soundVolume</code> です。</li>
+<li>クエスト認識成功と認識エラーは、同じキーで 3 秒以内なら繰り返し鳴らしません（<code>recognitionSoundCooldown</code>）。</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>通知</th><th>鳴るタイミング</th></tr>
+</thead>
+<tbody>
+<tr><td>クエスト認識成功</td><td>タスクを認識したとき</td></tr>
+<tr><td>認識・接続エラー</td><td>認識できなかったとき、または実行時エラー</td></tr>
+<tr><td>マッチ成立</td><td>ログでマッチ成立を検出したとき</td></tr>
+<tr><td>レイド開始</td><td>ログでレイド開始を検出したとき</td></tr>
+<tr><td>タスクアイテム確認</td><td>レイド開始時</td></tr>
+<tr><td>失敗タスクの再開確認</td><td>レイド開始時に、TarkovTracker 上で失敗しているタスクがあるとき</td></tr>
+<tr><td>ランスルー終了</td><td>PvE（設定または自動判定）、またはランスルー判定の対象となるレイドで、開始から <code>runThroughSeconds</code> が経過し、まだレイド中のとき</td></tr>
+<tr><td>Hideout エラー</td><td>下記</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="hideout-エラー通知"><a class="header" href="#hideout-エラー通知">Hideout エラー通知</a></h3>
+<ul>
+<li><code>hideoutErrorNotifications</code> が真の場合、新しく追記された失敗イベント（<code>status == "failed"</code> かつ過去ログではないもの）に対して、<code>hideout:alert</code> トーストを出し、<code>soundsEnabled</code> なら <code>hideoutErrorSoundPath</code> の音（既定はエラー音）を鳴らします。</li>
+<li>結果を確認できなかった操作（unknown）の通知と、その設定は削除されました（<code>shouldNotifyHideout</code>）。unknown のイベントも Hideout の履歴には残り、ログページでは <code>Warn</code> として表示します。</li>
+<li>詳細は <a href="hideout.html">hideout.md</a> を参照してください。</li>
+</ul>
+<h2 id="トレイとウィンドウ"><a class="header" href="#トレイとウィンドウ">トレイとウィンドウ</a></h2>
+<ul>
+<li><strong>トレイ</strong>（<code>tray.go</code>）: アイコンをクリックまたはダブルクリックすると <code>showWindow</code> でウィンドウを表示します。メニューは「MAYAKを開く / Open MAYAK」と「終了 / Quit」で、表示言語は <code>language</code> に従います。保存した <code>language</code> が変わると、その場でメニューの文言を切り替えます（<code>setTrayLanguage</code>、再起動は不要）。</li>
+<li><strong>最小化</strong>: <code>minimizeToTray</code> が真なら、最小化したときにウィンドウを <code>Hide()</code> し、タスクバーから消します。ウィンドウのフックは起動処理（<code>ServiceStartup</code>）より先に走ることがあるため、<code>main.go</code> がウィンドウを作る前に保存済みの設定を入れておきます。起動処理は設定をロックを取って置き換えます。</li>
+<li><strong>閉じる</strong>: <code>closeToTray</code> が真なら、閉じる操作をキャンセルしてウィンドウを隠します。終了はトレイメニューからのみ行えます（<code>quitting</code> フラグで区別）。</li>
+<li><strong>二重起動の防止</strong>: <code>SingleInstance</code>（<code>UniqueID: com.ichi0g0y.mayak</code>）で制御します。2 つ目のプロセスを起動すると、既存のウィンドウを表示します。</li>
+<li><strong>ウィンドウ</strong>: フレームレスです。既定サイズは 1120×760、最小サイズは 760×560 です。</li>
+<li><strong>位置の復元</strong>（<code>window.json</code>）:
+<ul>
+<li>移動、リサイズ、最大化、最大化解除、閉じる、終了のたびに保存します。最小化中の座標や、最小サイズ未満のサイズは保存しません。</li>
+<li>ディスプレイ名・ID と作業領域の原点を記録し、ディスプレイ基準の相対座標で復元します。該当するディスプレイが無い場合は、重なりが最大のディスプレイ、なければプライマリディスプレイを使い、作業領域内に収めます。最大化状態も復元します。</li>
+<li>保存値が異常な場合（幅 5000 超など）は無視します。</li>
+</ul>
+</li>
+<li>アイテム欄から開くポップアップウィンドウも、同じ方式で <code>popup.json</code> に位置を保存します。</li>
+</ul>
+<h2 id="自動アップデート"><a class="header" href="#自動アップデート">自動アップデート</a></h2>
+<p>MAYAK は <a href="https://github.com/ichi0g0y/mayak/releases">GitHub Releases</a> から自分自身を更新します（<code>internal/update</code>、<code>internal/app/app_update.go</code>）。Windows／macOS／Linux のどれでも同じ仕組みです。</p>
+<ul>
+<li><strong>版の比較</strong>: ビルドに埋め込まれた版（<code>internal/version</code>、<code>task build</code> が <code>git describe</code> かリリースタグから <code>-ldflags -X</code> で入れる）と、GitHub の「latest」リリース（ドラフトとプレリリースは除く）のタグを semver で比べます。タグ直後のコミットを含む開発ビルド（<code>0.1.0-3-g1a2b3c4</code>）は <code>0.1.0</code> より新しい扱いなので、同じ版の通知は出ません。版が入っていない <code>dev</code> ビルドはどのリリースよりも古い扱いです。</li>
+<li><strong>確認のタイミング</strong>: <code>autoUpdate</code> がオンなら起動 20 秒後と、その後 6 時間ごと。オフのときはステータスの「更新を確認」だけです。GitHub API は認証なしで呼びます（IP ごとに 60 回/時）。</li>
+<li><strong>ダウンロード</strong>: リリースのアセットから、この OS と CPU 向けのアーカイブ（<code>Mayak-windows-amd64.zip</code>、<code>Mayak-darwin-arm64.tar.gz</code> など。名前は <code>update.ArchiveName</code>）と <code>SHA256SUMS.txt</code> を取り、チェックサムが一致したものだけを設定フォルダの <code>updates/</code> に展開します。アーカイブに無い OS なら「このOS向けのビルドはありません」になります。<code>autoUpdate</code> がオンなら見つけ次第、オフなら「ダウンロード」を押したときに始まります。展開先に <code>staged.json</code> が残っていれば次回起動時に引き継ぎ、現在の版より新しくなければ捨てます。</li>
+<li><strong>適用</strong>: 展開したファイルを実行ファイルと同じフォルダへ入れ替えます。置き換える前のファイルは <code>*.mayak-old</code> に改名してから新しいものを置くので、実行中の exe（Windows では上書きも削除もできない）でも差し替えられます。失敗したときは改名したファイルを元に戻します。<code>autoUpdate</code> がオンなら終了時（<code>shutdown</code> の最後）に自動で適用し、次回起動から新しい版になります。ステータスの「再起動して更新」を押すと、その場で適用してから新しい版を起動し、自分は終了します。</li>
+<li><strong>再起動</strong>: 新しいプロセスは環境変数 <code>MAYAK_UPDATE_WAIT_PID</code> で古いプロセスの終了を最大 30 秒待ってから起動します（二重起動防止と衝突しないため）。起動時には <code>*.mayak-old</code> を削除します。</li>
+<li><strong>状態</strong>: <code>GetUpdateStatus</code> と <code>update:status</code> イベント（<code>model.UpdateStatus</code>）。<code>state</code> は <code>idle</code>／<code>checking</code>／<code>current</code>／<code>available</code>／<code>downloading</code>（<code>progress</code> は %）／<code>ready</code>／<code>unsupported</code>／<code>error</code>。ログのカテゴリは <code>Update</code> です。</li>
+</ul>
+<p>インストール先に書き込めない場合（管理者権限が要るフォルダなど）は適用に失敗し、エラーがステータスとログに出ます。その場合はリリースページから手動で入れ替えてください。リリースの作り方は <a href="development.html#リリース">開発ガイド</a> を参照してください。</p>
+<h2 id="tarkovtracker-連携"><a class="header" href="#tarkovtracker-連携">TarkovTracker 連携</a></h2>
+<ul>
+<li>
+<p><strong>API</strong>: <code>https://api.tarkovtracker.org</code>（<code>internal/tracker</code>）</p>
+</li>
+<li>
+<p><strong>トークンの取り込み</strong>: <code>PVP_</code> / <code>PVE_</code> / <code>SZN_</code> の接頭辞からモード（<code>pvp</code> / <code>pve</code> / <code>seasonal</code>）を判定します。そのうえで <code>TokenInfo</code> を取得し、次を確認します。</p>
+<ul>
+<li>報告されたモードが接頭辞と一致すること</li>
+<li>トークンの同一性</li>
+<li><code>GP</code>（Get Progress）と <code>WP</code>（Write Progress）の権限があること</li>
+</ul>
+<p>確認できたトークンは、どのプロフィールにも割り当てていないキーとして保存します。キー名には TarkovTracker の note を使い、起動時、tracker セクションの表示中は 60 秒ごと、およびウィンドウにフォーカスが戻ったときに更新します。</p>
+</li>
+<li>
+<p><strong>保存</strong>（<code>internal/trackerstore</code>）: <code>%APPDATA%\Mayak\tracker-tokens.dat</code> に保存します。Windows では DPAPI（<code>CryptProtectData</code>）で暗号化し、それ以外の OS では平文です。ドキュメントのバージョンは 2 です。</p>
+</li>
+<li>
+<p><strong>プロフィールとの紐付け</strong>: EFT のログ（<code>trackerlog</code>）から account・profile・mode の組を検出して記憶し、組ごとにキーを 1 つ割り当てます。割り当て中のキーは削除できません。</p>
+</li>
+<li>
+<p><strong>読み取るデータ</strong>（<code>Progress</code>）: <code>tasksProgress</code>（完了・失敗）、<code>hideoutModulesProgress</code>、<code>displayName</code>、<code>playerLevel</code>、<code>meta.gameMode</code>。モードが一致しない場合はエラーにします。</p>
+</li>
+<li>
+<p><strong>書き込むデータ</strong>: ログで検出したタスクの状態変化（<code>completed</code> / <code>failed</code> / <code>uncompleted</code>）を <code>SetTask</code> で送ります。<code>uncompleted</code>（再開）は、以前の状態が <code>failed</code> のときだけ送ります。過去ログの同期では、選んだブレークポイント（ゲームのバージョンと開始日時）以降のタスク状態を <code>SetTasks</code> でまとめて送ります。</p>
+</li>
+<li>
+<p><strong>接続状態</strong>: <code>disabled</code> / <code>waiting-profile</code> / <code>missing-token</code> / <code>connecting</code> / <code>connected</code> / <code>error</code></p>
+</li>
+<li>
+<p><strong>Hideout の進捗</strong>: 検出中のアイデンティティと割り当てたキーから得た <code>hideoutModulesProgress</code> を、同じモードのカタログと組み合わせて表示します（読み取り専用）。Hideout のログイベントから TarkovTracker へ書き込むことはありません。状態は <code>disabled</code> / <code>waiting-profile</code> / <code>missing-token</code> / <code>waiting-progress</code> / <code>waiting-catalog</code> / <code>ready</code> です。詳細は <a href="hideout.html">hideout.md</a> を参照してください。</p>
+</li>
+<li>
+<p>内蔵ブラウザでは、TarkovTracker（<code>https://tarkovtracker.org/</code>）が 2 番目の固定タブとして常に開いています。</p>
+</li>
+</ul>
+<h2 id="tarkovdev-remote-control"><a class="header" href="#tarkovdev-remote-control">tarkov.dev Remote Control</a></h2>
+<ul>
+<li><code>internal/remote</code> が <code>wss://socket.tarkov.dev</code> に接続し、<code>remoteTargets</code> の各 ID にマップ、タスク、位置を送ります。
+<ul>
+<li><code>map</code> 役のターゲット: マップと位置を受け取る</li>
+<li><code>tasks</code> 役のターゲット: タスクを受け取る</li>
+</ul>
+</li>
+<li>内蔵ブラウザのマップビューは <code>browserRemoteId</code> で自動接続します。ドキュメントスクリプトが <code>?connection=&lt;ID&gt;</code> を付与し、タブの URL からは取り除きます。アドレスに <code>?connection=</code> があればその ID を優先します（ID を作り直したあと、古いスクリプトのままのタブを新しい ID で開き直すため）。この ID はマップと位置だけを受け取り、タスクはシェルが自分でタブを開きます。</li>
+<li>起動時、<code>remoteTargets</code> があれば接続テストをバックグラウンドで実行します。</li>
+<li>詳細は <a href="tasks-and-maps.html">tasks-and-maps.md</a> を参照してください。</li>
+</ul>
+<h2 id="host--client-モード"><a class="header" href="#host--client-モード">Host / Client モード</a></h2>
+<p>シェルの <code>connection.mode</code> で決まります。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>モード</th><th>意味</th></tr>
+</thead>
+<tbody>
+<tr><td><code>local</code></td><td>このPCで検出する（Host モード）。Windows のみ選択可。監視、認識、Host 設定を使える</td></tr>
+<tr><td><code>webrtc</code></td><td>インターネット経由の WebRTC 直接接続で、別の PC の Host から受信する（Client モード）</td></tr>
+<tr><td><code>off</code></td><td>接続しない（受信 OFF）</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>Windows 以外で <code>local</code> が保存されている場合は <code>webrtc</code> にします。認識できないモードは <code>off</code> にします。旧 <code>remote</code>（LAN 受信）モードで保存されていた場合は <code>off</code> で起動します（<code>restore()</code>）。当時の接続先 URL とトークンは読み込まず、保存もしません。</li>
+<li>Go 側は <code>BrowserSetMode</code> でモードを受け取り、<code>local</code> 以外のときは Client として扱います（<code>browserClient</code>）。Windows では起動時に <code>browser.json</code> を読み、<code>webrtc</code> / <code>off</code> なら Client として起動します（Windows 以外は常に Client）。このとき OCR やフォルダの初期化、自動監視は行いません。</li>
+</ul>
+<h3 id="webrtc-ペアリング"><a class="header" href="#webrtc-ペアリング">WebRTC ペアリング</a></h3>
+<p><code>frontend/src/browser/peer-code.js</code> と <code>transport.js</code> が担当します。シグナリングサーバーは使わず、コードを手動で交換します。</p>
+<ol>
+<li>Host（<code>local</code>）が「招待コードを作成」を押すと、offer を作成して ICE の収集（最大 10 秒）を待ちます。</li>
+<li>招待コードを受信側に渡します。コードの形式は <code>MAYAK1.</code> + base64url(JSON <code>{version:1,type,id,createdAt,sdp}</code>) です。</li>
+<li>受信側（<code>webrtc</code>）が招待コードを貼り付けて応答コードを作成し、Host に返します。</li>
+<li>Host が応答コードを貼り付けると接続します。応答の <code>id</code> と <code>createdAt</code> は招待と一致している必要があります。</li>
+</ol>
+<ul>
+<li><strong>期限</strong>: 招待コードは 10 分で失効します。接続の待ち時間は、送信側が 45 秒、受信側が 120 秒です。</li>
+<li><strong>検証</strong>: SDP は <code>m=application</code> のみを許可し、sha-256 fingerprint を必須とします。音声・映像の m 行と relay 候補を含むものは拒否します。コードの長さは 100000 文字までです。</li>
+<li><strong>STUN</strong>: 既定は <code>stun:stun.cloudflare.com:3478</code> です。<code>stun:</code> / <code>stuns:</code> 形式だけを受け付け、空欄にすると STUN を使いません。TURN（中継）は使わず、接続後に選ばれた経路が relay であれば切断します（<code>relay-rejected</code>）。そのため、回線によっては接続できません。</li>
+<li><strong>LAN</strong>: 双方の候補が <code>host</code> 型であれば、経路を <code>local</code>（LAN 内の直接接続）と判定します。それ以外は <code>direct</code> です。</li>
+<li><strong>共有する内容</strong>: ordered DataChannel <code>mayak-display-v1</code> で、<code>browser:task</code>（タスク）、<code>browser:map</code>（マップ）、<code>browser:item</code>（アイテム情報）の 3 種類だけを Host から受信側へ一方向に送ります。1 メッセージは 64 KiB までで、送信バッファが 256 KiB を超えると <code>slow-peer</code> として切断します。設定、API キー、トークンは送りません。受信側は接続を確認するまで、最大 32 件のメッセージを保留します。</li>
+<li>アプリを再起動した場合や接続が切れた場合は、コードを再交換する必要があります。コードは保存しません。</li>
+</ul>
+<h2 id="ログ"><a class="header" href="#ログ">ログ</a></h2>
+<ul>
+<li><strong>アプリのログ</strong>（<code>internal/applog</code>）: メモリ上に最大 500 件を保持し、<code>%APPDATA%\MAYAK\mayak.log</code> に 1 行 1 件で追記します。ファイルの行数がメモリ上の上限の 2 倍（1000 行）に達すると、メモリに残っている項目だけで書き直すので、ファイルは際限なく大きくなりません。ファイルへの書き込みは読み出し側のロックを持たずに行います（書き込み順は専用のロックで保ちます）。起動時にこのファイルから読み込みます。レベルは <code>Error</code> / <code>Warn</code> / <code>Info</code> / <code>Debug</code> です。</li>
+<li>新しい項目は <code>log:entry</code> イベントで設定ページに送ります。設定ページも最新 500 件を保持します。</li>
+<li><strong>ログページ</strong>（<code>logs</code> セクション）:
+<ul>
+<li>上部の指標: 現在のマップ、レイド経過時間、ランスルーまでの残り時間、直前のマッチ待ち時間</li>
+<li>フォルダを開くボタン: Screenshots、EFT Logs、デバッグ用フォルダ（<code>Mayak-Debug</code>）</li>
+<li>フィルタ: カテゴリ（すべて / Hideout）、レベル、文字列検索</li>
+<li>件数表示と、新しい順の一覧</li>
+</ul>
+</li>
+<li>Hideout のイベントは、<code>debug</code> がオンのとき、またはカテゴリを Hideout にしたときに一覧に混ぜて表示します。レベルは failed が Error、unknown が Warn、それ以外が Info です。</li>
+<li>「ログを消去」（<code>ClearLogs</code>）は <code>mayak.log</code> と Hideout の履歴表示を空にし、<code>log:clear</code> を送ります。</li>
+</ul>
+<h2 id="データの保存場所"><a class="header" href="#データの保存場所">データの保存場所</a></h2>
+<p>すべて <code>%APPDATA%\MAYAK\</code>（<code>os.UserConfigDir()</code> 配下の <code>MAYAK</code>）に保存します。例外は <code>Mayak-Debug</code> だけで、EFT の Screenshots フォルダ内に作ります。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>パス</th><th>内容</th></tr>
+</thead>
+<tbody>
+<tr><td><code>settings.json</code> / <code>settings.json.bak</code></td><td>Host 設定と、その直前の内容</td></tr>
+<tr><td><code>window.json</code></td><td>メインウィンドウの位置</td></tr>
+<tr><td><code>popup.json</code></td><td>ポップアップウィンドウの位置</td></tr>
+<tr><td><code>browser.json</code></td><td>シェルの状態（ブラウザ設定、タブ、ブックマーク）</td></tr>
+<tr><td><code>processed-screenshot.json</code></td><td>最後に処理したスクリーンショットの指紋（パス、サイズ、更新時刻）</td></tr>
+<tr><td><code>tracker-tokens.dat</code></td><td>TarkovTracker のキーとプロフィールの割り当て（Windows では DPAPI で暗号化）</td></tr>
+<tr><td><code>mayak.log</code></td><td>アプリのログ</td></tr>
+<tr><td><code>hideout\events.json</code></td><td>Hideout イベントの履歴（最大 500 件・90 日）。診断ボタンでこのフォルダを開く</td></tr>
+<tr><td><code>catalog\&lt;mode&gt;.json</code></td><td>モード別のカタログキャッシュ（<a href="catalog.html">catalog.md</a>）</td></tr>
+<tr><td><code>favicons\</code></td><td>サイトアイコンのキャッシュ</td></tr>
+<tr><td><code>adblock\&lt;list&gt;.txt</code></td><td>広告ブロックのフィルタ（<code>easylist</code>、<code>easyprivacy</code>、<code>adguard-japanese</code>。4 日で期限切れ、失敗時は 6 時間後に再試行）</td></tr>
+<tr><td><code>browser-webdata\</code></td><td>内蔵ブラウザ（WebView2）のプロファイル</td></tr>
+<tr><td><code>&lt;Screenshots&gt;\Mayak-Debug\</code></td><td><code>saveRecognitionDebug</code> で保存する原画像、crop、JSON</td></tr>
+</tbody>
+</table>
+</div>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="catalog.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="languages.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="catalog.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="languages.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

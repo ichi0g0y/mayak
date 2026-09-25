@@ -1,0 +1,126 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* shadcn/ui tokens, dark only: charcoal and olive with the khaki of the
+   mark as the primary colour and a rust accent for highlights. */
+:root {
+  --background: oklch(0.17 0.008 120);
+  --foreground: oklch(0.93 0.015 95);
+  --card: oklch(0.21 0.009 120);
+  --card-foreground: oklch(0.93 0.015 95);
+  --popover: oklch(0.21 0.009 120);
+  --popover-foreground: oklch(0.93 0.015 95);
+  --primary: oklch(0.82 0.04 95);
+  --primary-foreground: oklch(0.2 0.02 100);
+  --secondary: oklch(0.27 0.01 120);
+  --secondary-foreground: oklch(0.93 0.015 95);
+  --muted: oklch(0.27 0.01 120);
+  --muted-foreground: oklch(0.68 0.015 95);
+  --accent: oklch(0.3 0.012 120);
+  --accent-foreground: oklch(0.93 0.015 95);
+  --destructive: oklch(0.6 0.16 30);
+  --border: oklch(0.32 0.012 110);
+  --input: oklch(0.32 0.012 110);
+  --ring: oklch(0.82 0.04 95 / 0.6);
+  --rust: oklch(0.62 0.15 40);
+  --olive: oklch(0.55 0.06 120);
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-rust: var(--rust);
+  --color-olive: var(--olive);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: 'Noto Sans JP', -apple-system, 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+  --font-display: 'Black Ops One', 'Barlow Condensed', sans-serif;
+  --font-label: 'Barlow Condensed', 'Noto Sans JP', sans-serif;
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background-image:
+      radial-gradient(900px 500px at 50% -10%, oklch(0.82 0.04 95 / 0.09), transparent 70%),
+      linear-gradient(oklch(1 0 0 / 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(1 0 0 / 0.025) 1px, transparent 1px);
+    background-size: auto, 48px 48px, 48px 48px;
+  }
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+}
+@utility font-label {
+  font-family: var(--font-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Corner brackets, as on a tactical display. */
+@utility bracket {
+  position: relative;
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: var(--primary);
+    border-style: solid;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  &::before {
+    top: -1px;
+    left: -1px;
+    border-width: 2px 0 0 2px;
+  }
+  &::after {
+    bottom: -1px;
+    right: -1px;
+    border-width: 0 2px 2px 0;
+  }
+}
+
+/* A faint scanline sweep behind the hero. */
+@utility scanlines {
+  background-image: repeating-linear-gradient(0deg, transparent 0 3px, oklch(1 0 0 / 0.02) 3px 4px);
+}

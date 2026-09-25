@@ -86,38 +86,32 @@ tasks:
     cmds:
       - 'go run ./tools/release -bin build/bin -out build/dist -arch {{.TARGET_ARCH | default ARCH}}'
 
-  # The docs site (docs/): mdBook builds it into build/docs-site, wrangler
-  # publishes it to Cloudflare Pages (wrangler.jsonc). Sign in once with
-  # `wrangler login` and create the project with
-  # `wrangler pages project create mayak-docs`.
-  docs:build:
-    cmds:
-      - mdbook build docs
-
-  docs:serve:
-    summary: Preview the docs site with live reload
-    cmds:
-      - mdbook serve docs
-
-  docs:deploy:
-    summary: Build the docs site and publish it to Cloudflare Pages
-    cmds:
-      - task: docs:build
-      - wrangler pages deploy
-
-  # The landing page (site/public, plain HTML): a separate Cloudflare Pages
-  # project, "mayak" (site/wrangler.jsonc).
-  site:serve:
-    summary: Preview the landing page locally
+  # The landing page (site/): a Vite + React app, published to Cloudflare
+  # as the "mayak" Worker with static assets (site/wrangler.jsonc). Sign in
+  # once with `wrangler login`.
+  site:install:
     dir: site
     cmds:
-      - wrangler pages dev public
+      - bun install --frozen-lockfile
+
+  site:dev:
+    summary: Run the landing page with hot reload
+    cmds:
+      - task: site:install
+      - bun --bun run --cwd site dev
+
+  site:build:
+    summary: Build the landing page into site/dist
+    cmds:
+      - task: site:install
+      - bun --bun run --cwd site build
 
   site:deploy:
-    summary: Publish the landing page to Cloudflare Pages
+    summary: Build the landing page and publish it to Cloudflare
     dir: site
     cmds:
-      - wrangler pages deploy
+      - task: site:build
+      - wrangler deploy
 
   dev:
     summary: Run with hot reload (Go changes rebuild and restart the app; WebUI changes reload via Vite)

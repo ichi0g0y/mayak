@@ -11,10 +11,9 @@ MAYAK は Go + Wails v3（`v3.0.0-beta.24` 固定）で作られた Windows 向�
 | [Task](https://taskfile.dev/)（または `wails3 task`） | `Taskfile.yml` の実行 |
 | bun | フロントエンドの依存インストール、Vite の実行、`bun test` |
 | 7-Zip（`C:\Program Files\7-Zip\7z.exe`） | `task tesseract:bundle` がインストーラーを実行せずに展開するため |
-| mdBook | `docs/` を `build/docs-site` に組む（`task docs:build`、`task docs:serve`） |
-| Node.js と wrangler | ドキュメントサイトを Cloudflare Pages に公開する（`task docs:deploy`）。Node は wrangler を動かすためだけに入れる |
+| Node.js と wrangler | ランディングページ（`site/`）を Cloudflare に公開する（`task site:deploy`）。Node は wrangler を動かすためだけに入れる |
 
-`mise install` で `mise.toml` のツールが入ります（mdBook、Node、wrangler も含みます）。mise の shims フォルダ（Windows では `%LOCALAPPDATA%\mise\shims`）を PATH に入れておくと、どのシェルからでもこのバージョンが使われます。アプリとフロントエンドのビルドに Node.js は使いません（wrangler を動かすためだけに入ります）。`task dev` は最初に `bun install --frozen-lockfile` を実行するので、新しいワークツリーでもそのまま起動できます。
+`mise install` で `mise.toml` のツールが入ります（Node と wrangler も含みます）。mise の shims フォルダ（Windows では `%LOCALAPPDATA%\mise\shims`）を PATH に入れておくと、どのシェルからでもこのバージョンが使われます。アプリとフロントエンドのビルドに Node.js は使いません（wrangler を動かすためだけに入ります）。`task dev` は最初に `bun install --frozen-lockfile` を実行するので、新しいワークツリーでもそのまま起動できます。
 
 Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.24` を固定バージョンで呼び出します。フロントエンドの `@wailsio/runtime` も同じ `3.0.0-beta.24` に揃えています。
 
@@ -168,8 +167,8 @@ Wails 本体はフォークせず公式モジュールを使います。
 ### その他
 
 - `client/`: 以前の Electron クライアントの残骸（無視対象の依存・ビルド出力のみ）。現在のアプリにもビルドにも関係しません
-- `docs/`: この mdBook（`book.toml`、`SUMMARY.md`）と英語の開発メモ
-- `site/`: ランディングページ（`public/` の素の HTML・CSS・JS。ビルド工程なし）と Cloudflare Pages の設定
+- `docs/`: この仕様書（Markdown のみ。目次は `SUMMARY.md`）と英語の開発メモ。公開はせず、開発時と AI の参照用に置いている
+- `site/`: ランディングページ（Vite + React + TypeScript + Tailwind + shadcn/ui + jotai）と Cloudflare の設定
 
 ## Task
 
@@ -186,9 +185,8 @@ Wails 本体はフォークせず公式モジュールを使います。
 | `task build:windows` | `.syso` 生成と `go build`。`DEV=true` でなければ `-tags production -ldflags="-s -w -H windowsgui"` で `build/bin/Mayak.exe` を出力。版（`VERSION`、既定は `git describe --tags`）を `internal/version` に埋め込む |
 | `task build:darwin` / `build:linux` | `production` タグ付きで `build/bin/Mayak` を出力（版の埋め込みは同じ） |
 | `task release:archive` | `build/bin` をリリース用アーカイブと SHA-256 にする（`build/dist/`、`tools/release`）。`TARGET_ARCH=amd64` で CPU を指定 |
-| `task docs:build` / `docs:serve` | mdBook で `docs/` を `build/docs-site` に組む／ライブリロード付きで確認する |
-| `task docs:deploy` | ドキュメントサイトを組んで Cloudflare Pages に公開する（`wrangler pages deploy`、設定は `wrangler.jsonc`） |
-| `task site:serve` / `site:deploy` | ランディングページ（`site/public`）をローカルで確認する／Cloudflare Pages に公開する（設定は `site/wrangler.jsonc`） |
+| `task site:dev` / `site:build` | ランディングページ（`site/`、Vite + React）をホットリロードで動かす／`site/dist` にビルドする |
+| `task site:deploy` | ランディングページをビルドして Cloudflare に公開する（`wrangler deploy`、設定は `site/wrangler.jsonc`） |
 | `task dev` | 依存インストール → ホットリロード付き開発モード（下記）。アプリを起動する |
 | `task build:dev` | `dev` が使う開発ビルド。バインディング生成、Tesseract 同梱、`production` タグなしで `build/bin/Mayak-dev.exe` |
 | `task check:offline` | アプリを開かない検証。全パッケージのコンパイル、`TestBrowser*`、bun のテスト |
@@ -229,16 +227,11 @@ Wails 本体はフォークせず公式モジュールを使います。
 
 macOS／Linux のビルドは CI でコンパイルしているだけで、動作は検証していません（[プラットフォーム](#プラットフォーム)）。
 
-### ドキュメントサイトとランディングページ
+### ランディングページ
 
-Cloudflare Pages のプロジェクトは 2 つです。どちらも初回だけ `wrangler login` でサインインします（CI なら `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID`）。wrangler はリポジトリ内で使ってください（Node はプロジェクトの `mise.toml` でだけ有効です）。
+`site/` は Vite + React + TypeScript のページで、Tailwind v4 と shadcn/ui（`src/components/ui`）、状態は jotai（`src/state.ts`: 表示言語と最新リリース）で作っています。文言は `src/i18n.ts` に日本語と英語で持ち、`lang` 属性と `localStorage` で切り替えます。ダウンロードボタンは GitHub の latest リリース（`releases/latest` API）から版と各 OS のアーカイブの URL・サイズを取り、取れないときはリリース一覧へのリンクになります。
 
-| プロジェクト | 内容 | 設定 | 公開 |
-| --- | --- | --- | --- |
-| `mayak-docs` | この仕様書。mdBook で `docs/` を `build/docs-site` に組む | `wrangler.jsonc` | `task docs:deploy` |
-| `mayak` | ランディングページ。`site/public` の素の HTML で、ビルド工程なし。ダウンロードボタンは GitHub の latest リリースから版と Windows 版 zip の URL を取る。日本語で書き、英語は `main.js` の辞書で切り替える | `site/wrangler.jsonc` | `task site:deploy`（確認は `task site:serve`） |
-
-プロジェクトが無ければ `wrangler pages project create <名前>` で作ります（ランディングページは `site/` の中で実行）。
+Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker 名 `mayak`）として公開します。初回だけ `wrangler login` でサインインし（CI なら `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID`）、あとは `task site:deploy`（`bun run build` → `wrangler deploy`）です。wrangler はリポジトリ内で使ってください（Node はプロジェクトの `mise.toml` でだけ有効です）。仕様書（`docs/`）は公開しません。
 
 ## テスト
 

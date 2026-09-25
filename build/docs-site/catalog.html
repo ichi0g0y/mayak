@@ -1,0 +1,405 @@
+<!DOCTYPE HTML>
+<html lang="ja" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ゲームデータ（カタログ） - MAYAK 仕様書</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-a0128e09.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9bee80de.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">MAYAK 仕様書</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ichi0g0y/mayak" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="ゲームデータカタログ"><a class="header" href="#ゲームデータカタログ">ゲームデータ（カタログ）</a></h1>
+<p>MAYAK が使うアイテム・マップ・トレーダー・タスク・ハイドアウトのデータは、tarkov.dev の公開 JSON（<code>https://json.tarkov.dev/</code>）から取得します。取得と保存は <code>internal/catalog</code> が一手に担い、アイテム照合（<code>internal/itemapi</code>）・タスク照合（<code>internal/questapi</code>）・アイテム欄（<code>internal/iteminfo</code>）・ハイドアウトはすべて同じスナップショットを共有します。</p>
+<h2 id="取得するリソース"><a class="header" href="#取得するリソース">取得するリソース</a></h2>
+<p>URL は <code>https://json.tarkov.dev/&lt;mode&gt;/&lt;resource&gt;</code> です。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>種別</th><th>リソース</th><th>欠けたとき</th></tr>
+</thead>
+<tbody>
+<tr><td>必須</td><td><code>items</code>, <code>items_en</code>, <code>maps</code>, <code>maps_en</code>, <code>traders</code>, <code>traders_en</code>, <code>tasks</code>, <code>tasks_en</code>, <code>hideout</code>, <code>hideout_en</code></td><td>更新全体を失敗扱いにする</td></tr>
+<tr><td>任意（言語別）</td><td><code>tasks_&lt;lang&gt;</code>, <code>items_&lt;lang&gt;</code>（現在は <code>tasks_ja</code>, <code>items_ja</code>）</td><td>前回の内容を引き継ぐ。なければ英語のみで動作</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>任意リソースの言語は <code>internal/locale</code> の <code>Languages</code>（現在 <code>["ja"]</code>）から <code>locale.Resource(base, lang)</code> で組み立てます。言語を追加すると取得対象も増えます（<a href="languages.html">言語</a>）。</li>
+<li>任意リソースは <code>data</code> が空でないオブジェクトのときだけ採用されます。</li>
+<li><code>Client.Get</code> は上記以外のリソース名を拒否します（<code>unsupported catalog resource</code>）。</li>
+</ul>
+<h2 id="ゲームモード"><a class="header" href="#ゲームモード">ゲームモード</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>カタログのモード</th><th>意味</th></tr>
+</thead>
+<tbody>
+<tr><td><code>regular</code></td><td>通常の PvP</td></tr>
+<tr><td><code>pve</code></td><td>PvE</td></tr>
+<tr><td><code>pvp-season</code></td><td>シーズン PvP</td></tr>
+</tbody>
+</table>
+</div>
+<p>設定 <code>GameMode</code> は <code>auto</code> / <code>regular</code> / <code>pve</code> / <code>pvp-season</code>（既定 <code>auto</code>、不正値は <code>auto</code> に正規化）。</p>
+<h3 id="自動判別auto"><a class="header" href="#自動判別auto">自動判別（<code>auto</code>）</a></h3>
+<p><code>effectiveCatalogMode</code>（<code>app_catalog.go</code>）は、<code>auto</code> のとき EFT ログから検出したプロファイルのモード（<code>status.Tracker.Mode</code>）を対応づけます。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>ログ上のモード</th><th>カタログのモード</th></tr>
+</thead>
+<tbody>
+<tr><td><code>pve</code></td><td><code>pve</code></td></tr>
+<tr><td><code>pvp</code></td><td><code>regular</code></td></tr>
+<tr><td><code>seasonal</code></td><td><code>pvp-season</code></td></tr>
+<tr><td>未検出</td><td><code>auto</code>（カタログ更新は行わない）</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>モードが未検出のまま手動更新すると <code>EFT game mode has not been detected; select a game mode or start log monitoring</code> を返します。</li>
+<li>照合側の扱い: アイテムは <code>auto</code> を <code>regular</code> とみなし、タスクは <code>auto</code> のとき全モードを統合した一覧を使います（後述）。</li>
+</ul>
+<h2 id="更新の仕組み"><a class="header" href="#更新の仕組み">更新の仕組み</a></h2>
+<ul>
+<li>更新間隔 <code>RefreshInterval</code> は <strong>5 分</strong>。スナップショットの <code>UpdatedAt</code> から 5 分未満なら、ネットワークに出ずにそのまま返します。</li>
+<li>各リソースは並列に取得し、前回の <code>ETag</code> があれば <code>If-None-Match</code> を付けた条件付きリクエストにします。<code>304 Not Modified</code> なら前回のデータと ETag を再利用するので、変化のないリソースは再ダウンロードされません。</li>
+<li>HTTP タイムアウト 30 秒、1 レスポンス上限 64 MiB、<code>User-Agent: MAYAK/0.1.0</code>。200 以外・不正 JSON はエラー。</li>
+<li>失敗後は <code>retryCooldown</code>（<strong>1 分</strong>）の間、強制でない更新は再試行せず、前回スナップショットと最後のエラーを返します。</li>
+<li>同時に走る更新は <code>refreshMu</code> で直列化されます。</li>
+<li>強制更新（<code>force</code>）は 5 分判定と 1 分クールダウンの両方を無視します。</li>
+</ul>
+<h3 id="検証"><a class="header" href="#検証">検証</a></h3>
+<p>全リソースがそろってから <code>validate</code> を通したものだけを新しいスナップショットとして公開します。部分的・不正なダウンロードで、動いていたカタログを置き換えることはありません。</p>
+<ul>
+<li>必須リソースそれぞれに空でない <code>data</code> オブジェクトがあること</li>
+<li><code>items</code> / <code>maps</code> / <code>tasks</code> は入れ子の同名マップが空でないこと</li>
+<li><code>traders</code> / <code>hideout</code> はエントリが空でないこと</li>
+<li>件数（アイテム・マップ・トレーダー・タスク・ハイドアウト施設）と、<code>items</code> の <code>settings.scavCooldownSeconds</code>、<code>playerLevels</code> の件数をスナップショットに記録</li>
+</ul>
+<h2 id="保存と最終正常版オフライン利用"><a class="header" href="#保存と最終正常版オフライン利用">保存と最終正常版（オフライン利用）</a></h2>
+<ul>
+<li>保存先: <code>os.UserConfigDir()</code> 配下の <code>Mayak\catalog\&lt;mode&gt;.json</code>（Windows では通常 <code>%AppData%\Mayak\catalog\regular.json</code> など）。</li>
+<li>一時ファイル（<code>.catalog-*</code>）に書いて <code>Sync</code> 後にリネームする原子的な保存。ディレクトリは <code>0700</code>。</li>
+<li>各リソースの本文と ETag、件数、<code>UpdatedAt</code> を含みます。</li>
+<li>起動後そのモードで最初の更新時に、メモリになければディスクから読み込み、モード一致と <code>validate</code> を満たせば最終正常版として採用します。</li>
+<li>ダウンロードや検証に失敗しても、最終正常版があればそれを返して利用を続けます（オフライン時もこの保存データで動作）。保存だけ失敗した場合は、新しいカタログを使いつつエラーを返します。</li>
+</ul>
+<h2 id="host-での自動更新と状態表示"><a class="header" href="#host-での自動更新と状態表示">Host での自動更新と状態表示</a></h2>
+<p><code>app_catalog.go</code> の <code>watchCatalog</code> は Windows の Host モードでのみ起動します（<code>startBrowserHostBackground</code>）。ブラウザの受信側（WebRTC クライアント）や終了中は更新しません。</p>
+<p>更新のきっかけ:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>きっかけ</th><th>強制</th></tr>
+</thead>
+<tbody>
+<tr><td>起動時（有効なモードが決まっていれば）</td><td>いいえ</td></tr>
+<tr><td>5 分ごとのティッカー</td><td>いいえ</td></tr>
+<tr><td>設定の <code>GameMode</code> 変更</td><td>いいえ</td></tr>
+<tr><td>ログで別のプロファイル／モードを検出</td><td>いいえ</td></tr>
+<tr><td>設定画面の「データを更新」（<code>RefreshCatalog</code>）</td><td>はい</td></tr>
+<tr><td>ハイドアウトの更新（<code>RefreshHideout</code>）</td><td>はい</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>1 回の更新は 60 秒でタイムアウト。完了時にモードが変わっていたら結果を捨て、状態表示を更新前のものに戻します（その間に新しい更新が始まっていれば、そちらの表示に任せます）。</li>
+<li>スナップショットが得られたら <code>questapi</code> と <code>itemapi</code> のキャッシュを無効化し、ハイドアウト施設一覧も更新します（<a href="hideout.html">ハイドアウト</a>）。</li>
+<li><code>status.catalog</code>（<code>model.CatalogStatus</code>）の <code>state</code>:</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>state</code></th><th>意味</th><th>画面表示</th></tr>
+</thead>
+<tbody>
+<tr><td><code>loading</code></td><td>更新中</td><td>処理中</td></tr>
+<tr><td><code>ready</code></td><td>最新（5 分以内）</td><td>利用可能</td></tr>
+<tr><td><code>stale</code></td><td>取得から 5 分以上（更新失敗で保存データを使用中）</td><td>保存済みデータを使用中</td></tr>
+<tr><td><code>error</code></td><td>使えるデータがない</td><td>待機中</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>Host 設定の状態カード（<code>frontend/src/main.tsx</code>）に、モード・状態・各件数・最終取得時刻・<code>lastError</code> と「データを更新」ボタンを表示します。</li>
+<li>ログ（カテゴリ <code>Catalog</code>）: 成功時は件数を <code>Info</code>、失敗時は <code>Warn</code> で記録し、最終正常版を使うときはその取得時刻も記録します。</li>
+</ul>
+<h2 id="アイテム一覧internalitemapi"><a class="header" href="#アイテム一覧internalitemapi">アイテム一覧（<code>internal/itemapi</code>）</a></h2>
+<ul>
+<li><code>ItemsForMode(mode)</code>: <code>""</code> / <code>auto</code> は <code>regular</code> として扱い、それ以外の不明モードはエラー。</li>
+<li>モードごとに <strong>12 時間</strong>メモリにキャッシュ。ただしカタログ更新のたびに <code>Invalidate</code> されるので、実際はカタログのスナップショットに追従します。</li>
+<li>名前・略称は <code>items_en</code> で英語化。<code>items_&lt;lang&gt;</code> の名前が英語と異なる場合、<code>Aliases</code> / <code>ShortAliases</code> に加え、<code>Names[lang]</code> に保持します（照合と表示言語に使用、<a href="item-panel.html">アイテム欄</a>）。</li>
+<li>言語リソースが取れなくても英語名で動作します。</li>
+<li><code>NewWithSource</code> でカタログを取得元にします（アプリはこちら）。取得元なしの場合は JSON API を直接読みます（タイムアウト 30 秒）。</li>
+</ul>
+<h2 id="タスク一覧internalquestapi"><a class="header" href="#タスク一覧internalquestapi">タスク一覧（<code>internal/questapi</code>）</a></h2>
+<ul>
+<li><code>QuestsForMode(mode)</code>:
+<ul>
+<li><code>regular</code> / <code>pve</code> / <code>pvp-season</code>: そのモードの <code>tasks</code>・<code>maps</code>・<code>traders</code> と英語名から構築し、補足タスクと Wiki タスクを加えます。</li>
+<li><code>""</code> / <code>auto</code>: <code>Quests()</code> が <code>regular</code> を基準に、<code>pve</code>・<code>pvp-season</code> にしかないタスクを ID 単位で追加した統合一覧を返します（マップ・トレーダー名は <code>regular</code> のもの）。</li>
+</ul>
+</li>
+<li>キャッシュは統合一覧・モード別とも <strong>12 時間</strong>。カタログ更新時に <code>Invalidate</code> されます。</li>
+<li>各タスクは ID・英語名・トレーダー名・マップ（<code>normalizedName</code>）・<code>normalizedName</code>・<code>wikiLink</code>・目標（説明と対象マップ）を持ちます。タスク自体にマップがなければ、最初にマップを持つ目標のマップを使います。</li>
+<li>別言語名: <code>tasks_&lt;lang&gt;</code> にある名前が英語名と異なれば <code>Aliases</code> に追加します。表示名と Wiki リンクは英語（正規）のまま。言語リソースが欠けても一覧は使えます。</li>
+<li>取得元なしの場合の HTTP タイムアウトは 20 秒。</li>
+</ul>
+<h3 id="補足タスクsupplementalgo"><a class="header" href="#補足タスクsupplementalgo">補足タスク（<code>supplemental.go</code>）</a></h3>
+<p>tarkov.dev の公開カタログに載る前の新タスクを、コードに直接持っています。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>ID</th><th>名前</th><th>トレーダー</th><th>マップ</th></tr>
+</thead>
+<tbody>
+<tr><td><code>mayak:preliminary-survey</code></td><td>Preliminary Survey</td><td>Ref</td><td><code>the-lab</code>（tarkov.dev のマップ名。ログ上は <code>laboratory</code>）</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>正規化した名前が一覧に既にあれば追加しません。</li>
+<li><code>NormalizedName</code> は空のままにし、tarkov.dev のまだ存在しないタスクページへ移動させません（Remote Control ではマップ送信にフォールバック、<a href="tasks-and-maps.html">タスクとマップ</a>）。</li>
+</ul>
+<h3 id="公式-wiki-からの補足wikigo"><a class="header" href="#公式-wiki-からの補足wikigo">公式 Wiki からの補足（<code>wiki.go</code>）</a></h3>
+<p>公式 Wiki（<code>escapefromtarkov.fandom.com</code>）は tarkov.dev より先に新タスクを載せるため、名前だけでも照合できるようにします。</p>
+<ul>
+<li>MediaWiki API（<code>https://escapefromtarkov.fandom.com/api.php</code>）で <code>Category:Quests</code> のメンバー（名前空間 0、500 件ずつ最大 10 ページ、追加日時付き）を取得します。</li>
+<li><code>Category:Event content</code> と <code>Category:Historical content</code> に属するページ（過去イベント）は除外します。</li>
+<li>カテゴリへの追加が <strong>直近 180 日</strong>以内のものだけを採用します（Arena や過去イベントによる誤一致を避けるため）。</li>
+<li>取得はバックグラウンドで行い、タスク一覧の構築は Wiki を待ちません（その時点で手元にある一覧を使います）。</li>
+<li>成功した一覧は <strong>12 時間</strong>ごとに取り直します。取得に失敗した（200 以外の応答を含む）、または結果が空のときは前回の一覧（なければなし）を保ち、<strong>30 分</strong>後に再取得します。</li>
+<li>取り直した一覧が前回と変わっていれば、タスク一覧のキャッシュを無効化し、次の照合から新しい一覧で作り直します。</li>
+<li>既に名前で一致するタスクと、カテゴリ概要ページ <code>Quests</code> は追加しません。</li>
+<li>追加されるタスクは ID <code>wiki:&lt;タイトル&gt;</code>、名前のみで、<code>WikiLink</code> はそのページ（空白を <code>_</code> に置換）。トレーダー・マップ・<code>NormalizedName</code> は持ちません。</li>
+<li><code>EnableWiki()</code> を呼んだクライアントだけが有効（既定はオフ）。アプリは <code>NewApp</code> で有効にし、テストやツールはオフラインのままです。</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="tasks-and-maps.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="settings-and-integrations.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="tasks-and-maps.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="settings-and-integrations.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

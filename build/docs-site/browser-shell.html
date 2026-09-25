@@ -1,0 +1,551 @@
+<!DOCTYPE HTML>
+<html lang="ja" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ブラウザシェル - MAYAK 仕様書</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-a0128e09.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9bee80de.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">MAYAK 仕様書</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ichi0g0y/mayak" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="ブラウザシェル"><a class="header" href="#ブラウザシェル">ブラウザシェル</a></h1>
+<p>MAYAK のメインウインドウは、自前のブラウザシェル（<code>frontend/src/browser</code>、vanilla JS）です。シェル自身はタブ一覧・ツールバー・設定・ブックマーク・アイテムサイドバーを描画し、Web ページはシェルとは別のネイティブ WebView（Windows では WebView2 の子ウインドウ）で表示します。</p>
+<p>この章では、現在のコードの挙動と、それを実装しているファイルを説明します。アイテムサイドバーの中身は <a href="item-panel.html">item-panel.md</a>、タスク・マップの自動表示は <a href="tasks-and-maps.html">tasks-and-maps.md</a>、設定画面と Host 連携は <a href="settings-and-integrations.html">settings-and-integrations.md</a> を参照してください。</p>
+<h2 id="構成ファイル"><a class="header" href="#構成ファイル">構成ファイル</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>ファイル</th><th>役割</th></tr>
+</thead>
+<tbody>
+<tr><td><code>frontend/src/browser/shell.js</code></td><td>DOM の描画、クリック・ドラッグ・キー操作、サイドバーのリサイズ、テーマ適用</td></tr>
+<tr><td><code>frontend/src/browser/api.js</code></td><td>状態の保持と操作（<code>window.mayak.action</code>）、ネイティブビューへの命令、永続化、ナビゲーションイベントの受信</td></tr>
+<tr><td><code>frontend/src/browser/state.js</code></td><td>既定値、<code>browser.json</code> の復元と検証、タブ・ブックマークの並べ替え規則、URL 検証</td></tr>
+<tr><td><code>frontend/src/browser/tab-drag.js</code></td><td>タブのドラッグによる並べ替え</td></tr>
+<tr><td><code>frontend/src/browser/popup.js</code>, <code>frontend/popup.html</code></td><td>アイテムポップアップウインドウのヘッダー</td></tr>
+<tr><td><code>frontend/src/browser/style.css</code></td><td>レイアウト（縦・横）、タブの縮小、ロードバーなど</td></tr>
+<tr><td><code>app_browser.go</code></td><td><code>browser.json</code> の読み書き、<code>BrowserView</code> 命令の検証</td></tr>
+<tr><td><code>app_popup.go</code>, <code>app_popup_windows.go</code></td><td>アイテムポップアップウインドウ</td></tr>
+<tr><td><code>app_favicon.go</code></td><td>ファビコンのディスクキャッシュ</td></tr>
+<tr><td><code>app_adblock.go</code>, <code>internal/adblock</code></td><td>広告ブロック</td></tr>
+<tr><td><code>internal/browserview/*</code></td><td>ネイティブビューの管理（Windows / macOS / Linux 実装）</td></tr>
+<tr><td><code>third_party/go-webview2/pkg/edge/browser_tabs.go</code></td><td>WebView2 の分離設定、ナビゲーションイベント、キャッシュ無視の再読み込み</td></tr>
+<tr><td><code>internal/app/run.go</code>, <code>app_window_theme.go</code>, <code>tray.go</code></td><td>メインウインドウの生成、タイトルバー色、トレイ</td></tr>
+</tbody>
+</table>
+</div>
+<p>シェルの操作はすべて <code>api.js</code> の <code>enqueue</code> で直列化され、ネイティブビューへの命令（<code>go.BrowserView</code>）も別の <code>nativeQueue</code> で 1 つずつ順に実行されます。</p>
+<h2 id="ウインドウとレイアウト"><a class="header" href="#ウインドウとレイアウト">ウインドウとレイアウト</a></h2>
+<h3 id="ウインドウ"><a class="header" href="#ウインドウ">ウインドウ</a></h3>
+<ul>
+<li>メインウインドウはフレームレス（<code>internal/app/run.go</code> の <code>Frameless: true</code>）。既定サイズ 1120×760、最小 760×560。Windows の影・角丸・スナップは維持されます。</li>
+<li>最小化・最大化・閉じるボタンはシェルが描画します（<code>windowControls()</code>）。<code>--wails-draggable: drag</code> の領域（縦レイアウトではサイドバー上部とツールバー、横レイアウトではタブストリップとドック。アイテムサイドバーの上部も）でウインドウを移動でき、ダブルクリックで最大化を切り替えます。</li>
+<li>タイトルバーと枠の色は、テーマの <code>--sidebar</code> / <code>--text</code> / <code>--border</code> と明暗から <code>BrowserSetWindowTheme</code> で設定します（<code>applyTheme()</code>）。OS のテーマが変わると Wails がボタン色を戻すため、300ms 後にもう一度送り直します。</li>
+<li>ウインドウ位置とサイズは <code>window.json</code> に保存され、起動時に画面内へ収めて復元されます（<code>main.go</code>）。</li>
+<li>トレイ: 設定 <code>MinimizeToTray</code> なら最小化時に、<code>CloseToTray</code> なら閉じるときにウインドウを隠します。トレイメニューは「MAYAKを開く」と「終了」で、設定の言語を変えるとすぐその言語に切り替わります。多重起動時は既存ウインドウを表示します。</li>
+</ul>
+<h3 id="タブ欄とアイテム欄の位置"><a class="header" href="#タブ欄とアイテム欄の位置">タブ欄とアイテム欄の位置</a></h3>
+<p>設定の「表示」で、タブ欄は左・右・上、アイテム欄は右・左・下から選べます（<code>navPosition</code> / <code>itemDock</code>）。両方を同じ側に置くと、外側がタブ欄、内側がアイテム欄になります。</p>
+<ul>
+<li>タブ欄の左・右は <code>layout: 'vertical'</code> と <code>sidebarSide</code>、上は <code>layout: 'horizontal'</code> で保存します。ドックの配置ボタン（アイコンは今のタブ欄の位置）を押すと、タブ欄とアイテム欄の位置をアイコンで選ぶメニューが開きます（<code>placeMenuHTML()</code>）。縦レイアウトではボタンの上、横レイアウトでは下に開き、ページ領域に重なるときはその間ページビューを隠します。選ぶとすぐ切り替わり、メニューは閉じます。Esc・外側のクリック・ウインドウのリサイズでも閉じます。</li>
+<li>シェルは <code>body</code> の <code>data-nav</code>（<code>left</code> / <code>right</code> / <code>top</code>）と <code>data-item</code>（<code>right</code> / <code>left</code> / <code>bottom</code> / <code>closed</code>）から、ページ領域の余白 <code>--page-left</code> / <code>--page-top</code> / <code>--page-right</code> / <code>--page-bottom</code> を CSS で計算します。<code>main</code>、スクショの拡大表示、Host 設定の iframe、設定の閉じるボタンはこの余白に従います。ネイティブビューは同じ値を <code>bounds()</code> で計算します（後述）。</li>
+<li>右のタブ欄はツールバーの行の下から始まり、ウインドウ操作ボタンはツールバーの右端（ウインドウの右上）に残ります。</li>
+<li>下のアイテム欄はページ領域と同じ幅で、ボタンを左に縦に並べ、中身を幅 280px ごとの段組みにして縦にスクロールします。高さは上端をドラッグして 180〜560px（既定 280px、<code>itemPanelHeights</code>）で変えられます。</li>
+</ul>
+<h3 id="縦レイアウト左右のサイドバー"><a class="header" href="#縦レイアウト左右のサイドバー">縦レイアウト（左右のサイドバー）</a></h3>
+<p><code>layout: 'vertical'</code>（既定）。以下は左に置いた場合です。右に置くと左右が入れ替わります。</p>
+<ul>
+<li>左サイドバーに、上からサイドバー開閉ボタンと状態表示、固定ビュー（TARKOV.DEV / TarkovTracker）、ピン留めしたブックマーク、タブ一覧が並びます。下部のドックには配置・アイテムサイドバー・設定のボタンがあります。</li>
+<li>ツールバー（高さ 48px）はサイドバーの右、ページはその下に置かれます。</li>
+<li>サイドバーの幅は右端をドラッグして 180〜420px の範囲で変えられます（既定 224px、<code>sidebarWidths</code>）。ダブルクリックで既定値に戻ります。ドラッグ中は CSS 幅がすぐに追従し、ページのネイティブビューは 1 フレームに 1 回追従し、幅はドラッグ終了時に保存されます。</li>
+<li>サイドバーを閉じると幅 52px のアイコンだけの表示になります（<code>sidebarCollapsed</code>）。タブ名・操作ボタン・状態表示は隠れます。</li>
+<li>ブックマーク欄は見出しクリックで折りたためます（<code>bookmarksCollapsed</code>）。</li>
+</ul>
+<h3 id="横レイアウト上部タブストリップ"><a class="header" href="#横レイアウト上部タブストリップ">横レイアウト（上部タブストリップ）</a></h3>
+<p><code>layout: 'horizontal'</code>。</p>
+<ul>
+<li>1 段目（高さ 48px）: 固定ビュー、ピン留めブックマークのアイコン、タブ、新規タブボタン。右端に幅 180px のドック（状態表示を含む）とウインドウ操作ボタン。</li>
+<li>2 段目: ツールバー。ページは上から 96px の位置から始まります。</li>
+<li>タブは Chrome のように縮みます。タブ列全体はタブ数 × 182px を上限に伸び（<code>--n</code>）、各タブは最大 180px・最小 40px です。コンテナ幅が 72px 以下になると、タブ名と操作ボタンを隠してアイコンだけにします（<code>style.css</code> の <code>@container (max-width:72px)</code>）。</li>
+<li>ピン留めタブとその他のタブの間には区切り線が入ります。</li>
+<li>サイドバーのリサイズと開閉は横レイアウトでは使えません。</li>
+</ul>
+<h2 id="タブ"><a class="header" href="#タブ">タブ</a></h2>
+<h3 id="種類"><a class="header" href="#種類">種類</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>種類</th><th>内容</th></tr>
+</thead>
+<tbody>
+<tr><td><code>web</code></td><td>ネイティブビューで表示する Web ページ</td></tr>
+<tr><td><code>blank</code></td><td>新しいタブ（アドレス入力待ち）</td></tr>
+<tr><td><code>settings</code></td><td>設定ページ（1 つだけ）</td></tr>
+<tr><td><code>bookmarks</code></td><td>ブックマーク一覧ページ（1 つだけ）</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>タブ一覧に並ぶのは固定ビュー・設定・ブックマーク以外のタブです（<code>listedTabs()</code>）。設定とブックマークはドックやブックマーク欄のボタンから開きます。</li>
+<li>設定を開いている間、サイドバーはタブの代わりに設定のセクション一覧を表示します。設定を閉じると、開く前のタブ（なければ TARKOV.DEV）に戻ります。</li>
+<li>タスク検出で開いたタブ（<code>role: 'task'</code>）には、ツールバーにサイト選択と Wiki 内検索が付きます（<a href="tasks-and-maps.html">tasks-and-maps.md</a>）。</li>
+<li>タブは合計 80 個まで（<code>tab-limit</code>）。ネイティブビューも 80 個までです。</li>
+</ul>
+<h3 id="固定ビュー"><a class="header" href="#固定ビュー">固定ビュー</a></h3>
+<p><code>state.js</code> の <code>mapTab()</code> と <code>trackerTab()</code> で作られる 2 つの <code>fixed</code> タブです。常に先頭にあり、閉じる・ピン留め・移動はできません。タブ一覧ではなく、その上にナビ項目として表示されます。</p>
+<ul>
+<li><strong>TARKOV.DEV</strong>（<code>id: 'map'</code>）: 既定は <code>https://tarkov.dev/maps/</code>。マップ検出はすべてこのタブに入ります。起動時にバックグラウンドで先読みされ（<code>preloadMap()</code>）、初めて切り替えたときにすぐ表示されます。マップページ（<code>/map/…</code>）とマップ一覧（<code>/maps/</code>）の表示時は URL に <code>?connection=&lt;Remote Control ID&gt;</code> が付けられますが、保存されるタブの URL からは取り除かれます（<code>viewURL()</code> / <code>pageURL()</code>）。</li>
+<li><strong>TarkovTracker</strong>（<code>id: 'tracker'</code>）: 既定は <code>https://tarkovtracker.org/</code>。</li>
+</ul>
+<p>固定ビューのツールバーは、戻る・進む・再読み込み・ホーム・読み取り専用のアドレス欄・「既定のブラウザで開く」です。アドレス欄では Enter を押しても移動しません。ホームボタンは <code>home</code>（TARKOV.DEV では最後に検出したマップ）へ戻り、既にホームにいるときは無効になります。</p>
+<h3 id="ピン留め並べ替え閉じる"><a class="header" href="#ピン留め並べ替え閉じる">ピン留め・並べ替え・閉じる</a></h3>
+<ul>
+<li>ピン留めできるのは固定ビュー以外の <code>web</code> タブだけです。並び順は常に「固定ビュー → ピン留め → その他」（<code>orderTabs()</code>）。ピン留めするとピン留めグループの末尾へ、外すとその他のグループの先頭へ移ります。</li>
+<li>ピン留めタブには閉じるボタンがなく、閉じられません。</li>
+<li>ドラッグでの並べ替え（<code>tab-drag.js</code>）:
+<ul>
+<li>5px 以上動かすと開始します。つかんだタブがポインタに追従し、ほかのタブが移動先を空けます。</li>
+<li>並べ替えはピン留めグループ内、その他グループ内でのみ行えます。</li>
+<li>Esc でキャンセル。ドラッグ後のクリックは無視されるため、タブの切り替えや閉じる操作にはなりません。</li>
+<li>サイドバーのブックマーク欄（またはブックマークアイコン）の上で離すと、<code>web</code> タブをブックマークしてサイドバーにピン留めします（同じ URL のブックマークがあればそれをピン留めします）。</li>
+<li>ページのネイティブビューの上やアプリの外で離した場合、シェルにはイベントが届きません。そのため、フォーカスが外れたとき、ボタンが離された状態で pointermove が来たとき、pointer capture を失ったときにドラッグを破棄します。</li>
+</ul>
+</li>
+<li>タブを閉じるとネイティブビューも破棄され（読み込み中の状態 <code>loadingViews</code> からも外します）、右隣（なければ左隣）のタブがアクティブになります。</li>
+</ul>
+<h3 id="起動をまたいだ状態の保存browserjson"><a class="header" href="#起動をまたいだ状態の保存browserjson">起動をまたいだ状態の保存（<code>browser.json</code>）</a></h3>
+<p><code>api.js</code> の <code>persist()</code> が <code>%AppData%\Mayak\browser.json</code>（<code>os.UserConfigDir()</code> 配下）に保存します。書き込みは 1 MiB 以下の有効な JSON のみ受け付け、一時ファイルに書いてから置き換えます（<code>BrowserSave</code>）。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>キー</th><th>内容 / 既定値</th></tr>
+</thead>
+<tbody>
+<tr><td><code>version</code>, <code>bookmarkRevision</code></td><td>形式のバージョン。<code>bookmarkRevision</code> は現在 2（TarkovTracker を <code>.org</code> へ移行）</td></tr>
+<tr><td><code>language</code></td><td><code>ja</code>（既定）/ <code>en</code></td></tr>
+<tr><td><code>clock</code></td><td>時刻の表示。<code>24</code>（既定）/ <code>12</code>。Host 設定の画面（iframe）にも <code>data-clock</code> で伝えます</td></tr>
+<tr><td><code>layout</code></td><td><code>vertical</code>（既定）/ <code>horizontal</code></td></tr>
+<tr><td><code>sidebarSide</code></td><td>縦レイアウトのタブ欄の側。<code>left</code>（既定）/ <code>right</code></td></tr>
+<tr><td><code>itemDock</code></td><td>アイテム欄の位置。<code>right</code>（既定）/ <code>left</code> / <code>bottom</code></td></tr>
+<tr><td><code>sidebarCollapsed</code>, <code>bookmarksCollapsed</code>, <code>screenshotsCollapsed</code></td><td><code>false</code></td></tr>
+<tr><td><code>bossesView</code></td><td>ボス欄の開閉。<code>full</code>（既定・マップのボスも表示）/ <code>goons</code>（Goons だけ）/ <code>closed</code></td></tr>
+<tr><td><code>bossMap</code>, <code>bossMode</code></td><td>ボス欄で手で選んだマップ（正規化名）とモード（<code>regular</code> / <code>pve</code>）。空は自動</td></tr>
+<tr><td><code>sidebarWidth</code></td><td>224（180〜420）</td></tr>
+<tr><td><code>itemPanelWidth</code></td><td>320（260〜560）</td></tr>
+<tr><td><code>itemPanelHeight</code></td><td>下に置いたアイテム欄の高さ。280（180〜560）</td></tr>
+<tr><td><code>itemPanel</code></td><td><code>{open, id, mode}</code>。アイテムサイドバーの開閉と表示中のアイテム</td></tr>
+<tr><td><code>bookmarkView</code></td><td><code>grid</code>（既定）/ <code>list</code></td></tr>
+<tr><td><code>favicons</code></td><td>ホスト名 → ファビコン URL（最大 200 件）</td></tr>
+<tr><td><code>theme</code></td><td><code>mayak-dark</code>（既定）。<code>system</code> と 12 種のテーマ</td></tr>
+<tr><td><code>adblock</code></td><td><code>true</code></td></tr>
+<tr><td><code>taskMode</code></td><td><code>new</code>（既定）/ <code>reuse</code></td></tr>
+<tr><td><code>questSite</code></td><td><code>host</code>（既定）/ <code>tarkov-dev</code> / <code>official-wiki</code> / <code>japanese-wiki</code></td></tr>
+<tr><td><code>bookmarks</code></td><td>最大 100 件</td></tr>
+<tr><td><code>tabs</code>, <code>active</code></td><td>タブ一覧とアクティブなタブ</td></tr>
+<tr><td><code>connection</code></td><td><code>mode</code> と <code>stun</code> のみ。接続キーや WebRTC のコードは保存しません</td></tr>
+</tbody>
+</table>
+</div>
+<p>ウインドウの位置とサイズは <code>browser.json</code> には保存しません（<code>window.json</code>）。以前のファイルにある <code>window</code> は読み込まず、次の保存で消えます。</p>
+<p>復元時（<code>restore()</code>）の検証:</p>
+<ul>
+<li>タブ ID は <code>^[a-zA-Z0-9_-]{1,80}$</code>。重複と、固定ビューの ID を持つ保存タブは捨てます。</li>
+<li><code>web</code> タブは有効な http/https URL のものだけ残します。<code>settings</code> と <code>bookmarks</code> は 1 つずつ。</li>
+<li>保存タブは 79 件まで。その先頭に固定ビュー 2 つを作り直します。TARKOV.DEV は保存されていた URL とホームを、TarkovTracker は保存 URL を引き継ぎます（<code>tarkovtracker.io</code> の URL は引き継ぎません）。</li>
+<li>タイトルは 160 文字、ブックマーク名は 150 文字、分類名は 40 文字で切り詰めます。</li>
+<li>初回起動の既定タブは TARKOV.DEV・TarkovTracker・設定で、アクティブは TARKOV.DEV です（<code>defaults()</code> の <code>active</code>）。</li>
+</ul>
+<h2 id="ブックマーク"><a class="header" href="#ブックマーク">ブックマーク</a></h2>
+<ul>
+<li>各ブックマークは <code>id</code>, <code>name</code>, <code>url</code>, <code>group</code>, <code>sidebar</code>（サイドバーにピン留め）を持ちます。</li>
+<li>分類（<code>group</code>）は組み込みの <code>maps</code> / <code>tasks</code> / <code>items</code> / <code>progress</code> / <code>other</code>（表示時に翻訳）と、ユーザーが入力した任意の名前です。空欄なら <code>other</code>。</li>
+<li>既定のブックマークは tarkov.dev（Maps / Items）、日本語 Wiki・公式 Wiki のタスクページ、TarkovTracker、Tarkov Market、Database for Tarkov、EFT Ammo です。</li>
+<li>ブックマークページでは検索（名前・URL）、タイル / リスト表示の切り替え、追加・編集・削除、サイドバーへのピン留めができます。</li>
+<li>サイドバーへのピン留めは、ブックマークページからブックマーク欄へドラッグするか、ピンボタンで行います。ドロップ位置に挿入され、ブックマーク欄の中でドラッグすると並べ替えになります。</li>
+<li>ピン留めブックマークを右クリックすると「開く」「サイドバーから外す」のメニューが出ます（矢印キー・Esc 対応）。</li>
+<li>ブックマークを開くと新しいタブで開きます。</li>
+</ul>
+<h2 id="スクリーンショット"><a class="header" href="#スクリーンショット">スクリーンショット</a></h2>
+<p>ゲームのスクリーンショット（Host の設定のスクリーンショットフォルダ）を見られます。Host の PC（接続モード <code>local</code>）でだけ表示します。</p>
+<ul>
+<li><strong>サイドバー:</strong> ブックマークの下に「スクリーンショット」の欄があり、最新の1枚の縮小画像と撮影からの時間を出します。新しいスクリーンショットが撮られると（<code>browser:screenshot</code> イベント）、自動で入れ替わります。
+<ul>
+<li>縮小画像をクリックすると、スクリーンショットのページでその1枚を大きく表示します。</li>
+<li>見出しの右の画像アイコンをクリックすると、スクリーンショットのページで一覧を表示します。</li>
+<li>見出しをクリックすると、ブックマークと同じようにプレビューを畳めます（<code>browser.json</code> の <code>screenshotsCollapsed</code>）。</li>
+<li>サイドバーを畳んだ状態と横バーのレイアウトでは、画像アイコンだけを出します。</li>
+</ul>
+</li>
+<li><strong>スクリーンショットのページ:</strong> ブックマークの一覧と同じく、タブ一覧には出ない専用のタブ（<code>kind: "screenshots"</code>）です。上部のツールバーにはアドレス欄を出しません。
+<ul>
+<li>新しい順に最大 300 枚を一覧にし、縮小画像は 1 枚ずつ順に読み込みます（先頭 120 枚）。「フォルダを開く」でフォルダを開けます。</li>
+<li>1枚をクリックすると、ページ部分（サイドバーとアイテム欄の間）に大きく表示します。←→ キーやボタンで前後の1枚へ、Esc や × で一覧に戻ります。</li>
+</ul>
+</li>
+<li><strong>大きく表示したときのズーム:</strong> 全体が収まる大きさを 100% として、最大 800% まで拡大できます。別の1枚に移ると 100% に戻ります。
+<ul>
+<li>マウスホイールで、カーソルの位置を中心に拡大・縮小します。</li>
+<li>拡大中はドラッグで表示位置を動かせます。</li>
+<li>ダブルクリックで、全体表示と等倍（画面の画素そのまま）を切り替えます。</li>
+<li>上部のボタン（縮小・拡大・全体表示）と、<code>+</code> / <code>-</code> / <code>0</code> キーでも操作できます。</li>
+</ul>
+</li>
+<li><strong>画像の受け渡し:</strong> Go 側（<code>app_screenshot_gallery.go</code>）が JPEG の data URL にして渡します。縮小画像は横 480 px で、最大 400 枚をメモリに保持します。受け付けるのはスクリーンショットフォルダの直下にある <code>.png</code> / <code>.jpg</code> / <code>.jpeg</code> だけで、パスを含む名前は拒否します。</li>
+</ul>
+<h3 id="判定の記録"><a class="header" href="#判定の記録">判定の記録</a></h3>
+<p>Host がスクリーンショットを解析するたびに、何と判定したか（種類・画面の形・検出スコア・マップ・レイド中か・一致したタスクやアイテムと一致度・上位3件の候補・OCR の読み取り結果（400文字まで）・座標・エラー）を、ファイル名ごとに <code>%AppData%\Mayak\screenshots.json</code> に記録します（<code>screenshotstore.Index</code>、最大3000件で古いものから消えます）。画像はコピーしません。記録すると <code>browser:screenshot</code> を送り、一覧が更新されます。</p>
+<ul>
+<li>この記録より前の解析は、スクリーンショットフォルダの <code>Mayak-Debug</code>（認識デバッグの保存）に JSON があれば、フォルダごとに1回だけ取り込みます（<code>DebugRecords</code>）。</li>
+<li>一覧とサイドバーの縮小画像は、左上に種類（タスク・アイテム・出品・位置・判定なし）、左下に一致した名前を重ねて表示します。</li>
+<li>大きく表示したときは、見出しに種類・一致した名前・一致度を出し、ⓘ ボタンで判定の詳細（候補・画面の形・スコア・OCR など）のパネルを開閉します。</li>
+</ul>
+<h2 id="ボス"><a class="header" href="#ボス">ボス</a></h2>
+<p>各マップのボスの出現率と、Goons の目撃報告を見られます。データは <code>json.tarkov.dev/{regular|pve}/maps</code>（名前は <code>maps_{言語}</code>）から Go 側（<code>internal/bossinfo</code>、<code>BrowserBosses</code>）が取得します。ゲームモードはアイテム欄と同じ決め方（検出中のモード。seasonal は regular）です。</p>
+<ul>
+<li><strong>取得:</strong> マップのデータは圧縮後も約 0.8MB あるため、4分以内は前回の結果を使い、それ以降は ETag 付きで問い合わせて、変わっていなければ前回のデータのままにします。シェルは起動時と5分ごと（ウインドウが見えている間）、表示言語を変えたとき、ボスのページを開いたときに取り直します。</li>
+<li><strong>表示するボス:</strong> <code>boss</code> で始まるもの、カルトの司祭、レイダー。AI の PMC などは出しません。同じボスが1つのマップに複数の出現枠を持つときは1行にまとめ、出現率は高い方、出現場所は全部をまとめます。</li>
+<li><strong>Goons:</strong> <code>goonReports</code>（プレイヤーの報告。マップと時刻）を新しい順に最大20件持ちます。新しさで色を変えます（1時間以内は緑、3時間以内は黄、それより前は赤）。経過時間は再描画なしで30秒ごとに更新します。</li>
+<li><strong>サイドバー:</strong> スクリーンショットの下に「ボス」の欄があり、最新の Goons の報告と、マップとモードのドロップダウン、そのマップのボス上位5件と出現率を出します。マップ・モードとも既定は「自動」（検出中のマップ＝Host の <code>currentMap</code>、プレイ中のモード）で、手で選ぶこともできます（<code>bossMap</code> / <code>bossMode</code>、ボスのページと共通）。見出しで開閉し、Goons の下の「マップのボス」の行でマップのボスを出し入れします（<code>bossesView</code> = <code>full</code> / <code>goons</code> / <code>closed</code>）。Goons は Knight の出現枠（Big Pipe と Birdeye が取り巻き）なので「Goons」と表示します。見出し横のアイコン（折りたたんだサイドバーと横レイアウトではアイコンだけ）でボスのページを開きます。</li>
+<li><strong>ボスのページ:</strong> Goons の報告（最大10件、時刻つき）と Goons が出るマップの一覧、マップを選んでボスごとの出現率・出現場所ごとの確率・取り巻きを表示します。見出しに同じマップ・モードのドロップダウンがあり、検出中のマップには ● 印が付きます。時刻は設定の「時刻の表示」（24時間 / 12時間）に従います。</li>
+<li><strong>Goons の報告:</strong> ボスのページの「Goons を報告」、またはサイドバーのボス欄の見出し横の旗アイコン（ボスのページを開いてダイアログを出します。折りたたんだサイドバーと横レイアウトにはありません）から、Goons を見たことを tarkov.dev の公開の受付口（<code>manager.tarkov.dev/api/goons</code>）に送れます（<code>BrowserGoonReportInfo</code> / <code>BrowserReportGoons</code>、<code>bossinfo.SendReport</code>）。
+<ul>
+<li>報告するアカウントとモードは、EFT のログで見つかったもの（<code>trackerData.Profiles</code>）から選びます。アカウントとモード（PvP / PvE）ごとに1つにまとめ、プレイ中のもの、最近見たものの順に並べます。シーズンモードは受け付け先にないので出しません。ログにないアカウントでは送れません。</li>
+<li>時刻は、今のレイドか直前のレイド（終了時に覚え、再起動後はログの最後のレイド開始と最後に検出したマップ）の開始時刻、または今の時刻です。24時間より前のレイドは送れず、同じレイドは1回だけです（アプリの起動中）。</li>
+<li>マップは Goons が出るマップだけで、ゲーム内の名前（<code>nameId</code>、例 <code>bigmap</code>）で送ります。送信前に、IP アドレスとアカウント ID が tarkov.dev に記録されることを表示します。tarkov.dev はアカウント ID が送信者本人のものかを確かめません（記録として保存するだけ）。</li>
+<li>報告は tarkov.dev のデータに10分ごとにまとめられるため、11分後に取り直します。</li>
+</ul>
+</li>
+</ul>
+<h2 id="ツールバーとアドレス欄"><a class="header" href="#ツールバーとアドレス欄">ツールバーとアドレス欄</a></h2>
+<ul>
+<li>通常の <code>web</code> / <code>blank</code> タブ: 戻る・進む・再読み込み・アドレス欄。<code>web</code> タブでは右端に「既定のブラウザで開く」ボタンが付きます（<code>Browser.OpenURL</code>、http/https のみ）。</li>
+<li>アドレス欄はスキームがなければ <code>https://</code> を補います。http/https 以外はエラーになります。<code>web</code> / <code>blank</code> タブでは現在のタブを移動させ、それ以外のタブからは新しいタブを開きます。</li>
+<li>Ctrl+L（macOS では Cmd+L）でアドレス欄にフォーカスします。新規タブを作ったときもアドレス欄にフォーカスします。</li>
+<li>戻る・進むのボタンは、ナビゲーションイベントの <code>canBack</code> / <code>canForward</code> に合わせて有効・無効が切り替わります。</li>
+<li>再読み込みは Ctrl+Shift+R と同じくキャッシュを無視します。DevTools プロトコルの <code>Page.reload</code>（<code>ignoreCache: true</code>）を使い、失敗した場合だけ通常の再読み込みになります（<code>browser_tabs.go</code> の <code>BrowserCommand</code>）。キャッシュが壊れたときも再読み込みで回復させるためです。</li>
+</ul>
+<h3 id="ロードバー"><a class="header" href="#ロードバー">ロードバー</a></h3>
+<ul>
+<li>WebView2 の <code>NavigationStarting</code> で読み込み中、<code>NavigationCompleted</code> で完了とみなし、<code>browser:navigation</code> イベントの <code>loading</code> として送ります。</li>
+<li>シェルは読み込み中のビュー ID を <code>loadingViews</code> で覚えておき（保存はしません）、アクティブなタブが読み込み中なら、アドレス欄の下端に 2px のバーを左右に往復させます（<code>loadBar()</code>、1.4 秒周期）。</li>
+<li>アニメーションの位相は時刻から決まる（<code>--load-offset</code>）ため、再描画してもアニメーションは最初からやり直しになりません。<code>prefers-reduced-motion</code> のときは静止したバーを表示します。</li>
+</ul>
+<h2 id="ファビコン"><a class="header" href="#ファビコン">ファビコン</a></h2>
+<ul>
+<li>ページが報告したファビコン URL（WebView2 の <code>FaviconChanged</code>、または他の変更と一緒に読む <code>faviconURI()</code>）をタブに記録し、ホスト名ごとに <code>favicons</code> に覚えます（最大 200 ホスト）。ブックマークのアイコンにも使われます。</li>
+<li>別のホストへ移動すると、新しいアイコンがわかるまで古いアイコンを外します。</li>
+<li>画像は Go 側のキャッシュ（<code>app_favicon.go</code>）から data URL として受け取ります。
+<ul>
+<li>保存先は <code>Mayak/favicons</code>。ファイル名は URL の SHA-256 の先頭 16 バイトで、<code>.img</code> と <code>.type</code> の 2 ファイルです。</li>
+<li>ページが同じアイコンを再報告したとき（<code>refresh</code>）は、キャッシュが 10 分（<code>faviconRefresh</code>）より古ければ取り直します。取得に失敗した場合はキャッシュを返します。</li>
+<li>取得のタイムアウトは 10 秒、最大 256 KiB。<code>image/*</code> でなければ拒否します（<code>.ico</code> は判定を補っています）。</li>
+<li><code>localhost</code>、<code>*.localhost</code>、<code>*.local</code>、ループバック・プライベート・リンクローカル・未指定 IP は取得しません（<code>faviconURLAllowed</code>）。取得はアプリ自身が行うため、ページにローカルマシンや LAN を指させないためです。</li>
+</ul>
+</li>
+<li>起動時に既知のアイコンをすべて読み込むので、オフラインでもすぐ表示されます。<code>&lt;img&gt;</code> は <code>referrerpolicy="no-referrer"</code> で読み込みます。アイコンを知らないサイトのブックマークは頭文字で表示します。読み込めない場合、タブとサイドバーでは地球アイコンに置き換え、ブックマークページでは画像を取り除きます。</li>
+</ul>
+<h2 id="広告ブロック"><a class="header" href="#広告ブロック">広告ブロック</a></h2>
+<p><code>app_adblock.go</code> と <code>internal/adblock</code>（AdGuard の urlfilter エンジン）で実装されています。Windows のみ有効です。</p>
+<ul>
+<li>フィルタリスト: EasyList、EasyPrivacy、AdGuard 日本語フィルタ（<code>DefaultLists</code>）。<code>Mayak/adblock/&lt;name&gt;.txt</code> にキャッシュします。</li>
+<li>更新: 4 日（<code>maxAge</code>）より古いリストをダウンロードし、6 時間（<code>retryAfter</code>）ごとに確認します。1 リストは最大 32 MiB です。</li>
+<li><code>tarkov.dev</code> とそのサブドメインは、広告で運営されているため対象外です（<code>Exempt</code>）。</li>
+<li>ページ本体（トップレベルのドキュメント）はブロックしません。サブリソース（画像、スクリプト、XHR/fetch、iframe など）を WebView2 の <code>WebResourceRequested</code> で判定してブロックします（<code>internal/browserview/filter_windows.go</code>）。</li>
+<li>ブロックした画像・iframe・メディアの跡は <code>collapse.js</code> で詰め、要素非表示ルールは <code>DOMContentLoaded</code> で CSS として挿入します。ホスト名の親ドメインのルールも適用します。</li>
+<li>設定の ON/OFF はすぐに反映され（<code>BrowserSetAdblock</code>）、表示中の <code>web</code> タブを再読み込みします。</li>
+</ul>
+<h2 id="ネイティブビュー"><a class="header" href="#ネイティブビュー">ネイティブビュー</a></h2>
+<h3 id="配置"><a class="header" href="#配置">配置</a></h3>
+<p><code>api.js</code> の <code>bounds()</code> がウインドウ内のページ領域を論理ピクセルのインセットで決め、<code>BrowserView('show', …)</code> で送ります（<code>browserview.Options</code>）。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>項目</th><th>値</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Left</code></td><td>左に置いたタブ欄の幅（閉じているときは 52）＋左に置いたアイテム欄の幅</td></tr>
+<tr><td><code>Top</code></td><td>縦レイアウトは 48、横レイアウトは 96</td></tr>
+<tr><td><code>Right</code></td><td>右に置いたタブ欄の幅＋右に置いたアイテム欄の幅</td></tr>
+<tr><td><code>Bottom</code></td><td>下に置いたアイテム欄の高さ。それ以外は 0</td></tr>
+</tbody>
+</table>
+</div>
+<p>アイテム欄が閉じているときは、その分は 0 です。</p>
+<p>Windows 実装（<code>internal/browserview/view_windows.go</code>）の動作:</p>
+<ul>
+<li>インセットはウインドウの DPI（<code>GetDpiForWindow</code>、既定 96）で物理ピクセルに換算します。</li>
+<li>最大化していないときは、右端と下端に少なくともリサイズ枠（<code>SM_CXSIZEFRAME + 1</code>）の幅を空けます。フレームレスウインドウをシェルの端からリサイズできるようにするためです。</li>
+<li>各タブは、クリップ付きの子 <code>STATIC</code> HWND に 1 つずつ WebView2 を埋め込みます。<code>WM_SIZE</code>・<code>WM_DPICHANGED</code> で再配置し、<code>WM_MOVE</code> では WebView2 に親ウインドウの移動を通知します。</li>
+<li>切り替え時は新しいビューを先に表示してから他のビューを隠します（<code>showOnly</code>）。間にシェルが一瞬見えるちらつきを防ぐためです。ページが描画されるまでの背景は、テーマの <code>--bg</code> 色で塗ります。</li>
+<li>アクティブなタブが <code>web</code> 以外（設定・ブックマーク・新規タブ・タブなし）のときは <code>hideAll</code> ですべてのビューを隠します。</li>
+<li>閲覧データは <code>Mayak/browser-webdata</code> に置きます。</li>
+<li>macOS（WKWebView）と Linux（WebKitGTK）の実装も <code>internal/browserview</code> にあります。</li>
+</ul>
+<h3 id="シェルのオーバーレイを重ねられない理由"><a class="header" href="#シェルのオーバーレイを重ねられない理由">シェルのオーバーレイを重ねられない理由</a></h3>
+<p>ページはシェルの WebView より手前にあるネイティブの子ウインドウです。そのため、シェルの HTML をページの上に重ねて描くことはできません。影響と対処は次のとおりです。</p>
+<ul>
+<li>ブックマークの右クリックメニューがサイドバーからはみ出す場合は、<code>overlay</code> アクションでビューを <code>hideAll</code> し、閉じたら元に戻します。</li>
+<li>アイテム欄は <code>Left</code> / <code>Right</code> / <code>Bottom</code> インセットでページ領域の外に置かれます。アイテム検索のポップアップもその中に収まります。</li>
+<li>アイテムサイドバーから開くページは、シェルの中ではなく別ウインドウ（次節）に表示します。</li>
+<li>ページ上で離したドラッグはシェルに届かないため、タブのドラッグはフォーカス喪失などで破棄します（前述）。</li>
+</ul>
+<h2 id="アイテムポップアップウインドウ"><a class="header" href="#アイテムポップアップウインドウ">アイテムポップアップウインドウ</a></h2>
+<p>アイテムサイドバーのタスク行や、見出しのアイテムのアイコン・名前をクリックすると、ページが専用のポップアップウインドウで開きます（<code>app_popup.go</code>、<code>frontend/popup.html</code>、<code>frontend/src/browser/popup.js</code>）。</p>
+<ul>
+<li><strong>ウインドウ</strong>: フレームレスで、タスクバーには表示しません。最小サイズは 320×200。メインウインドウを owner に設定するため（<code>app_popup_windows.go</code> の <code>GWLP_HWNDPARENT</code>）、メインウインドウより常に手前にあり、メインウインドウの外へ動かしても同様で、メインウインドウと一緒に最小化されます。</li>
+<li><strong>中身</strong>: 上部の 44px（<code>popupHead</code>）はヘッダーで、ここをドラッグすると移動できます。ページはその下のネイティブビュー（ID <code>popup</code>）です。左端 5px（<code>popupEdge</code>）と、右端・下端のリサイズ枠は空けてあり、そこからリサイズできます。</li>
+<li><strong>ヘッダー</strong>: タスク / 地球のアイコン、タイトル（ページ内のリンク移動に追従）、ピン、「タブで開く」、「外部ブラウザで開く」、閉じる。読み込み中はヘッダー下端にロードバーを表示します。テーマと言語はシェルと同じです。Esc で閉じます。</li>
+<li><strong>初回の配置</strong>（<code>popupPlace()</code>）: アイテムサイドバーのすぐ左（間隔 8px）に置き、縦位置はクリックした行の高さを基準にします（行の中心から 160px 上、上下の余白 12px の範囲内）。幅は 320〜960、高さは 240〜800 です。</li>
+<li><strong>位置の記憶</strong>: 開いてから 500ms 以降の移動・リサイズは <code>popup.json</code> に保存されます（最小化中や 320×200 未満は除きます）。次回からはその位置とサイズで、再起動後も画面内に収めて開きます。すでに開いているポップアップは動かしません。</li>
+<li><strong>フォーカスを失ったとき</strong>: ピン留めしていなければ閉じます。ただし 200ms 待ってから、その間に別のページが表示されていないか（<code>gen</code>）を確認します。このため、ポップアップを開いたまま別のタスク行をクリックすると、閉じずに中身が切り替わります。</li>
+<li><strong>同じ行を再度クリック</strong>すると閉じます。フォーカス喪失で閉じた直後（500ms 以内）に同じ行をクリックしても、すぐ再表示はしません。開いてから 300ms 以内に届いた「閉じた」通知は無視します。</li>
+<li><strong>ピン</strong>: ピン留め中は、ほかをクリックしても閉じません。閉じるとピンは解除されます。</li>
+<li><strong>閉じる</strong>: ビューを破棄してウインドウを隠します。次のポップアップに前のページが残らないようにするためです。Alt+F4 やウインドウの閉じる操作も同じ扱いで、ウインドウ自体は再利用します。</li>
+<li><strong>タブで開く</strong>: 現在のページ（タスク情報を含む）を新しいタブに移し、ポップアップを閉じます。</li>
+<li>ポップアップのビューにも、広告ブロックと tarkov.dev の Remote Control 用スクリプトが適用されます。開いている間、クリックしたタスク行や見出しのアイテム名には <code>popup-source</code> クラスが付き、アクセント色の枠で強調されます。</li>
+</ul>
+<h2 id="再描画の挙動"><a class="header" href="#再描画の挙動">再描画の挙動</a></h2>
+<p>シェルは状態が変わるたびに <code>#app</code> の <code>innerHTML</code> を作り直します（<code>shell.js</code> の <code>render()</code>）。作り直しても使い勝手が変わらないように、次の処理をしています。</p>
+<ul>
+<li>フォーカス中の入力欄、入力途中の値、カーソル位置を復元します。</li>
+<li><code>.item-body</code>、<code>.tab-strip</code>、<code>main</code>、<code>.item-results</code> のスクロール位置を保持します（<code>main</code> はタブが変わった場合のみ先頭に戻します）。</li>
+<li>描画直後の 2 フレームは <code>.rendering</code> クラスで CSS トランジションを止めます。ポインタの下で作り直された要素が、毎回ホバー色へフェードするのを防ぐためです。</li>
+<li>タブのドラッグ中は描画を保留し、ドロップまたはキャンセル後に描画します。</li>
+<li>ロードバーは時刻に基づく位相で描画するため、再描画で途切れません。</li>
+<li>アイテムの「◯分前」表示は 30 秒ごとに、DOM を作り直さずに文字だけ更新します。</li>
+</ul>
+<h2 id="セキュリティ上の制限"><a class="header" href="#セキュリティ上の制限">セキュリティ上の制限</a></h2>
+<ul>
+<li><strong>URL の検証</strong>: シェル（<code>webURL()</code>）、Go（<code>BrowserView</code>）、WebView2（<code>browserURL()</code>）のすべてで、http/https のみ、ユーザー名・パスワードを含まない、<code>wails.localhost</code> ではないことを確認します。<code>NavigationStarting</code> でも検査するため、リダイレクト先も対象になります。</li>
+<li><strong>新しいウインドウ</strong>: ページの <code>window.open</code> などは常に WebView2 側で処理して新しいウインドウを作りません。ユーザー操作によるものだけが新しいタブとして開きます（ポップアップウインドウからの場合も新しいタブ）。</li>
+<li><strong>分離</strong>（<code>BrowserIsolation</code>）: Web メッセージングは無効、ホストオブジェクトの登録なし、権限要求はすべて拒否します。外部ページには Wails のバインディングも <code>window.mayakDesktop</code> も渡りません（<code>window.mayakDesktop</code> は信頼できるシェル文書だけのものです）。</li>
+<li><strong>命令の検証</strong>: <code>BrowserView</code> はビュー ID（<code>^[a-zA-Z0-9_-]{1,80}$</code>）、インセット（0〜4096）、命令名（<code>show</code> / <code>preload</code> / <code>navigate</code> / <code>hideAll</code> / <code>close</code> / <code>back</code> / <code>forward</code> / <code>reload</code>）を検証します。<code>BrowserPopupShow</code> も配置の範囲を検証します。</li>
+<li><strong>保存データ</strong>: <code>browser.json</code> には接続キーや WebRTC の SDP を保存しません。ファビコンの取得先はローカル・LAN のアドレスを除外しています。</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="item-panel.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="item-panel.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

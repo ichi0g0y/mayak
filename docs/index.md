@@ -38,12 +38,6 @@ MAYAK は、Escape from Tarkov（EFT）を遊びながら使う Windows 向け�
 
 最後の「開発メモ（英語）」は、以前からある英語の設計メモです。
 
-## この仕様書のビルド
+## この仕様書の扱い
 
-仕様書は [mdBook](https://rust-lang.github.io/mdBook/) で Web ページにできます。設定は `docs/book.toml`、目次は `docs/SUMMARY.md` です。
-
-```bash
-mdbook serve docs
-```
-
-`build/docs-site/` に書き出され、ブラウザで見られます（`mdbook build docs` なら書き出すだけです）。
+仕様書は Markdown のまま `docs/` に置き、公開はしません。開発するとき、また AI に実装を頼むときの参照資料です。目次は `docs/SUMMARY.md` です。利用者向けの案内はランディングページ（`site/`）にあります。

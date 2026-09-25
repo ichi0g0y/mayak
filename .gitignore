@@ -35,8 +35,11 @@ Thumbs.db
 /mayak_windows_*.syso
 /.task/
 /build/ocrtrain-*/
-/build/docs-site/
 /build/pending/
 
 # wrangler local cache and temp files
 /.wrangler/
+
+# Landing page (site/)
+/site/node_modules/
+/site/dist/

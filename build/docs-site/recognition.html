@@ -1,0 +1,510 @@
+<!DOCTYPE HTML>
+<html lang="ja" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>スクリーンショット認識 - MAYAK 仕様書</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "navy";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-a0128e09.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-9bee80de.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">MAYAK 仕様書</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/ichi0g0y/mayak" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="スクリーンショット認識"><a class="header" href="#スクリーンショット認識">スクリーンショット認識</a></h1>
+<p>MAYAK は EFT のスクリーンショットキーでゲーム自身が保存した画像を監視し、画面の種類を判定して OCR でタイトルを読み取り、カタログと照合します。この章は現在のコードに基づいてその流れをまとめたものです。</p>
+<h2 id="設計方針-ゲームが書き出したファイルだけを読む"><a class="header" href="#設計方針-ゲームが書き出したファイルだけを読む">設計方針: ゲームが書き出したファイルだけを読む</a></h2>
+<ul>
+<li>ゲームプロセスには一切触れません(メモリ読み取り、画面キャプチャ、入力フック、オーバーレイはありません)。入力はゲームが自分で書き出すファイルだけです。
+<ul>
+<li><code>Screenshots</code> フォルダの画像(EFT のスクリーンショットキーで保存される)</li>
+<li><code>Logs</code> フォルダのログ(レイド状態やマップの判定に使う。<code>internal/logdetect</code>)</li>
+<li>ゲーム設定 <code>%AppData%\Battlestate Games\Escape from Tarkov\Settings\Game.ini</code>(表示言語のみ。<code>eftdetect.GameLanguage</code>)</li>
+<li>ランチャー設定 <code>%AppData%\Battlestate Games\BsgLauncher\settings</code> の <code>gamesRootDir</code>(フォルダの自動検出のみ。<code>eftdetect.Detect</code>)</li>
+</ul>
+</li>
+<li>解析はプレイヤーが撮ったスクリーンショットに対してだけ行うので、ゲームとのやり取りはすべてプレイヤーの操作が起点になります。アンチチートの観点でも、外部ツールがゲームを観察していると見なされる経路を持ちません。</li>
+<li>画面認識も OCR もローカルで完結します(同梱 Tesseract または Windows OCR)。ネットワークを使うのはカタログ取得とブラウザ連携だけです(<a href="catalog.html">catalog.md</a>、<a href="settings-and-integrations.html">settings-and-integrations.md</a>)。</li>
+</ul>
+<h2 id="全体の流れ"><a class="header" href="#全体の流れ">全体の流れ</a></h2>
+<pre><code class="language-text">Screenshots/*.png|jpg ─▶ watcher ─▶ processScreenshot(sequence++、前の解析を cancel)
+   ├─ ファイル名に座標なし ─▶ handleTaskScreenshot
+   │      itemdetect ─(IsItem)─▶ handleItemAnalysis
+   │      └─ taskdetect ─▶ handleTaskAnalysis
+   └─ ファイル名に座標あり ─▶ handleCoordinateScreenshot
+          itemdetect ─(IsItem)─▶ handleItemAnalysis
+          taskdetect(IsTasks かつ照合 ≥ .78)─▶ handleTaskAnalysis
+          それ以外 ─▶ レイド中なら位置情報(position)
+   └─ 完了後 afterScreenshotAnalysis: デバッグ保存・自動削除
+</code></pre>
+<p>分析関数はすべて <code>internal/app/app.go</code> にあり、後処理は同じパッケージの <code>app_screenshots.go</code> にあります。</p>
+<h2 id="スクリーンショットの監視-internalwatcher"><a class="header" href="#スクリーンショットの監視-internalwatcher">スクリーンショットの監視 (<code>internal/watcher</code>)</a></h2>
+<ul>
+<li><code>StartMonitoring</code> が設定の <code>ScreenshotDirectory</code> を <code>watcher.New</code> で監視します(Windows Host モードのみ。ログ監視 <code>startLogDetector</code> も同時に開始)。フォルダは <code>eftdetect.Detect</code> が自動検出します(<code>Documents\Escape from Tarkov\Screenshots</code>、OneDrive 配下、ランチャーの <code>gamesRootDir</code>、各ドライブの <code>Battlestate Games</code> / <code>Games</code> 配下)。</li>
+<li>対象拡張子は <code>.png</code> / <code>.jpg</code> / <code>.jpeg</code> です。</li>
+<li>fsnotify の <code>Create</code> / <code>Rename</code> / <code>Write</code> を受けます。Windows では通知がまとめられたり欠けたりするので、1 秒ごとのポーリングで「最新ファイル 1 件」も確認します(更新から 2 分以内のもののみ)。</li>
+<li>起動時には、更新から 15 分以内の最新スクリーンショットを 1 件だけ再生します。解析中にアプリを再起動しても画像を取りこぼさないためです。</li>
+<li>書き込み完了待ち: 150 ms 間隔で最大 20 回 <code>Stat</code> し、サイズが 0 より大きく前回と同じで、かつ開ける状態になったらコールバックします。最後まで読めなかったファイルは既読マークを外し、ポーリングで再試行できるようにします。</li>
+<li>同じパスは <code>seen</code> マップで 1 回だけ処理します。さらに <code>processScreenshot</code> がパス・サイズ・更新時刻の指紋(<code>config.FingerprintScreenshot</code>)を永続化し、前回処理した画像は再起動後もスキップします(手動の「最新を解析」<code>AnalyzeLatestScreenshot</code> は <code>force</code> で再解析)。</li>
+</ul>
+<h2 id="解析の順序付けとキャンセル"><a class="header" href="#解析の順序付けとキャンセル">解析の順序付けとキャンセル</a></h2>
+<ul>
+<li><code>processScreenshot</code> は新しい画像ごとに <code>analysisSequence</code> を 1 増やし、1 つ前の解析の <code>context</code> をキャンセルします。</li>
+<li>各分析関数は状態を書き込む前に「<code>analysisSequence</code> が自分の番号のままか、<code>status.LastScreenshot</code> が自分のパスか」を確認し、古ければ何もせずに戻ります。連写しても表示されるのは最新の画像の結果だけです。</li>
+<li>リモート送信も <code>runRemoteIfCurrent</code> で同じ確認をしてから行います。</li>
+<li>状態は <code>status:update</code> イベントでフロントエンドに送られ、<code>AnalysisStage</code> に進行状況(例: 「画像を分類中」「アイテム詳細を検出・OCR実行中」「解析完了」「解析エラー」)が入ります。</li>
+</ul>
+<h2 id="分類の順序"><a class="header" href="#分類の順序">分類の順序</a></h2>
+<p>画像はつねに次の順で判定します(<code>handleCoordinateScreenshot</code> / <code>handleTaskScreenshot</code>)。</p>
+<ol>
+<li><strong>アイテム詳細ウィンドウ / フリマの出品作成ウィンドウ</strong> (<code>itemdetect</code>): 開いているウィンドウの情報を、その背後の画面より優先します。</li>
+<li><strong>タスク一覧</strong> (<code>taskdetect</code>)</li>
+<li><strong>位置情報</strong>: ファイル名に座標が含まれる場合だけ(<code>position.ParseFilename</code>)。</li>
+</ol>
+<p>座標付きのファイル名は、EFT がメニュー画面にも古い座標を付けることがあるため、必ず先に画像を調べます。タスク一覧らしく見えても照合が .78 未満なら採用せず(<code>Rejected Tasks-like raid image</code>)、位置情報として扱います。位置情報を使うのはログがレイド中(<code>logdetect.RaidState</code>)を示す場合だけで、マップは <code>logdetect.LatestMap</code> で更新します。レイド外なら「レイド外の座標メタデータを無視しました」として捨てます。</p>
+<h3 id="アイテム詳細ウィンドウの検出-internalitemdetect"><a class="header" href="#アイテム詳細ウィンドウの検出-internalitemdetect">アイテム詳細ウィンドウの検出 (<code>internal/itemdetect</code>)</a></h3>
+<ul>
+<li>解像度はスクリーンショットの大きさから自動で判定します（設定はありません）。判定の規則は横幅 2560 px の画面で測った値です。EFT は UI の大きさを画面の横幅に合わせて決めるので、スクリーンショットは縦横比を保ったまま横幅 2560 px に拡大・縮小してから判定します（<code>internal/screenscale</code>）。16:9（1920×1080、3840×2160 など）は 2560×1440 に、16:10（1920×1200 など）は 2560×1600 になります。16:10 で縦に増えた分は、同じ配置の下に余白として伸びるだけです。
+<ul>
+<li>ウインドウの判定用には、画素の色を混ぜない拡大・縮小（最近傍）を使います。細い枠線の色がそのまま残るからです。</li>
+<li>OCR にかける題名の切り出しには、滑らかな拡大・縮小（Catmull-Rom）を使います。</li>
+<li>受け付ける縦横比は 16:10〜16:9 です（1366×768 のような端数のある大きさも含みます。高さ 360 px 未満は対象外）。それより横長の画面（ウルトラワイド）は UI の配置が違うので対応していません。<code>unsupported screenshot resolution</code> のエラー（<code>screenscale.ErrUnsupported</code>。タスク一覧の検出も同じエラーを返します）になります。</li>
+<li>実機の 1920×1080 と 1920×1200 のスクリーンショットで、アイテムの詳細画面とタスク一覧を認識できることを確かめています。</li>
+</ul>
+</li>
+<li><strong>ヘッダーの検出</strong> (<code>findHeaders</code>): y = 40 から高さ −120 まで、x = 20 から幅 −20 までを走査し、枠線色のピクセルが続く横線を探します。
+<ul>
+<li>枠線色 (<code>isBorderPixel</code>): RGB の最大と最小の差が 16 以下、輝度が 34〜115(半透明のため、青いアイテムの上では (58,62,71) 程度になる。1080p では細く描かれるので (37,40,41) 程度まで暗くなる)。</li>
+<li>横線の長さは 100 px 以上。左へ伸ばすときは 3 px までの切れ目を許します(<code>expandHeaderLeft</code>)。幅は 480〜1700 px で、その下が暗いタイトルバー(平均輝度 &lt; 60)であることが条件です。</li>
+<li>近い位置のヘッダー(y 差 6 以下、x 差 12 以下、幅の差 24 以下)は 1 つにまとめます。</li>
+</ul>
+</li>
+<li><strong>閉じるボタンのスコア</strong> (<code>closeButtonScore</code>): 右端 44 px の範囲で赤ピクセル(r &gt; 45、r &gt; 2g、r &gt; 1.5b)の比率と明るいピクセル(輝度 &gt; 155、× のグリフ)の比率を数えます。赤が 10% 未満か明るいピクセルが 1.2% 未満なら 0、それ以外は <code>min(1, 赤×3.2 + 明×2.5 + 幅/3200)</code> です。</li>
+<li><strong>判定</strong>: スコアが <strong>.72 以上</strong>、かつ左右の枠線を下にたどったウィンドウの高さが <strong>200 px 以上</strong>(<code>minWindowHeight</code>)であること。枠線はヘッダー両端の −2 / 0 / +2 px の位置で調べ、長い方を高さとします(<code>windowHeight</code>。拡大・縮小で側面の枠線が 1〜2 px ずれるため)。スタッシュの格子線と、その端にある赤いアイテム(除細動器など)の組み合わせを誤検出しないための条件です。</li>
+<li><strong>重なりの規則</strong> (<code>findInspectWindow</code> / <code>covered</code>): 複数のウィンドウが開いていると、フォーカスの有無ではヘッダーの見た目が変わりません。そのため前後関係は隠れ方から判断します。
+<ul>
+<li>ウィンドウ B のヘッダーが A の本体の中(A の上端 +10 より下、A の高さの範囲内、x が 8 px 以上重なる)に描かれていれば、A は B の後ろにあるとみなします。</li>
+<li>A のヘッダーの端がちょうど B の側面の枠線(±8 px)で止まっていれば、A は B の後ろにあるとみなします。</li>
+<li>閉じるボタンが見えない(スコア &lt; .72)線が A の幅の内側にある場合は、A 自身のレイアウト(出品ウィンドウのパネルなど)として無視します。</li>
+<li>覆われている数が最も少ないウィンドウを選び、同数ならスコアの高い方、さらに同じなら画面の下にある方(多くの場合は後から開いた方)を選びます。</li>
+</ul>
+</li>
+<li><strong>切り出し範囲</strong> (<code>CropRect</code>):</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>ウィンドウ</th><th>判定</th><th>切り出し範囲</th><th><code>DetectionLayout</code></th></tr>
+</thead>
+<tbody>
+<tr><td>アイテム詳細</td><td>幅はおよそ 1068 px</td><td><code>X+33, Y+2, 幅 W−97, 高さ 26</code>(タイトル行のみ。左の虫眼鏡アイコン、閉じるボタン、下のカテゴリ行や重量は含めない)</td><td><code>item-detail</code></td></tr>
+<tr><td>出品作成 (Offer creation)</td><td>幅が 1560〜1640 px(1440p では 1602 px)</td><td><code>X+W−682, Y+392, 幅 600, 高さ 38</code>(OFFER パネルの画像下の品名。日本語の字は英字より背が高いので、上下に余裕を持たせています。ウィンドウが左端からはみ出すことがあるので右端から測る)</td><td><code>flea-offer</code></td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>切り出し幅が 120 px 未満なら <code>item inspection window is too narrow</code> のエラーになります。</li>
+</ul>
+<h3 id="タスク一覧の検出-internaltaskdetect"><a class="header" href="#タスク一覧の検出-internaltaskdetect">タスク一覧の検出 (<code>internal/taskdetect</code>)</a></h3>
+<ul>
+<li>プリセットは <code>Preset2560</code>（2560×1440）だけです。アイテムと同じく、先に横幅 2560 px に拡大・縮小します。16:10 で縦に長い分は、判定する領域（上からの位置）に影響しません。</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>領域</th><th>Rect (X, Y, W, H)</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Anchor</code>(トレーダー画面のタブ)</td><td>150, 18, 240, 55</td></tr>
+<tr><td><code>CharacterAnchor</code>(キャラクター画面のタブ)</td><td>1430, 5, 300, 60</td></tr>
+<tr><td><code>RaidCharacterAnchor</code>(レイド中のキャラクター画面)</td><td>1170, 5, 260, 60</td></tr>
+<tr><td><code>LeftPanel</code></td><td>10, 410, 740, 950</td></tr>
+<tr><td><code>RightPanel</code></td><td>770, 410, 1750, 950</td></tr>
+<tr><td><code>Title</code>(トレーダー画面のタスク名)</td><td>810, 315, 720, 85</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>4 px 間隔で暗部(輝度 &lt; 95)、明部(&gt; 155)、エッジ(隣接差 &gt; 38)の比率を求め、次のスコアを計算します(値は 0〜1 に丸める)。
+<ul>
+<li><code>traderScore = Anchor.明×.72 + (左右のエッジ)×1.2 + (左右の暗部)×.08</code></li>
+<li><code>characterScore = max(CharacterAnchor, RaidCharacterAnchor) の 明×.9 + エッジ×.8 + 暗部×.05</code></li>
+</ul>
+</li>
+<li>高い方を採用し、レイアウトは <code>trader-tasks</code> か <code>character-tasks</code> になります。<code>MinScore</code> の <strong>.42 以上</strong>ならタスク一覧です。</li>
+<li><code>character-tasks</code> の切り出し (<code>selectedCharacterTitle</code>): x 300〜800、y 150〜1280 の範囲で、64 px 幅の帯の平均輝度が最も高い帯(選択中の行)を探し、その中心から高さ 96 px を切り出します。右端は行内の縦の区切り線(x &lt; 1300)まで広げます(<code>nameColumnEnd</code>)。長いタスク名が途中で切れないようにするためです。</li>
+</ul>
+<h2 id="ocr-エンジン-internalocr"><a class="header" href="#ocr-エンジン-internalocr">OCR エンジン (<code>internal/ocr</code>)</a></h2>
+<h3 id="エンジンの選択"><a class="header" href="#エンジンの選択">エンジンの選択</a></h3>
+<p>設定 <code>OCREngine</code> は <code>tesseract</code>(既定)か <code>windows</code> です。これ以外の値は <code>tesseract</code> に正規化されます。</p>
+<ul>
+<li>起動時の移行: <code>OCRDefaultRevision &lt; 1</code> のとき、<code>windows</code> を選んでいて Tesseract が使える環境では 1 回だけ <code>tesseract</code> に切り替えます。</li>
+<li>Tesseract が見つからず <code>TesseractPath</code> も空の場合は <code>windows</code> に切り替えます。</li>
+<li>Tesseract の探索順 (<code>tesseractEngine</code>): <code>TesseractPath</code> → 同梱版(<code>Mayak.exe</code> と同じフォルダの <code>tesseract\tesseract.exe</code> と <code>tesseract\tessdata</code>、<code>ocr.BundledTesseract</code>)→ <code>PATH</code> 上の <code>tesseract</code>。</li>
+<li>Tesseract が失敗し、<code>TesseractPath</code> が指定されていなければ Windows OCR にフォールバックします(<code>recognizeQuestTitle</code> / <code>recognizeTitleCandidates</code>)。</li>
+</ul>
+<h3 id="同梱-tesseract"><a class="header" href="#同梱-tesseract">同梱 Tesseract</a></h3>
+<ul>
+<li><code>task tesseract:bundle</code>(<code>tools/tessbundle</code>)が <code>build/bin/tesseract</code> に <code>eng</code> / <code>jpn</code> と MAYAK 独自のモデル <code>build/tessdata/eft.traineddata</code>、<code>eftjpn.traineddata</code> をまとめます。</li>
+<li>実行時の引数は <code>&lt;png&gt; stdout -l &lt;言語&gt; --psm 7 [--tessdata-dir &lt;dir&gt;]</code> です(1 行モード)。プロセスはウィンドウを出さずに起動します。</li>
+<li><strong>前処理</strong> (<code>preprocess</code>。学習用に <code>PrepareForTesseract</code> として公開):
+<ol>
+<li>明るいパネル(平均輝度 ≥ 90)では、左 1/4 にある暗い縦線(高さの 70% 以上が輝度 &lt; 60)より右だけを使います。クエストアイコンとタイトルの区切り線です。</li>
+<li>Otsu 法で 2 値化のしきい値を決めます。</li>
+<li>2 倍に拡大し、12 px の白い余白を付けます。</li>
+<li>文字が背景より暗くなければ反転し、つねに白地に黒文字にします(<code>darkerMinority</code>)。</li>
+<li>黒ピクセルの範囲に余白を付けて切り詰めます(<code>trimToInk</code>)。</li>
+</ol>
+</li>
+</ul>
+<h3 id="windows-ocr-ワーカー"><a class="header" href="#windows-ocr-ワーカー">Windows OCR ワーカー</a></h3>
+<ul>
+<li><code>windows_ocr.ps1</code>(埋め込み)を実行する PowerShell プロセスを 1 つだけ常駐させ、標準入出力で 1 行ずつ JSON をやり取りします(<code>{"path","language"}</code> → <code>{"ok","text"|"error"}</code>)。PowerShell と WinRT の起動コスト(数百 ms)を毎回払わないためです。</li>
+<li>要求は直列に処理します。1 回のタイムアウトは 30 秒で、10 分間使われなければ終了します。通信の失敗、タイムアウト、キャンセルのあとはプロセスを止め、次の要求で起動し直します(OCR 自体のエラー応答ではそのまま使い続けます)。アプリ終了時には <code>StopWindowsWorker</code> で止めます。</li>
+<li>画像は 2 倍に拡大し、角の色で 16 px の余白を付けます(文字が端に接していると Windows OCR は何も返さないため)。</li>
+<li><code>RecognizeAlternatives</code> は、しきい値 110 / 140 / 170 で 2 値化した 3 枚を読みます。<code>RecognizeCandidates</code> は元画像の読み取りとこの 3 枚を合わせ、重複を除いて返します。</li>
+<li>言語が <code>auto</code> の場合は <code>TryCreateFromUserProfileLanguages</code>(Windows の表示言語)を使います。言語パックがなければエラーになります。</li>
+</ul>
+<h3 id="言語"><a class="header" href="#言語">言語</a></h3>
+<ul>
+<li><code>ocrLanguage</code>: 設定 <code>GameLanguage</code> が <code>en</code> か <code>internal/locale</code> の言語(現在は <code>ja</code>)ならそのまま使います。<code>auto</code>(既定。それ以外の値も <code>auto</code> に正規化)なら <code>eftdetect.GameLanguage()</code> が <code>Game.ini</code> の <code>Language</code> から判定します(<code>jp</code>/<code>ja</code> は <code>ja</code>、<code>en</code>/<code>es</code>/<code>fr</code>/<code>de</code>/<code>pl</code> などのラテン文字言語は <code>en</code>)。判定できなければ <code>auto</code> になります。日本語版 Windows でも英語クライアントのタイトルを英語として読むためです。</li>
+<li>言語表 (<code>internal/ocr/language.go</code>):</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>MAYAK コード</th><th>Windows OCR</th><th>Tesseract 標準</th><th>MAYAK モデル</th></tr>
+</thead>
+<tbody>
+<tr><td><code>en</code></td><td><code>en-US</code></td><td><code>eng</code></td><td><code>eft</code></td></tr>
+<tr><td><code>ja</code></td><td><code>ja-JP</code></td><td><code>jpn</code></td><td><code>eftjpn</code></td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>tessdata に <code>&lt;モデル&gt;.traineddata</code> があれば MAYAK モデルを優先し、なければ標準モデルを使います(<code>tesseractModel</code>)。tessdata のフォルダを調べるのは同梱版だけで、<code>TesseractPath</code> や <code>PATH</code> 上の Tesseract ではつねに標準モデルを使います。</li>
+<li>英語以外の言語では英語も併用します(例: <code>-l eftjpn+eft</code>)。タイトルに英単語、数字、固有名が混ざるためです。表にない言語は英語だけで読み、Windows OCR は <code>auto</code> になります。</li>
+<li>表に行を追加してモデルを同梱すれば、その言語を読めるようになります。言語全般については <a href="languages.html">languages.md</a> を参照してください。</li>
+</ul>
+<h3 id="mayak-モデル-eft--eftjpn"><a class="header" href="#mayak-モデル-eft--eftjpn">MAYAK モデル <code>eft</code> / <code>eftjpn</code></a></h3>
+<ul>
+<li><code>eft</code> は <code>tessdata_best</code> の <code>eng</code> を、<code>eftjpn</code> は <code>jpn</code> を、ゲームのフォント(Bender、日本語は Meiryo / Yu Gothic)で描いたカタログのタスク名・アイテム名で追加学習したものです。学習用の画像も <code>PrepareForTesseract</code> を通すので、実際に読む画像と同じ見た目で学習します。</li>
+<li>手順は <a href="../tools/ocrtrain/README.html"><code>tools/ocrtrain/README.md</code></a> にあります。</li>
+</ul>
+<h2 id="照合"><a class="header" href="#照合">照合</a></h2>
+<h3 id="questmatchnormalize"><a class="header" href="#questmatchnormalize"><code>questmatch.Normalize</code></a></h3>
+<ol>
+<li>NFKC 正規化と小文字化。</li>
+<li>英語の <code>Part ろ</code> を <code>Part 3</code> に直します(日本語の「ろ」自体はそのまま残す)。</li>
+<li>数字と記号の取り違えを直します: <code>0</code>→<code>o</code>、<code>1</code>→<code>i</code>、<code>|</code>→<code>i</code>。</li>
+<li>文字と数字以外を空白にし、前後の空白を削ります。</li>
+<li>日本語(漢字・ひらがな・カタカナ)に隣接する空白を削除します(Windows OCR は文字の間に空白を入れるため)。英単語の区切りは残します。</li>
+</ol>
+<h3 id="questmatchsimilarity"><a class="header" href="#questmatchsimilarity"><code>questmatch.Similarity</code></a></h3>
+<ul>
+<li>正規化した文字列どうしの編集距離から <code>1 − 距離 / 長い方の長さ</code> を計算します。<code>i</code> と <code>l</code> の置換コストは .2 です(EFT の細い大文字フォントでよく取り違えられるため)。</li>
+<li><strong>先頭のゴミの除去</strong>: 先頭の単独の <code>i</code>(切り出し端や虫眼鏡アイコン)を除いたもの、および 1〜2 文字のトークンを先頭から最大 3 個除いたもの(例: <code>. だ ん</code>)も候補にします。これらの候補のスコアからは .001 を引きます。</li>
+<li><strong>部分一致</strong>: 7 文字以上の読み取りが対象に含まれていれば <code>.84 + .12 × 読み取り長 / 対象長</code> を下限にします(Windows OCR が表の区切り線の後ろの先頭部分を落とすことがあるため)。<code>Part 1</code> のような短い断片は自動で一致しません。</li>
+<li><code>questmatch.Match</code> は英語名と別名(<code>internal/locale</code> の言語の名前。<code>questapi</code> が同じタスク ID で付与)の最高値をスコアにし、降順(同点は名前順)に並べます。</li>
+</ul>
+<h3 id="itemmatchmatch"><a class="header" href="#itemmatchmatch"><code>itemmatch.Match</code></a></h3>
+<ul>
+<li>英語名 <code>Name</code>、他言語名 <code>Aliases</code>(<code>internal/locale</code> の言語。現在は日本語。<code>itemapi</code> が付与)に対して <code>Similarity</code> を計算します。</li>
+<li>略称 <code>ShortName</code> と <code>ShortAliases</code> のスコアは <strong>×0.97</strong> します。略称は短く偶然一致しやすいので、正式名より少し不利にしています。</li>
+<li>表示には <code>Names</code>(言語別の名前)を使います。カタログについては <a href="catalog.html">catalog.md</a> を参照してください。</li>
+</ul>
+<h3 id="しきい値と再読み取り"><a class="header" href="#しきい値と再読み取り">しきい値と再読み取り</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>対象</th><th>処理</th><th>値</th></tr>
+</thead>
+<tbody>
+<tr><td>アイテム</td><td>一致として採用・表示</td><td>≥ .82</td></tr>
+<tr><td>アイテム</td><td>Tesseract で読んだ最良値が .82 未満(または候補なし)なら、Windows OCR の <code>RecognizeCandidates</code> で再読み取り</td><td>&lt; .82</td></tr>
+<tr><td>タスク</td><td>一致として採用</td><td>≥ .78</td></tr>
+<tr><td>タスク</td><td>Tesseract の最良値が .9 未満なら、Windows OCR の <code>RecognizeAlternatives</code> で再読み取り</td><td>&lt; .9</td></tr>
+<tr><td>タスク</td><td>エンジンが <code>windows</code> で最良値が .98 未満なら、2 値化した画像で再読み取り</td><td>&lt; .98</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>再読み取りの結果は元の読み取りと合わせ、最も高い一致を得た読み取りを採用します(<code>bestItemReading</code> / <code>bestQuestReading</code>)。</li>
+<li>アイテムは <code>recognizeTitleCandidates</code> を使います。Windows OCR で読んだ場合(設定が <code>windows</code> のときと、同梱 Tesseract が失敗して代わりに読んだとき)は最初から元画像と 2 値化画像の全候補を読むので、Windows OCR での再読み取りはしません。</li>
+<li>候補は上位 5 件を <code>ItemCandidates</code> / <code>QuestCandidates</code> に保存し、読み取った生の文字列を <code>OCRRaw</code> に保存します。どの読み取りも一致しなかったときは、最初の(空でない)読み取りを <code>OCRRaw</code> に残します。</li>
+</ul>
+<h2 id="照合したあとの処理"><a class="header" href="#照合したあとの処理">照合したあとの処理</a></h2>
+<ul>
+<li><strong>アイテム</strong>(≥ .82): <code>LastItem</code>、<code>ItemID</code>、アイコンなどを設定し、<code>showBrowserItem</code> がカタログの情報を <code>browser:item</code> で送ります。そのあと最新価格を取得して送り直します(タイムアウト 45 秒)。これでアイテムサイドバーが開きます(<a href="item-panel.html">item-panel.md</a>)。.82 未満なら警告ログだけを出します。</li>
+<li><strong>タスク</strong>(≥ .78):
+<ul>
+<li><code>LastQuest</code>、トレーダー、マップ、目標、<code>https://tarkov.dev/task/&lt;normalizedName&gt;</code>、Wiki の URL を設定します。</li>
+<li>認識音を鳴らします(同じキーは <code>recognitionSoundCooldown</code> の間は鳴らさない)。一致しなかった場合はエラー音を鳴らします。</li>
+<li><code>showBrowserTask</code> が設定 <code>QuestSite</code>(tarkov-dev / official-wiki / japanese-wiki)のページを <code>browser:task</code> で開きます。</li>
+<li><code>tasks</code> の役割を持つ Remote Control ターゲットには <code>task/&lt;slug&gt;</code> を送ります。slug がなければ <code>map/&lt;QuestMap&gt;</code> を送ります。詳しくは <a href="tasks-and-maps.html">tasks-and-maps.md</a> と <a href="settings-and-integrations.html">settings-and-integrations.md</a> を参照してください。</li>
+</ul>
+</li>
+<li><strong>レイド状態</strong>: 各分析では <code>logdetect.RaidState</code> で <code>RaidActive</code> を更新します。位置情報を使うのはレイド中だけです。</li>
+<li>エラー時は <code>updateAnalysisError</code> が「解析エラー」を設定し、ログとエラー音で知らせます。</li>
+</ul>
+<h2 id="スクリーンショットの保持-internalscreenshotstore"><a class="header" href="#スクリーンショットの保持-internalscreenshotstore">スクリーンショットの保持 (<code>internal/screenshotstore</code>)</a></h2>
+<ul>
+<li>設定 <code>ScreenshotCleanup</code>(既定はオフ)が有効な場合、スクリーンショットフォルダ直下の画像を更新時刻の新しい順に並べ、次のどちらかに当てはまるものを削除します。
+<ul>
+<li><code>ScreenshotRetainCount</code> 件目より後(既定 500、範囲 0〜100000、0 は無制限)</li>
+<li><code>ScreenshotRetainHours</code> 時間より古い(既定 168、範囲 0〜87600、0 は無制限)</li>
+</ul>
+</li>
+<li>実行タイミングは、各解析のあと(解析中の画像は保護)、起動時と 30 分ごと(<code>watchScreenshotMaintenance</code>)、保持設定を変えたときです。ブラウザクライアントモードでは実行しません。</li>
+<li>サブフォルダ(<code>Mayak-Debug</code> など)は削除しません。相対パスやボリュームのルートは対象にしません。</li>
+</ul>
+<h2 id="デバッグ出力-mayak-debug"><a class="header" href="#デバッグ出力-mayak-debug">デバッグ出力 (<code>Mayak-Debug</code>)</a></h2>
+<ul>
+<li>設定 <code>SaveRecognitionDebug</code>(既定はオフ)が有効な場合、各解析のあとに <code>&lt;Screenshots&gt;\Mayak-Debug\</code> に次のファイルを保存します(<code>screenshotstore.SaveDebug</code>)。
+<ul>
+<li><code>&lt;yyyyMMdd-HHmmss.fff&gt;_&lt;種類&gt;_&lt;スコア×1000&gt;_source.&lt;拡張子&gt;</code>: 元画像のコピー</li>
+<li><code>…_crop.png</code>: OCR にかけた切り出し画像</li>
+<li><code>….json</code>: <code>Metadata</code>(種類、レイド状態、マップ、レイアウト、スコア、段階、<code>ocrRaw</code>、クエストまたはアイテムと候補、位置、エラー)。<code>detectionDetails</code> には <code>taskdetect</code> と <code>itemdetect</code> の両方のスコアと切り出し範囲を記録します(画像のデコードは両方で 1 回だけ。デコードできなければ <code>error</code> だけを記録)。</li>
+</ul>
+</li>
+<li>保存先はスクリーンショットフォルダの直下にある画像に限ります。書き込みは一時ファイルからの rename で行います。<code>OpenDebugDirectory</code> でフォルダを開けます。</li>
+<li>このデータは <code>cmd/ocreval</code> の評価用データとしてそのまま使えます。</li>
+</ul>
+<h2 id="ツール"><a class="header" href="#ツール">ツール</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>ツール</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td><code>cmd/ocrharvest</code></td><td>スクリーンショットフォルダ(<code>.png</code> / <code>.jpg</code> / <code>.jpeg</code>)から、アプリと同じ順序(アイテム → タスク)で切り出し画像を集めます。Windows OCR、<code>eft</code>(同梱 tessdata の MAYAK モデル。日本語なら <code>eftjpn+eft</code>)、<code>eng</code>(tessdata を指定しない Tesseract 標準モデル。日本語なら <code>jpn+eng</code>)の 3 エンジンで読み、<code>-min-confidence</code>(既定 .9)以上で 2 エンジン以上が同じ名前に一致したもの、または 1 エンジンが完全一致(≥ .999)したものだけを <code>&lt;kind&gt;_&lt;n&gt;.png</code> / <code>.json</code> として保存します。ラベルには英語名と別名のうち読み取りに近い方(画面に表示された名前)を使います。<code>-lang</code>(既定 <code>en</code>。MAYAK の言語コード。言語表にない言語は英語として読む)、<code>-screens</code>、<code>-catalog</code>、<code>-tesseract</code>、<code>-out</code> を指定します。</td></tr>
+<tr><td><code>cmd/ocreval</code></td><td><code>Mayak-Debug</code> の <code>*_tasks_*</code> の記録(または <code>ocrharvest</code> の出力)を正解として、Windows OCR(毎回起動 / 常駐ワーカー)と任意の Tesseract(<code>-tesseract</code>、<code>-tessdata</code>)について、完全一致数、.9 以上の一致数、平均時間を比べます。<code>-lang</code> は MAYAK の言語コード(既定 <code>en</code>。<code>ja</code> なら <code>jpn</code>、<code>-tessdata</code> に <code>eftjpn</code> があればそれと英語を併用)です。<code>-min-confidence</code> の既定は .8、<code>-winlang</code> の既定は <code>auto</code> です。</td></tr>
+<tr><td><code>tools/ocrtrain</code></td><td>カタログの名前をゲームのフォントで描き、<code>PrepareForTesseract</code> を通した行画像、正解テキスト、学習用・評価用のリストを作ります(<code>-lang</code> 既定 <code>en</code>。ほかの言語はそのコードで、カタログの <code>items_&lt;コード&gt;</code> / <code>tasks_&lt;コード&gt;</code> の名前を描く、<code>-latin-fonts</code>、<code>-variants</code> 既定 2、<code>-eval-percent</code> 既定 5)。学習と入れ替えの手順は <a href="../tools/ocrtrain/README.html"><code>tools/ocrtrain/README.md</code></a> を参照してください。</td></tr>
+</tbody>
+</table>
+</div>
+<p>ビルドと開発の環境については <a href="development.html">development.md</a> を参照してください。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="item-panel.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="tasks-and-maps.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="item-panel.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="tasks-and-maps.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

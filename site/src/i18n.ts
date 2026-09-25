@@ -1,0 +1,238 @@
+// Every string on the page, in Japanese and English. useT() returns the
+// current language's set (state.ts holds the choice).
+import { useAtomValue } from 'jotai'
+import { langAtom } from './state'
+
+export type Lang = 'ja' | 'en'
+
+const ja = {
+  nav: { features: '機能', start: 'はじめかた', safety: '安全性', download: 'ダウンロード', faq: 'FAQ', license: 'ライセンス', github: 'GitHub', lang: 'EN' },
+  hero: {
+    kicker: 'ESCAPE FROM TARKOV COMPANION',
+    title: '見えないところで、\nレイドを支える灯台。',
+    lead: 'MAYAK は、ゲームが保存したスクリーンショットとログを読むだけで、tarkov.dev のマップ上の現在地、タスク、アイテム情報をブラウザに同期するコンパニオンアプリです。ゲームのプロセスには一切触れません。',
+    download: 'Windows 版をダウンロード',
+    downloadFor: (os: string) => `${os} 版をダウンロード`,
+    github: 'GitHub で見る',
+    latest: '最新版',
+    badges: ['Windows 11', 'ゲームに触れない', 'オープンソース (GPL-3.0)', '日本語 / English'],
+    note: '無料・広告なし。インストーラーはなく、zip を展開して起動するだけです。',
+  },
+  features: {
+    kicker: '// 01  FEATURES',
+    title: 'できること',
+    lead: 'スクリーンショット 1 枚とログの読み取りだけで、ここまで自動化できます。',
+    items: [
+      { title: 'マップ上の現在地を同期', body: 'PrintScreen で保存されるファイル名に含まれる座標と向きを読み取り、tarkov.dev のマップ上のマーカーを動かします。マップの判定と階層もログと座標から自動です。' },
+      { title: 'タスク画面を読み取る', body: 'タスク一覧を撮ると、選択中のタスク名をローカル OCR で読み取り、tarkov.dev または Wiki の該当ページを開きます。日本語表示のゲームにも対応。' },
+      { title: 'アイテムの価格と用途', body: 'アイテム詳細ウィンドウを撮るだけで、フリマ・トレーダー価格、価格の推移、必要なタスクやハイドアウトをアプリ内のアイテム欄に表示します。' },
+      { title: 'TarkovTracker と同期', body: 'EFT の通知ログからタスクの開始・失敗・完了を検知し、PvP / Season / PvE のプロフィールごとに TarkovTracker へ送ります。過去ログからの一括同期も可能。' },
+      { title: 'レイドの通知音', body: 'マッチ成立、レイド開始、ランスルー終了のタイマーをログから検知して、好きな音で知らせます。音量調整と好きな WAV / MP3 の割り当てに対応。' },
+      { title: '内蔵ブラウザと自動更新', body: 'tarkov.dev、TarkovTracker、Wiki をタブで並べて表示。GitHub Releases の新しい版は自動で確認・ダウンロードし、終了時に入れ替えます。' },
+    ],
+  },
+  start: {
+    kicker: '// 02  GETTING STARTED',
+    title: 'はじめかた',
+    lead: '初めての人向けの手順です。5 分ほどで動きます。',
+    steps: [
+      { title: 'ダウンロードして展開する', body: 'ページ下のボタンから zip をダウンロードし、好きなフォルダ（例: ドキュメント\\Mayak）に展開します。Mayak.exe、tesseract フォルダ、THIRD_PARTY_NOTICES.txt が入っています。' },
+      { title: 'Mayak.exe を起動する', body: '初回は Windows の SmartScreen が「WindowsによってPCが保護されました」と表示することがあります。「詳細情報」→「実行」で起動します。MAYAK は署名なしのオープンソースアプリで、ソースは GitHub で確認できます。' },
+      { title: 'フォルダを確認する', body: '起動すると EFT のスクリーンショットとログのフォルダを自動で探します。設定の「フォルダと保存」で場所が正しいか確認してください。見つからないときは手で選べます。' },
+      { title: 'tarkov.dev のマップと繋ぐ', body: 'tarkov.dev のマップで Remote Control を有効にすると Remote ID が表示されます。同じ PC の Chrome / Edge / Brave なら設定の「tarkov.dev 連携」で自動検出できます。別の PC なら ID を入力してください。' },
+      { title: 'ゲーム内で PrintScreen', body: 'レイド中に PrintScreen を押すと、MAYAK が保存されたスクリーンショットを検知して現在地をマップに送ります。タスク画面やアイテム詳細を撮れば、それぞれの情報が表示されます。' },
+      { title: '（任意）TarkovTracker を繋ぐ', body: 'TarkovTracker の設定ページで API キー（GP と WP 権限）を作り、MAYAK の「TarkovTracker」で取り込みます。EFT のログから見つかったプロフィールにキーを割り当てると、タスクの進捗が自動で同期されます。' },
+    ],
+    tip: 'MAYAK は常駐させたままで大丈夫です。トレイに最小化して、監視は起動時に自動で始まります。',
+  },
+  safety: {
+    kicker: '// 03  SAFETY BOUNDARY',
+    title: 'ゲームには触れません',
+    lead: 'MAYAK が読むのは、ゲーム自身が保存したスクリーンショットとログ、ローカルの設定ファイル、公開 Web API だけです。',
+    items: [
+      'プロセスメモリの読み取り、DLL インジェクション、フック、パケットキャプチャは行いません',
+      'ゲームへのキー入力・マウス操作の自動化は行いません',
+      'スクリーンショットはアップロードしません。OCR と画像解析はすべてローカルで実行します',
+      'TarkovTracker の API キーは Windows の DPAPI で暗号化して保存します',
+      'ソースコードは GPL-3.0 で公開しています。何をしているかは誰でも確認できます',
+    ],
+    note: 'それでもコンパニオンツールの利用が許容されるかどうかはご自身の判断です。ゲームの利用規約を確認のうえ、自己責任でお使いください。',
+  },
+  download: {
+    kicker: '// 04  DOWNLOAD',
+    title: 'ダウンロード',
+    lead: '最新版は GitHub Releases から配布しています。一度入れれば、以後の更新はアプリが自動で行います。',
+    windows: 'Windows',
+    windowsBody: 'Windows 11 / 10 (64 bit)。zip を展開して Mayak.exe を起動。',
+    mac: 'macOS',
+    macBody: 'Apple Silicon と Intel。受信専用クライアントとしてビルドしています。',
+    linux: 'Linux',
+    linuxBody: 'x86-64。受信専用クライアントとしてビルドしています。',
+    untested: '動作未検証',
+    recommended: 'おすすめ',
+    appleSilicon: 'Apple Silicon',
+    intel: 'Intel',
+    loading: 'GitHub から最新版を取得中…',
+    failed: '最新版の情報を取得できませんでした。GitHub Releases から直接ダウンロードしてください。',
+    checksums: 'SHA256SUMS.txt',
+    releases: 'すべてのリリース',
+    published: (date: string) => `${date} 公開`,
+  },
+  faq: {
+    kicker: '// 05  FAQ',
+    title: 'よくある質問',
+    items: [
+      { q: 'BAN の心配はありませんか？', a: 'MAYAK はゲームのプロセスに一切触れず、ゲームが自分で保存したファイル（スクリーンショットとログ）を読むだけです。メモリの読み取りや入力の自動化のような、アンチチートが検出する対象の動作はしていません。ただし、コンパニオンツールを許容するかどうかの最終判断はご自身で行ってください。' },
+      { q: 'スクリーンショットはどこかに送られますか？', a: '送られません。OCR（文字認識）と画像解析は同梱の Tesseract または Windows OCR でローカルに実行します。外部と通信するのは tarkov.dev、TarkovTracker、GitHub（更新確認）の公開 API だけです。' },
+      { q: 'どの解像度・言語に対応していますか？', a: '位置の同期は解像度に関係なく動きます。タスク画面とアイテム詳細の認識は 2560×1440 を基準に、16:9 と 16:10 の一般的な解像度に対応しています。ゲームの表示言語は英語と日本語に対応しています。' },
+      { q: 'インストーラーはありますか？署名は？', a: 'zip 配布のみで、インストーラーと署名はありません。そのため初回起動時に SmartScreen の警告が出ることがあります。「詳細情報」→「実行」で起動できます。以後の更新はアプリ内で自動的に行われ、警告は出ません。' },
+      { q: 'macOS / Linux でも使えますか？', a: 'ビルドは配布していますが、動作は検証していません。監視・認識は Windows 版だけで、macOS / Linux 版は受信専用のクライアントとして起動します。' },
+      { q: 'TarkovTracker との同期は必須ですか？', a: '任意です。設定しなければ、位置の同期・タスク画面・アイテム欄の機能だけが動きます。設定するときは PvP / Season / PvE ごとに API キーを作り、対応するプロフィールに割り当てます。' },
+    ],
+  },
+  license: {
+    kicker: '// 06  LICENSE & CREDITS',
+    title: 'ライセンスとクレジット',
+    lead: 'MAYAK はフリーソフトウェアです。使っているデータとソフトウェアの出典も示します。',
+    appTitle: 'MAYAK — GNU General Public License v3.0',
+    appBody: 'MAYAK のソースコードは GPL-3.0 で公開しています。誰でも自由に使い、読み、改変し、同じライセンスで再配布できます。保証はありません。配布物には同梱ソフトウェアのライセンス文（THIRD_PARTY_NOTICES.txt）が含まれています。',
+    thirdTitle: 'データとソフトウェアの出典',
+    third: [
+      { name: 'tarkov.dev', url: 'https://tarkov.dev/api/', note: 'アイテム、マップ、トレーダー、タスク、ハイドアウトのデータと Remote Control。コミュニティ運営の無料 API' },
+      { name: 'TarkovTracker', url: 'https://tarkovtracker.org/', note: 'タスク進捗の同期。利用者自身が作った API トークンで接続' },
+      { name: 'Escape from Tarkov Wiki', url: 'https://escapefromtarkov.fandom.com/', note: 'タスク一覧の補完。CC BY-NC-SA' },
+      { name: 'Tesseract OCR', url: 'https://github.com/tesseract-ocr/tesseract', note: 'Apache-2.0。UB Mannheim ビルドを同梱、モデルは tessdata_best 由来' },
+      { name: 'EasyList / EasyPrivacy', url: 'https://easylist.to/', note: '内蔵ブラウザの広告ブロック。GPLv3 / CC BY-SA 3.0' },
+      { name: 'AdGuard Japanese filter', url: 'https://github.com/AdguardTeam/AdguardFilters', note: '内蔵ブラウザの広告ブロック。GPLv3' },
+      { name: 'Catppuccin, Nord, Dracula ほか', url: 'https://catppuccin.com/', note: 'カラーテーマの配色（Gruvbox、Tokyo Night、Solarized も）' },
+      { name: 'Google Fonts', url: 'https://fonts.google.com/', note: 'このページの書体（Black Ops One、Barlow Condensed、Noto Sans JP）。SIL Open Font License' },
+    ],
+    noticesNote: 'アイテムの画像と名称は Battlestate Games の財産で、tarkov.dev が表示しているとおりに表示します。Escape from Tarkov および関連する名称は Battlestate Games の商標です。MAYAK は Battlestate Games、tarkov.dev、TarkovTracker のいずれとも提携・承認関係にありません。',
+  },
+  footer: {
+    credit: 'ゲームデータは tarkov.dev、進捗は TarkovTracker の API を使っています。Escape from Tarkov は Battlestate Games の商標です。MAYAK は Battlestate Games、tarkov.dev、TarkovTracker とは無関係の個人プロジェクトです。',
+    license: 'GPL-3.0',
+    source: 'ソースコード',
+    issues: '不具合の報告',
+  },
+}
+
+export type Messages = typeof ja
+
+const en: Messages = {
+  nav: { features: 'Features', start: 'Getting started', safety: 'Safety', download: 'Download', faq: 'FAQ', license: 'License', github: 'GitHub', lang: '日本語' },
+  hero: {
+    kicker: 'ESCAPE FROM TARKOV COMPANION',
+    title: 'A lighthouse for your raids,\nout of sight.',
+    lead: 'MAYAK reads only the screenshots and logs the game saves, and keeps your position on the tarkov.dev map, your tasks and item info in sync in a browser. It never touches the game process.',
+    download: 'Download for Windows',
+    downloadFor: (os: string) => `Download for ${os}`,
+    github: 'View on GitHub',
+    latest: 'Latest',
+    badges: ['Windows 11', 'Never touches the game', 'Open source (GPL-3.0)', '日本語 / English'],
+    note: 'Free, no ads. There is no installer: unzip and run.',
+  },
+  features: {
+    kicker: '// 01  FEATURES',
+    title: 'What it does',
+    lead: 'One screenshot and the game logs are enough for all of this.',
+    items: [
+      { title: 'Your position on the map', body: 'Reads the coordinates and heading in the file name PrintScreen writes and moves your marker on the tarkov.dev map. The map and the floor come from the logs and the coordinates.' },
+      { title: 'Reads the Tasks screen', body: 'Screenshot the task list and local OCR reads the selected task name, then opens the matching tarkov.dev or wiki page. Works with the game in Japanese too.' },
+      { title: 'Item prices and uses', body: 'Screenshot an item inspection window and the item panel shows flea and trader prices, price history, and the tasks and hideout stations that need it.' },
+      { title: 'TarkovTracker sync', body: 'Task started, failed and completed events from the EFT notification logs go to TarkovTracker, per PvP, Season and PvE profile. Past logs can be synced in one go.' },
+      { title: 'Raid alerts', body: 'Match found, raid start and the run-through timer are detected from the logs and announced with sounds of your choice, with volume control and custom WAV / MP3 files.' },
+      { title: 'Built-in browser and auto update', body: 'tarkov.dev, TarkovTracker and the wiki side by side in tabs. New versions are picked up from GitHub Releases, downloaded in the background and installed when the app quits.' },
+    ],
+  },
+  start: {
+    kicker: '// 02  GETTING STARTED',
+    title: 'Getting started',
+    lead: 'For first-time users. It takes about five minutes.',
+    steps: [
+      { title: 'Download and unzip', body: 'Grab the zip from the button below and unzip it anywhere you like (for example Documents\\Mayak). It holds Mayak.exe, a tesseract folder and THIRD_PARTY_NOTICES.txt.' },
+      { title: 'Run Mayak.exe', body: 'The first time, Windows SmartScreen may say "Windows protected your PC". Click "More info", then "Run anyway". MAYAK is an unsigned open-source app; the source is on GitHub.' },
+      { title: 'Check the folders', body: 'On start MAYAK looks for the EFT Screenshots and Logs folders. Check them under Settings → Folders; if they were not found, pick them by hand.' },
+      { title: 'Connect the tarkov.dev map', body: 'Enable Remote Control on the tarkov.dev map and it shows a Remote ID. Chrome, Edge and Brave on the same PC are detected automatically under Settings → tarkov.dev; from another PC, type the ID in.' },
+      { title: 'Press PrintScreen in game', body: 'During a raid, press PrintScreen. MAYAK notices the saved screenshot and sends your position to the map. Screenshot the Tasks screen or an item window and the matching info appears.' },
+      { title: '(Optional) Connect TarkovTracker', body: 'Create an API key (GP and WP permissions) on the TarkovTracker settings page and add it under Settings → TarkovTracker. Assign the key to the profile found in the EFT logs and task progress syncs automatically.' },
+    ],
+    tip: 'Leave MAYAK running. It minimizes to the tray and starts monitoring on launch.',
+  },
+  safety: {
+    kicker: '// 03  SAFETY BOUNDARY',
+    title: 'It never touches the game',
+    lead: 'MAYAK reads only the screenshots and logs the game saves, local settings files and public web APIs.',
+    items: [
+      'No process memory reads, DLL injection, hooks or packet capture',
+      'No automated keyboard or mouse input to the game',
+      'Screenshots are never uploaded; OCR and image analysis run locally',
+      'TarkovTracker API keys are stored encrypted with Windows DPAPI',
+      'The source is published under GPL-3.0, so anyone can check what it does',
+    ],
+    note: 'Whether a companion tool is acceptable to you is still your own call. Read the game’s terms and use MAYAK at your own risk.',
+  },
+  download: {
+    kicker: '// 04  DOWNLOAD',
+    title: 'Download',
+    lead: 'Releases are published on GitHub. Install once; the app updates itself from then on.',
+    windows: 'Windows',
+    windowsBody: 'Windows 11 / 10 (64-bit). Unzip and run Mayak.exe.',
+    mac: 'macOS',
+    macBody: 'Apple Silicon and Intel. Built as a receive-only client.',
+    linux: 'Linux',
+    linuxBody: 'x86-64. Built as a receive-only client.',
+    untested: 'Untested',
+    recommended: 'Recommended',
+    appleSilicon: 'Apple Silicon',
+    intel: 'Intel',
+    loading: 'Fetching the latest release from GitHub…',
+    failed: 'Could not fetch the latest release. Download it from GitHub Releases directly.',
+    checksums: 'SHA256SUMS.txt',
+    releases: 'All releases',
+    published: (date: string) => `Published ${date}`,
+  },
+  faq: {
+    kicker: '// 05  FAQ',
+    title: 'Questions',
+    items: [
+      { q: 'Can this get me banned?', a: 'MAYAK never touches the game process; it only reads files the game saves itself (screenshots and logs). It does nothing an anti-cheat looks for, such as reading memory or automating input. Whether you use a companion tool at all is still your own decision.' },
+      { q: 'Are my screenshots sent anywhere?', a: 'No. OCR and image analysis run locally with the bundled Tesseract or Windows OCR. The only outside services are the public APIs of tarkov.dev, TarkovTracker and GitHub (for update checks).' },
+      { q: 'Which resolutions and languages are supported?', a: 'Position sync works at any resolution. Tasks screen and item recognition are tuned for 2560×1440 and support common 16:9 and 16:10 resolutions. The game can be in English or Japanese.' },
+      { q: 'Is there an installer? Is it signed?', a: 'It ships as a zip only, without an installer or a code signature, so SmartScreen may warn on the first start: click "More info", then "Run anyway". Later updates happen inside the app without the warning.' },
+      { q: 'Does it work on macOS or Linux?', a: 'Builds are published but untested. Monitoring and recognition are Windows-only; the macOS and Linux builds start as receive-only clients.' },
+      { q: 'Do I have to use TarkovTracker?', a: 'No. Without it, position sync, the Tasks screen and the item panel still work. To use it, create an API key per PvP, Season and PvE and assign it to the matching profile.' },
+    ],
+  },
+  license: {
+    kicker: '// 06  LICENSE & CREDITS',
+    title: 'License and credits',
+    lead: 'MAYAK is free software. The data and software it builds on are credited here.',
+    appTitle: 'MAYAK — GNU General Public License v3.0',
+    appBody: 'The source code is published under GPL-3.0: anyone may use, read, modify and redistribute it under the same license. It comes without warranty. The download includes the license texts of the bundled software (THIRD_PARTY_NOTICES.txt).',
+    thirdTitle: 'Data and software credits',
+    third: [
+      { name: 'tarkov.dev', url: 'https://tarkov.dev/api/', note: 'Items, maps, traders, tasks and hideout data, and Remote Control. A free, community-run API' },
+      { name: 'TarkovTracker', url: 'https://tarkovtracker.org/', note: 'Task progress sync, with API tokens you create yourself' },
+      { name: 'Escape from Tarkov Wiki', url: 'https://escapefromtarkov.fandom.com/', note: 'Completes the task list. CC BY-NC-SA' },
+      { name: 'Tesseract OCR', url: 'https://github.com/tesseract-ocr/tesseract', note: 'Apache-2.0. The UB Mannheim build is bundled; models derive from tessdata_best' },
+      { name: 'EasyList / EasyPrivacy', url: 'https://easylist.to/', note: 'Ad blocking in the built-in browser. GPLv3 / CC BY-SA 3.0' },
+      { name: 'AdGuard Japanese filter', url: 'https://github.com/AdguardTeam/AdguardFilters', note: 'Ad blocking in the built-in browser. GPLv3' },
+      { name: 'Catppuccin, Nord, Dracula and more', url: 'https://catppuccin.com/', note: 'Colour theme palettes (also Gruvbox, Tokyo Night, Solarized)' },
+      { name: 'Google Fonts', url: 'https://fonts.google.com/', note: 'The typefaces on this page (Black Ops One, Barlow Condensed, Noto Sans JP). SIL Open Font License' },
+    ],
+    noticesNote: 'Item images and names are the property of Battlestate Games and are shown as tarkov.dev shows them. Escape from Tarkov and related names are trademarks of Battlestate Games. MAYAK is not affiliated with or endorsed by Battlestate Games, tarkov.dev or TarkovTracker.',
+  },
+  footer: {
+    credit: 'Game data comes from the tarkov.dev API and progress from TarkovTracker. Escape from Tarkov is a trademark of Battlestate Games. MAYAK is an independent project, not affiliated with Battlestate Games, tarkov.dev or TarkovTracker.',
+    license: 'GPL-3.0',
+    source: 'Source code',
+    issues: 'Report an issue',
+  },
+}
+
+export const messages: Record<Lang, Messages> = { ja, en }
+
+export function useT(): Messages {
+  return messages[useAtomValue(langAtom)]
+}
