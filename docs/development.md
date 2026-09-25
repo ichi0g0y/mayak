@@ -185,7 +185,8 @@ Wails 本体はフォークせず公式モジュールを使います。
 | `task build:windows` | `.syso` 生成と `go build`。`DEV=true` でなければ `-tags production -ldflags="-s -w -H windowsgui"` で `build/bin/Mayak.exe` を出力。版（`VERSION`、既定は `git describe --tags`）を `internal/version` に埋め込む |
 | `task build:darwin` / `build:linux` | `production` タグ付きで `build/bin/Mayak` を出力（版の埋め込みは同じ） |
 | `task release:archive` | `build/bin` をリリース用アーカイブと SHA-256 にする（`build/dist/`、`tools/release`）。`TARGET_ARCH=amd64` で CPU を指定 |
-| `task site:dev` / `site:build` | ランディングページ（`site/`、Vite + React）をホットリロードで動かす／`site/dist` にビルドする |
+| `task dev:web` | ランディングページ（`site/`、Vite + React）をローカルの Web サーバー（http://localhost:5173）でホットリロード付きで動かす |
+| `task site:build` | ランディングページを `site/dist` にビルドする |
 | `task site:deploy` | ランディングページをビルドして Cloudflare に公開する（`wrangler deploy`、設定は `site/wrangler.jsonc`） |
 | `task dev` | 依存インストール → ホットリロード付き開発モード（下記）。アプリを起動する |
 | `task build:dev` | `dev` が使う開発ビルド。バインディング生成、Tesseract 同梱、`production` タグなしで `build/bin/Mayak-dev.exe` |

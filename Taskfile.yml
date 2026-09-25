@@ -94,11 +94,11 @@ tasks:
     cmds:
       - bun install --frozen-lockfile
 
-  site:dev:
-    summary: Run the landing page with hot reload
+  dev:web:
+    summary: Run the landing page on a local web server with hot reload (http://localhost:5173)
     cmds:
       - task: site:install
-      - bun --bun run --cwd site dev
+      - bun --bun run --cwd site dev -- --host 127.0.0.1 --port 5173 --strictPort
 
   site:build:
     summary: Build the landing page into site/dist
