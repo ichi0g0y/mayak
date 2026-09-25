@@ -33,7 +33,7 @@ export const zh: Messages = {
       { title: '运行安装程序', body: '点击页面上方的按钮下载 Mayak-Setup-windows-amd64.exe 并运行。无需管理员权限，安装在你的用户文件夹中。' },
       { title: '出现 SmartScreen 时选择“仍要运行”', body: '首次运行时 Windows 可能提示“Windows 已保护你的电脑”。点击“更多信息”，再点击“仍要运行”。MAYAK 是未签名的开源应用，源码在 GitHub 上。之后启动不会再出现警告。' },
       { title: '确认文件夹', body: '启动后 MAYAK 会自动查找 EFT 的 Screenshots 和 Logs 文件夹。在 设置 → 文件夹 中确认位置；找不到时请手动选择。' },
-      { title: '把截图键放到顺手的位置', body: '在 EFT 中进入 Settings → Controls → “Screenshot”。默认是 PrintScreen，战斗中很难够到，建议绑定到鼠标侧键或左手附近的空闲按键。只有用游戏自带截图功能保存的文件才包含坐标；Steam 或 Windows 的截图不行。' },
+      { title: '把截图键放到顺手的位置', body: '在 EFT 中进入 Settings → Controls → “Screenshot”。默认是 PrintScreen，战斗中很难够到，建议绑定到鼠标侧键或左手附近的空闲按键（例如左 Ctrl + 1）。只有用游戏自带截图功能保存的文件才包含坐标；Steam 或 Windows 的截图不行。' },
       { title: '在战局中按下该键，仅此而已', body: '在 MAYAK 的内置浏览器中打开地图标签页，无需任何设置，位置就会自动跟随。单台电脑多显示器使用时，完全不需要自己连接 tarkov.dev。截取任务界面或物品窗口，相关信息也会显示在内置浏览器里。' },
       { title: '（可选）在另一台电脑或平时的浏览器上查看', body: '在那个浏览器中打开 tarkov.dev 地图，点击左下角的连接按钮即可。同一台电脑上的 Chrome / Edge / Brave 会在 设置 → tarkov.dev 中自动检测；其他电脑或平板请输入显示的 Remote ID。' },
     ],
