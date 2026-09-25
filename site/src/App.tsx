@@ -8,7 +8,6 @@ import { GettingStarted } from './sections/GettingStarted'
 import { Safety } from './sections/Safety'
 import { Download } from './sections/Download'
 import { Faq } from './sections/Faq'
-import { Licenses } from './sections/Licenses'
 import { Footer } from './sections/Footer'
 
 export function App() {
@@ -26,7 +25,6 @@ export function App() {
         <Safety />
         <Download />
         <Faq />
-        <Licenses />
       </main>
       <Footer />
     </div>

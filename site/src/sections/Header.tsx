@@ -6,30 +6,32 @@ import { useT } from '@/i18n'
 import { langAtom, REPOSITORY } from '@/state'
 import { cn } from '@/lib/utils'
 
-export function Header() {
+/** The top bar. On the home page it is transparent over the hero and
+ *  turns solid once the page scrolls; on other pages it is always solid. */
+export function Header({ home = true }: { home?: boolean }) {
   const t = useT()
   const [lang, setLang] = useAtom(langAtom)
-  // Transparent over the hero, solid once the page scrolls.
-  const [scrolled, setScrolled] = useState(false)
+  const [scrolled, setScrolled] = useState(!home)
   useEffect(() => {
+    if (!home) return
     const onScroll = () => setScrolled(window.scrollY > 40)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+  }, [home])
+  const prefix = home ? '' : '/'
   const links: [string, string][] = [
-    ['#features', t.nav.features],
-    ['#start', t.nav.start],
-    ['#safety', t.nav.safety],
-    ['#download', t.nav.download],
-    ['#faq', t.nav.faq],
-    ['#license', t.nav.license],
+    [`${prefix}#features`, t.nav.features],
+    [`${prefix}#start`, t.nav.start],
+    [`${prefix}#safety`, t.nav.safety],
+    [`${prefix}#download`, t.nav.download],
+    [`${prefix}#faq`, t.nav.faq],
   ]
   return (
     <header className={cn('fixed inset-x-0 top-0 z-20 transition-colors duration-300', scrolled ? 'bg-background/85 border-b backdrop-blur' : 'border-b border-transparent')}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <a href="#" className={cn('flex items-center gap-2.5 transition-opacity duration-300', scrolled ? 'opacity-100' : 'opacity-0')} aria-hidden={!scrolled}>
-          <img src="/assets/mayak-logo-white.png" alt="" width={36} height={36} className="size-9" />
+        <a href="/" className={cn('flex items-center gap-2.5 transition-opacity duration-300', scrolled ? 'opacity-100' : 'opacity-0')} aria-hidden={!scrolled}>
+          <img src="/assets/mayak-mark.png" alt="" width={32} height={32} className="size-8" />
           <span className="font-display text-primary text-lg tracking-[0.2em]">MAYAK</span>
         </a>
         <nav className="hidden items-center gap-5 text-sm md:flex">

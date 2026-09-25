@@ -112,8 +112,9 @@ const ja = {
   footer: {
     credit: 'ゲームデータは tarkov.dev、進捗は TarkovTracker の API を使っています。Escape from Tarkov は Battlestate Games の商標です。MAYAK は Battlestate Games、tarkov.dev、TarkovTracker とは無関係の個人プロジェクトです。',
     license: 'GPL-3.0',
-    source: 'ソースコード',
+    source: 'GitHub',
     issues: '不具合の報告',
+    licensePage: 'ライセンスとクレジット',
   },
 }
 
@@ -226,8 +227,9 @@ const en: Messages = {
   footer: {
     credit: 'Game data comes from the tarkov.dev API and progress from TarkovTracker. Escape from Tarkov is a trademark of Battlestate Games. MAYAK is an independent project, not affiliated with Battlestate Games, tarkov.dev or TarkovTracker.',
     license: 'GPL-3.0',
-    source: 'Source code',
+    source: 'GitHub',
     issues: 'Report an issue',
+    licensePage: 'License and credits',
   },
 }
 
