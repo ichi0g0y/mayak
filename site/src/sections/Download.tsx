@@ -1,22 +1,27 @@
 import { useAtomValue } from 'jotai'
-import { Download as DownloadIcon, ExternalLink, FileCheck2, Laptop, Monitor, Terminal } from 'lucide-react'
+import { Download as DownloadIcon, ExternalLink, FileCheck2 } from 'lucide-react'
 import { Reveal } from '@/components/Reveal'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { useT } from '@/i18n'
 import { ARCHIVES, findAsset, formatSize, platformAtom, RELEASES_URL, releaseLoadableAtom, type Asset, type Platform } from '@/state'
 import { cn } from '@/lib/utils'
 import { Section } from './Section'
 
-function AssetButton({ asset, label, primary }: { asset: Asset | undefined; label: string; primary?: boolean }) {
+function AssetLink({ asset, label, primary }: { asset: Asset | undefined; label: string; primary?: boolean }) {
   return (
-    <Button variant={primary ? 'default' : 'secondary'} size="sm" asChild disabled={!asset}>
-      <a href={asset?.url ?? `${RELEASES_URL}/latest`} download={asset?.name}>
-        <DownloadIcon />
-        {label}
-        {asset && <span className="opacity-70">{formatSize(asset.size)}</span>}
-      </a>
-    </Button>
+    <a
+      href={asset?.url ?? `${RELEASES_URL}/latest`}
+      download={asset?.name}
+      className={cn(
+        'flex items-center gap-3 border px-3 py-2 text-sm transition-colors',
+        primary ? 'bg-primary text-primary-foreground border-primary hover:bg-primary/90' : 'bg-card hover:border-primary/60',
+        !asset && 'opacity-60',
+      )}
+    >
+      <DownloadIcon className="size-4 shrink-0" />
+      <span className="min-w-0 flex-1 truncate font-medium">{label}</span>
+      {asset && <span className={cn('font-mono text-xs', primary ? 'text-primary-foreground/70' : 'text-muted-foreground')}>{formatSize(asset.size)}</span>}
+    </a>
   )
 }
 
@@ -26,71 +31,65 @@ export function Download() {
   const platform = useAtomValue(platformAtom)
   const latest = release.state === 'hasData' ? release.data : undefined
   const checksums = findAsset(latest, ARCHIVES.checksums)
-  const cards: { key: Platform; icon: typeof Monitor; title: string; body: string; untested: boolean; buttons: { asset: Asset | undefined; label: string }[] }[] = [
+  const cards: { key: Platform; title: string; body: string; untested: boolean; links: { asset: Asset | undefined; label: string }[] }[] = [
     {
       key: 'windows',
-      icon: Monitor,
       title: t.download.windows,
       body: t.download.windowsBody,
       untested: false,
-      buttons: [
+      links: [
         { asset: findAsset(latest, ARCHIVES.windowsInstaller), label: t.download.installer },
         { asset: findAsset(latest, ARCHIVES.windows), label: t.download.portable },
       ],
     },
     {
       key: 'mac',
-      icon: Laptop,
       title: t.download.mac,
       body: t.download.macBody,
       untested: true,
-      buttons: [
+      links: [
         { asset: findAsset(latest, ARCHIVES.macArm), label: t.download.appleSilicon },
         { asset: findAsset(latest, ARCHIVES.macIntel), label: t.download.intel },
       ],
     },
-    { key: 'linux', icon: Terminal, title: t.download.linux, body: t.download.linuxBody, untested: true, buttons: [{ asset: findAsset(latest, ARCHIVES.linux), label: ARCHIVES.linux }] },
+    { key: 'linux', title: t.download.linux, body: t.download.linuxBody, untested: true, links: [{ asset: findAsset(latest, ARCHIVES.linux), label: ARCHIVES.linux }] },
   ]
   const publishedAt = latest ? new Date(latest.publishedAt).toLocaleDateString(document.documentElement.lang === 'ja' ? 'ja-JP' : 'en-US') : ''
+  const aside = (
+    <div className="flex flex-wrap items-center gap-3 text-sm lg:justify-end">
+      {release.state === 'loading' && <span className="text-muted-foreground">{t.download.loading}</span>}
+      {release.state === 'hasError' && <span className="text-rust">{t.download.failed}</span>}
+      {latest && (
+        <>
+          <Badge className="font-mono">v{latest.version}</Badge>
+          <span className="text-muted-foreground">{t.download.published(publishedAt)}</span>
+        </>
+      )}
+    </div>
+  )
   return (
-    <Section id="download" kicker={t.download.kicker} title={t.download.title} lead={t.download.lead}>
-      <Reveal className="mb-4 flex flex-wrap items-center gap-3 text-sm">
-        {release.state === 'loading' && <span className="text-muted-foreground">{t.download.loading}</span>}
-        {release.state === 'hasError' && <span className="text-rust">{t.download.failed}</span>}
-        {latest && (
-          <>
-            <Badge className="font-display text-sm tracking-wide">v{latest.version}</Badge>
-            <span className="text-muted-foreground">{t.download.published(publishedAt)}</span>
-          </>
-        )}
-      </Reveal>
-      <div className="grid gap-3 md:grid-cols-3">
+    <Section id="download" kicker={t.download.kicker} title={t.download.title} lead={t.download.lead} aside={aside}>
+      <div className="grid border-t border-l md:grid-cols-3">
         {cards.map((card, i) => {
-          const Icon = card.icon
           const primary = card.key === platform
           return (
-            <Reveal key={card.key} delay={i * 70} className={cn('panel flex h-full flex-col p-5', primary && 'border-primary/50')}>
-              <div className="flex items-center justify-between">
-                <Icon className="text-primary/80 size-5" />
-                {primary && <Badge className="font-label text-[11px]">{t.download.recommended}</Badge>}
-                {card.untested && (
-                  <Badge variant="outline" className="font-label text-[11px]">
-                    {t.download.untested}
-                  </Badge>
-                )}
+            <Reveal key={card.key} delay={i * 60} className="flex flex-col border-r border-b p-6">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-xl font-bold">{card.title}</h3>
+                {primary && <Badge>{t.download.recommended}</Badge>}
+                {card.untested && <Badge variant="outline">{t.download.untested}</Badge>}
               </div>
-              <h3 className="font-display mt-3 text-xl font-semibold tracking-wide">{card.title}</h3>
-              <p className="text-muted-foreground mt-1 text-sm">{card.body}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {card.buttons.map((button, j) => (
-                  <AssetButton key={button.label} asset={button.asset} label={button.label} primary={primary && j === 0} />
+              <p className="text-muted-foreground mt-2 flex-1 text-sm">{card.body}</p>
+              <div className="mt-5 grid gap-2">
+                {card.links.map((link, j) => (
+                  <AssetLink key={link.label} asset={link.asset} label={link.label} primary={primary && j === 0} />
                 ))}
               </div>
             </Reveal>
           )
         })}
       </div>
-      <Reveal className="mt-4 flex flex-wrap gap-4 text-sm">
+      <Reveal className="mt-5 flex flex-wrap gap-5 text-sm">
         <a href={checksums?.url ?? RELEASES_URL} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5">
           <FileCheck2 className="size-4" />
           {t.download.checksums}

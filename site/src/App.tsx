@@ -18,14 +18,15 @@ export function App() {
   return (
     <div>
       <Header />
-      <Hero />
-      <main className="mx-auto max-w-6xl px-4 sm:px-6">
+      <main className="mx-auto max-w-6xl border-x">
+        <Hero />
         <Features />
         <GettingStarted />
         <Safety />
         <Download />
         <Faq />
       </main>
+      <div className="border-t" />
       <Footer />
     </div>
   )

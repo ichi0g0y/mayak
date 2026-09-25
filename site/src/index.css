@@ -1,30 +1,30 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* shadcn/ui tokens after the game's own UI: cold olive-black, dusty
-   khaki text, thin worn lines, square corners. */
+/* shadcn/ui tokens: black, white text, the khaki of the mark as the one
+   accent, thin grey rules. */
 :root {
-  --background: oklch(0.12 0.006 130);
-  --foreground: oklch(0.86 0.018 95);
-  --card: oklch(0.155 0.007 130);
-  --card-foreground: oklch(0.86 0.018 95);
-  --popover: oklch(0.155 0.007 130);
-  --popover-foreground: oklch(0.86 0.018 95);
-  --primary: oklch(0.78 0.045 95);
-  --primary-foreground: oklch(0.16 0.015 100);
-  --secondary: oklch(0.22 0.008 130);
-  --secondary-foreground: oklch(0.86 0.018 95);
-  --muted: oklch(0.22 0.008 130);
-  --muted-foreground: oklch(0.6 0.018 100);
-  --accent: oklch(0.24 0.01 130);
-  --accent-foreground: oklch(0.86 0.018 95);
-  --destructive: oklch(0.55 0.14 30);
-  --border: oklch(0.32 0.012 110 / 0.7);
-  --input: oklch(0.32 0.012 110 / 0.7);
-  --ring: oklch(0.78 0.045 95 / 0.5);
-  --rust: oklch(0.6 0.13 40);
-  --olive: oklch(0.58 0.06 125);
-  --radius: 0.125rem;
+  --background: oklch(0.1 0 0);
+  --foreground: oklch(0.97 0 0);
+  --card: oklch(0.13 0 0);
+  --card-foreground: oklch(0.97 0 0);
+  --popover: oklch(0.13 0 0);
+  --popover-foreground: oklch(0.97 0 0);
+  --primary: oklch(0.83 0.045 95);
+  --primary-foreground: oklch(0.15 0.01 95);
+  --secondary: oklch(0.2 0 0);
+  --secondary-foreground: oklch(0.97 0 0);
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.68 0 0);
+  --accent: oklch(0.22 0 0);
+  --accent-foreground: oklch(0.97 0 0);
+  --destructive: oklch(0.6 0.16 30);
+  --border: oklch(0.26 0 0);
+  --input: oklch(0.26 0 0);
+  --ring: oklch(0.83 0.045 95 / 0.6);
+  --rust: oklch(0.65 0.15 40);
+  --olive: oklch(0.72 0.1 130);
+  --radius: 0.375rem;
 }
 
 @theme inline {
@@ -48,12 +48,12 @@
   --color-ring: var(--ring);
   --color-rust: var(--rust);
   --color-olive: var(--olive);
-  --radius-sm: var(--radius);
+  --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 2px);
-  --font-sans: 'Noto Sans JP', -apple-system, 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
-  --font-display: 'Rajdhani', 'Noto Sans JP', sans-serif;
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
+  --font-sans: 'Inter Tight', 'Noto Sans JP', -apple-system, 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
   @keyframes accordion-down {
@@ -83,57 +83,41 @@
   }
 }
 
-/* The game's UI lettering: squarish, condensed, upper case, spaced. */
-@utility font-display {
-  font-family: var(--font-display);
+/* Headlines: heavy and tight, as on the reference. */
+@utility headline {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  &:lang(ja) {
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
 }
-@utility font-label {
-  font-family: var(--font-display);
-  font-weight: 600;
+
+/* A section label: a small accent square and mono upper-case text. */
+@utility eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-}
-
-/* A worn panel: a thin translucent edge, a faint lighter top line, no
-   rounding to speak of. */
-@utility panel {
-  position: relative;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, oklch(1 0 0 / 0.025), transparent 40%), var(--card);
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.05);
-}
-
-/* A label with a rule running off to the right, as on the game's panel headers. */
-@utility rule-after {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  &::after {
+  color: var(--muted-foreground);
+  &::before {
     content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, var(--border), transparent);
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--primary);
   }
-}
-
-/* The hero fades and shrinks as the page scrolls past it (where scroll
-   timelines exist; elsewhere it just scrolls away). */
-@utility hero-fade {
-  @supports (animation-timeline: scroll()) {
-    animation: hero-fade linear both;
-    animation-timeline: scroll(root);
-    animation-range: 0 90vh;
-  }
-}
-@keyframes hero-fade {
-  to { opacity: 0; transform: translateY(-40px) scale(0.97); }
 }
 
 /* Scroll reveal (components/Reveal.tsx). */
 .reveal {
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transform: translateY(14px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
 }
 .reveal.is-visible {
   opacity: 1;
