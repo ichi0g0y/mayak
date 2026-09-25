@@ -174,6 +174,23 @@ async function viewShot(name){
   if(want===name)update();
  }
 }
+// The action queue is serial: everything a click asks for waits behind what
+// is already in it. Fetches from the network never go into it, then, or a
+// slow or failing connection (a 45 s timeout per item lookup) would hold
+// every click for minutes: the sidebar looks dead while the pages, in their
+// own processes, still respond. These run on their own and update the item
+// when they return, if it is still the one shown.
+async function refreshItem(auto){
+ if(!item||itemBusy)return;
+ itemBusy=true;update();
+ // The spinner stays long enough to be seen: a cached answer comes back at once.
+ const started=Date.now(),id=item.id;
+ try{const next=itemInfo(await go.BrowserItemInfo(item.mode,id));if(next&&next.id===item?.id)item=next;}
+ catch(e){if(!auto)messageError(e);}
+ finally{const wait=600-(Date.now()-started);if(wait>0)await new Promise(resolve=>setTimeout(resolve,wait));itemBusy=false;}
+ void loadHistory(true);
+ update();
+}
 async function reloadItem(){
  if(!item)return;
  try{const next=itemInfo(await go.BrowserItemInfo('',item.id));if(next&&next.id===item.id){item=next;void loadHistory();void persist().catch(()=>{});update();}}catch{}
@@ -292,7 +309,7 @@ const ready=(async()=>{
   // The game mode comes with TarkovTracker: the boss data follows it.
   // Another EFT account, profile or mode: the item shown is read again in the
   // mode now played, so its prices and progress are that profile's.
-  window.mayakDesktop.on('status:update',next=>{const tracker=host?.tracker,mode=host?.mode,identity=host?.identity;host={...host,...hostStatus(next)};if(host.tracker!==tracker||host.mode!==mode)void loadBosses();if(identity!==undefined&&host.identity!==identity)void enqueue(reloadItem);update();});
+  window.mayakDesktop.on('status:update',next=>{const tracker=host?.tracker,mode=host?.mode,identity=host?.identity;host={...host,...hostStatus(next)};if(host.tracker!==tracker||host.mode!==mode)void loadBosses();if(identity!==undefined&&host.identity!==identity)void reloadItem();update();});
  }
  // The popup window closed by itself, or one of its buttons was pressed.
  window.mayakDesktop.on('popup:closed',()=>void enqueue(async()=>{if(!popup||Date.now()-popup.openedAt<300)return;popupClosed={key:popup.key,at:Date.now()};popup=null;update();}));
@@ -431,28 +448,28 @@ async function perform(type,data){
  case 'itemSearch':{
   const query=String(data??'').slice(0,80),seq=++searchSeq;itemSearch={...itemSearch,query};
   if(!query.trim()){itemSearch.results=[];update();return snapshot();}
-  const hits=await go.BrowserItemSearch(query);
+  void (async()=>{let hits;try{hits=await go.BrowserItemSearch(query);}catch(e){messageError(e);return;}
   // A later keystroke's search wins over this one.
   if(seq===searchSeq)itemSearch={query,results:(Array.isArray(hits)?hits:[]).slice(0,20).map(h=>({id:String(h?.id||'').slice(0,40),name:String(h?.name||'').slice(0,160),shortName:String(h?.shortName||'').slice(0,60),names:names(h?.names),iconUrl:webURL(h?.iconUrl)||''})).filter(h=>h.id&&h.name)};
-  update();return snapshot();
+  update();})();
+  return snapshot();
  }
  case 'itemSelect':{
-  const next=itemInfo(await go.BrowserItemInfo('',String(data||'')));
-  if(next){item=next;itemOpen=true;itemSearch={query:'',results:[]};void loadHistory();await persist();}
-  update();await show();return snapshot();
+  const id=String(data||'');
+  void (async()=>{
+   let next;try{next=itemInfo(await go.BrowserItemInfo('',id));}catch(e){messageError(e);return;}
+   if(next){item=next;itemOpen=true;itemSearch={query:'',results:[]};void loadHistory();await persist().catch(()=>{});}
+   update();await show();
+  })();
+  return snapshot();
  }
  // data.auto: the periodic refresh, which keeps the shown item quietly when
  // the catalog cannot be reached (the refresh button reports it).
  case 'itemRefresh':{
   if(!item||itemBusy)return snapshot();
-  itemBusy=true;update();
-  // The spinner stays long enough to be seen: a cached answer comes back at once.
-  const started=Date.now();
-  try{const next=itemInfo(await go.BrowserItemInfo(item.mode,item.id));if(next&&next.id===item.id)item=next;}
-  catch(e){if(!data?.auto)throw e;}
-  finally{const wait=600-(Date.now()-started);if(wait>0)await new Promise(resolve=>setTimeout(resolve,wait));itemBusy=false;}
-  void loadHistory(true);
-  update();return snapshot();
+  // The fetch runs outside the action queue (see refreshItem).
+  void refreshItem(!!data?.auto);
+  return snapshot();
  }
  case 'dismiss':error='';update();return snapshot();
  default:return snapshot();
