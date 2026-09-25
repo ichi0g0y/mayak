@@ -97,7 +97,9 @@ function restore(raw={}) {
     state.tabs.unshift(mapTab(savedMap?.kind==='web'?pageURL(savedMap.url):undefined,savedMap?.home&&pageURL(savedMap.home)),trackerTab(savedTracker?.kind==='web'&&hostname(savedTracker.url)!=='tarkovtracker.io'?savedTracker.url:undefined));
     orderTabs(state);
   }
-  state.active=state.tabs.some(t=>t.id===raw.active)?raw.active:state.tabs[0]?.id||'';
+  // The settings view is not restored as the active tab: a start lands on the map, not on settings.
+  const restored=state.tabs.find(t=>t.id===raw.active);
+  state.active=restored&&restored.kind!=='settings'?restored.id:state.tabs[0]?.id||'';
   return state;
 }
 function validTask(task) {return !!task && typeof task.id==='string' && task.id.length>0 && task.id.length<=128 && typeof task.name==='string' && task.name.length<=256 && task.urls && sites.every(s=>webURL(task.urls[s]));}

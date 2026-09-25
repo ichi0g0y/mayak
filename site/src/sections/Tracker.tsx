@@ -1,21 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useAtomValue } from 'jotai'
 import { ExternalLink, KeyRound } from 'lucide-react'
 import { Reveal } from '@/components/Reveal'
 import { useT } from '@/i18n'
+import { localized } from '@/lib/screenshots'
+import { langAtom } from '@/state'
 import { Section } from './Section'
-
-/** The real TarkovTracker settings screen, when public/screenshots/tracker.png exists. */
-const screenshot = '/screenshots/tracker.png'
 
 /** Linking TarkovTracker: what it is, the three steps, and the caveats. */
 export function Tracker() {
   const t = useT()
-  const [hasImage, setHasImage] = useState(false)
-  useEffect(() => {
-    const image = new Image()
-    image.onload = () => setHasImage(true)
-    image.src = screenshot
-  }, [])
+  const lang = useAtomValue(langAtom)
+  const [missing, setMissing] = useState(false)
+  const screenshot = localized(lang, 'tracker.png')
   return (
     <Section id="tracker" kicker={t.tracker.kicker} title={t.tracker.title} lead={t.tracker.lead}>
       <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:gap-14">
@@ -42,10 +39,10 @@ export function Tracker() {
             </ul>
           </div>
         </Reveal>
-        {hasImage && (
-          <Reveal delay={80} className="hidden lg:block">
-            <figure className="panel sticky top-24 overflow-hidden">
-              <img src={screenshot} alt="" className="block w-full" />
+        {!missing && (
+          <Reveal delay={80}>
+            <figure className="panel overflow-hidden">
+              <img key={screenshot} src={screenshot} alt="" loading="lazy" className="block w-full" onError={() => setMissing(true)} />
             </figure>
           </Reveal>
         )}
