@@ -37,3 +37,6 @@ Thumbs.db
 /build/ocrtrain-*/
 /build/docs-site/
 /build/pending/
+
+# wrangler local cache and temp files
+/.wrangler/
