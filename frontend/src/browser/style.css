@@ -517,10 +517,11 @@ body[data-sidebar=collapsed] .shots-open{width:40px;height:32px}
 body[data-sidebar=collapsed] .screenshot-section-label{border-top:0;margin:4px 0 0;padding-top:0}
 /* Page-area insets (see the top). Set on body, where --sidebar-width
    already has its collapsed value. */
-body{--nav-left:var(--sidebar-width);--nav-right:0px;--item-left:0px;--item-right:0px;--item-bottom:0px;--page-top:48px;
+body{--nav-left:var(--sidebar-width);--nav-right:0px;--item-left:0px;--item-right:0px;--item-bottom:0px;--update-bar:0px;--page-top:calc(48px + var(--update-bar));
  --page-left:calc(var(--nav-left) + var(--item-left));--page-right:calc(var(--nav-right) + var(--item-right));--page-bottom:var(--item-bottom)}
 body[data-nav=right]{--nav-left:0px;--nav-right:var(--sidebar-width)}
-body[data-nav=top]{--nav-left:0px;--nav-right:0px;--page-top:96px}
+body[data-nav=top]{--nav-left:0px;--nav-right:0px;--page-top:calc(96px + var(--update-bar))}
+body[data-update-bar=on]{--update-bar:36px}
 body[data-item=right]{--item-right:var(--item-width)}
 body[data-item=left]{--item-left:var(--item-width)}
 body[data-item=bottom]{--item-bottom:var(--item-height)}
@@ -693,10 +694,11 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .pair-code output{font:600 30px/1.2 ui-monospace,"Cascadia Code",Consolas,monospace;letter-spacing:.14em;color:var(--text)}
 .peer-error{color:var(--danger,#e06c75)}
 .peer-manual{margin-top:18px}
-/* The update toast: over the toolbar row, which the shell owns (page views
-   are native windows above the shell, so a toast under them would be covered). */
-.toast.update{top:8px;bottom:auto;left:50%;right:auto;transform:translateX(-50%);max-width:min(720px,calc(100vw - 40px));padding:6px 8px 6px 14px;gap:8px;border-color:var(--accent);animation:none}
-.toast.update .update-text{white-space:nowrap}
-.toast.update button{flex:none;height:28px;padding:0 10px;font-size:12.5px}
-.update-progress{display:inline-block;width:90px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+/* The update bar: its own row under the toolbar (the page views start below
+   it; see --update-bar and bounds() in api.js), never over the pages. */
+.update-bar{position:fixed;z-index:12;top:calc(var(--page-top) - var(--update-bar));left:var(--page-left);right:var(--page-right);height:var(--update-bar);display:flex;align-items:center;gap:10px;padding:0 6px 0 14px;overflow:hidden;background:var(--raised);border-bottom:1px solid var(--border);box-shadow:inset 3px 0 var(--accent);font-size:12.5px;color:var(--text)}
+.update-bar .update-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.update-actions{display:flex;flex:none;gap:6px}
+.update-bar button{flex:none;height:26px;padding:0 10px;font-size:12px;white-space:nowrap}
+.update-progress{flex:none;width:90px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
 .update-progress i{display:block;height:100%;background:var(--accent)}

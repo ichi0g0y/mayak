@@ -10,8 +10,14 @@ let queue=Promise.resolve(),nativeQueue=Promise.resolve(),expiry;
 // While the shell shows an overlay (the tutorial), the native page views stay
 // hidden whatever else asks to show them; closing it shows the active tab again.
 let overlay=false;
-// The updater's state (model.UpdateStatus), for the shell's update toast.
-let updateStatus=null;
+// The updater's state (model.UpdateStatus) drives the update bar: a strip
+// between the toolbar and the page while a newer version is found,
+// downloading or ready. The page views are native windows above the shell,
+// so the bar takes its own row (bounds() moves the pages down) rather than
+// floating over them, where it would be covered.
+let updateStatus=null,updateDismissed='';
+const updateBarHeight=36;
+function updateBarVisible(){const u=updateStatus;return !!(u&&['available','downloading','ready'].includes(u.state)&&u.latest&&u.latest!==updateDismissed);}
 const views=new Map();
 // Tabs whose page is loading, by view ID (not saved).
 const loadingViews=new Set();
@@ -34,7 +40,7 @@ function loadFavicon(url,refresh=false){
  go.BrowserFavicon(url,refresh).then(data=>{if(typeof data==='string'&&data.startsWith('data:image/')&&faviconData[url]!==data){faviconData[url]=data;update();}}).catch(()=>{});
 }
 
-const snapshot=()=>({...state,update:updateStatus,goonReport,bosses:bosses&&{...bosses,current:host?.map||''},screenshots:shotsAvailable()?{list:shots.list,thumbs:shots.thumbs,viewing:shots.viewing,full:shots.full[shots.viewing]||''}:null,loadingTabs:[...loadingViews],popup:popup&&{key:popup.key},faviconData,host:state.connection.mode==='local'?host:null,hostQuestSite,item,itemOpen,itemSearch,itemBusy,itemHistory,settingsSection:section,localHost:platform==='windows',connectionStatus:state.connection.mode==='local'?'connected':state.connection.mode==='off'?'off':peerState.phase==='connected'?'connected':'disconnected',peer:peerState,error});
+const snapshot=()=>({...state,update:updateStatus,updateBar:updateBarVisible(),goonReport,bosses:bosses&&{...bosses,current:host?.map||''},screenshots:shotsAvailable()?{list:shots.list,thumbs:shots.thumbs,viewing:shots.viewing,full:shots.full[shots.viewing]||''}:null,loadingTabs:[...loadingViews],popup:popup&&{key:popup.key},faviconData,host:state.connection.mode==='local'?host:null,hostQuestSite,item,itemOpen,itemSearch,itemBusy,itemHistory,settingsSection:section,localHost:platform==='windows',connectionStatus:state.connection.mode==='local'?'connected':state.connection.mode==='off'?'off':peerState.phase==='connected'?'connected':'disconnected',peer:peerState,error});
 const update=()=>notify(snapshot());
 const messageError=e=>{error=(state.language==='ja'?'操作を完了できませんでした: ':'Could not complete the action: ')+String(e?.message||e);update();};
 const native=(command,o)=>{const result=nativeQueue.then(()=>go.BrowserView(command,o));nativeQueue=result.catch(()=>{});return result;};
@@ -49,7 +55,7 @@ function bounds(){
  const item=dock==='bottom'?0:state.itemPanelWidth;
  return {
   left:(state.sidebarSide==='left'?nav:0)+(dock==='left'?item:0),
-  top:state.layout==='horizontal'?96:48,
+  top:(state.layout==='horizontal'?96:48)+(updateBarVisible()?updateBarHeight:0),
   right:(state.sidebarSide==='right'?nav:0)+(dock==='right'?item:0),
   bottom:dock==='bottom'?state.itemPanelHeight:0,
  };
@@ -319,8 +325,9 @@ const ready=(async()=>{
  window.mayakDesktop.on('browser:item',info=>void display({event:'browser:item',args:[info]}));
  // The update toast follows the updater; a found, downloading or downloaded
  // version shows until it is applied or put off.
- window.mayakDesktop.on('update:status',next=>{updateStatus=next;update();});
- go.GetUpdateStatus?.().then(next=>{updateStatus=next;update();}).catch(()=>{});
+ const updateChanged=next=>{const shown=updateBarVisible();updateStatus=next;update();if(updateBarVisible()!==shown)void show();};
+ window.mayakDesktop.on('update:status',updateChanged);
+ go.GetUpdateStatus?.().then(updateChanged).catch(()=>{});
  // A new screenshot shows in the sidebar (and on the screenshot page).
  window.mayakDesktop.on('browser:screenshot',()=>void loadShots());
  void loadShots();
@@ -490,6 +497,7 @@ async function perform(type,data){
  // Applying restarts the app and downloading takes a while: neither holds the queue.
  case 'updateInstall':void go.InstallUpdate().catch(messageError);return snapshot();
  case 'updateDownload':void go.DownloadUpdate().catch(messageError);return snapshot();
+ case 'updateDismiss':updateDismissed=updateStatus?.latest||'';await show();return snapshot();
  case 'dismiss':error='';update();return snapshot();
  default:return snapshot();
  }
