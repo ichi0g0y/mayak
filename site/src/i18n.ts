@@ -48,17 +48,6 @@ const ja = {
       { title: '（任意）TarkovTracker を繋ぐ', body: 'TarkovTracker の設定ページで API キー（GP と WP）を作り、MAYAK に取り込んで、ログから見つかったプロフィールに割り当てます。' },
     ],
     tip: 'MAYAK は常駐させたままで大丈夫です。トレイに最小化され、監視は起動時に自動で始まります。',
-    mock: {
-      title: 'ステータス',
-      rows: [
-        ['Remote 接続', '接続済み'],
-        ['現在のマップ', 'Customs'],
-        ['レイド状態', 'レイド中'],
-        ['最後のスクリーンショット', '位置 → tarkov.dev へ送信'],
-        ['TarkovTracker', 'PVE · 同期済み 19:42'],
-      ],
-      log: ['19:41:58  Raid started on Customs (PVE)', '19:42:03  Position (-123.4, 2.1, 45.0) sent to tarkov.dev', '19:44:10  Tasks screen: "Shortage" 98% → opened', '19:45:31  Task completed: Shortage → TarkovTracker'],
-    },
   },
   safety: {
     kicker: '安全性',
@@ -187,17 +176,6 @@ const en: Messages = {
       { title: '(Optional) Connect TarkovTracker', body: 'Create an API key (GP and WP) on the TarkovTracker settings page, add it in MAYAK and assign it to the profile found in the logs.' },
     ],
     tip: 'Leave MAYAK running. It minimizes to the tray and starts monitoring on launch.',
-    mock: {
-      title: 'Status',
-      rows: [
-        ['Remote', 'Connected'],
-        ['Current map', 'Customs'],
-        ['Raid', 'In raid'],
-        ['Last screenshot', 'Position → sent to tarkov.dev'],
-        ['TarkovTracker', 'PVE · synced 19:42'],
-      ],
-      log: ['19:41:58  Raid started on Customs (PVE)', '19:42:03  Position (-123.4, 2.1, 45.0) sent to tarkov.dev', '19:44:10  Tasks screen: "Shortage" 98% → opened', '19:45:31  Task completed: Shortage → TarkovTracker'],
-    },
   },
   safety: {
     kicker: 'Safety',
