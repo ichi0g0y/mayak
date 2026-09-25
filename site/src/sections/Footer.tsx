@@ -21,12 +21,6 @@ export function Footer() {
           <a href="/license" className="hover:text-foreground">
             {t.footer.licensePage}
           </a>
-          <a href="https://tarkov.dev/" rel="noopener" className="hover:text-foreground">
-            tarkov.dev
-          </a>
-          <a href="https://tarkovtracker.org/" rel="noopener" className="hover:text-foreground">
-            TarkovTracker
-          </a>
         </p>
       </div>
     </footer>
