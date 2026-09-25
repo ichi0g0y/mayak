@@ -19,9 +19,9 @@ Get the latest release from [mayak.ich.sh](https://mayak.ich.sh) or the [release
 
 | Platform | File | Notes |
 | --- | --- | --- |
-| Windows 11 / 10 (64-bit) | `Mayak-Setup-windows-amd64.exe` | Per-user installer, no administrator rights. SmartScreen warns once because the build is unsigned: **More info → Run anyway**. Updates are automatic afterwards. |
+| Windows 11 (64-bit; Windows 10 should work but is untested) | `Mayak-Setup-windows-amd64.exe` | Per-user installer, no administrator rights. SmartScreen warns once because the build is unsigned: **More info → Run anyway**. Updates are automatic afterwards. |
 | Windows, portable | `Mayak-windows-amd64.zip` | Unzip and run `Mayak.exe`. |
-| macOS (Apple Silicon / Intel) | `Mayak-darwin-arm64.tar.gz` / `Mayak-darwin-amd64.tar.gz` | Preview. Receive-only client for maps and tasks. If macOS blocks it, right-click → Open. |
+| macOS (Apple Silicon / Intel) | `Mayak-darwin-arm64.dmg` / `Mayak-darwin-amd64.dmg` | Preview. Open the disk image and drag Mayak.app to Applications. Unsigned: right-click → Open the first time (or System Settings → Privacy & Security → Open Anyway). Receive-only client for maps and tasks. |
 | Linux (x86-64) | `Mayak-linux-amd64.tar.gz` | Preview. Receive-only client; needs WebKitGTK. |
 
 `SHA256SUMS.txt` lists the checksum of every file. MAYAK checks GitHub Releases for a newer version at start and every 6 hours, downloads it in the background, verifies the checksum and installs it when it quits (Settings → Startup → Automatic updates).
@@ -46,9 +46,10 @@ Whether a companion tool is acceptable to you is your own call: read the game's 
 
 1. Run the installer (or unzip the portable build) and start MAYAK.
 2. Check the EFT Screenshots and Logs folders under Settings → Folders; they are detected automatically when possible.
-3. On the tarkov.dev map, enable Remote Control and enter the Remote ID (browsers on the same PC are detected automatically).
-4. In EFT, bind Settings → Controls → Screenshot to a key you can reach in a fight (the default is PrintScreen). Only EFT's own screenshots carry coordinates.
-5. Optional: create a TarkovTracker API token (GP and WP) on its [settings page](https://tarkovtracker.org/settings#api) and assign it to the profile MAYAK finds in the logs.
+3. In EFT, bind Settings → Controls → Screenshot to a key you can reach in a fight (the default is PrintScreen). Only EFT's own screenshots carry coordinates.
+4. Press that key in a raid. The map tab in MAYAK's built-in browser follows your position with no further setup; on one PC with a second monitor that is all you need.
+5. Optional, for another PC or your usual browser: open the tarkov.dev map there, click the connect button at the bottom left, and enter the Remote ID it shows under Settings → tarkov.dev (browsers on the same PC are detected automatically).
+6. Optional: TarkovTracker records your task progress. Create an API token (GP and WP) on its [settings page](https://tarkovtracker.org/settings#api), paste it under Settings → TarkovTracker and assign it to the profile MAYAK finds in the logs (one token per PvP / Season / PvE).
 
 The full guide is on [mayak.ich.sh](https://mayak.ich.sh).
 

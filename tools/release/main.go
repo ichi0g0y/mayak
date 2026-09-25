@@ -34,6 +34,9 @@ func main() {
 	out := flag.String("out", "build/dist", "directory to write the archive and its checksum to")
 	goos := flag.String("os", runtime.GOOS, "target OS (windows, darwin, linux)")
 	goarch := flag.String("arch", runtime.GOARCH, "target CPU (amd64, arm64)")
+	version := flag.String("version", "0.0.0", "the app's version, for the macOS bundle")
+	icon := flag.String("icon", "build/appicon.png", "the app icon, for the macOS bundle")
+	dmg := flag.Bool("dmg", true, "on macOS, also build Mayak.app and a disk image (needs hdiutil)")
 	flag.Parse()
 	name := update.ArchiveName(*goos, *goarch)
 	entries := []string{"THIRD_PARTY_NOTICES.txt"}
@@ -61,9 +64,27 @@ func main() {
 		os.Remove(target)
 		log.Fatal(err)
 	}
+	outputs := []string{target}
+	// macOS: Mayak.app in a disk image, for people; the tar.gz above stays
+	// for the updater.
+	if *goos == "darwin" {
+		staging := filepath.Join(*out, "dmg-"+*goarch)
+		os.RemoveAll(staging)
+		if _, err := buildApp(staging, *bin, versionCore(*version), *icon); err != nil {
+			log.Fatal(err)
+		}
+		if *dmg {
+			image := filepath.Join(*out, "Mayak-darwin-"+*goarch+".dmg")
+			if err := buildDMG(staging, image); err != nil {
+				log.Fatal(err)
+			}
+			outputs = append(outputs, image)
+			os.RemoveAll(staging)
+		}
+	}
 	// The installer (tools/nsis), when it was built, gets its checksum too.
 	installers, _ := filepath.Glob(filepath.Join(*out, "Mayak-Setup-*.exe"))
-	for _, path := range append([]string{target}, installers...) {
+	for _, path := range append(outputs, installers...) {
 		sum, err := fileSHA256(path)
 		if err != nil {
 			log.Fatal(err)
@@ -73,6 +94,16 @@ func main() {
 		}
 		fmt.Printf("%s  %s\n", sum, path)
 	}
+}
+
+// versionCore is the numeric part of the version ("v0.1.2-3-gabcdef0" is
+// "0.1.2"), which the bundle's version fields want.
+func versionCore(value string) string {
+	parsed, err := update.ParseSemver(value)
+	if err != nil {
+		return "0.0.0"
+	}
+	return fmt.Sprintf("%d.%d.%d", parsed.Major, parsed.Minor, parsed.Patch)
 }
 
 // walk calls visit for every regular file under the entries, with the

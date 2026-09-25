@@ -224,7 +224,7 @@ Wails 本体はフォークせず公式モジュールを使います。
 
 1. `build/config.yml` と `build/windows/info.json` の版を上げてコミットします。
 2. `v1.2.3` の形のタグを打って push します: `git tag -a v1.2.3 -m "MAYAK 1.2.3" && git push origin v1.2.3`
-3. `.github/workflows/release.yml` が Windows（amd64）、macOS（arm64、amd64）、Linux（amd64）で `task build VERSION=v1.2.3` と `task release:archive` を実行し（Windows では間に `task installer`）、`SHA256SUMS.txt` を付けてリリースを公開します。リリースノートは GitHub が自動生成します。
+3. `.github/workflows/release.yml` が Windows（amd64）、macOS（arm64、amd64）、Linux（amd64）で `task build VERSION=v1.2.3` と `task release:archive` を実行し（Windows では間に `task installer`。macOS では `release:archive` が `Mayak.app` を組んで ad-hoc 署名し、`hdiutil` で `Mayak-darwin-<arch>.dmg` も作る）、`SHA256SUMS.txt` を付けてリリースを公開します。リリースノートは GitHub が自動生成します。
 
 アーカイブの名前（`Mayak-windows-amd64.zip`、`Mayak-darwin-arm64.tar.gz`、`Mayak-darwin-amd64.tar.gz`、`Mayak-linux-amd64.tar.gz`）と `SHA256SUMS.txt` は `internal/update` が探すものなので変えないでください。Windows のアーカイブには `Mayak.exe`、`tesseract/`、`THIRD_PARTY_NOTICES.txt` が、ほかには `Mayak` と `THIRD_PARTY_NOTICES.txt` がルートに入ります。プレリリース（`prerelease` にチェック）とドラフトは「latest」に含まれないため、自動アップデートの対象になりません。
 

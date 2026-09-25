@@ -94,7 +94,7 @@ tasks:
   release:archive:
     summary: Pack build/bin into the release archive for this OS and CPU
     cmds:
-      - 'go run ./tools/release -bin build/bin -out build/dist -arch {{.TARGET_ARCH | default ARCH}}'
+      - 'go run ./tools/release -bin build/bin -out build/dist -arch {{.TARGET_ARCH | default ARCH}} -version {{.VERSION}}'
 
   # The landing page (site/): a Vite + React app, published to Cloudflare
   # as the "mayak" Worker with static assets (site/wrangler.jsonc). Sign in

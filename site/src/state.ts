@@ -31,8 +31,8 @@ export type Release = { tag: string; version: string; name: string; url: string;
 export const ARCHIVES = {
   windowsInstaller: 'Mayak-Setup-windows-amd64.exe',
   windows: 'Mayak-windows-amd64.zip',
-  macArm: 'Mayak-darwin-arm64.tar.gz',
-  macIntel: 'Mayak-darwin-amd64.tar.gz',
+  macArm: 'Mayak-darwin-arm64.dmg',
+  macIntel: 'Mayak-darwin-amd64.dmg',
   linux: 'Mayak-linux-amd64.tar.gz',
   checksums: 'SHA256SUMS.txt',
 } as const
