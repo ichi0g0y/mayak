@@ -1,0 +1,49 @@
+# はじめに
+
+MAYAK は、Escape from Tarkov（EFT）を遊びながら使う Windows 向けの補助アプリです。Go と Wails v3 で作られていて、タブ付きのブラウザにマップやタスク、アイテムの情報をまとめて表示します。
+
+この仕様書は、今の MAYAK の動きをコードから書き起こしたものです。コードを変えたら、該当する章も更新してください。
+
+## 名前について
+
+このアプリは 2026年9月に RaidLens から MAYAK に改名しました。データの置き場所も `%AppData%\RaidLens` から `%AppData%\Mayak` に変わります。起動時に新しいフォルダがなく古いフォルダがあれば、フォルダごと移動します（`internal/appdir`、ログファイルは `mayak.log` に改名）。スクリーンショットフォルダの認識デバッグデータは `Mayak-Debug` に保存し、以前の `RaidLens-Debug` も読み続けます。Windows の自動起動の登録名は `Mayak` で、以前の `RaidLens` の登録は起動時に消します（もう存在しない exe を指しているため。`Mayak` の登録は設定に従います）。
+
+## 基本の考え方
+
+- **ゲームには触らない:** MAYAK が読むのは、ゲーム自身が保存したスクリーンショットとログファイル、それに設定ファイル（ゲームの表示言語、ランチャーのインストール先）だけです。ゲームのプロセスやメモリ、画面、キー入力には一切触れません。アンチチート的に一番安全な形です（[スクリーンショット認識](recognition.md)）。
+- **公開データを使う:** アイテム、タスク、マップ、価格などのゲームデータは、tarkov.dev が公開している JSON と API から取ります（[ゲームデータ](catalog.md)）。進捗は TarkovTracker から読みます（[設定と連携](settings-and-integrations.md)）。
+- **ブラウザにまとめる:** tarkov.dev のマップ、TarkovTracker、Wiki などを、アプリ内のタブで開きます（[ブラウザシェル](browser-shell.md)）。
+
+## 主な流れ
+
+1. ゲーム内でスクリーンショットを撮る。
+2. MAYAK が保存を検知して、何の画面かを判定する。
+   - アイテムの詳細画面・出品画面 → [アイテム欄](item-panel.md)に価格や必要なタスクを表示
+   - タスク画面 → タスクのページやマップを開く（[タスクとマップ](tasks-and-maps.md)）
+3. レイドの開始などはログから検知して、マップを開く。
+
+## 章の案内
+
+| 章 | 内容 |
+|---|---|
+| [ブラウザシェル](browser-shell.md) | タブ、ブックマーク、レイアウト、ポップアップウインドウ |
+| [アイテム欄](item-panel.md) | 価格、価格の推移、必要なタスク・ハイドアウト、検索 |
+| [スクリーンショット認識](recognition.md) | 画面の判定、OCR、名前の照合 |
+| [タスクとマップ](tasks-and-maps.md) | タスクのページ、マップの自動表示、レイド状態 |
+| [ゲームデータ（カタログ）](catalog.md) | tarkov.dev のデータの取得と更新、Wiki での補完 |
+| [設定と連携](settings-and-integrations.md) | すべての設定、通知、トレイ、TarkovTracker、Host モード |
+| [多言語対応](languages.md) | 対応言語と、言語を足す手順 |
+| [開発ガイド](development.md) | リポジトリの構成、開発・ビルド・テスト |
+| [OCR モデルの学習](ocr-training.md) | Tesseract モデルの追加学習 |
+
+最後の「開発メモ（英語）」は、以前からある英語の設計メモです。
+
+## この仕様書のビルド
+
+仕様書は [mdBook](https://rust-lang.github.io/mdBook/) で Web ページにできます。設定は `docs/book.toml`、目次は `docs/SUMMARY.md` です。
+
+```bash
+mdbook serve docs
+```
+
+`build/docs-site/` に書き出され、ブラウザで見られます（`mdbook build docs` なら書き出すだけです）。

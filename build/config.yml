@@ -1,0 +1,36 @@
+version: '3'
+
+info:
+  companyName: MAYAK
+  productName: MAYAK
+  productIdentifier: com.ichi0g0y.mayak
+  description: Escape from Tarkov companion
+  version: 0.1.0
+
+# `task dev` (wails3 dev) runs the app with hot reload:
+# - Go changes: rebuild (bindings + dev binary) and restart the app.
+# - WebUI changes: served by the Vite dev server, which reloads the page itself,
+#   so the frontend directory is not watched here.
+dev_mode:
+  root_path: .
+  log_level: warn
+  debounce: 1000
+  ignore:
+    dir: [.git, node_modules, frontend, client, third_party, build, docs, tools]
+    file: [.DS_Store, .gitignore]
+    # An atomic save writes a temporary file and renames it over the .go file.
+    # On Windows the watcher reloads on neither the rename nor the removal, so
+    # the temporary file's write starts the rebuild: write-file-atomic names it
+    # <file>.go.tmp.<pid>.<hash>, GoLand's safe write <file>.go___jb_tmp___.
+    watched_extension: ['*.go', '*.go.tmp.*', '*.go___jb_tmp___']
+    git_ignore: true
+  executes:
+    # Started first so the app finds the dev server (port matches `task dev`).
+    # Bound to IPv4: the Wails asset proxy dials 127.0.0.1, while "localhost" may be ::1 only.
+    - cmd: bun --bun frontend/node_modules/vite/bin/vite.js frontend --host 127.0.0.1 --port 9245 --strictPort
+      type: background
+    - cmd: go run github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.24 task build:dev
+      type: blocking
+    # Runs through cmd.exe on Windows, which needs backslashes.
+    - cmd: build\bin\Mayak-dev.exe
+      type: primary

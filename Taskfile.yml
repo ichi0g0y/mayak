@@ -1,0 +1,95 @@
+version: '3'
+
+vars:
+  WAILS: go run github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.24
+  DEV: '{{.DEV | default "false"}}'
+
+tasks:
+  bindings:
+    cmds:
+      - '{{.WAILS}} generate bindings -ts -d frontend/bindings'
+
+  frontend:install:
+    dir: frontend
+    cmds:
+      - bun install --frozen-lockfile
+
+  frontend:build:
+    cmds:
+      - task: bindings
+      - task: frontend:install
+      - cmd: bun --bun run --cwd frontend build
+
+  # The Tesseract OCR runtime ships next to Mayak.exe. The pinned UB Mannheim
+  # build is downloaded once (checksum-verified) and unpacked with 7-Zip.
+  # build/tessdata holds MAYAK' own models (tools/ocrtrain/README.md).
+  tesseract:bundle:
+    summary: Build the bundled Tesseract runtime in build/bin/tesseract
+    platforms: [windows]
+    sources:
+      - build/tessdata/*.traineddata
+      - tools/tessbundle/*.go
+    generates:
+      - build/bin/tesseract/tesseract.exe
+    cmds:
+      - go run ./tools/tessbundle -fetch -out build/bin/tesseract -lang eng,jpn -tessdata build/tessdata/eft.traineddata,build/tessdata/eftjpn.traineddata
+
+  build:
+    summary: Build the Wails v3 application without launching it
+    cmds:
+      - task: frontend:build
+      - task: tesseract:bundle
+      - task: 'build:{{OS}}'
+
+  # Windows resources (icon, manifest, version info) that go build links in.
+  syso:
+    platforms: [windows]
+    sources:
+      - build/windows/*
+    generates:
+      - mayak_windows_{{ARCH}}.syso
+    cmds:
+      - '{{.WAILS}} generate syso -arch {{ARCH}} -icon build/windows/icon.ico -manifest build/windows/wails.exe.manifest -info build/windows/info.json -out mayak_windows_{{ARCH}}.syso'
+
+  build:windows:
+    cmds:
+      - task: syso
+      - 'go build -p 2 -buildvcs=false {{if ne .DEV "true"}}-tags production -ldflags="-s -w -H windowsgui"{{end}} -o build/bin/Mayak.exe .'
+
+  build:darwin:
+    cmds:
+      - 'go build -p 2 -buildvcs=false {{if ne .DEV "true"}}-tags production{{end}} -o build/bin/Mayak .'
+
+  build:linux:
+    cmds:
+      - 'go build -p 2 -buildvcs=false {{if ne .DEV "true"}}-tags production{{end}} -o build/bin/Mayak .'
+
+  dev:
+    summary: Run with hot reload (Go changes rebuild and restart the app; WebUI changes reload via Vite)
+    cmds:
+      # A fresh checkout or worktree has no node_modules yet.
+      - task: frontend:install
+      - '{{.WAILS}} dev -config ./build/config.yml -port 9245'
+
+  build:dev:
+    summary: Development build used by `dev` (no production tag, so assets come from the Vite dev server)
+    cmds:
+      - task: bindings
+      - task: tesseract:bundle
+      - task: syso
+      - 'go build -p 2 -buildvcs=false -o build/bin/Mayak-dev{{exeExt}} .'
+
+  check:offline:
+    summary: Compile Go and run isolated browser state tests without opening the application
+    cmds:
+      - go test -p 2 -run '^$' ./...
+      - go test -p 2 -run '^TestBrowser' ./internal/app
+      - bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js
+
+  run:
+    summary: Launch the application (only when explicitly requested)
+    cmds:
+      - cmd: ./build/bin/Mayak.exe
+        platforms: [windows]
+      - cmd: ./build/bin/Mayak
+        platforms: [darwin, linux]

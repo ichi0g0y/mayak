@@ -1,0 +1,15 @@
+{
+	"fixed": {
+		"file_version": "0.1.0.0"
+	},
+	"info": {
+		"0000": {
+			"ProductVersion": "0.1.0.0",
+			"CompanyName": "MAYAK",
+			"FileDescription": "MAYAK",
+			"LegalCopyright": "Copyright MAYAK contributors",
+			"ProductName": "MAYAK",
+			"Comments": "Go + Wails v3"
+		}
+	}
+}

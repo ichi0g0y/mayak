@@ -1,0 +1,119 @@
+/* Color themes shared by the browser shell and the Host settings page.
+   The shell sets <html data-theme>; "system" is resolved there to
+   claude-light or claude-dark. Every color in the UI derives from these
+   tokens, so a theme only has to define this list. */
+:root,
+[data-theme="claude-dark"] {
+  color-scheme: dark;
+  --bg: #262624; --sidebar: #1f1e1d; --surface: #2b2a28; --surface-2: #30302e; --raised: #353431;
+  --hover: #2c2b29; --selected: #343330; --border: #353430; --border-strong: #403f3b;
+  --text: #faf9f5; --text-2: #c2c0b6; --muted: #9c9a92;
+  --accent: #d97757; --accent-hover: #c6613f; --accent-soft: #5a3b2f; --on-accent: #ffffff;
+  --success: #8fd19e; --danger: #f08c7e; --warn: #e7c07f; --info: #818cf8;
+  --shadow: #000000aa;
+}
+[data-theme="claude-light"] {
+  color-scheme: light;
+  --bg: #faf9f5; --sidebar: #f5f4ed; --surface: #ffffff; --surface-2: #f0eee6; --raised: #ffffff;
+  --hover: #f0eee6; --selected: #e8e6dc; --border: #e8e6dc; --border-strong: #d1cfc5;
+  --text: #141413; --text-2: #3d3d3a; --muted: #73726c;
+  --accent: #c96442; --accent-hover: #b05730; --accent-soft: #f2d9cd; --on-accent: #ffffff;
+  --success: #2e7d32; --danger: #c0392b; --warn: #a86b00; --info: #4f46e5;
+  --shadow: #00000026;
+}
+/* Catppuccin (https://catppuccin.com/palette) */
+[data-theme="catppuccin-latte"] {
+  color-scheme: light;
+  --bg: #eff1f5; --sidebar: #e6e9ef; --surface: #e6e9ef; --surface-2: #dce0e8; --raised: #eff1f5;
+  --hover: #dce0e8; --selected: #ccd0da; --border: #ccd0da; --border-strong: #bcc0cc;
+  --text: #4c4f69; --text-2: #5c5f77; --muted: #8c8fa1;
+  --accent: #8839ef; --accent-hover: #7287fd; --accent-soft: #dcc8fa; --on-accent: #eff1f5;
+  --success: #40a02b; --danger: #d20f39; --warn: #df8e1d; --info: #1e66f5;
+  --shadow: #4c4f6926;
+}
+[data-theme="catppuccin-frappe"] {
+  color-scheme: dark;
+  --bg: #303446; --sidebar: #292c3c; --surface: #292c3c; --surface-2: #414559; --raised: #414559;
+  --hover: #3a3e52; --selected: #414559; --border: #414559; --border-strong: #51576d;
+  --text: #c6d0f5; --text-2: #b5bfe2; --muted: #838ba7;
+  --accent: #ca9ee6; --accent-hover: #babbf1; --accent-soft: #544a6b; --on-accent: #232634;
+  --success: #a6d189; --danger: #e78284; --warn: #e5c890; --info: #8caaee;
+  --shadow: #000000aa;
+}
+[data-theme="catppuccin-macchiato"] {
+  color-scheme: dark;
+  --bg: #24273a; --sidebar: #1e2030; --surface: #1e2030; --surface-2: #363a4f; --raised: #363a4f;
+  --hover: #2e3247; --selected: #363a4f; --border: #363a4f; --border-strong: #494d64;
+  --text: #cad3f5; --text-2: #b8c0e0; --muted: #8087a2;
+  --accent: #c6a0f6; --accent-hover: #b7bdf8; --accent-soft: #4a4165; --on-accent: #181926;
+  --success: #a6da95; --danger: #ed8796; --warn: #eed49f; --info: #8aadf4;
+  --shadow: #000000aa;
+}
+[data-theme="catppuccin-mocha"] {
+  color-scheme: dark;
+  --bg: #1e1e2e; --sidebar: #181825; --surface: #181825; --surface-2: #313244; --raised: #313244;
+  --hover: #28283b; --selected: #313244; --border: #313244; --border-strong: #45475a;
+  --text: #cdd6f4; --text-2: #bac2de; --muted: #7f849c;
+  --accent: #cba6f7; --accent-hover: #b4befe; --accent-soft: #463c5e; --on-accent: #11111b;
+  --success: #a6e3a1; --danger: #f38ba8; --warn: #f9e2af; --info: #89b4fa;
+  --shadow: #000000aa;
+}
+/* Nord (https://www.nordtheme.com) */
+[data-theme="nord"] {
+  color-scheme: dark;
+  --bg: #2e3440; --sidebar: #292e39; --surface: #3b4252; --surface-2: #434c5e; --raised: #3b4252;
+  --hover: #353b49; --selected: #434c5e; --border: #3b4252; --border-strong: #4c566a;
+  --text: #eceff4; --text-2: #d8dee9; --muted: #9aa5b8;
+  --accent: #88c0d0; --accent-hover: #8fbcbb; --accent-soft: #3e5566; --on-accent: #2e3440;
+  --success: #a3be8c; --danger: #bf616a; --warn: #ebcb8b; --info: #81a1c1;
+  --shadow: #000000aa;
+}
+/* Dracula (https://draculatheme.com) */
+[data-theme="dracula"] {
+  color-scheme: dark;
+  --bg: #282a36; --sidebar: #21222c; --surface: #2d2f3d; --surface-2: #343746; --raised: #343746;
+  --hover: #303241; --selected: #44475a; --border: #343746; --border-strong: #44475a;
+  --text: #f8f8f2; --text-2: #d6d6e0; --muted: #8a93c4;
+  --accent: #bd93f9; --accent-hover: #ff79c6; --accent-soft: #4b3f72; --on-accent: #21222c;
+  --success: #50fa7b; --danger: #ff5555; --warn: #f1fa8c; --info: #8be9fd;
+  --shadow: #000000aa;
+}
+/* Gruvbox (https://github.com/morhetz/gruvbox) */
+[data-theme="gruvbox-dark"] {
+  color-scheme: dark;
+  --bg: #282828; --sidebar: #1d2021; --surface: #32302f; --surface-2: #3c3836; --raised: #3c3836;
+  --hover: #32302f; --selected: #3c3836; --border: #3c3836; --border-strong: #504945;
+  --text: #ebdbb2; --text-2: #d5c4a1; --muted: #a89984;
+  --accent: #fe8019; --accent-hover: #d65d0e; --accent-soft: #5a3a1f; --on-accent: #282828;
+  --success: #b8bb26; --danger: #fb4934; --warn: #fabd2f; --info: #83a598;
+  --shadow: #000000aa;
+}
+/* Tokyo Night (https://github.com/folke/tokyonight.nvim) */
+[data-theme="tokyo-night"] {
+  color-scheme: dark;
+  --bg: #1a1b26; --sidebar: #16161e; --surface: #1f2335; --surface-2: #24283b; --raised: #24283b;
+  --hover: #1f2335; --selected: #292e42; --border: #292e42; --border-strong: #3b4261;
+  --text: #c0caf5; --text-2: #a9b1d6; --muted: #737aa2;
+  --accent: #7aa2f7; --accent-hover: #7dcfff; --accent-soft: #2e3c64; --on-accent: #1a1b26;
+  --success: #9ece6a; --danger: #f7768e; --warn: #e0af68; --info: #bb9af7;
+  --shadow: #000000aa;
+}
+/* Solarized (https://ethanschoonover.com/solarized/) */
+[data-theme="solarized-dark"] {
+  color-scheme: dark;
+  --bg: #002b36; --sidebar: #00252e; --surface: #073642; --surface-2: #0a3d4a; --raised: #073642;
+  --hover: #06313c; --selected: #0e4452; --border: #0a3d4a; --border-strong: #1c5363;
+  --text: #eee8d5; --text-2: #93a1a1; --muted: #839496;
+  --accent: #268bd2; --accent-hover: #2aa198; --accent-soft: #0f4a63; --on-accent: #fdf6e3;
+  --success: #859900; --danger: #dc322f; --warn: #b58900; --info: #6c71c4;
+  --shadow: #000000aa;
+}
+[data-theme="solarized-light"] {
+  color-scheme: light;
+  --bg: #fdf6e3; --sidebar: #eee8d5; --surface: #fffbee; --surface-2: #eee8d5; --raised: #fdf6e3;
+  --hover: #eee8d5; --selected: #e4dcc4; --border: #e4dcc4; --border-strong: #d3cbb3;
+  --text: #073642; --text-2: #586e75; --muted: #839496;
+  --accent: #268bd2; --accent-hover: #1f76b3; --accent-soft: #d5e6f0; --on-accent: #fdf6e3;
+  --success: #859900; --danger: #dc322f; --warn: #b58900; --info: #6c71c4;
+  --shadow: #07364226;
+}

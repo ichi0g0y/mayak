@@ -1,0 +1,14 @@
+# Text files are stored and checked out with LF line endings on every
+# machine, whatever its core.autocrlf. (PowerShell scripts run fine with LF.)
+* text=auto eol=lf
+
+# Binaries: never converted or diffed as text.
+*.png binary
+*.ico binary
+*.dll binary
+*.exe binary
+*.syso binary
+*.traineddata binary
+*.otf binary
+*.ttf binary
+*.ttc binary

@@ -1,0 +1,38 @@
+# Wails and frontend output
+/build/bin/
+/build/tesseract-cache/
+/frontend/dist/
+/frontend/node_modules/
+/frontend/node_modules-pre-rename/
+/client/node_modules/
+/client/dist/
+/client/host-ui/
+
+# Local captures and diagnostics
+/build/mayak-*.png
+/build/devtools*.png
+/build/trader-title.png
+/build/appicon-new.png
+/docs/RESEARCH.md
+*.log
+
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+settings.json
+window.json
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Wails v3 generated build resources
+/mayak_windows_*.syso
+/.task/
+/build/ocrtrain-*/
+/build/docs-site/
+/build/pending/
