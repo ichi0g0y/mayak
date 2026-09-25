@@ -359,21 +359,31 @@ async function perform(type,data){
  // shown large (from its thumbnail); screenshotView pages through them.
  case 'bosses':openLocal(state,'bosses');void loadBosses();break;
  case 'goonReportOpen':{
-  let info=null,error='';
-  try{info=await go.BrowserGoonReportInfo();}catch(e){error=String(e?.message||e);}
-  goonReport={raid:info?.raid||null,identities:Array.isArray(info?.identities)?info.identities:[],busy:false,done:false,error};
+  // The raid and profile lookup may go to the network; it fills the dialog
+  // when it returns rather than holding the queue.
+  goonReport={raid:null,identities:[],busy:true,done:false,error:''};
+  void (async()=>{
+   let info=null,error='';
+   try{info=await go.BrowserGoonReportInfo();}catch(e){error=String(e?.message||e);}
+   if(!goonReport||goonReport.done)return;
+   goonReport={raid:info?.raid||null,identities:Array.isArray(info?.identities)?info.identities:[],busy:false,done:false,error};update();
+  })();
   return snapshot();
  }
  case 'goonReportClose':goonReport=null;return snapshot();
  case 'goonReportSend':{
   if(!goonReport||goonReport.busy)return snapshot();
   goonReport={...goonReport,busy:true,error:''};update();
-  try{
-   await go.BrowserReportGoons({map:String(data?.map||''),accountId:String(data?.accountId||''),mode:String(data?.mode||''),startedAt:String(data?.startedAt||'')});
-   goonReport={...goonReport,busy:false,done:true};
-   // tarkov.dev adds reports to its data every ten minutes.
-   setTimeout(()=>void loadBosses(),11*60*1000);
-  }catch(e){goonReport={...goonReport,busy:false,error:String(e?.message||e)};}
+  const report={map:String(data?.map||''),accountId:String(data?.accountId||''),mode:String(data?.mode||''),startedAt:String(data?.startedAt||'')};
+  void (async()=>{
+   try{
+    await go.BrowserReportGoons(report);
+    if(goonReport)goonReport={...goonReport,busy:false,done:true};
+    // tarkov.dev adds reports to its data every ten minutes.
+    setTimeout(()=>void loadBosses(),11*60*1000);
+   }catch(e){if(goonReport)goonReport={...goonReport,busy:false,error:String(e?.message||e)};}
+   update();
+  })();
   return snapshot();
  }
  case 'screenshots':openLocal(state,'screenshots');shots.viewing='';void loadShots();break;

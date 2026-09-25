@@ -23,8 +23,12 @@ import (
 // at once. With autoUpdate off, the Status section's check and download
 // buttons do the same steps by hand.
 const (
-	updateCheckDelay    = 20 * time.Second
+	// The first check runs as soon as the app is up (it is a goroutine and
+	// never holds the start), then every six hours; failures retry sooner.
+	updateCheckDelay    = 1 * time.Second
 	updateCheckInterval = 6 * time.Hour
+	updateRetryDelay    = 5 * time.Minute
+	updateRetryMax      = 1 * time.Hour
 	updateDownloadLimit = 30 * time.Minute
 )
 
@@ -120,6 +124,10 @@ func (a *App) restoreStagedUpdate() {
 func (a *App) updateCheckLoop() {
 	timer := time.NewTimer(updateCheckDelay)
 	defer timer.Stop()
+	// A failed check (the network not up yet after boot, a name that does
+	// not resolve, a rate limit) is tried again soon, backing off to an hour,
+	// rather than after the full interval.
+	retry := updateRetryDelay
 	for {
 		select {
 		case <-a.done:
@@ -129,12 +137,17 @@ func (a *App) updateCheckLoop() {
 		a.mu.RLock()
 		automatic := a.settings.AutoUpdate
 		a.mu.RUnlock()
+		next := updateCheckInterval
 		if automatic {
 			if _, err := a.checkForUpdates(true); err != nil {
-				a.addLog("Warn", "Update", "Update check failed: "+err.Error())
+				a.addLog("Warn", "Update", "Update check failed: "+err.Error()+"; trying again in "+retry.String())
+				next = retry
+				retry = min(retry*2, updateRetryMax)
+			} else {
+				retry = updateRetryDelay
 			}
 		}
-		timer.Reset(updateCheckInterval)
+		timer.Reset(next)
 	}
 }
 

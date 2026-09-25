@@ -104,24 +104,44 @@ func (r Release) Archive() (Asset, bool) {
 	return Asset{}, false
 }
 
-// Client reads releases from the GitHub API.
+// Client reads releases from the GitHub API, by way of the site's cached
+// copy of the latest one.
 type Client struct {
 	HTTP       *http.Client
 	UserAgent  string
 	Repository string
 	// APIBase is the GitHub API root; tests point it at a local server.
 	APIBase string
+	// Mirror is the site's copy of the latest release (the same JSON, cached
+	// for a few minutes by the Worker in site/worker/index.js). It is asked
+	// first because GitHub allows an address only 60 anonymous API calls an
+	// hour, which a shared connection or a busy day exhausts; GitHub itself
+	// is the fallback. Empty disables it.
+	Mirror string
 }
+
+// MirrorURL is the site's cached copy of the latest release.
+const MirrorURL = "https://mayak.ich.sh/api/release"
 
 // NewClient returns a client for Repository with a 20 second timeout.
 func NewClient(userAgent string) *Client {
-	return &Client{HTTP: &http.Client{Timeout: 20 * time.Second}, UserAgent: userAgent, Repository: Repository, APIBase: "https://api.github.com"}
+	return &Client{HTTP: &http.Client{Timeout: 20 * time.Second}, UserAgent: userAgent, Repository: Repository, APIBase: "https://api.github.com", Mirror: MirrorURL}
 }
 
 // Latest returns the newest published release that is not a draft or
-// pre-release, as GitHub's "latest" release.
+// pre-release, as GitHub's "latest" release: from the mirror when it
+// answers, else from GitHub.
 func (c *Client) Latest(ctx context.Context) (Release, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.APIBase+"/repos/"+c.Repository+"/releases/latest", nil)
+	if c.Mirror != "" {
+		if release, err := c.fetch(ctx, c.Mirror); err == nil {
+			return release, nil
+		}
+	}
+	return c.fetch(ctx, c.APIBase+"/repos/"+c.Repository+"/releases/latest")
+}
+
+func (c *Client) fetch(ctx context.Context, url string) (Release, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return Release{}, err
 	}

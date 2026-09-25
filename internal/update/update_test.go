@@ -185,6 +185,7 @@ func TestStageFromServer(t *testing.T) {
 	}))
 	defer server.Close()
 	client := NewClient("MAYAK/test")
+	client.Mirror = "" // the tests serve the release themselves
 	client.APIBase = server.URL
 	release, err := client.Latest(context.Background())
 	if err != nil {
@@ -224,6 +225,7 @@ func TestDownloadRejectsChecksumMismatch(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("content")) }))
 	defer server.Close()
 	client := NewClient("MAYAK/test")
+	client.Mirror = "" // the tests serve the release themselves
 	dir := t.TempDir()
 	_, err := client.Download(context.Background(), Asset{Name: "a.zip", URL: server.URL}, strings.Repeat("0", 64), dir, nil)
 	if err == nil || !strings.Contains(err.Error(), "checksum mismatch") {
@@ -291,5 +293,27 @@ func TestAssetNames(t *testing.T) {
 	release := Release{Assets: []Asset{{Name: "SHA256SUMS.txt"}, {Name: "Mayak-0.1.6-" + runtime.GOOS + "-" + runtime.GOARCH + archiveExt(runtime.GOOS)}}}
 	if asset, ok := release.Archive(); !ok || asset.Name != release.Assets[1].Name {
 		t.Fatalf("Archive() = %+v, %v", asset, ok)
+	}
+}
+
+// A mirror that does not answer is skipped for GitHub; one that answers wins.
+func TestLatestPrefersMirror(t *testing.T) {
+	github := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"tag_name":"v1.0.0","assets":[]}`))
+	}))
+	defer github.Close()
+	mirror := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"tag_name":"v1.0.1","assets":[]}`))
+	}))
+	defer mirror.Close()
+	client := NewClient("MAYAK/test")
+	client.APIBase = github.URL
+	client.Mirror = mirror.URL
+	if release, err := client.Latest(context.Background()); err != nil || release.Tag != "v1.0.1" {
+		t.Fatalf("mirror: %+v, %v", release, err)
+	}
+	client.Mirror = "http://127.0.0.1:1/unreachable"
+	if release, err := client.Latest(context.Background()); err != nil || release.Tag != "v1.0.0" {
+		t.Fatalf("fallback: %+v, %v", release, err)
 	}
 }

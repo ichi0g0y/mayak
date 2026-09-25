@@ -23,7 +23,7 @@ func (a *App) showBrowserItem(mode, id string) {
 	if parent == nil {
 		parent = context.Background()
 	}
-	ctx, cancel := context.WithTimeout(parent, 45*time.Second)
+	ctx, cancel := context.WithTimeout(parent, 20*time.Second)
 	defer cancel()
 	info, err := a.itemInfo.Catalog(ctx, mode, id)
 	if err != nil {
@@ -51,7 +51,7 @@ func (a *App) BrowserItemInfo(mode, id string) (iteminfo.Info, error) {
 	if parent == nil {
 		parent = context.Background()
 	}
-	ctx, cancel := context.WithTimeout(parent, 45*time.Second)
+	ctx, cancel := context.WithTimeout(parent, 20*time.Second)
 	defer cancel()
 	info, err := a.itemInfo.Current(ctx, a.itemMode(mode), id)
 	if info.ID == "" {
@@ -144,7 +144,7 @@ func (a *App) BrowserItemSearch(query string) ([]ItemSearchHit, error) {
 	if parent == nil {
 		parent = context.Background()
 	}
-	ctx, cancel := context.WithTimeout(parent, 45*time.Second)
+	ctx, cancel := context.WithTimeout(parent, 20*time.Second)
 	defer cancel()
 	items, err := a.itemClient.ItemsForMode(ctx, a.itemMode(""))
 	if err != nil {
