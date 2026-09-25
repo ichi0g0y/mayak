@@ -575,9 +575,9 @@ const loadBar=tab=>tab&&state.loadingTabs?.includes(tab.id)?`<span class="load-b
 // Areas that scroll on their own, by selector.
 let scrolledTab='';
 const scrollAreas=['.item-body','.tab-strip','main','.item-results'];
-// The update bar: its own row between the toolbar and the page (api.js moves
-// the page views down by it), shown while a newer version is found,
-// downloading or ready, until it is applied or put off.
+// The update bar: a status strip along the bottom of the window (api.js lifts
+// the page views by it), shown while a newer version is found, downloading
+// or ready, until it is applied or put off.
 function updateBarHTML(){
  const u=state.update;
  if(!state.updateBar||!u)return '';

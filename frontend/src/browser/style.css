@@ -38,13 +38,13 @@ textarea{font:12px ui-monospace,"Cascadia Code",Consolas,monospace;line-height:1
 .mode-status:hover{background:var(--hover);color:var(--text)}
 .status-tooltip{display:none;position:absolute;top:calc(100% + 8px);right:0;width:max-content;max-width:220px;padding:8px 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--raised);color:var(--text);box-shadow:0 10px 30px var(--shadow);font-size:12px;line-height:1.5;pointer-events:none;z-index:20}
 /* Settings and layout toggle: bottom-left of the sidebar, or the far right of the top strip. */
-.layout-dock{position:fixed;left:0;bottom:0;width:var(--sidebar-width);height:48px;display:flex;align-items:center;gap:4px;padding:0 8px;background:var(--sidebar);box-shadow:inset -1px 0 var(--border);z-index:12}
+.layout-dock{position:fixed;left:0;bottom:var(--status-bar);width:var(--sidebar-width);height:48px;display:flex;align-items:center;gap:4px;padding:0 8px;background:var(--sidebar);box-shadow:inset -1px 0 var(--border);z-index:12}
 .dock-button{width:32px;height:32px;padding:0;border:0;flex:none;color:var(--text-2)}
 .dock-button .icon{width:18px;height:18px}
 .dock-button:hover{color:var(--text)}
 .mode-status:hover .status-tooltip,.mode-status:focus .status-tooltip{display:block}
 
-.tab-strip{position:fixed;left:0;top:48px;bottom:48px;width:var(--sidebar-width);background:var(--sidebar);box-shadow:inset -1px 0 var(--border);padding:4px 8px 16px;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
+.tab-strip{position:fixed;left:0;top:48px;bottom:calc(48px + var(--status-bar));width:var(--sidebar-width);background:var(--sidebar);box-shadow:inset -1px 0 var(--border);padding:4px 8px 16px;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
 /* Section header: bold name with the new-tab icon at its right, like Claude's sidebar. */
 .section-label{display:flex;align-items:center;justify-content:space-between;margin:18px 2px 4px 10px;color:var(--text-2);font-size:13px;font-weight:600}
 .new-tab{width:26px;height:26px;padding:0;border:0;border-radius:6px;color:var(--muted)}
@@ -146,7 +146,7 @@ h3{font-size:12px;font-weight:500;color:var(--muted);margin:0 0 10px}
 .empty-tabs{margin:64px 24px;color:var(--muted);font-size:13px;text-align:center}
 /* Stays in the toolbar row: the native web view covers everything below it. */
 /* Errors show as a toast at the bottom right, like the settings' toasts. */
-.toast{position:fixed;right:20px;bottom:20px;z-index:30;display:flex;align-items:center;gap:10px;max-width:min(440px,calc(100vw - 40px));padding:10px 8px 10px 14px;border:1px solid var(--border-strong);border-radius:10px;background:var(--raised);color:var(--text);font-size:13px;box-shadow:0 10px 28px var(--shadow);animation:toast-in .18s ease-out}
+.toast{position:fixed;right:20px;bottom:calc(20px + var(--status-bar));z-index:30;display:flex;align-items:center;gap:10px;max-width:min(440px,calc(100vw - 40px));padding:10px 8px 10px 14px;border:1px solid var(--border-strong);border-radius:10px;background:var(--raised);color:var(--text);font-size:13px;box-shadow:0 10px 28px var(--shadow);animation:toast-in .18s ease-out}
 .toast.error{border-color:color-mix(in srgb,var(--danger) 55%,var(--border-strong))}
 .toast button{flex:none;width:26px;height:26px;padding:0;border:0;color:var(--muted)}
 .toast button .icon{width:14px;height:14px}
@@ -165,7 +165,7 @@ h3{font-size:12px;font-weight:500;color:var(--muted);margin:0 0 10px}
 /* Sidebar resize handle, centered on the sidebar's edge. */
 /* Resize handles lie wholly inside their panel: a page view is a native
    window above the shell and would cover any part over it. */
-.sidebar-resizer{position:fixed;top:0;bottom:0;left:calc(var(--sidebar-width) - 6px);width:6px;z-index:13;cursor:col-resize;--wails-draggable:no-drag}
+.sidebar-resizer{position:fixed;top:0;bottom:var(--status-bar);left:calc(var(--sidebar-width) - 6px);width:6px;z-index:13;cursor:col-resize;--wails-draggable:no-drag}
 .sidebar-resizer::after{content:"";position:absolute;top:0;bottom:0;right:0;width:2px;background:var(--accent);opacity:0;transition:opacity .12s}
 .sidebar-resizer:hover::after,.sidebar-resizing .sidebar-resizer::after{opacity:1;transition-delay:.15s}
 .sidebar-resizing,.sidebar-resizing *,.item-resizing,.item-resizing *{cursor:col-resize!important;user-select:none}
@@ -179,7 +179,7 @@ body[data-nav=right] .sidebar-resizer::after{right:auto;left:0}
 body[data-sidebar=collapsed]{--sidebar-width:52px}
 body[data-sidebar=collapsed] .app-menu-anchor{justify-content:center;padding:0}
 body[data-sidebar=collapsed] .app-menu-anchor .mode-status{display:none}
-body[data-sidebar=collapsed] .tab-strip{padding:4px 6px 12px;scrollbar-width:none;bottom:116px}
+body[data-sidebar=collapsed] .tab-strip{padding:4px 6px 12px;scrollbar-width:none;bottom:calc(116px + var(--status-bar))}
 body[data-sidebar=collapsed] .tab-name,body[data-sidebar=collapsed] .tab-actions,body[data-sidebar=collapsed] .drop-hint,body[data-sidebar=collapsed] .section-label>span,body[data-sidebar=collapsed] .bookmark-section-label .section-link{display:none}
 body[data-sidebar=collapsed] .bookmark-section-label{border-top:0;margin:4px 0 0;padding-top:0}
 body[data-sidebar=collapsed] .bookmarks-open{width:40px;height:32px}
@@ -311,7 +311,7 @@ body[data-sidebar=collapsed] .layout-dock{flex-direction:column;justify-content:
 .item-toggle.selected{color:var(--accent)}
 /* The item sidebar runs the window's full height like the left sidebar, its
    border up through the title bar; the address bar row ends at it. */
-.item-panel{position:fixed;top:0;right:0;bottom:0;width:var(--item-width);display:flex;flex-direction:column;background:var(--sidebar);box-shadow:inset 1px 0 var(--border);font-size:13px;z-index:11}
+.item-panel{position:fixed;top:0;right:0;bottom:var(--status-bar);width:var(--item-width);display:flex;flex-direction:column;background:var(--sidebar);box-shadow:inset 1px 0 var(--border);font-size:13px;z-index:11}
 .item-titlebar{flex:none;height:48px;display:flex;align-items:center;gap:2px;padding:0 10px;--wails-draggable:drag}
 .item-titlebar .item-button{align-self:center;width:30px;height:30px}
 .item-titlebar .item-button.selected{background:var(--selected);color:var(--text)}
@@ -413,7 +413,7 @@ button.need-row:hover .need-name{color:var(--accent)}
 .monitor-toggle:hover{color:var(--text)}
 body[data-sidebar=collapsed] .monitor-toggle{display:none}
 /* The item sidebar's left edge resizes it, like the left sidebar's edge. */
-.item-resizer{position:fixed;top:0;bottom:0;right:calc(var(--nav-right) + var(--item-width) - 6px);width:6px;z-index:5;cursor:col-resize;--wails-draggable:no-drag}
+.item-resizer{position:fixed;top:0;bottom:var(--status-bar);right:calc(var(--nav-right) + var(--item-width) - 6px);width:6px;z-index:5;cursor:col-resize;--wails-draggable:no-drag}
 [data-layout=horizontal] .item-resizer,body[data-nav=right][data-item=right] .item-resizer{top:48px}
 body[data-item=left] .item-resizer{right:auto;left:calc(var(--nav-left) + var(--item-width) - 6px)}
 body[data-item=left] .item-resizer::after{left:auto;right:0}
@@ -517,11 +517,12 @@ body[data-sidebar=collapsed] .shots-open{width:40px;height:32px}
 body[data-sidebar=collapsed] .screenshot-section-label{border-top:0;margin:4px 0 0;padding-top:0}
 /* Page-area insets (see the top). Set on body, where --sidebar-width
    already has its collapsed value. */
-body{--nav-left:var(--sidebar-width);--nav-right:0px;--item-left:0px;--item-right:0px;--item-bottom:0px;--update-bar:0px;--page-top:calc(48px + var(--update-bar));
- --page-left:calc(var(--nav-left) + var(--item-left));--page-right:calc(var(--nav-right) + var(--item-right));--page-bottom:var(--item-bottom)}
+body{--nav-left:var(--sidebar-width);--nav-right:0px;--item-left:0px;--item-right:0px;--item-bottom:0px;--status-bar:0px;--page-top:48px;
+ --page-left:calc(var(--nav-left) + var(--item-left));--page-right:calc(var(--nav-right) + var(--item-right));--page-bottom:calc(var(--item-bottom) + var(--status-bar))}
 body[data-nav=right]{--nav-left:0px;--nav-right:var(--sidebar-width)}
-body[data-nav=top]{--nav-left:0px;--nav-right:0px;--page-top:calc(96px + var(--update-bar))}
-body[data-update-bar=on]{--update-bar:36px}
+body[data-nav=top]{--nav-left:0px;--nav-right:0px;--page-top:96px}
+/* The update bar along the bottom lifts everything above it. */
+body[data-update-bar=on]{--status-bar:28px}
 body[data-item=right]{--item-right:var(--item-width)}
 body[data-item=left]{--item-left:var(--item-width)}
 body[data-item=bottom]{--item-bottom:var(--item-height)}
@@ -542,7 +543,7 @@ body[data-item=bottom] .item-flow{columns:280px;column-gap:32px;column-rule:1px 
 body[data-item=bottom] .item-flow>*{break-inside:avoid}
 body[data-item=bottom] .item-flow>.item-best{margin-bottom:16px}
 body[data-item=bottom] .item-flow>.item-section:first-of-type{margin-top:0}
-body[data-item=bottom] .item-resizer{top:auto;left:var(--nav-left);right:var(--nav-right);bottom:calc(var(--item-height) - 6px);width:auto;height:6px;cursor:row-resize}
+body[data-item=bottom] .item-resizer{top:auto;left:var(--nav-left);right:var(--nav-right);bottom:calc(var(--item-height) - 6px + var(--status-bar));width:auto;height:6px;cursor:row-resize}
 body[data-item=bottom] .item-resizer::after{top:0;bottom:auto;left:0;right:0;width:auto;height:2px}
 body[data-item=bottom] .item-search-pop{top:8px;left:52px;right:auto;width:380px}
 body[data-item=bottom] .item-results{max-height:calc(var(--item-height) - 70px)}
@@ -694,11 +695,12 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .pair-code output{font:600 30px/1.2 ui-monospace,"Cascadia Code",Consolas,monospace;letter-spacing:.14em;color:var(--text)}
 .peer-error{color:var(--danger,#e06c75)}
 .peer-manual{margin-top:18px}
-/* The update bar: its own row under the toolbar (the page views start below
-   it; see --update-bar and bounds() in api.js), never over the pages. */
-.update-bar{position:fixed;z-index:12;top:calc(var(--page-top) - var(--update-bar));left:var(--page-left);right:var(--page-right);height:var(--update-bar);display:flex;align-items:center;gap:10px;padding:0 6px 0 14px;overflow:hidden;background:var(--raised);border-bottom:1px solid var(--border);box-shadow:inset 3px 0 var(--accent);font-size:12.5px;color:var(--text)}
+/* The update bar: a status strip along the window's bottom edge, below the
+   sidebar, the pages and the item panel (see --status-bar and bounds() in
+   api.js); nothing floats over the page views. */
+.update-bar{position:fixed;z-index:12;left:0;right:0;bottom:0;height:var(--status-bar);display:flex;align-items:center;gap:10px;padding:0 6px 0 12px;overflow:hidden;background:var(--sidebar);border-top:1px solid var(--border);box-shadow:inset 3px 0 var(--accent);font-size:12px;color:var(--text)}
 .update-bar .update-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .update-actions{display:flex;flex:none;gap:6px}
-.update-bar button{flex:none;height:26px;padding:0 10px;font-size:12px;white-space:nowrap}
-.update-progress{flex:none;width:90px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.update-bar button{flex:none;height:22px;padding:0 9px;font-size:12px;white-space:nowrap}
+.update-progress{flex:none;width:120px;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden}
 .update-progress i{display:block;height:100%;background:var(--accent)}

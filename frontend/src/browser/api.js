@@ -10,13 +10,13 @@ let queue=Promise.resolve(),nativeQueue=Promise.resolve(),expiry;
 // While the shell shows an overlay (the tutorial), the native page views stay
 // hidden whatever else asks to show them; closing it shows the active tab again.
 let overlay=false;
-// The updater's state (model.UpdateStatus) drives the update bar: a strip
-// between the toolbar and the page while a newer version is found,
+// The updater's state (model.UpdateStatus) drives the update bar: a status
+// strip along the bottom of the whole window while a newer version is found,
 // downloading or ready. The page views are native windows above the shell,
-// so the bar takes its own row (bounds() moves the pages down) rather than
+// so the bar takes its own row (bounds() lifts the pages by it) rather than
 // floating over them, where it would be covered.
 let updateStatus=null,updateDismissed='';
-const updateBarHeight=36;
+const updateBarHeight=28;
 function updateBarVisible(){const u=updateStatus;return !!(u&&['available','downloading','ready'].includes(u.state)&&u.latest&&u.latest!==updateDismissed);}
 const views=new Map();
 // Tabs whose page is loading, by view ID (not saved).
@@ -55,9 +55,9 @@ function bounds(){
  const item=dock==='bottom'?0:state.itemPanelWidth;
  return {
   left:(state.sidebarSide==='left'?nav:0)+(dock==='left'?item:0),
-  top:(state.layout==='horizontal'?96:48)+(updateBarVisible()?updateBarHeight:0),
+  top:state.layout==='horizontal'?96:48,
   right:(state.sidebarSide==='right'?nav:0)+(dock==='right'?item:0),
-  bottom:dock==='bottom'?state.itemPanelHeight:0,
+  bottom:(dock==='bottom'?state.itemPanelHeight:0)+(updateBarVisible()?updateBarHeight:0),
  };
 }
 // The map view opens with the Host's Remote Control ID, so tarkov.dev connects
