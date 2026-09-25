@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"unsafe"
 )
 
 type nativeView struct {
@@ -27,7 +28,6 @@ type nativeManager struct {
 	closed  bool
 	active  string
 	showing bool
-	edges   []*resizeEdge
 }
 
 var subclassDLL = windows.NewLazySystemDLL("comctl32.dll")
@@ -64,10 +64,67 @@ func init() {
 				}
 			case 0x0082:
 				m.closeNative() // WM_NCDESTROY fallback
+			case 0x0083: // WM_NCCALCSIZE
+				// The window is frameless, so Wails makes the whole window client
+				// area and resizes it from the page's edges. The page views are
+				// child HWNDs that take the mouse, so that never sees the right and
+				// bottom edges under them. Keep Windows' own sizing borders on the
+				// left, right and bottom instead: the invisible strip outside the
+				// visible edge that every ordinary window (Chrome included) resizes
+				// from, so nothing inside, scrollbar arrows included, is covered.
+				if wp != 0 && !w32.IsZoomed(w32.HWND(hwnd)) && !m.window.IsFullscreen() {
+					rect := (*w32.RECT)(unsafe.Pointer(lp))
+					frame := int32(frameWidth(w32.HWND(hwnd)))
+					rect.Left += frame
+					rect.Right -= frame
+					rect.Bottom -= frame
+				}
+			case 0x0084: // WM_NCHITTEST: those borders resize the window.
+				if hit := frameHit(w32.HWND(hwnd), lp); hit != 0 {
+					return hit
+				}
 			}
 		}
 		return result
 	})
+}
+
+// frameWidth is the width of the sizing border Windows gives a window at its
+// DPI (the sizing frame plus the padded border, 8px at 96 DPI).
+func frameWidth(hwnd w32.HWND) int {
+	dpi := w32.GetDpiForWindow(hwnd)
+	if dpi == 0 {
+		dpi = 96
+	}
+	return w32.GetSystemMetricsForDpi(w32.SM_CXSIZEFRAME, dpi) + w32.GetSystemMetricsForDpi(w32.SM_CXPADDEDBORDER, dpi)
+}
+
+// frameHit maps a screen point in the window's left, right or bottom sizing
+// border to its hit code, or 0 inside the client area or outside the window.
+func frameHit(hwnd w32.HWND, lp uintptr) uintptr {
+	if w32.IsZoomed(hwnd) {
+		return 0
+	}
+	x, y := int32(int16(lp&0xffff)), int32(int16((lp>>16)&0xffff))
+	window := w32.GetWindowRect(hwnd)
+	if window == nil || x < window.Left || x >= window.Right || y < window.Top || y >= window.Bottom {
+		return 0
+	}
+	frame := int32(frameWidth(hwnd))
+	left, right, bottom := x < window.Left+frame, x >= window.Right-frame, y >= window.Bottom-frame
+	switch {
+	case bottom && left:
+		return w32.HTBOTTOMLEFT
+	case bottom && right:
+		return w32.HTBOTTOMRIGHT
+	case bottom:
+		return w32.HTBOTTOM
+	case left:
+		return w32.HTLEFT
+	case right:
+		return w32.HTRIGHT
+	}
+	return 0
 }
 
 func (m *Manager) resize() {
@@ -78,7 +135,6 @@ func (m *Manager) resize() {
 	if v := m.native.views[m.native.active]; v != nil {
 		m.place(v, dpi)
 	}
-	m.layoutResizeEdges()
 }
 
 // place sizes v to its area of the window without changing its visibility.
@@ -92,9 +148,7 @@ func (m *Manager) place(v *nativeView, dpi uint) {
 	width, height := max(0, int(bounds.Right)-left-right), max(0, int(bounds.Bottom)-top-bottom)
 	// A separate clipped child HWND keeps the site's input surface and z-order
 	// independent from Wails' full-window shell controller during live resize.
-	// The resize edges (resize_windows.go) stay above it.
 	w32.SetWindowPos(v.host, w32.HWND_TOP, left, top, width, height, w32.SWP_NOACTIVATE)
-	m.raiseResizeEdges()
 	v.chromium.ResizeWithBounds(&edge.Rect{Right: int32(width), Bottom: int32(height)})
 }
 func (m *Manager) command(command string, o Options) error {
@@ -119,7 +173,8 @@ func (m *Manager) command(command string, o Options) error {
 			}
 			m.native.hwnd = hwnd
 			managers[hwnd] = m
-			m.createResizeEdges()
+			// Apply the sizing borders (WM_NCCALCSIZE above) to the existing frame.
+			w32.SetWindowPos(w32.HWND(hwnd), 0, 0, 0, 0, 0, w32.SWP_FRAMECHANGED|w32.SWP_NOMOVE|w32.SWP_NOSIZE|w32.SWP_NOZORDER|w32.SWP_NOACTIVATE)
 		}
 		views := m.native.views
 		v := views[o.ID]
@@ -295,7 +350,6 @@ func (m *Manager) closeNative() {
 		w32.DestroyWindow(v.host)
 		delete(m.native.views, id)
 	}
-	m.destroyResizeEdges()
 	if m.native.hwnd != 0 {
 		removeSubclass.Call(m.native.hwnd, subclassProc, 0x524c)
 		delete(managers, m.native.hwnd)

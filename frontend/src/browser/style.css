@@ -688,15 +688,8 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .about-links{display:flex;flex-wrap:wrap;gap:8px}
 .about-links button{display:inline-flex;align-items:center;gap:8px}
 .about-links button .icon{width:16px;height:16px}
-/* A grip marks the window's bottom-right corner as the place to resize. */
-.resize-grip{position:fixed;right:3px;bottom:3px;width:11px;height:11px;z-index:62;pointer-events:none;opacity:.55;background:radial-gradient(circle,var(--muted) 1px,transparent 1.4px) 0 0/4px 4px;clip-path:polygon(100% 0,100% 100%,0 100%)}
-body[data-maximised=true] .resize-grip{display:none}
 /* The 8-digit pairing code. */
 .pair-code{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
 .pair-code output{font:600 30px/1.2 ui-monospace,"Cascadia Code",Consolas,monospace;letter-spacing:.14em;color:var(--text)}
 .peer-error{color:var(--danger,#e06c75)}
 .peer-manual{margin-top:18px}
-/* With the item sidebar against the window's bottom edge, its scrollbar's
-   down arrow would sit under the resize corner; a short footer keeps the
-   scroll area above it and holds the corner grip. */
-body[data-item=right] .item-panel,body[data-item=bottom] .item-panel{padding-bottom:20px}
