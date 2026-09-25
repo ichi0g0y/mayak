@@ -325,7 +325,15 @@ const ready=(async()=>{
  window.mayakDesktop.on('browser:item',info=>void display({event:'browser:item',args:[info]}));
  // The update toast follows the updater; a found, downloading or downloaded
  // version shows until it is applied or put off.
- const updateChanged=next=>{const shown=updateBarVisible();updateStatus=next;update();if(updateBarVisible()!==shown)void show();};
+ // Progress arrives once per percent; the bar redraws at most a few times a second.
+ let updateRedraw=0;
+ const updateChanged=next=>{
+  const shown=updateBarVisible(),before=updateStatus;updateStatus=next;
+  const minor=before&&before.state===next?.state&&before.latest===next?.latest;
+  if(minor){if(!updateRedraw)updateRedraw=setTimeout(()=>{updateRedraw=0;update();},250);}
+  else{clearTimeout(updateRedraw);updateRedraw=0;update();}
+  if(updateBarVisible()!==shown)void show();
+ };
  window.mayakDesktop.on('update:status',updateChanged);
  go.GetUpdateStatus?.().then(updateChanged).catch(()=>{});
  // A new screenshot shows in the sidebar (and on the screenshot page).
@@ -414,8 +422,11 @@ async function perform(type,data){
  case 'settingsSection':if(data==='tasks'&&platform==='windows')try{hostQuestSite=(await go.GetSettings()).questSite||hostQuestSite;}catch{}
   if(browserSections.includes(data)||(platform==='windows'&&hostSections.includes(data)))section=data;break;
  case 'activate':if(state.tabs.some(t=>t.id===data))state.active=data;break;
- case 'open':case 'navigate':{
+ // openOrFocus goes to a tab already showing the address, if any, so a
+ // link pressed twice (the changelog, About) does not open a second tab.
+ case 'open':case 'navigate':case 'openOrFocus':{
   const url=webURL(data);if(!url)throw new Error(state.language==='ja'?'http / https のURLを入力してください':'Enter an http or https URL');
+  if(type==='openOrFocus'){const same=state.tabs.find(t=>t.kind==='web'&&t.url===url);if(same){state.active=same.id;break;}}
   if(type==='navigate'&&tab&&['web','blank'].includes(tab.kind)){tab.kind='web';tab.url=url;delete tab.task;}
   else{if(state.tabs.length>=80)throw new Error('tab-limit');const item={id:randomUUID(),kind:'web',url};state.tabs.push(item);state.active=item.id;}break;
  }
