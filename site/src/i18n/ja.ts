@@ -3,8 +3,9 @@ export const ja = {
   hero: {
     released: (version: string) => `MAYAK ${version} を公開`,
     lead: 'MAYAK は Escape from Tarkov のコンパニオンです。ゲームが保存したスクリーンショットとログを読むだけで、tarkov.dev のマップ上の現在地、タスク、アイテム情報をブラウザに映します。プロセスやメモリには一切触れません。',
-    installLabel: (version: string) => `MAYAK ${version} をインストール`,
-    installerHint: 'Windows 用インストーラー。実行するだけで、管理者権限は不要です。macOS / Linux 版は下のダウンロードにあります。',
+    installLabel: (version: string, os: string) => `MAYAK ${version} をインストール（${os}）`,
+    hints: { windows: 'Windows 用インストーラー。実行するだけで、管理者権限は不要です。', mac: 'tar.gz を展開して Mayak を実行。「開発元を確認できない」と出たら右クリック →「開く」。プレビュー版です。', linux: 'tar.gz を展開して ./Mayak を実行（WebKitGTK が必要）。プレビュー版です。' },
+    otherPlatforms: 'ほかの OS →',
     download: 'ダウンロード',
     quickstart: 'はじめかたを読む',
     fetching: 'GitHub から最新版を取得しています…',

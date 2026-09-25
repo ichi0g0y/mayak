@@ -61,7 +61,7 @@ export function Header({ home = true }: { home?: boolean }) {
             </SelectContent>
           </Select>
           <Button asChild size="sm" className="font-semibold">
-            <a href={direct.asset ? direct.href : `${prefix}${direct.href.startsWith('#') ? direct.href : '#download'}`} download={direct.download}>{t.nav.downloadButton}</a>
+            <a href={direct.asset ? direct.href : `${prefix}#download`} download={direct.download}>{t.nav.downloadButton}</a>
           </Button>
         </div>
       </div>

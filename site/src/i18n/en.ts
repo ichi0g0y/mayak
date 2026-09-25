@@ -5,8 +5,9 @@ export const en: Messages = {
   hero: {
     released: (version: string) => `MAYAK ${version} released`,
     lead: 'MAYAK is a companion for Escape from Tarkov. It reads only the screenshots and logs the game saves, and shows your position on the tarkov.dev map, your tasks and item info in a browser. It never touches the process or its memory.',
-    installLabel: (version: string) => `Install MAYAK ${version}`,
-    installerHint: 'The Windows installer. Just run it; no administrator rights needed. macOS and Linux builds are under Download below.',
+    installLabel: (version: string, os: string) => `Install MAYAK  for `,
+    hints: { windows: 'The Windows installer. Just run it; no administrator rights needed.', mac: 'Extract the tar.gz and run Mayak. If macOS says the developer cannot be verified, right-click → Open. A preview build.', linux: 'Extract the tar.gz and run ./Mayak (needs WebKitGTK). A preview build.' },
+    otherPlatforms: 'Other platforms →',
     download: 'Download',
     quickstart: 'Then follow the setup guide',
     fetching: 'Fetching the latest release from GitHub…',
