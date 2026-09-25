@@ -23,7 +23,7 @@ export function Section({
 }) {
   const lines = title.split('\n')
   return (
-    <section id={id} className={cn('scroll-mt-14 border-b px-6 py-16 sm:px-10 sm:py-24', className)}>
+    <section id={id} className={cn('scroll-mt-16 py-16 sm:py-24', className)}>
       <Reveal className={cn('mb-10 sm:mb-12', aside && 'grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-end')}>
         <div>
           <p className="eyebrow">{kicker}</p>

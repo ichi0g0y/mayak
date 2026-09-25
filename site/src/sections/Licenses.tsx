@@ -9,8 +9,8 @@ export function Licenses() {
   return (
     <Section id="license" kicker={t.license.kicker} title={t.license.title} lead={t.license.lead}>
       <Reveal>
-        <div className="grid border-t border-l lg:grid-cols-[1fr_1.4fr]">
-          <div className="border-r border-b p-6">
+        <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+          <div className="panel p-6">
             <h3 className="font-bold">{t.license.appTitle}</h3>
             <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{t.license.appBody}</p>
             <div className="mt-4 flex flex-wrap gap-4 text-sm">
@@ -22,7 +22,7 @@ export function Licenses() {
               </a>
             </div>
           </div>
-          <div className="border-r border-b p-6">
+          <div className="panel p-6">
             <h3 className="font-bold">{t.license.thirdTitle}</h3>
             <ul className="mt-3 grid gap-3 sm:grid-cols-2">
               {t.license.third.map((item) => (

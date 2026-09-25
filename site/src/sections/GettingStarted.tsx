@@ -24,7 +24,7 @@ export function GettingStarted() {
           </Reveal>
         </ol>
         <Reveal className="lg:sticky lg:top-24 lg:self-start">
-          <div className="bg-card border">
+          <div className="panel overflow-hidden">
             <div className="flex items-center gap-2 border-b px-4 py-2.5">
               <img src="/assets/mayak-mark.png" alt="" width={16} height={16} className="size-4" />
               <span className="font-mono text-xs">{t.start.mock.title}</span>

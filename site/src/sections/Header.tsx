@@ -1,13 +1,24 @@
+import { useEffect, useState } from 'react'
 import { useAtom } from 'jotai'
 import { Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/i18n'
 import { langAtom, REPOSITORY } from '@/state'
+import { cn } from '@/lib/utils'
 
-/** The top bar: mark and name, the section links, GitHub, language, download. */
+/** The top bar. On the home page it is transparent over the logo and turns
+ *  solid once the page scrolls; on other pages it is always solid. */
 export function Header({ home = true }: { home?: boolean }) {
   const t = useT()
   const [lang, setLang] = useAtom(langAtom)
+  const [scrolled, setScrolled] = useState(!home)
+  useEffect(() => {
+    if (!home) return
+    const onScroll = () => setScrolled(window.scrollY > 40)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [home])
   const prefix = home ? '' : '/'
   const links: [string, string][] = [
     [`${prefix}#features`, t.nav.features],
@@ -16,9 +27,9 @@ export function Header({ home = true }: { home?: boolean }) {
     [`${prefix}#faq`, t.nav.faq],
   ]
   return (
-    <header className="bg-background/90 sticky top-0 z-20 border-b backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 border-x px-6 sm:px-10">
-        <a href="/" className="flex items-center gap-2.5">
+    <header className={cn('fixed inset-x-0 top-0 z-20 transition-colors duration-300', scrolled ? 'bg-background/85 border-b backdrop-blur' : 'border-b border-transparent')}>
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-6 px-4 sm:px-6">
+        <a href="/" className={cn('flex items-center gap-2.5 transition-opacity duration-300', scrolled ? 'opacity-100' : 'opacity-0')} aria-hidden={!scrolled}>
           <img src="/assets/mayak-mark.png" alt="" width={28} height={28} className="size-7" />
           <span className="text-lg font-extrabold tracking-tight">MAYAK</span>
         </a>
@@ -36,7 +47,7 @@ export function Header({ home = true }: { home?: boolean }) {
           <Button variant="ghost" size="icon" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')} aria-label={t.nav.lang} title={t.nav.lang}>
             <Globe className="size-5" />
           </Button>
-          <Button asChild className="font-semibold">
+          <Button asChild size="sm" className="font-semibold">
             <a href={`${prefix}#download`}>{t.nav.downloadButton}</a>
           </Button>
         </div>

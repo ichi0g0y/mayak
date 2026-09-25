@@ -25,7 +25,7 @@ const ja = {
   features: {
     kicker: '機能',
     title: 'スクリーンショット 1 枚で、\nここまで。',
-    lead: 'PrintScreen を押すだけ。あとは MAYAK が保存されたファイルを読んで、必要な画面をブラウザに出します。',
+    lead: 'EFT のスクリーンショットキーを押すだけ。あとは MAYAK が保存されたファイルを読んで、必要な画面をブラウザに出します。',
     items: [
       { title: '現在地をマップに', reads: 'ファイル名の座標と向き', body: 'スクリーンショットのファイル名に埋め込まれた座標と向きを読み、tarkov.dev のマップ上のマーカーを動かします。マップと階層はログと座標から判定します。', example: '2026-09-25[19-42]_-123.4, 2.1, 45.0_0.0, 0.7, 0.0, 0.7_12.3 (0).png' },
       { title: 'タスクを開く', reads: 'タスク一覧画面の OCR', body: 'タスク一覧を撮ると、選択中のタスク名をローカル OCR で読み取り、tarkov.dev または Wiki の該当ページを開きます。日本語表示のゲームにも対応。', example: 'Tasks screen → "Shortage" (98%) → tarkov.dev/task/shortage' },
@@ -43,7 +43,8 @@ const ja = {
       { title: 'SmartScreen が出たら「実行」', body: '初回は「Windows によって PC が保護されました」と出ることがあります。「詳細情報」→「実行」で進みます。MAYAK は署名なしのオープンソースアプリで、ソースは GitHub で確認できます。以後の起動で警告は出ません。' },
       { title: 'フォルダを確認する', body: '起動すると EFT の Screenshots と Logs フォルダを自動で探します。設定の「フォルダと保存」で場所を確認し、見つからなければ手で選びます。' },
       { title: 'tarkov.dev のマップと繋ぐ', body: 'tarkov.dev のマップで Remote Control を有効にすると Remote ID が表示されます。同じ PC の Chrome / Edge / Brave なら自動検出、別の PC なら ID を入力します。' },
-      { title: 'レイド中に PrintScreen', body: 'MAYAK が保存されたスクリーンショットを検知して、現在地をマップに送ります。タスク画面やアイテム詳細を撮れば、それぞれの情報が出ます。' },
+      { title: 'スクリーンショットキーを押しやすい場所に', body: 'EFT の設定 → Controls → 「Screenshot」。既定は PrintScreen ですが、戦闘中に手が届きにくいので、マウスのサイドボタンや左手で届く空いているキーへの割り当てをおすすめします。座標が入るのは EFT 自身のスクリーンショット機能で保存したファイルだけで、Steam や Windows のスクリーンショットは対象外です。' },
+      { title: 'レイド中にそのキーを押す', body: 'MAYAK が保存されたスクリーンショットを検知して、現在地をマップに送ります。タスク画面やアイテム詳細を撮れば、それぞれの情報が出ます。' },
       { title: '（任意）TarkovTracker を繋ぐ', body: 'TarkovTracker の設定ページで API キー（GP と WP）を作り、MAYAK に取り込んで、ログから見つかったプロフィールに割り当てます。' },
     ],
     tip: 'MAYAK は常駐させたままで大丈夫です。トレイに最小化され、監視は起動時に自動で始まります。',
@@ -163,7 +164,7 @@ const en: Messages = {
   features: {
     kicker: 'Features',
     title: 'One screenshot.\nEverything you need.',
-    lead: 'Press PrintScreen. MAYAK reads the saved file and puts the right page in your browser.',
+    lead: 'Press EFT’s screenshot key. MAYAK reads the saved file and puts the right page in your browser.',
     items: [
       { title: 'Your position on the map', reads: 'Coordinates in the file name', body: 'Reads the coordinates and heading embedded in the screenshot file name and moves your marker on the tarkov.dev map. Map and floor come from the logs and the coordinates.', example: '2026-09-25[19-42]_-123.4, 2.1, 45.0_0.0, 0.7, 0.0, 0.7_12.3 (0).png' },
       { title: 'Open the task', reads: 'OCR of the Tasks screen', body: 'Screenshot the task list and local OCR reads the selected task name, then opens the matching tarkov.dev or wiki page. Works with the game in Japanese too.', example: 'Tasks screen → "Shortage" (98%) → tarkov.dev/task/shortage' },
@@ -181,7 +182,8 @@ const en: Messages = {
       { title: 'If SmartScreen warns, choose "Run anyway"', body: 'The first time, Windows may say "Windows protected your PC". Click "More info", then "Run anyway". MAYAK is an unsigned open-source app; the source is on GitHub. Later starts show no warning.' },
       { title: 'Check the folders', body: 'On start MAYAK looks for the EFT Screenshots and Logs folders. Check them under Settings → Folders; if they were not found, pick them by hand.' },
       { title: 'Connect the tarkov.dev map', body: 'Enable Remote Control on the tarkov.dev map and it shows a Remote ID. Chrome, Edge and Brave on the same PC are detected automatically; from another PC, type the ID in.' },
-      { title: 'Press PrintScreen in a raid', body: 'MAYAK notices the saved screenshot and sends your position to the map. Screenshot the Tasks screen or an item window and the matching info appears.' },
+      { title: 'Put the screenshot key within reach', body: 'In EFT go to Settings → Controls → "Screenshot". The default is PrintScreen, which is hard to reach mid-fight, so bind it to a mouse side button or a free key near your left hand. Only screenshots taken with EFT’s own function carry coordinates; Steam or Windows screenshots do not.' },
+      { title: 'Press that key in a raid', body: 'MAYAK notices the saved screenshot and sends your position to the map. Screenshot the Tasks screen or an item window and the matching info appears.' },
       { title: '(Optional) Connect TarkovTracker', body: 'Create an API key (GP and WP) on the TarkovTracker settings page, add it in MAYAK and assign it to the profile found in the logs.' },
     ],
     tip: 'Leave MAYAK running. It minimizes to the tray and starts monitoring on launch.',

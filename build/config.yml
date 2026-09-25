@@ -5,7 +5,7 @@ info:
   productName: MAYAK
   productIdentifier: com.ichi0g0y.mayak
   description: Escape from Tarkov companion
-  version: 0.1.0
+  version: 0.1.1
 
 # `task dev` (wails3 dev) runs the app with hot reload:
 # - Go changes: rebuild (bindings + dev binary) and restart the app.

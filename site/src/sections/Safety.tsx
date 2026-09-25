@@ -8,15 +8,17 @@ export function Safety() {
   return (
     <Section id="safety" kicker={t.safety.kicker} title={t.safety.title} lead={t.safety.lead}>
       <Reveal>
-        <ul className="grid border-t border-l sm:grid-cols-2 lg:grid-cols-3">
-          {t.safety.items.map((item) => (
-            <li key={item} className="flex items-start gap-3 border-r border-b p-5">
-              <ShieldCheck className="text-olive mt-0.5 size-5 shrink-0" />
-              <span className="text-sm leading-relaxed">{item}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="text-muted-foreground mt-6 max-w-2xl text-xs leading-relaxed">{t.safety.note}</p>
+        <div className="panel p-6 sm:p-8">
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {t.safety.items.map((item) => (
+              <li key={item} className="flex items-start gap-3">
+                <ShieldCheck className="text-olive mt-0.5 size-5 shrink-0" />
+                <span className="text-sm leading-relaxed">{item}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-muted-foreground mt-6 border-t pt-4 text-xs leading-relaxed">{t.safety.note}</p>
+        </div>
       </Reveal>
     </Section>
   )

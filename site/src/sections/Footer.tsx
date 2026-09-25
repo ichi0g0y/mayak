@@ -23,8 +23,8 @@ export function Footer() {
     },
   ]
   return (
-    <footer>
-      <div className="mx-auto grid max-w-6xl gap-10 border-x px-6 py-12 sm:px-10 md:grid-cols-[1.4fr_1fr_1fr]">
+    <footer className="border-t">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-2.5">
             <img src="/assets/mayak-mark.png" alt="" width={24} height={24} className="size-6" />

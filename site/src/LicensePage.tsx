@@ -14,10 +14,9 @@ export function LicensePage() {
   return (
     <div>
       <Header home={false} />
-      <main className="mx-auto max-w-6xl border-x">
+      <main className="mx-auto max-w-6xl px-4 pt-14 sm:px-6">
         <Licenses />
       </main>
-      <div className="border-t" />
       <Footer />
     </div>
   )

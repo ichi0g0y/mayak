@@ -13,8 +13,8 @@ function AssetLink({ asset, label, primary }: { asset: Asset | undefined; label:
       href={asset?.url ?? `${RELEASES_URL}/latest`}
       download={asset?.name}
       className={cn(
-        'flex items-center gap-3 border px-3 py-2 text-sm transition-colors',
-        primary ? 'bg-primary text-primary-foreground border-primary hover:bg-primary/90' : 'bg-card hover:border-primary/60',
+        'flex items-center gap-3 rounded-sm border px-3 py-2 text-sm transition-colors',
+        primary ? 'bg-primary text-primary-foreground border-primary hover:bg-primary/90' : 'bg-secondary/60 hover:border-primary/60',
         !asset && 'opacity-60',
       )}
     >
@@ -69,11 +69,11 @@ export function Download() {
   )
   return (
     <Section id="download" kicker={t.download.kicker} title={t.download.title} lead={t.download.lead} aside={aside}>
-      <div className="grid border-t border-l md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3">
         {cards.map((card, i) => {
           const primary = card.key === platform
           return (
-            <Reveal key={card.key} delay={i * 60} className="flex flex-col border-r border-b p-6">
+            <Reveal key={card.key} delay={i * 60} className={cn('panel flex flex-col p-6', primary && 'border-primary/50')}>
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-xl font-bold">{card.title}</h3>
                 {primary && <Badge>{t.download.recommended}</Badge>}
@@ -82,7 +82,7 @@ export function Download() {
               <p className="text-muted-foreground mt-2 flex-1 text-sm">{card.body}</p>
               <div className="mt-5 grid gap-2">
                 {card.links.map((link, j) => (
-                  <AssetLink key={link.label} asset={link.asset} label={link.label} primary={primary && j === 0} />
+                  <AssetLink key={link.label} asset={link.asset} label={link.label} primary={primary && j === 0 && !!link.asset} />
                 ))}
               </div>
             </Reveal>
