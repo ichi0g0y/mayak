@@ -44,7 +44,6 @@ export function Hero() {
         </div>
         <p className="text-muted-foreground/80 mt-4 text-xs sm:text-sm">{t.hero.note}</p>
       </div>
-      <div className="from-background pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t to-transparent" aria-hidden="true" />
     </section>
   )
 }
