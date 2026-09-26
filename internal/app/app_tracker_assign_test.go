@@ -34,4 +34,11 @@ func TestAutoAssignTrackerKeyGoesToTheOnlyFreeProfileOrTheOnePlayed(t *testing.T
 	if !assigned || to.ProfileID != "p3" || document.TokenFor("2", "p3", "pvp") != "PVP_token" {
 		t.Fatalf("assigned=%v to=%+v", assigned, to)
 	}
+	// An account's earlier profile of the mode (a past wipe) does not count:
+	// with the latest one free, the key goes there although two are free.
+	document.Profiles = []trackerstore.Profile{{AccountID: "3", ProfileID: "old", Mode: "seasonal", LastSeen: "2026-01-01T00:00:00Z"}, {AccountID: "3", ProfileID: "new", Mode: "seasonal", LastSeen: "2026-09-01T00:00:00Z"}}
+	season, _ := document.AddKey("seasonal", "SZN_token")
+	if assigned, to := autoAssignTrackerKey(&document, season, trackerstore.Profile{}); !assigned || to.ProfileID != "new" {
+		t.Fatalf("assigned=%v to=%+v", assigned, to)
+	}
 }

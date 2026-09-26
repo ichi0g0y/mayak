@@ -511,9 +511,14 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .tracker-group-columns, .tracker-profile { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(240px, 1.2fr) auto; align-items: center; gap: 14px; }
 .tracker-group-columns { padding: 6px 12px 4px; font-size: 10px; color: var(--muted-foreground); }
 .tracker-profile { padding: 10px 12px; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
-.tracker-profile.current { border-color: var(--border); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+/* Every row alike, told apart by the rules between them. */
+.tracker-profile.current { border-color: var(--border); background: transparent; }
 .tracker-profile-info > span:empty { display: none; }
 .tracker-profile-key { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-items: start; }
 .tracker-profile-key .tracker-profile-actions { grid-template-columns: auto; }
 .tracker-profile-tools { display: flex; justify-content: flex-end; }
 @media (max-width: 720px) { .tracker-group-columns { display: none; } .tracker-profile { grid-template-columns: 1fr; } .tracker-profile-tools { justify-content: flex-start; } }
+
+/* An account's earlier profiles of a mode (past wipes) fold away. */
+.tracker-older summary { padding: 8px 12px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted-foreground); cursor: pointer; }
+.tracker-older .tracker-profile { opacity: .85; }

@@ -370,10 +370,12 @@ func (a *App) ImportTrackerToken(token string) (string, error) {
 
 // autoAssignTrackerKey puts a new key onto the one profile of its mode that
 // has no key, or onto the profile being played (current) when several have
-// none and it is one of them. With no such profile the key stays free.
+// none and it is one of them. With no such profile the key stays free. Only
+// an account's latest profile of the mode counts: the earlier ones are past
+// wipes, kept from the logs, and TarkovTracker's progress is the wipe's.
 func autoAssignTrackerKey(document *trackerstore.Document, key trackerstore.Key, current trackerstore.Profile) (bool, trackerstore.Profile) {
 	var free []trackerstore.Profile
-	for _, profile := range document.Profiles {
+	for _, profile := range latestTrackerProfiles(document.Profiles) {
 		if profile.Mode == key.Mode && document.TokenFor(profile.AccountID, profile.ProfileID, profile.Mode) == "" {
 			free = append(free, profile)
 		}
@@ -392,6 +394,27 @@ func autoAssignTrackerKey(document *trackerstore.Document, key trackerstore.Key,
 		return false, trackerstore.Profile{}
 	}
 	return true, target
+}
+
+// latestTrackerProfiles keeps, of each account's profiles of a mode, the
+// one seen last in the logs (RFC 3339 times compare as strings).
+func latestTrackerProfiles(profiles []trackerstore.Profile) []trackerstore.Profile {
+	latest := map[string]trackerstore.Profile{}
+	var order []string
+	for _, profile := range profiles {
+		id := profile.AccountID + "/" + profile.Mode
+		if seen, ok := latest[id]; !ok {
+			order = append(order, id)
+			latest[id] = profile
+		} else if profile.LastSeen > seen.LastSeen {
+			latest[id] = profile
+		}
+	}
+	out := make([]trackerstore.Profile, 0, len(order))
+	for _, id := range order {
+		out = append(out, latest[id])
+	}
+	return out
 }
 
 // clearTrackerProgressLocked forgets the TarkovTracker progress loaded for the
