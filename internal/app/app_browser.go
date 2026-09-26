@@ -5,6 +5,7 @@ import (
 	"github.com/local/mayak/internal/appdir"
 
 	"errors"
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	goruntime "runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/local/mayak/internal/browserview"
 	"github.com/local/mayak/internal/model"
@@ -148,7 +150,14 @@ func (a *App) BrowserView(command string, v browserview.Options) error {
 	if a.browserViews == nil {
 		return errors.New("browser is not ready")
 	}
-	return a.browserViews.Command(command, v)
+	// A slow or failed view command is worth a line: the shell's commands
+	// wait behind each other, so one slow one holds every view change after it.
+	started := time.Now()
+	err := a.browserViews.Command(command, v)
+	if elapsed := time.Since(started); err != nil || elapsed > 500*time.Millisecond {
+		a.addLog("Debug", "Browser", fmt.Sprintf("View command %s (%s) took %s: %v", command, v.ID, elapsed.Round(time.Millisecond), err))
+	}
+	return err
 }
 func (a *App) showBrowserTask(status model.Status, site string) {
 	urls := map[string]string{}
