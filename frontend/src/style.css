@@ -487,3 +487,8 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .tracker-manage-key { display: grid; grid-template-columns: minmax(200px, 1fr) auto auto; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); }
 .tracker-manage-key .button { padding: 4px; height: 28px; width: 28px; }
 @media (max-width: 720px) { .tracker-unassigned-key, .tracker-manage-key { grid-template-columns: 1fr; } }
+/* Everything about keys sits in one block above the profiles: the token
+   input, the keys not yet on a profile, and the folded list of all keys. */
+.tracker-keys-block { display: grid; gap: 12px; padding: 12px 14px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
+.tracker-keys-block .tracker-unassigned { padding-top: 0; border-top: 0; }
+.tracker-keys-block .tracker-manage { padding-top: 10px; }
