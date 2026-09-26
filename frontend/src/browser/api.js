@@ -1,7 +1,7 @@
 import * as AppService from '../../bindings/github.com/local/mayak/internal/app/app';
 import {Events,Clipboard} from '@wailsio/runtime';
 import {itemInfo,clampItemPanel,clampItemPanelHeight,historyPoints,names} from './item.js';
-import {browserSections,hostSections,mapTabID,randomUUID,bookmarkGroup,clampSidebar,rememberFavicon,hostname,defaults,restore,webURL,pageURL,receiveTask,receiveMap,receivePosition,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,tabAt,cycleTab} from './state.js';
+import {browserSections,hostSections,mapTabID,randomUUID,bookmarkGroup,clampSidebar,rememberFavicon,hostname,defaults,restore,webURL,pageURL,receiveTask,receiveMap,receivePosition,translatedURL,originalURL,isTranslated,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,tabAt,cycleTab} from './state.js';
 import {encode,decode,iceServers,PAIR_RELAY} from './peer-code.js';
 import './transport.js';
 
@@ -117,8 +117,8 @@ async function persist(){
  // Until a restored item has loaded, the saved one is kept.
  const shown=item||restoredItem;
  const itemPanel={open:itemOpen,id:shown?.id||'',mode:shown?.mode||''};
- const {version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,bookmarkView,favicons,theme,adblock,taskMode,questSite,bookmarks,tabs,active}=state;
- await go.BrowserSave(JSON.stringify({version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,itemPanel,bookmarkView,favicons,theme,adblock,taskMode,questSite,bookmarks,tabs,active,connection:{mode:state.connection.mode,stun:state.connection.stun}}));
+ const {version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,bookmarkView,favicons,theme,adblock,taskMode,questSite,translateWiki,bookmarks,tabs,active}=state;
+ await go.BrowserSave(JSON.stringify({version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,itemPanel,bookmarkView,favicons,theme,adblock,taskMode,questSite,translateWiki,bookmarks,tabs,active,connection:{mode:state.connection.mode,stun:state.connection.stun}}));
 }
 async function changed(){update();await persist();void show().catch(messageError);}
 function enqueue(fn){const result=queue.then(fn);queue=result.catch(messageError);return result.catch(()=>snapshot());}
@@ -476,7 +476,7 @@ async function perform(type,data){
  case 'pin':togglePin(state,data);break;
  case 'move':moveTab(state,data?.id,data?.before??null);break;
  case 'preferences':{
-  const next=restore({...state,...data});state.language=next.language;state.tutorialDone=next.tutorialDone;state.layout=next.layout;state.sidebarSide=next.sidebarSide;state.theme=next.theme;state.clock=next.clock;state.sidebarCollapsed=next.sidebarCollapsed;state.bookmarksCollapsed=next.bookmarksCollapsed;state.screenshotsCollapsed=next.screenshotsCollapsed;state.bossesView=next.bossesView;state.bossMap=next.bossMap;state.bossMode=next.bossMode;if(data&&'bossMode' in data)void loadBosses();if(data&&'language' in data)void loadBosses();state.sidebarWidth=next.sidebarWidth;state.itemPanelWidth=next.itemPanelWidth;state.itemPanelHeight=next.itemPanelHeight;state.itemDock=next.itemDock;state.bookmarkView=next.bookmarkView;state.taskMode=next.taskMode;state.questSite=next.questSite;
+  const next=restore({...state,...data});state.language=next.language;state.tutorialDone=next.tutorialDone;state.layout=next.layout;state.sidebarSide=next.sidebarSide;state.theme=next.theme;state.clock=next.clock;state.sidebarCollapsed=next.sidebarCollapsed;state.bookmarksCollapsed=next.bookmarksCollapsed;state.screenshotsCollapsed=next.screenshotsCollapsed;state.bossesView=next.bossesView;state.bossMap=next.bossMap;state.bossMode=next.bossMode;if(data&&'bossMode' in data)void loadBosses();if(data&&'language' in data)void loadBosses();state.sidebarWidth=next.sidebarWidth;state.itemPanelWidth=next.itemPanelWidth;state.itemPanelHeight=next.itemPanelHeight;state.itemDock=next.itemDock;state.bookmarkView=next.bookmarkView;state.taskMode=next.taskMode;state.questSite=next.questSite;state.translateWiki=next.translateWiki;
   // Blocking applies to new requests; reload so the visible page matches the setting.
   if(next.adblock!==state.adblock){state.adblock=next.adblock;await go.BrowserSetAdblock(state.adblock);if(tab?.kind==='web')await native('reload',{id:tab.id});}
   break;
@@ -493,6 +493,13 @@ async function perform(type,data){
  case 'deleteBookmark':state.bookmarks=state.bookmarks.filter(b=>b.id!==data);break;
  case 'site':if(tab?.task&&webURL(tab.task.urls[data]))tab.url=tab.task.urls[data];break;
  case 'back':case 'forward':case 'reload':if(tab?.kind==='web')await native(type,{id:tab.id});return snapshot();
+ // The page opens through Google Translate's proxy, or back as itself.
+ case 'translate':{
+  if(tab?.kind!=='web'||tab.fixed)return snapshot();
+  const url=isTranslated(tab.url)?originalURL(tab.url):translatedURL(tab.url,state.language);
+  if(!url||url===tab.url)return snapshot();
+  tab.url=url;break;
+ }
  case 'windowTheme':try{await go.BrowserSetWindowTheme(data.caption,data.text,data.border,!!data.dark);}catch{}return snapshot();
  // A task in the item sidebar opens like a recognized task, on the task site
  // set now (on the Host its current setting, not the one when the item came).

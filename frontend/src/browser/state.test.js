@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mapTabID,trackerTabID,rememberFavicon,bookmarkGroup,defaults,restore,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,webURL,pageURL,resolveAddress,searchURL,shortcut,tabAt,cycleTab,receivePosition} from './state.js';
+import {mapTabID,trackerTabID,rememberFavicon,bookmarkGroup,defaults,restore,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,webURL,pageURL,resolveAddress,searchURL,shortcut,tabAt,cycleTab,receivePosition,translatedURL,originalURL,isTranslated} from './state.js';
 import {encode,decode,iceServers} from './peer-code.js';
 test('curated bookmarks merge once and preserve user choices',()=>{
  const existing={id:'custom-market',name:'My prices',url:'https://tarkov-market.com',group:'other'};
@@ -304,4 +304,30 @@ test('a detected position brings the map view forward without reloading its map'
  assert.equal(s.tabs.find(t=>t.id===mapTabID).url,'https://tarkov.dev/map/woods');
  assert.equal(receivePosition(s,'ground-zero-21').url,'https://tarkov.dev/map/ground-zero');
  assert.equal(receivePosition(s,'Bad Map'),null);
+});
+test('pages translate through Google Translate\'s proxy and back',()=>{
+ const wiki='https://escapefromtarkov.fandom.com/wiki/Quests?x=1#top';
+ const translated=translatedURL(wiki,'ja');
+ assert.equal(translated,'https://escapefromtarkov-fandom-com.translate.goog/wiki/Quests?x=1&_x_tr_sl=auto&_x_tr_tl=ja&_x_tr_hl=ja#top');
+ assert.equal(isTranslated(translated),true);
+ assert.equal(isTranslated(wiki),false);
+ assert.equal(originalURL(translated),wiki);
+ // Hyphens in the host are doubled and restored.
+ assert.equal(translatedURL('https://tarkov-market.com/item/x','en'),'https://tarkov--market-com.translate.goog/item/x?_x_tr_sl=auto&_x_tr_tl=en&_x_tr_hl=en');
+ assert.equal(originalURL('https://tarkov--market-com.translate.goog/item/x?_x_tr_sl=auto&_x_tr_tl=en'),'https://tarkov-market.com/item/x');
+ // Already translated stays; the original stays; junk is null.
+ assert.equal(translatedURL(translated,'ja'),translated);
+ assert.equal(originalURL(wiki),wiki);
+ assert.equal(translatedURL('not a url','ja'),null);
+});
+test('a detected task opens the official wiki translated when asked',()=>{
+ const s=defaults();s.questSite='official-wiki';s.translateWiki=true;
+ const tab=receiveTask(s,task('Debut'));
+ assert.equal(tab.url,'https://escapefromtarkov-fandom-com.translate.goog/wiki/Debut?_x_tr_sl=auto&_x_tr_tl=ja&_x_tr_hl=ja');
+ s.translateWiki=false;
+ assert.equal(receiveTask(s,task('Debut')).url,'https://escapefromtarkov.fandom.com/wiki/Debut');
+ s.translateWiki=true;s.questSite='japanese-wiki';
+ assert.equal(receiveTask(s,task('Debut')).url,'https://wikiwiki.jp/eft/Prapor/Debut');
+ assert.equal(restore({translateWiki:true}).translateWiki,true);
+ assert.equal(restore({}).translateWiki,false);
 });

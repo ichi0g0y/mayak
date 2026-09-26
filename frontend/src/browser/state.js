@@ -55,6 +55,26 @@ function rememberFavicon(state,pageURL,favicon) {
   for(const old of hosts.slice(0,Math.max(0,hosts.length-maxFavicons)))delete state.favicons[old];
 }
 function hostname(value) {try{return new URL(value).hostname.toLowerCase().replace(/^www\./,'');}catch{return '';}}
+// Pages translated by Google Translate's proxy: the host's dots become
+// hyphens (hyphens doubled) under translate.goog, and _x_tr_* parameters
+// name the languages. The built-in browser has no Chrome translation of its
+// own (WebView2 lacks it), so a page is translated by opening it there.
+const translateSuffix='.translate.goog';
+function translatedURL(value,language) {
+  const url=webURL(value);if(!url)return null;
+  const u=new URL(url);if(u.hostname.endsWith(translateSuffix))return url;
+  u.hostname=u.hostname.replace(/-/g,'--').replace(/\./g,'-')+translateSuffix;
+  u.searchParams.set('_x_tr_sl','auto');u.searchParams.set('_x_tr_tl',language==='en'?'en':'ja');u.searchParams.set('_x_tr_hl',language==='en'?'en':'ja');
+  return u.href;
+}
+function originalURL(value) {
+  const url=webURL(value);if(!url)return null;
+  const u=new URL(url);if(!u.hostname.endsWith(translateSuffix))return url;
+  u.hostname=u.hostname.slice(0,-translateSuffix.length).replace(/--|-/g,m=>m==='--'?'\u0000':'.').replace(/\u0000/g,'-');
+  for(const key of [...u.searchParams.keys()])if(key.startsWith('_x_tr_'))u.searchParams.delete(key);
+  return u.href;
+}
+const isTranslated=value=>{try{return new URL(value).hostname.endsWith(translateSuffix);}catch{return false;}};
 // The item sidebar reopens after a restart with the item it showed.
 function restoreItemPanel(raw){
  const id=typeof raw?.id==='string'&&/^[0-9a-f]{24}$/.test(raw.id)?raw.id:'';
@@ -63,7 +83,7 @@ function restoreItemPanel(raw){
 // The sidebar can be resized between these widths (logical pixels).
 const sidebarWidths={min:180,max:420,default:224};
 const clampSidebar=value=>Number.isFinite(value)?Math.round(Math.min(sidebarWidths.max,Math.max(sidebarWidths.min,value))):sidebarWidths.default;
-function defaults() { return {version:1,bookmarkRevision,language:'ja',tutorialDone:false,clock:'24',layout:'vertical',sidebarSide:'left',sidebarCollapsed:false,bookmarksCollapsed:false,screenshotsCollapsed:false,bossesView:'full',bossMap:'',bossMode:'',sidebarWidth:224,itemPanelWidth:320,itemPanelHeight:280,itemDock:'right',itemPanel:{open:false,id:'',mode:''},favicons:{},bookmarkView:'grid',theme:'mayak-dark',adblock:true,taskMode:'new',questSite:'host',connection:{mode:'local',stun:DEFAULT_STUN},bookmarks:structuredClone(defaultBookmarks),tabs:[mapTab(),trackerTab(),{id:'settings',kind:'settings'}],active:mapTabID}; }
+function defaults() { return {version:1,bookmarkRevision,language:'ja',tutorialDone:false,clock:'24',layout:'vertical',sidebarSide:'left',sidebarCollapsed:false,bookmarksCollapsed:false,screenshotsCollapsed:false,bossesView:'full',bossMap:'',bossMode:'',sidebarWidth:224,itemPanelWidth:320,itemPanelHeight:280,itemDock:'right',itemPanel:{open:false,id:'',mode:''},favicons:{},bookmarkView:'grid',theme:'mayak-dark',adblock:true,taskMode:'new',questSite:'host',translateWiki:false,connection:{mode:'local',stun:DEFAULT_STUN},bookmarks:structuredClone(defaultBookmarks),tabs:[mapTab(),trackerTab(),{id:'settings',kind:'settings'}],active:mapTabID}; }
 function restore(raw={}) {
   const state=defaults();
   state.bookmarkRevision=bookmarkRevision;
@@ -74,6 +94,7 @@ function restore(raw={}) {
   if(['left','right','top'].includes(raw.navPosition)){state.layout=raw.navPosition==='top'?'horizontal':'vertical';if(raw.navPosition!=='top')state.sidebarSide=raw.navPosition;}
   state.taskMode=raw.taskMode==='reuse'?'reuse':'new';state.adblock=raw.adblock!==false;const theme={'claude-dark':'mayak-dark','claude-light':'mayak-light'}[raw.theme]||raw.theme;state.theme=themes.includes(theme)?theme:'mayak-dark';state.clock=raw.clock==='12'?'12':'24';state.sidebarCollapsed=raw.sidebarCollapsed===true;state.bookmarksCollapsed=raw.bookmarksCollapsed===true;state.screenshotsCollapsed=raw.screenshotsCollapsed===true;state.bossesView=['full','goons','closed'].includes(raw.bossesView)?raw.bossesView:raw.bossesCollapsed===true?'closed':'full';state.bossMap=typeof raw.bossMap==='string'&&/^[a-z0-9-]{1,40}$/.test(raw.bossMap)?raw.bossMap:'';state.bossMode=['regular','pve'].includes(raw.bossMode)?raw.bossMode:'';state.sidebarWidth=clampSidebar(raw.sidebarWidth);state.itemPanelWidth=clampItemPanel(raw.itemPanelWidth);state.itemPanelHeight=clampItemPanelHeight(raw.itemPanelHeight);state.itemDock=['left','bottom'].includes(raw.itemDock)?raw.itemDock:'right';state.itemPanel=restoreItemPanel(raw.itemPanel);state.bookmarkView=raw.bookmarkView==='list'?'list':'grid';state.favicons=restoreFavicons(raw.favicons);
   state.questSite=['host',...sites].includes(raw.questSite)?raw.questSite:'host';
+  state.translateWiki=raw.translateWiki===true;
   // The LAN receiving mode ("remote") is gone; a browser saved in it starts off.
   if (raw.connection && ['local','remote','webrtc','off'].includes(raw.connection.mode)) state.connection={mode:raw.connection.mode==='remote'?'off':raw.connection.mode,stun:typeof raw.connection.stun==='string'?raw.connection.stun:DEFAULT_STUN};
   if (Array.isArray(raw.bookmarks)) state.bookmarks=raw.bookmarks.filter(b=>b && webURL(b.url)).slice(0,100).map(b=>({id:String(b.id||randomUUID()),name:String(b.name||b.url).slice(0,150),url:webURL(b.url),group:bookmarkGroup(b.group),...(b.sidebar?{sidebar:true}:{})}));
@@ -109,7 +130,8 @@ function validTask(task) {return !!task && typeof task.id==='string' && task.id.
 function receiveTask(state,task) {
   if(!validTask(task))return null;
   const site=state.questSite==='host'?(sites.includes(task.site)?task.site:'tarkov-dev'):state.questSite;
-  const url=webURL(task.urls[site]);
+  // The official wiki (English) opens translated when asked to.
+  const url=site==='official-wiki'&&state.translateWiki?translatedURL(task.urls[site],state.language):webURL(task.urls[site]);
   // Reconnect/repeated screenshots focus the same task, without a tab explosion.
   let tab=state.tabs.find(t=>t.kind==='web' && t.task?.id===task.id && t.url===url);
   if(!tab && state.taskMode==='reuse')tab=state.tabs.find(t=>t.role==='task'&&!t.pinned);
@@ -256,4 +278,4 @@ function receivePosition(state,name) {
   }
   return receiveMap(state,name);
 }
-export {browserSections,hostSections,randomUUID,mapTabID,trackerTabID,themes,bookmarkGroups,bookmarkGroup,rememberFavicon,hostname,sidebarWidths,clampSidebar,defaults,restore,webURL,pageURL,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,sites,resolveAddress,searchURL,shortcut,tabAt,cycleTab,receivePosition};
+export {browserSections,hostSections,randomUUID,mapTabID,trackerTabID,themes,bookmarkGroups,bookmarkGroup,rememberFavicon,hostname,sidebarWidths,clampSidebar,defaults,restore,webURL,pageURL,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,sites,translatedURL,originalURL,isTranslated,resolveAddress,searchURL,shortcut,tabAt,cycleTab,receivePosition};
