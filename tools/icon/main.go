@@ -11,8 +11,8 @@
 // The master's two colours are read as the ends of a scale; every pixel's
 // position on it (anti-aliased edges included) is kept, so the shape never
 // changes. What changes is the dressing, in the manner of the official
-// launcher's icon: a rounded square with a soft top-to-bottom gradient of
-// dark grey, and the mark in a light grey gradient over it.
+// launcher's icon: a rounded square in a cool dark grey gradient, the mark in
+// a grey gradient with a light haze around it, grain and faint scanlines.
 package main
 
 import (
@@ -66,6 +66,7 @@ type style struct {
 	haze                             float64     // strength of the light haze around the mark
 	hazeColor                        color.NRGBA // its colour
 	grain                            float64     // amplitude of the grain, in levels
+	scan                             float64     // depth of the scanlines, in levels
 }
 
 func lerp(a, b color.NRGBA, t float64) (float64, float64, float64) {
@@ -174,8 +175,12 @@ func render(master *image.NRGBA, s style, bare bool) *image.NRGBA {
 			fr, fg, fb := lerp(s.fgTop, s.fgBottom, math.Max(0, math.Min(1, 0.9*v+0.1*u)))
 			cov := t[i]
 			r, g, b := br*(1-cov)+fr*cov, bg*(1-cov)+fg*cov, bb*(1-cov)+fb*cov
-			// Grain, a little stronger on the mark.
+			// Grain, a little stronger on the mark, and faint scanlines: every
+			// other row at the 256px scale is a shade darker, like a screen.
 			g0 := grain(x, y) * s.grain * (1 + 0.6*cov)
+			if (y/max(1, size/256))%2 == 1 {
+				g0 -= s.scan
+			}
 			r, g, b = r+g0, g+g0, b+g0
 			a := squareAlpha(x, y, size, radius)
 			out.SetNRGBA(x, y, color.NRGBA{
@@ -248,12 +253,13 @@ func main() {
 	haze := flag.Float64("haze", 0.5, "strength of the light haze around the mark, 0 to 1")
 	hazeColor := flag.String("haze-color", "9a9ea0", "colour of the haze (rrggbb)")
 	grainLevels := flag.Float64("grain", 5, "amplitude of the grain, in levels of 255")
-	corner := flag.Float64("corner", 0.2, "corner radius as a fraction of the side")
+	scan := flag.Float64("scanlines", 4, "depth of the scanlines, in levels of 255")
+	corner := flag.Float64("corner", 0.12, "corner radius as a fraction of the side (the launcher's is about 0.12)")
 	out := flag.String("out", "", "write only one PNG of -size here")
 	size := flag.Int("size", 256, "size for -out")
 	bare := flag.Bool("bare", false, "with -out: only the mark, flat white on a transparent background")
 	flag.Parse()
-	s := style{corner: *corner, bgTop: parse(*bgTop), bgBottom: parse(*bgBottom), fgTop: parse(*fgTop), fgBottom: parse(*fgBottom), haze: *haze, hazeColor: parse(*hazeColor), grain: *grainLevels}
+	s := style{corner: *corner, bgTop: parse(*bgTop), bgBottom: parse(*bgBottom), fgTop: parse(*fgTop), fgBottom: parse(*fgBottom), haze: *haze, hazeColor: parse(*hazeColor), grain: *grainLevels, scan: *scan}
 	master := loadMaster()
 	if *out != "" {
 		if err := os.WriteFile(*out, encodePNG(resize(render(master, s, *bare), *size)), 0o644); err != nil {
