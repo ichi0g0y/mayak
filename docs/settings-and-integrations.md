@@ -94,7 +94,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | `openMapOnRaidStart` | `true` | レイド開始時に tarkov.dev を現在のマップに切り替える |
 | `navigateMapOnPositionScreenshot` | `true` | 位置スクリーンショットの送信後、そのマップに切り替える |
-| `playerMarker` | `"default"` | 内蔵ブラウザの tarkov.dev マップに出る自分の位置マーカー。`default`（tarkov.dev 標準）/ `large` / `glow-red` / `glow-green` / `pulse` / `beacon` / `custom`。それ以外は `default` |
+| `playerMarker` | `"default"` | 内蔵ブラウザの tarkov.dev マップに出る自分の位置マーカー。`default`（tarkov.dev 標準）/ `outline` / `glow-red` / `glow-green` / `pulse` / `beacon` / `custom`。`large`（0.1.15）は `outline`、それ以外は `default` |
 | `playerMarkerImage` | `""` | `custom` の画像ファイル（PNG / SVG / JPEG / WebP / GIF、1 MiB まで）。読めなければ tarkov.dev 標準のまま（ログに Warn） |
 | `tarkovTrackerEnabled` | `false` | TarkovTracker との同期 |
 | `startMinimized` | `false` | 最小化した状態で起動する（「起動とウィンドウ」）。ウインドウの位置を復元したあとで最小化し、`minimizeToTray` が真ならトレイに入る |
@@ -271,7 +271,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 
 - tarkov.dev のマップは自分の位置を Leaflet の `divIcon`（class `marker`）で描き、中身は `<img src="/maps/interactive/player-position.png" style="width:24px;height:24px;rotate:Ndeg">`（向きが無いときは `player-position-no-rotation.png`）、アンカーは中心です。レイヤーグループ名は `player-position`、表示中はマップのコンテナに `player-position-shown` が付きます。
 - 設定 `playerMarker` に応じたスタイルシートを、ドキュメントスクリプト（`tarkovDevScript`。Remote Control の接続と同じスクリプト。マップページと `/maps/` だけ）が `<style id="mayak-player-marker">` として差し込みます。画像は `img[src$="/player-position.png"]` で選び、マーカーの箱には `:has()` で届きます。`rotate` は独立したプロパティなので、シートの `transform` や `filter` と合成され、tarkov.dev の向きは保たれます。
-- プリセット: `large`（2 倍、白い縁）、`glow-red` / `glow-green`（1.8 倍と光彩）、`pulse`（1.8 倍と、箱の `::before` に脈打つ赤いリング）、`beacon`（2.4 倍と黄色の光彩、箱の `::before` に放射状の光）。`custom` は `content: url(data:…)` で画像を置き換え、48 px に `margin: -12px` で中心を保ちます（上向きが 0°）。画像は Go 側で読んで data URL にします（`playerMarkerImageData`。種類は内容で判定できれば内容から（PNG / JPEG / GIF / WebP）、できなければ拡張子から。SVG は XML なので拡張子です。どちらでも分からないファイルだけ、ファイル名と判定結果を添えて断ります）。tarkov.dev の CSP は `img-src` に `data:` を含むので、data URL の画像はそのまま表示されます。
+- プリセット: `outline`（白い縁取り）、`glow-red` / `glow-green`（光彩）、`pulse`（箱の `::before` に脈打つ赤いリング）、`beacon`（黄色の光彩と、箱の `::before` に放射状の光）。どれもアイコン自体は tarkov.dev の 24 px のまま拡大しません（効果だけが外へ広がる）。`custom` は `content: url(data:…)` で画像を同じ 24 px の箱に置き換えます（上向きが 0°。サイズを持たない SVG のため幅・高さも指定）。0.1.15 の `large` は `outline` に読み替えます。画像は Go 側で読んで data URL にします（`playerMarkerImageData`。種類は内容で判定できれば内容から（PNG / JPEG / GIF / WebP）、できなければ拡張子から。SVG は XML なので拡張子です。どちらでも分からないファイルだけ、ファイル名と判定結果を添えて断ります）。tarkov.dev の CSP は `img-src` に `data:` を含むので、data URL の画像はそのまま表示されます。
 - 設定ページのギャラリーは同じ規則を `.marker-preview[data-style=…] .marker-icon`（と `img`）向けに作ったシート（`PlayerMarkerPreviewCSS`）で、`public/marker-arrow.svg` を 35° 回して見せます。
 - 保存時にマーカーの設定が変わると `applyBrowserScript` でシェルとポップアップのドキュメントスクリプトを作り直し、`browser:document-script` を送ります。開いているページはスクリプトを持ち替えないので、シェルはマップビューを閉じて作り直します（表示中なら `show`、それ以外は `preload`）。
 - 対象は内蔵ブラウザのマップだけです。自分の Chrome で開いた tarkov.dev には効きません（Stylus などで同じ CSS を入れる形になります）。tarkov.dev がファイル名やクラスを変えると効かなくなり、標準の表示に戻ります。

@@ -35,8 +35,8 @@ const emptyTracker:TrackerStatus={connection:'disabled',mode:'',profileId:'',acc
 const emptyStatus:Status={connection:'disconnected',monitoring:false,currentMap:'',raidActive:false,raidStartedAt:'',runThroughAt:'',lastQueueSeconds:0,lastScreenshot:'',screenshotType:'unknown',lastError:'',detectionScore:0,detectionLayout:'',analysisStage:'待機中',ocrRaw:'',lastQuest:'',questTrader:'',questMap:'',matchConfidence:0,questCandidates:[],cropPreview:'',questUrl:'',questObjectives:[],lastItem:'',itemId:'',itemShortName:'',itemUrl:'',itemIconUrl:'',itemConfidence:0,itemCandidates:[],lastRemoteCommand:'',tracker:emptyTracker}
 const maps=['customs','factory','night-factory','ground-zero','ground-zero-21','interchange','icebreaker','the-lab','the-lab-dark','the-labyrinth','lighthouse','reserve','shoreline','streets-of-tarkov','terminal','woods']
 // The player marker styles (app_marker.go), in the gallery's order.
-const markerStyles=['default','large','glow-red','glow-green','pulse','beacon','custom'] as const
-const markerNames:Record<string,Parameters<typeof translate>[1]>={default:'markerDefault',large:'markerLarge','glow-red':'markerGlowRed','glow-green':'markerGlowGreen',pulse:'markerPulse',beacon:'markerBeacon',custom:'markerCustom'}
+const markerStyles=['default','outline','glow-red','glow-green','pulse','beacon','custom'] as const
+const markerNames:Record<string,Parameters<typeof translate>[1]>={default:'markerDefault',outline:'markerOutline','glow-red':'markerGlowRed','glow-green':'markerGlowGreen',pulse:'markerPulse',beacon:'markerBeacon',custom:'markerCustom'}
 
 function normalizeStatus(value:Partial<Status>|null|undefined):Status{
   const next={...emptyStatus,...(value??{})}
@@ -275,7 +275,7 @@ function App(){
             </div>
             <div className="field marker-field"><Label>{t('markerTitle')}</Label><p className="help">{t('markerDescription')}</p>
               <style>{markerCSS}</style>
-              <div className="marker-gallery" role="radiogroup" aria-label={t('markerTitle')}>{markerStyles.map(style=><button type="button" key={style} role="radio" aria-checked={settings.playerMarker===style} className={`marker-choice${settings.playerMarker===style?' selected':''}`} onClick={()=>patch({playerMarker:style})}><span className="marker-preview" data-style={style}><span className="marker-icon"><img src="/marker-arrow.svg" alt="" style={{width:24,height:24,rotate:'35deg'}}/></span></span><span className="marker-name">{t(markerNames[style]??'markerCustom')}</span></button>)}</div>
+              <div className="marker-gallery" role="radiogroup" aria-label={t('markerTitle')}>{markerStyles.map(style=><button type="button" key={style} role="radio" aria-checked={settings.playerMarker===style} className={`marker-choice${settings.playerMarker===style?' selected':''}`} onClick={()=>style==='custom'&&!settings.playerMarkerImage?void chooseMarkerImage():patch({playerMarker:style})}><span className="marker-preview" data-style={style}><span className="marker-icon"><img src="/marker-arrow.svg" alt="" style={{width:24,height:24,rotate:'35deg'}}/></span></span><span className="marker-name">{t(markerNames[style]??'markerCustom')}</span></button>)}</div>
               <div className="marker-file-row"><Button type="button" size="sm" variant="secondary" onClick={chooseMarkerImage}><FolderOpen/>{t('markerChooseFile')}</Button><span className="marker-file-path" title={settings.playerMarkerImage}>{settings.playerMarkerImage||t('markerNoFile')}</span>{settings.playerMarkerImage&&<Button type="button" size="sm" variant="ghost" aria-label={t('markerClearFile')} onClick={()=>patch({playerMarkerImage:'',playerMarker:settings.playerMarker==='custom'?'default':settings.playerMarker})}><X/></Button>}</div>
               <p className="help">{t('markerHelp')}</p>
             </div>

@@ -21,6 +21,15 @@ func TestPlayerMarkerStylesAreKnownOrDefault(t *testing.T) {
 			t.Fatalf("%q -> %q", unknown, got)
 		}
 	}
+	if normalizePlayerMarker("large") != "outline" {
+		t.Fatal("the 0.1.15 name of the outline is not carried over")
+	}
+	// Nothing scales the icon: it keeps tarkov.dev's size on the map.
+	for _, style := range playerMarkerStyles {
+		if rules := playerMarkerRules(style, "IMG", "BOX", "data:image/png;base64,AAAA"); strings.Contains(rules, "IMG{transform") || strings.Contains(rules, "48px") {
+			t.Fatalf("%s scales the icon: %s", style, rules)
+		}
+	}
 	// Every style but tarkov.dev's own has rules on the marker image.
 	for _, style := range playerMarkerStyles[1:] {
 		rules := playerMarkerRules(style, "IMG", "BOX", "data:image/png;base64,AAAA")

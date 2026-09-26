@@ -26,8 +26,10 @@ import (
 const playerMarkerDefault = "default"
 
 // playerMarkerStyles are the markers to choose from, in the settings' order:
-// tarkov.dev's own, five that stand out, and the user's own image.
-var playerMarkerStyles = []string{playerMarkerDefault, "large", "glow-red", "glow-green", "pulse", "beacon", "custom"}
+// tarkov.dev's own, five that stand out, and the user's own image. None is
+// drawn larger than tarkov.dev's 24 px: the effects reach beyond the icon,
+// the icon itself keeps its size and place on the map.
+var playerMarkerStyles = []string{playerMarkerDefault, "outline", "glow-red", "glow-green", "pulse", "beacon", "custom"}
 
 // The selectors on tarkov.dev: the marker image, and its box.
 const (
@@ -40,6 +42,9 @@ const (
 const playerMarkerImageLimit = 1 << 20
 
 func normalizePlayerMarker(style string) string {
+	if style == "large" { // the outline's name in 0.1.15, when it also scaled the icon
+		return "outline"
+	}
 	for _, known := range playerMarkerStyles {
 		if style == known {
 			return style
@@ -54,26 +59,26 @@ func normalizePlayerMarker(style string) string {
 func playerMarkerRules(style, img, parent, image string) string {
 	const ring = `{content:"";position:absolute;left:50%;top:50%;border-radius:50%;pointer-events:none;box-sizing:border-box}`
 	switch style {
-	case "large":
-		return img + `{transform:scale(2);filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 1px 3px rgba(0,0,0,.9))}`
+	case "outline":
+		return img + `{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 1px 3px rgba(0,0,0,.9))}`
 	case "glow-red":
-		return img + `{transform:scale(1.8);filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 5px #ff3b30) drop-shadow(0 0 12px #ff3b30)}`
+		return img + `{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 5px #ff3b30) drop-shadow(0 0 12px #ff3b30)}`
 	case "glow-green":
-		return img + `{transform:scale(1.8);filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 5px #3dff6e) drop-shadow(0 0 12px #3dff6e)}`
+		return img + `{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 5px #3dff6e) drop-shadow(0 0 12px #3dff6e)}`
 	case "pulse":
-		return img + `{transform:scale(1.8);filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 1px 3px rgba(0,0,0,.9))}` +
+		return img + `{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 1px 3px rgba(0,0,0,.9))}` +
 			parentEach(parent, `::before`+ring[:len(ring)-1]+`;width:24px;height:24px;margin:-12px 0 0 -12px;border:3px solid #ff3b30;animation:mayak-marker-pulse 1.4s ease-out infinite}`) +
 			`@keyframes mayak-marker-pulse{from{transform:scale(1);opacity:.9}to{transform:scale(3.4);opacity:0}}`
 	case "beacon":
-		return img + `{transform:scale(2.4);filter:drop-shadow(0 0 1px #000) drop-shadow(0 0 4px #ffd60a) drop-shadow(0 0 14px #ffd60a)}` +
+		return img + `{filter:drop-shadow(0 0 1px #000) drop-shadow(0 0 4px #ffd60a) drop-shadow(0 0 14px #ffd60a)}` +
 			parentEach(parent, `::before`+ring[:len(ring)-1]+`;width:72px;height:72px;margin:-36px 0 0 -36px;background:radial-gradient(circle,rgba(255,214,10,.45),rgba(255,214,10,0) 70%)}`)
 	case "custom":
 		if image == "" {
 			return ""
 		}
-		// The image replaces tarkov.dev's at twice the size, still centred on
-		// the position (the box stays 24 px, so the extra hangs over evenly).
-		return img + `{content:url("` + image + `");width:48px!important;height:48px!important;margin:-12px 0 0 -12px;object-fit:contain;filter:drop-shadow(0 0 2px rgba(0,0,0,.85))}`
+		// The image replaces tarkov.dev's in its 24 px box (sized here too:
+		// an SVG without a size of its own would be drawn at none).
+		return img + `{content:url("` + image + `");width:24px!important;height:24px!important;object-fit:contain}`
 	}
 	return ""
 }
