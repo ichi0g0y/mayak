@@ -252,7 +252,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 
   確認できたトークンは、どのプロフィールにも割り当てていないキーとして保存します。キー名には TarkovTracker の note を使い、起動時、tracker セクションの表示中は 60 秒ごと、およびウィンドウにフォーカスが戻ったときに更新します。
 - **保存**（`internal/trackerstore`）: `%APPDATA%\Mayak\tracker-tokens.dat` に保存します。Windows では DPAPI（`CryptProtectData`）で暗号化し、それ以外の OS では平文です。ドキュメントのバージョンは 2 です。
-- **プロフィールとの紐付け**: EFT のログ（`trackerlog`）から account・profile・mode の組を検出して記憶し、組ごとにキーを 1 つ割り当てます。割り当て中のキーは削除できません。
+- **プロフィールとの紐付け**: EFT のログ（`trackerlog`）から account・profile・mode の組を検出して記憶し、組ごとにキーを 1 つ割り当てます。割り当ては両側から行えます: 「検出した EFT プロフィール」の各行でキーを選ぶか、「保存済みキー」の各キーで割り当て先のプロフィールを選ぶか（同じモードで、未割り当てかそのキーが付いているプロフィールだけを出す。「未割り当て」を選ぶとそのキーをプロフィールから外す）。どちらも `SetTrackerProfileKey` です。割り当て中のキーは削除できません。
 - **読み取るデータ**（`Progress`）: `tasksProgress`（完了・失敗）、`hideoutModulesProgress`、`displayName`、`playerLevel`、`meta.gameMode`。モードが一致しない場合はエラーにします。
 - **書き込むデータ**: ログで検出したタスクの状態変化（`completed` / `failed` / `uncompleted`）を `SetTask` で送ります。`uncompleted`（再開）は、以前の状態が `failed` のときだけ送ります。過去ログの同期では、選んだブレークポイント（ゲームのバージョンと開始日時）以降のタスク状態を `SetTasks` でまとめて送ります。
 - **接続状態**: `disabled` / `waiting-profile` / `missing-token` / `connecting` / `connected` / `error`

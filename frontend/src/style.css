@@ -461,3 +461,5 @@ select option { background: var(--raised); color: var(--text); }
 .marker-color-input { width: 44px; height: 28px; padding: 2px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); cursor: pointer; }
 .marker-color-input:disabled { opacity: .5; cursor: default; }
 .marker-color-value { font-size: 12px; color: var(--muted); }
+.tracker-key-assign { display: grid; gap: 6px; }
+.tracker-key-assign label { font-size: 11px; color: var(--muted-foreground); }
