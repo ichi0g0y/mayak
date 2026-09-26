@@ -183,7 +183,7 @@ async function loadSnapThumb(note){
 async function openSnap(id){
  const data=await go.SnapNoteOpen(id);
  if(!data?.note||typeof data.image!=='string')throw new Error('snap note');
- snaps.open={note:{...data.note,strokes:undefined},image:data.image,strokes:Array.isArray(data.note.strokes)?data.note.strokes:[]};
+ snaps.open={note:{...data.note,strokes:undefined},image:data.image,strokes:data.note.strokes??[]};
 }
 async function loadShots(){
  if(!shotsAvailable())return;
@@ -481,7 +481,7 @@ async function perform(type,data){
  case 'snapClose':snaps.open=null;void loadSnaps();return snapshot();
  case 'snapFilter':snaps.filter=['all','linked','single'].includes(data)?data:'all';return snapshot();
  case 'snapSave':{
-  const note=await go.SnapNoteSave(String(data?.id||''),String(data?.title||''),JSON.stringify(Array.isArray(data?.strokes)?data.strokes:[]),String(data?.thumb||''));
+  const note=await go.SnapNoteSave(String(data?.id||''),String(data?.title||''),JSON.stringify(data?.strokes??[]),String(data?.thumb||''));
   if(snaps.open?.note.id===note.id){snaps.open.note={...snaps.open.note,...note,strokes:undefined};snaps.open.strokes=data.strokes;}
   return snapshot();
  }

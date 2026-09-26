@@ -6,6 +6,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- Snap notes draw on layers: three layers over the original image, which is never edited; the original and each layer can be hidden.
+
 - Story chapters with a large picture (They Are Already Here, Accidental Witness and the like) are recognized as task screens again, and the picture beside a chapter's name is no longer read as letters.
 
 - Snap notes: the menu shows over the page (the page no longer disappears), the editor fills the page area and zooms with Ctrl+wheel or its toolbar, and captures of translated pages leave out Google Translate's bar.

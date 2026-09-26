@@ -806,3 +806,23 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 .page.snap-editor .snap-stage{flex:1;min-height:0}
 .page.snap-editor .snap-sheet{margin:0 auto}
 .snap-zoom-level{width:auto!important;min-width:52px;padding:0 6px!important;font-size:12px;font-variant-numeric:tabular-nums}
+
+/* Snap note layers: the stage and the layer panel side by side. */
+.snap-body{flex:1;min-height:0;display:flex;gap:10px}
+.snap-body .snap-stage{flex:1;min-width:0}
+.snap-sheet.base-hidden{background:repeating-conic-gradient(#d9d9d9 0 25%,#ffffff 0 50%) 0 0/20px 20px}
+.snap-sheet.base-hidden .snap-base{visibility:hidden}
+.snap-layers{flex:none;width:190px;display:flex;flex-direction:column;gap:4px;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--raised);align-self:flex-start}
+.snap-layers h3{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--text-2)}
+.snap-layer{display:flex;align-items:center;gap:4px;padding:3px;border:1px solid transparent;border-radius:8px}
+.snap-layer.on{border-color:var(--accent);background:var(--accent-soft)}
+.snap-layer.hidden .snap-layer-name{opacity:.5}
+.snap-layer button{height:30px;padding:0 6px;border-color:transparent}
+.snap-eye,.snap-layer-clear{width:30px;padding:0!important}
+.snap-eye.off{color:var(--muted)}
+.snap-layer-name{flex:1;min-width:0;display:grid!important;justify-content:start;justify-items:start;align-content:center;gap:0;text-align:left;font-size:12.5px}
+.snap-layer-name small{font-size:11px;color:var(--muted)}
+.snap-layer.base{margin-top:6px;padding-top:9px;border-top:1px solid var(--border);border-radius:0}
+.snap-layer.base .snap-layer-name{padding:0 6px}
+.snap-layer.base>.icon{width:15px;height:15px;margin-right:8px;color:var(--muted)}
+@media(max-width:900px){.snap-body{flex-direction:column}.snap-layers{width:auto;align-self:stretch;flex-direction:row;flex-wrap:wrap}}
