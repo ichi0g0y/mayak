@@ -292,3 +292,58 @@ func (e *Chromium) BrowserCommand(command, rawURL string) error {
 	}
 	return nil
 }
+
+// devToolsResultHandler is the completion handler of a DevTools call whose
+// result is wanted: WebView2 calls Invoke(errorCode, returnObjectAsJson).
+type devToolsResultHandler struct {
+	vtbl *browserHandlerVtbl
+	done func(result string, err error)
+	iid  windows.GUID
+}
+
+var devToolsResultPending = map[*devToolsResultHandler]struct{}{}
+
+var devToolsResultVtbl = browserHandlerVtbl{
+	browserVtbl.query,
+	browserVtbl.add,
+	browserVtbl.release,
+	NewComProc(func(h *devToolsResultHandler, errorCode uintptr, result *uint16) uintptr {
+		delete(devToolsResultPending, h)
+		if int32(errorCode) != 0 {
+			h.done("", fmt.Errorf("devtools: 0x%x", uint32(errorCode)))
+			return 0
+		}
+		text := ""
+		if result != nil {
+			text = UTF16PtrToString(result)
+		}
+		h.done(text, nil)
+		return 0
+	}),
+}
+
+// DevToolsCall runs a DevTools protocol method and hands its result (JSON)
+// to done. It must be called on the UI thread, which also runs done.
+func (e *Chromium) DevToolsCall(method, params string, done func(result string, err error)) error {
+	w := e.webview
+	if w == nil || e.shuttingDown {
+		return errors.New("webview is not available")
+	}
+	name, err := windows.UTF16PtrFromString(method)
+	if err != nil {
+		return err
+	}
+	args, err := windows.UTF16PtrFromString(params)
+	if err != nil {
+		return err
+	}
+	guid, _ := windows.GUIDFromString("{5C4889F0-5EF6-4C5A-952C-D8F1B92D0574}")
+	h := &devToolsResultHandler{vtbl: &devToolsResultVtbl, done: done, iid: guid}
+	devToolsResultPending[h] = struct{}{}
+	hr, _, _ := w.vtbl.CallDevToolsProtocolMethod.Call(uintptr(unsafe.Pointer(w)), uintptr(unsafe.Pointer(name)), uintptr(unsafe.Pointer(args)), uintptr(unsafe.Pointer(h)))
+	if hr != 0 {
+		delete(devToolsResultPending, h)
+		return fmt.Errorf("devtools %s: 0x%x", method, hr)
+	}
+	return nil
+}

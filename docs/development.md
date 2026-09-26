@@ -42,6 +42,7 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `app_adblock.go` | 内蔵ブラウザの広告ブロック設定 |
 | `app_favicon.go` | サイトアイコンのディスクキャッシュ |
 | `app_catalog.go` | ゲームデータカタログの更新と定期監視（[catalog.md](catalog.md)） |
+| `app_snapnote.go` | スナップノートの撮影・作成・保存・紐付け（保存は `internal/snapnote`、撮影は `browserview.Capture`） |
 | `app_screenshots.go` | スクリーンショット解析後の処理、デバッグ用メタデータ、古いスクリーンショットの整理 |
 | `app_item.go` | 認識したアイテムをアイテム欄へ送る。アイテム検索と詳細取得 |
 | `app_popup.go` / `app_popup_windows.go` / `app_popup_other.go` | アイテムポップアップウィンドウ。Windows ではメインウィンドウをオーナーにする |
@@ -135,6 +136,7 @@ ocrtrain -catalog %AppData%\Mayak\catalog\pve.json -fonts <dir with Bender*.otf>
 | `src/browser/shell.js` | シェルの描画（タブ、ブックマーク、アイテム欄、メニュー） |
 | `src/browser/words.js` | シェル・アイテム欄・ポップアップの文言（[languages.md](languages.md)） |
 | `src/browser/shell-core.js` | シェルの共有部分（状態、`action`、`render` の入口、HTML の部品） |
+| `src/browser/view-snapnotes.js` | スナップノートの撮影メニュー、一覧、書き込み画面（[browser-shell.md](browser-shell.md#スナップノート)） |
 | `src/browser/view-bosses.js` / `view-screenshots.js` / `view-item.js` / `view-tutorial.js` | ボス、スクリーンショット、アイテム欄、チュートリアルの描画とイベント処理 |
 | `src/browser/api.js` | バックエンド呼び出しとイベント処理、状態の保存。設定画面用のブリッジ `window.mayakDesktop` を用意する |
 | `src/browser/state.js` | タブ・ブックマークなどの状態操作（純粋関数中心） |

@@ -27,6 +27,12 @@ const loadingViews=new Set();
 // The game's screenshots (on the Host): newest first, their thumbnails and
 // the full image being viewed, as data URLs from the Go side.
 const shots={list:[],thumbs:{},full:{},viewing:''};
+// Snap notes (internal/snapnote, app_snapnote.go): the list (latest changed
+// first), their thumbnails by ID, the note open for drawing (its image as a
+// data URL and its strokes), the list's filter and a capture under way.
+const snaps={list:[],thumbs:{},open:null,filter:'all',busy:false};
+const snapThumbKeys={};
+const snapsAvailable=()=>platform==='windows';
 const thumbQueue=[];let thumbLoading=false;
 // Bosses of each map and the Goons reports (json.tarkov.dev, through the Go
 // side), asked again every few minutes: unchanged data costs a small request.
@@ -43,7 +49,7 @@ function loadFavicon(url,refresh=false){
  go.BrowserFavicon(url,refresh).then(data=>{if(typeof data==='string'&&data.startsWith('data:image/')&&faviconData[url]!==data){faviconData[url]=data;update();}}).catch(()=>{});
 }
 
-const snapshot=()=>({...state,update:updateStatus,updateChannel:hostUpdateChannel,updateBar:updateBarVisible(),statusRows:statusRows(),goonReport,bosses:bosses&&{...bosses,current:host?.map||''},screenshots:shotsAvailable()?{list:shots.list,thumbs:shots.thumbs,viewing:shots.viewing,full:shots.full[shots.viewing]||''}:null,loadingTabs:[...loadingViews],popup:popup&&{key:popup.key},faviconData,host:state.connection.mode==='local'?host:null,hostQuestSite,item,itemOpen,itemSearch,itemBusy,itemHistory,settingsSection:section,localHost:platform==='windows',connectionStatus:state.connection.mode==='local'?'connected':state.connection.mode==='off'?'off':peerState.phase==='connected'?'connected':'disconnected',peer:peerState,error});
+const snapshot=()=>({...state,snapNotes:snapsAvailable()?{list:snaps.list,thumbs:snaps.thumbs,open:snaps.open,filter:snaps.filter,busy:snaps.busy}:null,update:updateStatus,updateChannel:hostUpdateChannel,updateBar:updateBarVisible(),statusRows:statusRows(),goonReport,bosses:bosses&&{...bosses,current:host?.map||''},screenshots:shotsAvailable()?{list:shots.list,thumbs:shots.thumbs,viewing:shots.viewing,full:shots.full[shots.viewing]||''}:null,loadingTabs:[...loadingViews],popup:popup&&{key:popup.key},faviconData,host:state.connection.mode==='local'?host:null,hostQuestSite,item,itemOpen,itemSearch,itemBusy,itemHistory,settingsSection:section,localHost:platform==='windows',connectionStatus:state.connection.mode==='local'?'connected':state.connection.mode==='off'?'off':peerState.phase==='connected'?'connected':'disconnected',peer:peerState,error});
 const update=()=>notify(snapshot());
 // An error shows as a strip along the bottom, in a row of its own like the
 // update bar (see there): a toast over the page would be under it. The row
@@ -118,8 +124,8 @@ async function persist(){
  // Until a restored item has loaded, the saved one is kept.
  const shown=item||restoredItem;
  const itemPanel={open:itemOpen,id:shown?.id||'',mode:shown?.mode||''};
- const {version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,bookmarkView,favicons,theme,adblock,taskMode,questSite,translateWiki,bookmarks,tabs,active}=state;
- await go.BrowserSave(JSON.stringify({version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,itemPanel,bookmarkView,favicons,theme,adblock,taskMode,questSite,translateWiki,bookmarks,tabs,active,connection:{mode:state.connection.mode,stun:state.connection.stun}}));
+ const {version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,snapNotesCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,bookmarkView,favicons,theme,adblock,taskMode,questSite,translateWiki,bookmarks,tabs,active}=state;
+ await go.BrowserSave(JSON.stringify({version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,snapNotesCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,itemPanel,bookmarkView,favicons,theme,adblock,taskMode,questSite,translateWiki,bookmarks,tabs,active,connection:{mode:state.connection.mode,stun:state.connection.stun}}));
 }
 async function changed(){update();await persist();void show().catch(messageError);}
 function enqueue(fn){const result=queue.then(fn);queue=result.catch(messageError);return result.catch(()=>snapshot());}
@@ -160,6 +166,22 @@ function shotMeta(m){
  const text=(v,max=200)=>typeof v==='string'?v.slice(0,max):'';
  const num=v=>Number.isFinite(v)?v:0;
  return {type:['tasks','item','position'].includes(m.type)?m.type:'unknown',layout:text(m.layout,60),score:num(m.score),map:text(m.map,60),raid:m.raid===true,stage:text(m.stage),match:text(m.match),detail:text(m.detail,80),confidence:num(m.confidence),candidates:Array.isArray(m.candidates)?m.candidates.slice(0,3).map(c=>text(c)):[],ocr:text(m.ocr,500),position:text(m.position,80),error:text(m.error,300)};
+}
+async function loadSnaps(){
+ if(!snapsAvailable())return;
+ try{const list=await go.SnapNoteList();snaps.list=Array.isArray(list)?list.filter(n=>n&&typeof n.id==='string'):[];}catch{return;}
+ update();
+ for(const note of snaps.list.slice(0,200))void loadSnapThumb(note);
+}
+// A thumbnail is loaded again only after its note changed.
+async function loadSnapThumb(note){
+ const key=note.updatedAt||'';if(snapThumbKeys[note.id]===key)return;snapThumbKeys[note.id]=key;
+ try{const data=await go.SnapNoteThumb(note.id);if(typeof data==='string'&&data.startsWith('data:image/jpeg;base64,'))snaps.thumbs[note.id]=data;else delete snaps.thumbs[note.id];update();}catch{}
+}
+async function openSnap(id){
+ const data=await go.SnapNoteOpen(id);
+ if(!data?.note||typeof data.image!=='string')throw new Error('snap note');
+ snaps.open={note:{...data.note,strokes:undefined},image:data.image,strokes:Array.isArray(data.note.strokes)?data.note.strokes:[]};
 }
 async function loadShots(){
  if(!shotsAvailable())return;
@@ -361,6 +383,8 @@ const ready=(async()=>{
  go.GetUpdateStatus?.().then(updateChanged).catch(()=>{});
  // A new screenshot shows in the sidebar (and on the screenshot page).
  window.mayakDesktop.on('browser:screenshot',()=>void loadShots());
+ window.mayakDesktop.on('snapnote:changed',()=>void loadSnaps());
+ void loadSnaps();
  void loadShots();
  void loadBosses();
  setInterval(()=>{if(document.visibilityState==='visible')void loadBosses();},bossesEvery);
@@ -431,6 +455,30 @@ async function perform(type,data){
   })();
   return snapshot();
  }
+ case 'snapnotes':openLocal(state,'snapnotes');snaps.open=null;void loadSnaps();break;
+ // A capture shows the page first (a menu may have hidden it), then opens
+ // the new note for drawing.
+ case 'snapCapture':{
+  if(!snapsAvailable()||tab?.kind!=='web'||snaps.busy)return snapshot();
+  overlay=false;await show();await new Promise(resolve=>setTimeout(resolve,150));
+  snaps.busy=true;update();
+  let note;
+  try{note=await go.SnapNoteCapture(tab.id,originalURL(tab.url)||tab.url,tab.title||'',!!data?.full);}
+  catch(e){snaps.busy=false;const shown=!!error;error=t(state.language,'snapCaptureFailed')+String(e?.message||e);update();if(!shown)void show().catch(()=>{});return snapshot();}
+  snaps.busy=false;openLocal(state,'snapnotes');await openSnap(note.id);void loadSnaps();break;
+ }
+ case 'snapOpen':openLocal(state,'snapnotes');await openSnap(String(data||''));break;
+ case 'snapClose':snaps.open=null;void loadSnaps();return snapshot();
+ case 'snapFilter':snaps.filter=['all','linked','single'].includes(data)?data:'all';return snapshot();
+ case 'snapSave':{
+  const note=await go.SnapNoteSave(String(data?.id||''),String(data?.title||''),JSON.stringify(Array.isArray(data?.strokes)?data.strokes:[]),String(data?.thumb||''));
+  if(snaps.open?.note.id===note.id){snaps.open.note={...snaps.open.note,...note,strokes:undefined};snaps.open.strokes=data.strokes;}
+  return snapshot();
+ }
+ case 'snapNew':{const note=await go.SnapNoteCreate(String(data?.image||''),String(data?.title||''));openLocal(state,'snapnotes');await openSnap(note.id);void loadSnaps();break;}
+ case 'snapLink':{const note=await go.SnapNoteLink(String(data?.id||''),!!data?.linked);if(snaps.open?.note.id===note.id)snaps.open.note={...snaps.open.note,linked:note.linked};void loadSnaps();return snapshot();}
+ case 'snapDelete':{const id=String(data||'');await go.SnapNoteDelete(id);if(snaps.open?.note.id===id)snaps.open=null;await loadSnaps();return snapshot();}
+ case 'snapOpenPage':{const note=snaps.open?.note.id===data?snaps.open.note:snaps.list.find(n=>n.id===data);if(!note?.url)return snapshot();return perform('openOrFocus',note.url);}
  case 'screenshots':openLocal(state,'screenshots');shots.viewing='';void loadShots();break;
  case 'screenshotOpen':openLocal(state,'screenshots');await changed();void loadShots();void viewShot(String(data||''));return snapshot();
  case 'screenshotView':void viewShot(String(data||''));return snapshot();
@@ -477,7 +525,7 @@ async function perform(type,data){
  case 'pin':togglePin(state,data);break;
  case 'move':moveTab(state,data?.id,data?.before??null);break;
  case 'preferences':{
-  const next=restore({...state,...data});state.language=next.language;state.tutorialDone=next.tutorialDone;state.layout=next.layout;state.sidebarSide=next.sidebarSide;state.theme=next.theme;state.clock=next.clock;state.sidebarCollapsed=next.sidebarCollapsed;state.bookmarksCollapsed=next.bookmarksCollapsed;state.screenshotsCollapsed=next.screenshotsCollapsed;state.bossesView=next.bossesView;state.bossMap=next.bossMap;state.bossMode=next.bossMode;if(data&&'bossMode' in data)void loadBosses();if(data&&'language' in data)void loadBosses();state.sidebarWidth=next.sidebarWidth;state.itemPanelWidth=next.itemPanelWidth;state.itemPanelHeight=next.itemPanelHeight;state.itemDock=next.itemDock;state.bookmarkView=next.bookmarkView;state.taskMode=next.taskMode;state.questSite=next.questSite;state.translateWiki=next.translateWiki;
+  const next=restore({...state,...data});state.language=next.language;state.tutorialDone=next.tutorialDone;state.layout=next.layout;state.sidebarSide=next.sidebarSide;state.theme=next.theme;state.clock=next.clock;state.sidebarCollapsed=next.sidebarCollapsed;state.bookmarksCollapsed=next.bookmarksCollapsed;state.screenshotsCollapsed=next.screenshotsCollapsed;state.snapNotesCollapsed=next.snapNotesCollapsed;state.bossesView=next.bossesView;state.bossMap=next.bossMap;state.bossMode=next.bossMode;if(data&&'bossMode' in data)void loadBosses();if(data&&'language' in data)void loadBosses();state.sidebarWidth=next.sidebarWidth;state.itemPanelWidth=next.itemPanelWidth;state.itemPanelHeight=next.itemPanelHeight;state.itemDock=next.itemDock;state.bookmarkView=next.bookmarkView;state.taskMode=next.taskMode;state.questSite=next.questSite;state.translateWiki=next.translateWiki;
   // Blocking applies to new requests; reload so the visible page matches the setting.
   if(next.adblock!==state.adblock){state.adblock=next.adblock;await go.BrowserSetAdblock(state.adblock);if(tab?.kind==='web')await native('reload',{id:tab.id});}
   break;

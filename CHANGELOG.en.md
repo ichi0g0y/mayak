@@ -6,6 +6,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- Snap notes: the brush button in the built-in browser's toolbar captures what is on screen or the whole page, to draw on with a pen. A note taken from a page stays linked to it: the page's button counts its notes and its menu opens them. Notes can be unlinked, or started from a blank sheet, an image file or an image on the clipboard. "Snap notes" in the sidebar opens the list.
+
 - Lighter: the catalog check every five minutes no longer rebuilds the task list and the hideout when they did not change (new flea prices update the items only).
 
 - Nightly builds are now published. Set "Update channel" under Settings → About MAYAK to Nightly to update to the version in development, built every day. On nightly, a newer stable release is installed instead.

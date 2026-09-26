@@ -107,3 +107,6 @@ func New(window *application.WebviewWindow, notify func(Event)) *Manager {
 }
 func (m *Manager) Command(command string, o Options) error { return m.command(command, o) }
 func (m *Manager) Close()                                  { m.close() }
+
+// Capture takes a PNG of tab id: what is on screen, or with full the whole page.
+func (m *Manager) Capture(id string, full bool) ([]byte, error) { return m.capture(id, full) }

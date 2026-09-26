@@ -83,7 +83,7 @@ function restoreItemPanel(raw){
 // The sidebar can be resized between these widths (logical pixels).
 const sidebarWidths={min:180,max:420,default:224};
 const clampSidebar=value=>Number.isFinite(value)?Math.round(Math.min(sidebarWidths.max,Math.max(sidebarWidths.min,value))):sidebarWidths.default;
-function defaults() { return {version:1,bookmarkRevision,language:'ja',tutorialDone:false,clock:'24',layout:'vertical',sidebarSide:'left',sidebarCollapsed:false,bookmarksCollapsed:false,screenshotsCollapsed:false,bossesView:'full',bossMap:'',bossMode:'',sidebarWidth:224,itemPanelWidth:320,itemPanelHeight:280,itemDock:'right',itemPanel:{open:false,id:'',mode:''},favicons:{},bookmarkView:'grid',theme:'mayak-dark',adblock:true,taskMode:'new',questSite:'host',translateWiki:false,connection:{mode:'local',stun:DEFAULT_STUN},bookmarks:structuredClone(defaultBookmarks),tabs:[mapTab(),trackerTab(),{id:'settings',kind:'settings'}],active:mapTabID}; }
+function defaults() { return {version:1,bookmarkRevision,language:'ja',tutorialDone:false,clock:'24',layout:'vertical',sidebarSide:'left',sidebarCollapsed:false,bookmarksCollapsed:false,screenshotsCollapsed:false,snapNotesCollapsed:false,bossesView:'full',bossMap:'',bossMode:'',sidebarWidth:224,itemPanelWidth:320,itemPanelHeight:280,itemDock:'right',itemPanel:{open:false,id:'',mode:''},favicons:{},bookmarkView:'grid',theme:'mayak-dark',adblock:true,taskMode:'new',questSite:'host',translateWiki:false,connection:{mode:'local',stun:DEFAULT_STUN},bookmarks:structuredClone(defaultBookmarks),tabs:[mapTab(),trackerTab(),{id:'settings',kind:'settings'}],active:mapTabID}; }
 function restore(raw={}) {
   const state=defaults();
   state.bookmarkRevision=bookmarkRevision;
@@ -92,7 +92,7 @@ function restore(raw={}) {
   state.language=raw.language==='en'?'en':'ja'; state.layout=raw.layout==='horizontal'?'horizontal':'vertical';state.sidebarSide=raw.sidebarSide==='right'?'right':'left';
   // The settings choose the tab sidebar's place in one: left, right or top.
   if(['left','right','top'].includes(raw.navPosition)){state.layout=raw.navPosition==='top'?'horizontal':'vertical';if(raw.navPosition!=='top')state.sidebarSide=raw.navPosition;}
-  state.taskMode=raw.taskMode==='reuse'?'reuse':'new';state.adblock=raw.adblock!==false;const theme={'claude-dark':'mayak-dark','claude-light':'mayak-light'}[raw.theme]||raw.theme;state.theme=themes.includes(theme)?theme:'mayak-dark';state.clock=raw.clock==='12'?'12':'24';state.sidebarCollapsed=raw.sidebarCollapsed===true;state.bookmarksCollapsed=raw.bookmarksCollapsed===true;state.screenshotsCollapsed=raw.screenshotsCollapsed===true;state.bossesView=['full','goons','closed'].includes(raw.bossesView)?raw.bossesView:raw.bossesCollapsed===true?'closed':'full';state.bossMap=typeof raw.bossMap==='string'&&/^[a-z0-9-]{1,40}$/.test(raw.bossMap)?raw.bossMap:'';state.bossMode=['regular','pve'].includes(raw.bossMode)?raw.bossMode:'';state.sidebarWidth=clampSidebar(raw.sidebarWidth);state.itemPanelWidth=clampItemPanel(raw.itemPanelWidth);state.itemPanelHeight=clampItemPanelHeight(raw.itemPanelHeight);state.itemDock=['left','bottom'].includes(raw.itemDock)?raw.itemDock:'right';state.itemPanel=restoreItemPanel(raw.itemPanel);state.bookmarkView=raw.bookmarkView==='list'?'list':'grid';state.favicons=restoreFavicons(raw.favicons);
+  state.taskMode=raw.taskMode==='reuse'?'reuse':'new';state.adblock=raw.adblock!==false;const theme={'claude-dark':'mayak-dark','claude-light':'mayak-light'}[raw.theme]||raw.theme;state.theme=themes.includes(theme)?theme:'mayak-dark';state.clock=raw.clock==='12'?'12':'24';state.sidebarCollapsed=raw.sidebarCollapsed===true;state.bookmarksCollapsed=raw.bookmarksCollapsed===true;state.screenshotsCollapsed=raw.screenshotsCollapsed===true;state.snapNotesCollapsed=raw.snapNotesCollapsed===true;state.bossesView=['full','goons','closed'].includes(raw.bossesView)?raw.bossesView:raw.bossesCollapsed===true?'closed':'full';state.bossMap=typeof raw.bossMap==='string'&&/^[a-z0-9-]{1,40}$/.test(raw.bossMap)?raw.bossMap:'';state.bossMode=['regular','pve'].includes(raw.bossMode)?raw.bossMode:'';state.sidebarWidth=clampSidebar(raw.sidebarWidth);state.itemPanelWidth=clampItemPanel(raw.itemPanelWidth);state.itemPanelHeight=clampItemPanelHeight(raw.itemPanelHeight);state.itemDock=['left','bottom'].includes(raw.itemDock)?raw.itemDock:'right';state.itemPanel=restoreItemPanel(raw.itemPanel);state.bookmarkView=raw.bookmarkView==='list'?'list':'grid';state.favicons=restoreFavicons(raw.favicons);
   state.questSite=['host',...sites].includes(raw.questSite)?raw.questSite:'host';
   state.translateWiki=raw.translateWiki===true;
   // The LAN receiving mode ("remote") is gone; a browser saved in it starts off.
@@ -106,13 +106,14 @@ function restore(raw={}) {
   }
   if (revision < 2) for (const b of state.bookmarks) if (b.url==='https://tarkovtracker.io/') b.url=trackerHome;
   if (Array.isArray(raw.tabs)) {
-    const ids=new Set();let settings=false,bookmarksPage=false,screenshotsPage=false,bossesPage=false,tabsPage=false;
+    const ids=new Set();let settings=false,bookmarksPage=false,screenshotsPage=false,snapNotesPage=false,bossesPage=false,tabsPage=false;
     const savedMap=raw.tabs.find(t=>t?.id===mapTabID),savedTracker=raw.tabs.find(t=>t?.id===trackerTabID);
     state.tabs=raw.tabs.filter(t=>{
       if(!t || typeof t.id!=='string' || !/^[a-zA-Z0-9_-]{1,80}$/.test(t.id) || fixedTabIDs.includes(t.id) || ids.has(t.id))return false;
       if(t.kind==='settings'){if(settings)return false;settings=true;}
       else if(t.kind==='bookmarks'){if(bookmarksPage)return false;bookmarksPage=true;}
       else if(t.kind==='screenshots'){if(screenshotsPage)return false;screenshotsPage=true;}
+      else if(t.kind==='snapnotes'){if(snapNotesPage)return false;snapNotesPage=true;}
       else if(t.kind==='bosses'){if(bossesPage)return false;bossesPage=true;}
       else if(t.kind==='tabs'){if(tabsPage)return false;tabsPage=true;}
       else if(t.kind!=='blank' && !(t.kind==='web' && webURL(t.url)))return false;

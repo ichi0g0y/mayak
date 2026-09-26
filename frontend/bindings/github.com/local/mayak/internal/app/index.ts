@@ -14,5 +14,6 @@ export {
     ItemSearchHit,
     PopupPage,
     PopupPlace,
-    ScreenshotEntry
+    ScreenshotEntry,
+    SnapNoteData
 } from "./models.js";

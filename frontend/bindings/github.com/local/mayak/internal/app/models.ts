@@ -8,6 +8,9 @@ import { Create as $Create } from "@wailsio/runtime";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as screenshotstore$0 from "../screenshotstore/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as snapnote$0 from "../snapnote/models.js";
 
 /**
  * GoonIdentity is an account and game mode seen in the EFT logs.
@@ -350,6 +353,39 @@ export class ScreenshotEntry {
     }
 }
 
+/**
+ * SnapNoteData is a note opened for drawing: the note with its strokes and
+ * its image as a data URL.
+ */
+export class SnapNoteData {
+    "note": snapnote$0.Note;
+    "image": string;
+
+    /** Creates a new SnapNoteData instance. */
+    constructor($$source: Partial<SnapNoteData> = {}) {
+        if (!("note" in $$source)) {
+            this["note"] = (new snapnote$0.Note());
+        }
+        if (!("image" in $$source)) {
+            this["image"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new SnapNoteData instance from a string or object.
+     */
+    static createFrom($$source: any = {}): SnapNoteData {
+        const $$createField0_0 = $$createType7;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("note" in $$parsedSource) {
+            $$parsedSource["note"] = $$createField0_0($$parsedSource["note"]);
+        }
+        return new SnapNoteData($$parsedSource as Partial<SnapNoteData>);
+    }
+}
+
 // Private type creation functions
 const $$createType0 = GoonRaid.createFrom;
 const $$createType1 = $Create.Nullable($$createType0);
@@ -358,3 +394,4 @@ const $$createType3 = $Create.Array($$createType2);
 const $$createType4 = $Create.Map($Create.Any, $Create.Any);
 const $$createType5 = screenshotstore$0.Record.createFrom;
 const $$createType6 = $Create.Nullable($$createType5);
+const $$createType7 = snapnote$0.Note.createFrom;

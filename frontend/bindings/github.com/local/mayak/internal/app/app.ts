@@ -23,6 +23,9 @@ import * as iteminfo$0 from "../iteminfo/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as model$0 from "../model/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as snapnote$0 from "../snapnote/models.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
@@ -392,6 +395,78 @@ export function SetTrackerProfileKey(accountID: string, profileID: string, mode:
     return $Call.ByID(3013609958, accountID, profileID, mode, keyID);
 }
 
+/**
+ * SnapNoteCapture captures the page in tab viewID (what is on screen, or with
+ * full the whole page) as a new note linked to that page.
+ */
+export function SnapNoteCapture(viewID: string, pageURL: string, pageTitle: string, full: boolean): $CancellablePromise<snapnote$0.Note> {
+    return $Call.ByID(2024184632, viewID, pageURL, pageTitle, full).then(($result: any) => {
+        return $$createType16($result);
+    });
+}
+
+/**
+ * SnapNoteCreate starts a note on its own (not linked to a page) from an
+ * image data URL: a pasted picture, an image file or a blank sheet.
+ */
+export function SnapNoteCreate(imageDataURL: string, title: string): $CancellablePromise<snapnote$0.Note> {
+    return $Call.ByID(173459086, imageDataURL, title).then(($result: any) => {
+        return $$createType16($result);
+    });
+}
+
+/**
+ * SnapNoteDelete removes a note.
+ */
+export function SnapNoteDelete(id: string): $CancellablePromise<void> {
+    return $Call.ByID(2432754661, id);
+}
+
+/**
+ * SnapNoteLink links a note to the page it was taken from, or unlinks it.
+ */
+export function SnapNoteLink(id: string, linked: boolean): $CancellablePromise<snapnote$0.Note> {
+    return $Call.ByID(2416529170, id, linked).then(($result: any) => {
+        return $$createType16($result);
+    });
+}
+
+/**
+ * SnapNoteList returns every note (without strokes), the latest changed first.
+ */
+export function SnapNoteList(): $CancellablePromise<snapnote$0.Note[]> {
+    return $Call.ByID(2495635670).then(($result: any) => {
+        return $$createType17($result);
+    });
+}
+
+/**
+ * SnapNoteOpen returns a note with its strokes and image.
+ */
+export function SnapNoteOpen(id: string): $CancellablePromise<$models.SnapNoteData> {
+    return $Call.ByID(625471842, id).then(($result: any) => {
+        return $$createType18($result);
+    });
+}
+
+/**
+ * SnapNoteSave stores a note's title, drawing (JSON) and thumbnail (a JPEG
+ * data URL; empty keeps the one it has).
+ */
+export function SnapNoteSave(id: string, title: string, strokes: string, thumbDataURL: string): $CancellablePromise<snapnote$0.Note> {
+    return $Call.ByID(4245433319, id, title, strokes, thumbDataURL).then(($result: any) => {
+        return $$createType16($result);
+    });
+}
+
+/**
+ * SnapNoteThumb returns a note's thumbnail as a data URL, empty before one
+ * was saved.
+ */
+export function SnapNoteThumb(id: string): $CancellablePromise<string> {
+    return $Call.ByID(1299541354, id);
+}
+
 export function StartMonitoring(): $CancellablePromise<void> {
     return $Call.ByID(2732801236);
 }
@@ -425,3 +500,6 @@ const $$createType12 = model$0.LogEntry.createFrom;
 const $$createType13 = $Create.Array($$createType12);
 const $$createType14 = config$0.Settings.createFrom;
 const $$createType15 = model$0.Status.createFrom;
+const $$createType16 = snapnote$0.Note.createFrom;
+const $$createType17 = $Create.Array($$createType16);
+const $$createType18 = $models.SnapNoteData.createFrom;
