@@ -6,6 +6,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- Story chapters with a large picture (They Are Already Here, Accidental Witness and the like) are recognized as task screens again.
+
 - Snap notes: the menu shows over the page (the page no longer disappears), the editor fills the page area and zooms with Ctrl+wheel or its toolbar, and captures of translated pages leave out Google Translate's bar.
 - The toolbar's icons on the right (translate, snap notes, wiki search, open in the default browser) can be reordered by dragging; the order is kept across restarts.
 

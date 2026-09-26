@@ -104,6 +104,7 @@ Screenshots/*.png|jpg ─▶ watcher ─▶ processScreenshot(sequence++、前�
   - `characterScore = max(CharacterAnchor, RaidCharacterAnchor) の 明×.9 + エッジ×.8 + 暗部×.05`
 - 高い方を採用し、レイアウトは `trader-tasks` か `character-tasks` になります。`MinScore` の **.42 以上**ならタスク一覧です。
 - `character-tasks` のうち、「ストーリー」タブ(`StoryAnchor`)の明部が **.6 以上**なら `story-tasks` です(選択中は .87、隣の「サイド」一覧が選ばれているときは .06〜.14)。ストーリー画面は一覧ではなくチャプター 1 つを表示し、その名前("Blue Fire"、"The Ticket" など。日本語 UI でも英語)が `StoryTitle` の固定位置に出るので、そこをそのまま切り出します。バナー画像の上に白文字で、幅は右側の画像に食い込まないよう 620 px にしています。チャプター名は tarkov.dev にタスクとして入っています。
+- ストーリーの章は、大きな挿絵があるとパネルの縁が少なくなり、スコアが基準（.42）をわずかに下回ることがあります（They Are Already Here と Accidental Witness で .419 と .416）。そのため、「ストーリー」タブが光っていて文字の縁が .08 以上あり（ラベルがある）、キャラクター画面の「タスク」タブの明部が .2 以上（実測 .29 と .47。レイド中のインベントリでは .06〜.09）のときは、スコアを基準まで引き上げてタスク画面とみなします（`storyTabEdges`、`storyCharacterTab`）。
 - `character-tasks` の切り出し (`selectedCharacterTitle`): x 300〜800、y 150〜1280 の範囲で、64 px 幅の帯の平均輝度が最も高い帯(選択中の行)を探し、その中心から高さ 96 px を切り出します。右端は行内の縦の区切り線(x < 1300)まで広げます(`nameColumnEnd`)。長いタスク名が途中で切れないようにするためです。
 
 ## OCR エンジン (`internal/ocr`)

@@ -28,6 +28,16 @@ var Preset2560 = Preset{Width: 2560, Height: 1440, Anchor: Rect{150, 18, 240, 55
 // least (.87 measured; the "Side" list lit next to it gives it .06–.14).
 const storyTabBright = .6
 
+// With the Story tab lit, a chapter counts as a Tasks screen when the tab
+// carries its label (storyTabEdges; .15 measured) and the character screen's
+// Tasks tab is lit at least storyCharacterTab (.29 and .47 measured; a
+// raid's inventory has .06–.09 there). A chapter with a large picture has
+// few panel edges and scores just under MinScore otherwise.
+const (
+	storyTabEdges     = .08
+	storyCharacterTab = .2
+)
+
 type Result struct {
 	IsTasks            bool
 	Score              float64
@@ -95,8 +105,11 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 		score, layout, cropRect = characterScore, "character-tasks", selectedCharacterTitle(px)
 		// The Story tab shows one chapter, its name at a fixed place, rather
 		// than a list with a selected row.
-		if stats(px, p.StoryAnchor).bright >= storyTabBright {
+		if story := stats(px, p.StoryAnchor); story.bright >= storyTabBright {
 			layout, cropRect = "story-tasks", p.StoryTitle
+			if story.edges >= storyTabEdges && characterTabBright >= storyCharacterTab {
+				score = max(score, p.MinScore)
+			}
 		}
 	}
 	isTasks := score >= p.MinScore

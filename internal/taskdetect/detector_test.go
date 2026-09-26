@@ -136,3 +136,49 @@ func TestStoryTabSelectsTheChapterTitle(t *testing.T) {
 		t.Fatalf("story chapter: result=%+v err=%v", got, err)
 	}
 }
+
+// A chapter with a large picture has few panel edges: with the Story tab lit
+// (its label drawn) and the Tasks tab lit dimly, it still counts.
+func TestStoryChapterWithAPictureCounts(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 2560, 1440))
+	for y := 0; y < 1440; y++ {
+		for x := 0; x < 2560; x++ {
+			img.Set(x, y, color.RGBA{18, 20, 19, 255})
+		}
+	}
+	// The Tasks tab, a third of it lit.
+	c := Preset2560.CharacterAnchor
+	for y := c.Y; y < c.Y+c.H; y++ {
+		for x := c.X; x < c.X+c.W/3; x++ {
+			img.Set(x, y, color.RGBA{210, 210, 205, 255})
+		}
+	}
+	got, err := Analyze(img, Preset2560)
+	if err != nil || got.IsTasks {
+		t.Fatalf("no Story tab: result=%+v err=%v", got, err)
+	}
+	// The lit Story tab with its label (dark strokes on it).
+	s := Preset2560.StoryAnchor
+	for y := s.Y; y < s.Y+s.H; y++ {
+		for x := s.X; x < s.X+s.W; x++ {
+			v := uint8(215)
+			if y > s.Y+14 && y < s.Y+38 && (x/6)%3 == 0 {
+				v = 40
+			}
+			img.Set(x, y, color.RGBA{v, v, v - 5, 255})
+		}
+	}
+	got, err = Analyze(img, Preset2560)
+	if err != nil || !got.IsTasks || got.Layout != "story-tasks" {
+		t.Fatalf("chapter with a picture: result=%+v err=%v", got, err)
+	}
+	// The same Story tab with the Tasks tab dark (a raid's inventory) does not.
+	for y := c.Y; y < c.Y+c.H; y++ {
+		for x := c.X; x < c.X+c.W; x++ {
+			img.Set(x, y, color.RGBA{18, 20, 19, 255})
+		}
+	}
+	if got, _ = Analyze(img, Preset2560); got.IsTasks {
+		t.Fatalf("dark Tasks tab counted: %+v", got)
+	}
+}
