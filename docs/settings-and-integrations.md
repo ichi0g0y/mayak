@@ -103,6 +103,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `closeToTray` | `false` | 閉じるボタンでは終了せず、トレイに常駐する |
 | `keepPriority` | `false` | 起動 3 秒後と以後 10 秒ごとに、MAYAK 自身と直下の `msedgewebview2.exe` が Idle / BelowNormal なら Normal に戻す（`guardPriority`、Windows のみ）。Process Lasso の ProBalance などが起動直後の CPU 使用で優先度を下げ、そのあいだに生まれた WebView2 プロセスが低いまま残って UI が固まって見えるときに使う |
 | `launchAtStartup` | `false` | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` に登録する |
+| `updateChannel` | `stable` | 更新の取得先。`nightly` にすると nightly ビルドも対象にし、安定版と新しい方を適用する（[自動アップデート](#自動アップデート)） |
 | `autoUpdate` | `true` | GitHub Releases の新しい版を自動で確認・ダウンロードし、終了時に適用する（[自動アップデート](#自動アップデート)） |
 | `windowX` / `windowY` / `windowWidth` / `windowHeight` / `windowConfigured` | `0` / `false` | 旧形式のウィンドウ位置。現在は `window.json` を使う |
 
@@ -117,7 +118,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `remote` | `remoteTargets`（名前、ID、役割「マップ」「タスク」）, `map`, `openMapOnRaidStart`, `navigateMapOnPositionScreenshot` | 追加、ブラウザからの ID 自動検出（`AutoDetectRemoteID`）、接続テスト（`TestRemote`） |
 | `tracker` | `tarkovTrackerEnabled`、トークンの取り込み、保存済みキー、既知プロフィールへのキーの割り当て、過去ログの同期 | ログからプロフィールを探す、tarkovtracker.org の API 設定を開く |
 | `sounds` | `soundsEnabled`。オンのとき、各通知（Hideout エラー、クエスト認識成功、認識・接続エラー、マッチ成立、レイド開始、ランスルー終了、タスクアイテム確認、失敗タスクの再開確認）の ON/OFF・音声ファイル・リセット・試聴、ランスルー時間（分・秒。ランスルー終了の通知がオンのときだけ表示）、`soundVolume` | `ChooseSoundFile`, `PreviewSound` |
-| `startup` | `launchAtStartup`, `startMinimized`, `autoStartMonitoring`, `minimizeToTray`, `closeToTray`, `autoUpdate` | — |
+| `startup` | `launchAtStartup`, `startMinimized`, `autoStartMonitoring`, `minimizeToTray`, `closeToTray`, `autoUpdate`, `updateChannel` | — |
 | `status` | 表示のみ: Remote 接続状態、現在のマップ、レイド状態、スクリーンショット種別、TarkovTracker の状態、最後の検出結果、カタログの状態、アップデートの状態 | 最新スクリーンショットの解析、TarkovTracker の更新、カタログの更新、タスクページを開く、更新の確認・ダウンロード・再起動して更新、リリースノートを開く |
 | `logs` | 表示のみ（[ログ](#ログ) を参照） | フォルダを開く、ログの消去 |
 | `debug` | `debug`, `saveRecognitionDebug`。`debug` がオンのときは Hideout 診断フォルダ、候補一覧、crop、目標も表示 | `OpenHideoutDiagnostics` |
@@ -234,6 +235,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から自分自身を更新します（`internal/update`、`internal/app/app_update.go`）。Windows／macOS／Linux のどれでも同じ仕組みです。
 
 - **版の比較**: ビルドに埋め込まれた版（`internal/version`、`task build` が `git describe` かリリースタグから `-ldflags -X` で入れる）と、GitHub の「latest」リリース（ドラフトとプレリリースは除く）のタグを semver で比べます。タグ直後のコミットを含む開発ビルド（`0.1.0-3-g1a2b3c4`）は `0.1.0` より新しい扱いなので、同じ版の通知は出ません。版が入っていない `dev` ビルドはどのリリースよりも古い扱いです。
+- **更新チャンネル**（`updateChannel`、設定 → 起動とウィンドウ）: `stable`（既定）は上の「latest」リリースだけ。`nightly` は加えて nightly ビルド（プレリリース `nightly` タグ。[開発](development.md#nightly-ビルド)）も取り、両方のうち新しい方を選びます（`update.LatestFor`）。nightly の版は `git describe`（`0.1.17-16-ge057eae`）で、直前のリリースより新しく次のリリースより古いので、nightly のあとに安定版が出ればそちらに更新します。nightly が読めない、またはこの OS 向けのアーカイブが無いときは安定版だけで判断します。`stable` に戻すと、ダウンロード済みの nightly は破棄し（`dropStagedNightly`、起動時も同じ）、すぐ確認し直します。インストール済みの nightly より新しい安定版が出るまでは、そのまま使います（版を戻すことはしない）。
 - **確認のタイミング**: `autoUpdate` がオンなら起動直後（1 秒後、goroutine なので起動は待たせない）と、その後 6 時間ごと。失敗したときは 5 分後から 1 時間まで間隔を倍にしながら再試行する。リリース情報はまず `https://mayak.ich.sh/api/release`（Worker が 5 分キャッシュ、GitHub の IP ごとの制限を受けない）から取り、届かなければ GitHub API に当たる。オフのときはステータスの「更新を確認」だけです。GitHub API は認証なしで呼びます（IP ごとに 60 回/時）。
 - **ダウンロード**: リリースのアセットから、この OS と CPU 向けのアーカイブ（`Mayak-<version>-windows-amd64.zip`、`Mayak-<version>-darwin-arm64.tar.gz` など。名前は `update.ArchiveName`）と `SHA256SUMS.txt` を取り、チェックサムが一致したものだけを設定フォルダの `updates/` に展開します。アーカイブに無い OS なら「このOS向けのビルドはありません」になります。`autoUpdate` がオンなら見つけ次第、オフなら「ダウンロード」を押したときに始まります。展開先に `staged.json` が残っていれば次回起動時に引き継ぎ、現在の版より新しくなければ捨てます。
 - **適用**: 展開したファイルを実行ファイルと同じフォルダへ入れ替えます。置き換える前のファイルは `*.mayak-old` に改名してから新しいものを置くので、実行中の exe（Windows では上書きも削除もできない）でも差し替えられます。失敗したときは改名したファイルを元に戻します。`autoUpdate` がオンなら終了時（`shutdown` の最後）に自動で適用し、次回起動から新しい版になります。ステータスの「再起動して更新」を押すと、その場で適用してから新しい版を起動し、自分は終了します。

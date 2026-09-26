@@ -18,6 +18,19 @@ import (
 // Repository is the GitHub repository the releases are published in.
 const Repository = "ichi0g0y/mayak"
 
+// NightlyTag is the tag of the rolling nightly build, a pre-release that
+// .github/workflows/nightly.yml publishes again for each day with new
+// commits. Its version is not in the tag: the release is named
+// "MAYAK nightly <version>" and its archives carry the version too.
+const NightlyTag = "nightly"
+
+// Channels: which releases an update may come from. Stable is the tagged
+// releases only; Nightly also the nightly build, whichever is newer.
+const (
+	ChannelStable  = "stable"
+	ChannelNightly = "nightly"
+)
+
 // ChecksumsAsset is the release asset that lists the SHA-256 of every
 // archive ("<hex>  <file name>" per line, as sha256sum writes it).
 const ChecksumsAsset = "SHA256SUMS.txt"
@@ -41,8 +54,53 @@ type Asset struct {
 	Size int64  `json:"size"`
 }
 
-// Version is the release's version without the tag's "v".
-func (r Release) Version() string { return strings.TrimPrefix(r.Tag, "v") }
+// Version is the release's version without the tag's "v". For the nightly
+// build it is the `git describe` version it was built from
+// (0.1.17-16-ge057eae), from its name or else its archives' names.
+func (r Release) Version() string {
+	if r.Tag != NightlyTag {
+		return strings.TrimPrefix(r.Tag, "v")
+	}
+	if fields := strings.Fields(r.Name); len(fields) > 0 {
+		if _, err := ParseSemver(fields[len(fields)-1]); err == nil {
+			return strings.TrimPrefix(fields[len(fields)-1], "v")
+		}
+	}
+	for _, asset := range r.Assets {
+		if version, ok := archiveVersion(asset.Name); ok {
+			return version
+		}
+	}
+	return ""
+}
+
+// archiveVersion reads the version out of an archive's name
+// (Mayak-0.1.17-16-ge057eae-windows-amd64.zip).
+func archiveVersion(name string) (string, bool) {
+	if !strings.HasPrefix(name, "Mayak-") || strings.HasPrefix(name, "Mayak-Setup-") {
+		return "", false
+	}
+	rest := strings.TrimPrefix(name, "Mayak-")
+	for _, ext := range []string{".zip", ".tar.gz"} {
+		if !strings.HasSuffix(rest, ext) {
+			continue
+		}
+		rest = strings.TrimSuffix(rest, ext)
+		// Drop "-<os>-<arch>".
+		for i := 0; i < 2; i++ {
+			cut := strings.LastIndex(rest, "-")
+			if cut < 0 {
+				return "", false
+			}
+			rest = rest[:cut]
+		}
+		if _, err := ParseSemver(rest); err != nil {
+			return "", false
+		}
+		return rest, true
+	}
+	return "", false
+}
 
 // Asset returns the release's asset of that name.
 func (r Release) Asset(name string) (Asset, bool) {
@@ -138,6 +196,33 @@ func (c *Client) Latest(ctx context.Context) (Release, error) {
 		}
 	}
 	return c.fetch(ctx, c.APIBase+"/repos/"+c.Repository+"/releases/latest")
+}
+
+// Nightly returns the nightly build's release (NightlyTag), from GitHub.
+func (c *Client) Nightly(ctx context.Context) (Release, error) {
+	return c.fetch(ctx, c.APIBase+"/repos/"+c.Repository+"/releases/tags/"+NightlyTag)
+}
+
+// LatestFor returns the release to update to on a channel. On the nightly
+// channel it is the newer of the latest release and the nightly build, so a
+// release published after the nightly still wins; a nightly without a build
+// for this OS and CPU, or one that cannot be read, leaves the release.
+func (c *Client) LatestFor(ctx context.Context, channel string) (Release, error) {
+	stable, stableErr := c.Latest(ctx)
+	if channel != ChannelNightly {
+		return stable, stableErr
+	}
+	nightly, err := c.Nightly(ctx)
+	if err != nil || nightly.Version() == "" {
+		return stable, stableErr
+	}
+	if _, ok := nightly.Archive(); !ok {
+		return stable, stableErr
+	}
+	if stableErr != nil || IsNewer(stable.Version(), nightly.Version()) {
+		return nightly, nil
+	}
+	return stable, nil
 }
 
 func (c *Client) fetch(ctx context.Context, url string) (Release, error) {

@@ -15,6 +15,7 @@ import (
 	"github.com/local/mayak/internal/locale"
 	"github.com/local/mayak/internal/screenshotstore"
 	"github.com/local/mayak/internal/sound"
+	"github.com/local/mayak/internal/update"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -204,6 +205,13 @@ func (a *App) saveSettings(s config.Settings, restartMonitor bool) error {
 	}
 	if !old.AutoUpdate && s.AutoUpdate {
 		go func() { _, _ = a.checkForUpdates(true) }()
+	} else if old.UpdateChannel != "" && old.UpdateChannel != s.UpdateChannel {
+		// Another channel: a nightly downloaded for the old one is dropped,
+		// and the new channel is asked at once.
+		go func() {
+			a.dropStagedNightly()
+			_, _ = a.checkForUpdates(s.AutoUpdate)
+		}()
 	}
 	if old.Language != s.Language {
 		a.setTrayLanguage(s.Language)
@@ -245,6 +253,9 @@ func normalizeSettings(s config.Settings) config.Settings {
 		s.GameLanguage = "auto"
 	}
 	s.QuestSite = normalizeQuestSite(s.QuestSite)
+	if s.UpdateChannel != update.ChannelNightly {
+		s.UpdateChannel = update.ChannelStable
+	}
 	if s.PlayerMarker != "" && s.PlayerMarkerEffect == "" {
 		s.PlayerMarkerEffect, s.PlayerMarkerColor = legacyPlayerMarker(s.PlayerMarker)
 	}

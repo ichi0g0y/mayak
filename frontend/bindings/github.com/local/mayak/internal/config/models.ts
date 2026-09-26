@@ -116,6 +116,12 @@ export class Settings {
      * the background and installs it when MAYAK quits.
      */
     "autoUpdate": boolean;
+
+    /**
+     * UpdateChannel is where updates come from: "stable" (tagged releases)
+     * or "nightly" (also the nightly build, whichever is newer).
+     */
+    "updateChannel": string;
     "windowX": number;
     "windowY": number;
     "windowWidth": number;
@@ -270,6 +276,9 @@ export class Settings {
         }
         if (!("autoUpdate" in $$source)) {
             this["autoUpdate"] = false;
+        }
+        if (!("updateChannel" in $$source)) {
+            this["updateChannel"] = "";
         }
         if (!("windowX" in $$source)) {
             this["windowX"] = 0;

@@ -58,6 +58,35 @@ func updateStagingDir() string {
 
 func (a *App) updateClient() *update.Client { return update.NewClient(version.UserAgent()) }
 
+// updateChannel is the settings' update channel (update.ChannelStable or
+// update.ChannelNightly).
+func (a *App) updateChannel() string {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.settings.UpdateChannel
+}
+
+// dropStagedNightly discards a downloaded nightly build when the channel is
+// no longer nightly, so leaving the channel does not install it on quit.
+func (a *App) dropStagedNightly() {
+	if a.updateChannel() == update.ChannelNightly {
+		return
+	}
+	a.update.mu.Lock()
+	staged := a.update.staged
+	if staged == nil || staged.Tag != update.NightlyTag || a.update.busy {
+		a.update.mu.Unlock()
+		return
+	}
+	a.update.staged = nil
+	a.update.mu.Unlock()
+	if dir := updateStagingDir(); dir != "" {
+		_ = update.Discard(dir)
+	}
+	a.addLog("Info", "Update", "Dropped the downloaded nightly build "+staged.Version+" (the update channel is stable)")
+	a.setUpdateStatus(func(status *model.UpdateStatus) { status.State = "idle"; status.Progress = 0 })
+}
+
 // GetVersion is the running build's version, empty in development.
 func (a *App) GetVersion() string { return version.Current() }
 
@@ -105,7 +134,7 @@ func (a *App) restoreStagedUpdate() {
 		_ = update.Discard(dir)
 		return
 	}
-	if !update.IsNewer(version.Current(), staged.Version) {
+	if !update.IsNewer(version.Current(), staged.Version) || (staged.Tag == update.NightlyTag && a.updateChannel() != update.ChannelNightly) {
 		_ = update.Discard(dir)
 		return
 	}
@@ -171,7 +200,7 @@ func (a *App) checkForUpdates(download bool) (model.UpdateStatus, error) {
 	a.update.mu.Unlock()
 	a.setUpdateStatus(func(status *model.UpdateStatus) { status.State = "checking"; status.LastError = "" })
 	ctx, cancel := context.WithTimeout(a.ctx, 30*time.Second)
-	release, err := a.updateClient().Latest(ctx)
+	release, err := a.updateClient().LatestFor(ctx, a.updateChannel())
 	cancel()
 	if err != nil {
 		a.update.mu.Lock()
@@ -192,7 +221,7 @@ func (a *App) checkForUpdates(download bool) (model.UpdateStatus, error) {
 	staged := a.update.staged
 	a.update.mu.Unlock()
 	_, supported := release.Archive()
-	newer := update.IsNewer(version.Current(), release.Tag)
+	newer := update.IsNewer(version.Current(), release.Version())
 	status := a.setUpdateStatus(func(status *model.UpdateStatus) {
 		status.Latest = release.Version()
 		status.ReleaseURL = release.URL
@@ -202,7 +231,7 @@ func (a *App) checkForUpdates(download bool) (model.UpdateStatus, error) {
 		status.CheckedAt = time.Now().Format(time.RFC3339)
 		status.LastError = ""
 		switch {
-		case staged != nil && !update.IsNewer(staged.Version, release.Tag):
+		case staged != nil && !update.IsNewer(staged.Version, release.Version()):
 			status.State = "ready"
 			status.Latest = staged.Version
 		case !newer:

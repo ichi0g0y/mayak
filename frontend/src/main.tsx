@@ -244,6 +244,7 @@ function App(){
               <div className="switch-row"><div><Label htmlFor="close-to-tray">{t('closeToTray')}</Label><p className="help">{t('closeToTrayHelp')}</p></div><Switch id="close-to-tray" checked={settings.closeToTray} onCheckedChange={closeToTray=>patch({closeToTray})}/></div>
               <div className="switch-row"><div><Label htmlFor="keep-priority">{t('keepPriority')}</Label><p className="help">{t('keepPriorityHelp')}</p></div><Switch id="keep-priority" checked={settings.keepPriority} onCheckedChange={keepPriority=>patch({keepPriority})}/></div>
               <div className="switch-row"><div><Label htmlFor="auto-update">{t('autoUpdate')}</Label><p className="help">{t('autoUpdateHelp')}</p></div><Switch id="auto-update" checked={settings.autoUpdate} onCheckedChange={autoUpdate=>patch({autoUpdate})}/></div>
+              <div className="switch-row"><div><Label htmlFor="update-channel">{t('updateChannel')}</Label><p className="help">{t('updateChannelHelp')}</p></div><Select value={settings.updateChannel==='nightly'?'nightly':'stable'} onValueChange={updateChannel=>patch({updateChannel})}><SelectTrigger id="update-channel" className="update-channel-select"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="stable">{t('updateChannelStable')}</SelectItem><SelectItem value="nightly">{t('updateChannelNightly')}</SelectItem></SelectContent></Select></div>
             </div>
           </CardContent></Card>
       </div></TabsContent>

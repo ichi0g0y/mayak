@@ -72,12 +72,15 @@ type Settings struct {
 	LaunchAtStartup bool `json:"launchAtStartup"`
 	// AutoUpdate checks GitHub Releases for a newer MAYAK, downloads it in
 	// the background and installs it when MAYAK quits.
-	AutoUpdate       bool `json:"autoUpdate"`
-	WindowX          int  `json:"windowX"`
-	WindowY          int  `json:"windowY"`
-	WindowWidth      int  `json:"windowWidth"`
-	WindowHeight     int  `json:"windowHeight"`
-	WindowConfigured bool `json:"windowConfigured"`
+	AutoUpdate bool `json:"autoUpdate"`
+	// UpdateChannel is where updates come from: "stable" (tagged releases)
+	// or "nightly" (also the nightly build, whichever is newer).
+	UpdateChannel    string `json:"updateChannel"`
+	WindowX          int    `json:"windowX"`
+	WindowY          int    `json:"windowY"`
+	WindowWidth      int    `json:"windowWidth"`
+	WindowHeight     int    `json:"windowHeight"`
+	WindowConfigured bool   `json:"windowConfigured"`
 }
 
 type RemoteTarget struct {

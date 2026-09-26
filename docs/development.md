@@ -242,6 +242,15 @@ Wails 本体はフォークせず公式モジュールを使います。
 
 アーカイブの名前（`Mayak-0.1.6-windows-amd64.zip`、`Mayak-0.1.6-darwin-arm64.tar.gz`、`Mayak-0.1.6-darwin-amd64.tar.gz`、`Mayak-0.1.6-linux-amd64.tar.gz`。バージョンは `internal/update` の `ArchiveName` が付け、更新側は `IsArchive` でバージョンを問わず OS と CPU の接尾辞で選ぶ）と `SHA256SUMS.txt` は `internal/update` が探すものなので変えないでください。Windows のアーカイブには `Mayak.exe`、`tesseract/`、`THIRD_PARTY_NOTICES.txt` が、ほかには `Mayak` と `THIRD_PARTY_NOTICES.txt` がルートに入ります。プレリリース（`prerelease` にチェック）とドラフトは「latest」に含まれないため、自動アップデートの対象になりません。
 
+### nightly ビルド
+
+`.github/workflows/nightly.yml` が毎日 03:00（日本時間）に開発ブランチ（既定 `rename-mayak`。手動実行では `ref` で変えられる）をビルドし、プレリリース `nightly` として公開します。前回の nightly と同じコミットのとき、またはブランチの先頭がリリースタグそのもののときはビルドしません（手動実行の `force` で強制）。
+
+- 版は `git describe --tags --match 'v*'`（`0.1.17-16-ge057eae`）で、`task build`・`task installer`・`task release:archive` に `VERSION` として渡します。アセットの名前もこの版になります。
+- 公開は毎回作り直しです。古い `nightly` リリースとタグを消してから、そのコミットに `nightly` タグを付けて作ります（古い版のアーカイブが残らない）。リリース名は `MAYAK nightly <版>` で、アプリはこの名前（なければアーカイブ名）から版を読みます（`update.Release.Version`）。
+- プレリリースなので GitHub の「latest」には入らず、安定版チャンネルのアプリやランディングページには影響しません。
+- スケジュール実行は既定ブランチ（`main`）にあるこのファイルからだけ始まります。ビルド手順は `release.yml` と同じなので、片方を変えたらもう片方も合わせます。
+
 ### Windows インストーラー
 
 `Mayak-Setup-<version>-windows-amd64.exe`（`build/windows/nsis/mayak.nsi`、NSIS 3）はランディングページが案内する主な配布物で、zip はポータブル版兼自動アップデート用です。インストーラーの動きは次のとおりです。
