@@ -1,10 +1,16 @@
-// Command icon renders the MAYAK mark (the hexagon and M of
-// frontend/public/favicon.svg) into the raster icons the builds embed:
-// build/appicon.png (1024px, also the tray icon and the source of the macOS
-// bundle's ICNS), build/windows/icon.ico (16 to 256px, PNG entries) and
-// frontend/public/favicon-32.png, and rewrites the SVG's colours to match.
+// Command icon derives every icon from the master artwork tools/icon/mark.png
+// (the hexagon and M as first drawn, khaki on near-black, 1024px) by
+// recolouring it: build/appicon.png (the tray icon and the source of the
+// macOS ICNS), build/windows/icon.ico (16 to 256px, PNG entries),
+// frontend/public/favicon-32.png and favicon-256.png (the About logo), and
+// the site's mark (site/public/assets/mayak-mark.png) plus its bare white
+// version for the header (mayak-mark-white.png, transparent).
 //
-//	go run ./tools/icon -bg 2f3232 -fg cfd2d1
+//	go run ./tools/icon -bg 1a1a1a -fg f2f2f2
+//
+// The master's two colours are read as the ends of a scale; every pixel's
+// position on it (anti-aliased edges included) is kept and mapped onto the
+// new pair, so the shape never changes.
 package main
 
 import (
@@ -18,115 +24,67 @@ import (
 	"log"
 	"math"
 	"os"
-	"regexp"
 
-	"golang.org/x/image/vector"
+	"golang.org/x/image/draw"
 )
 
-// The geometry, in the SVG's 32-unit box: a hexagon ring (circumradius
-// 13.4 about (16, 16.5), 2.6 wide) around an M clipped to the hexagon of
-// circumradius 10.5.
-const (
-	box       = 32.0
-	cx, cy    = 16.0, 16.5
-	ringR     = 13.4
-	ringWidth = 2.6
-	clipR     = 10.5
-	cornerR   = 6.0
-)
+// The master's colours.
+var masterBG = color.NRGBA{0x1b, 0x1c, 0x1a, 255}
+var masterFG = color.NRGBA{0xcd, 0xc6, 0xae, 255}
 
-var leftM = [][2]float64{{8.56, 8.30}, {12.13, 8.30}, {15.08, 13.93}, {15.08, 19.12}, {12.66, 16.86}, {12.66, 24.30}, {8.56, 24.30}}
-
-func hexagon(r float64) [][2]float64 {
-	var points [][2]float64
-	for i := 0; i < 6; i++ {
-		a := math.Pi/6 + float64(i)*math.Pi/3 // flat sides left and right, points top and bottom
-		points = append(points, [2]float64{cx + r*math.Cos(a-math.Pi/2), cy + r*math.Sin(a-math.Pi/2)})
-	}
-	return points
+// coverage is how far a master pixel sits from the background towards the
+// mark, 0 to 1.
+func coverage(c color.NRGBA) float64 {
+	dr, dg, db := float64(masterFG.R)-float64(masterBG.R), float64(masterFG.G)-float64(masterBG.G), float64(masterFG.B)-float64(masterBG.B)
+	pr, pg, pb := float64(c.R)-float64(masterBG.R), float64(c.G)-float64(masterBG.G), float64(c.B)-float64(masterBG.B)
+	t := (pr*dr + pg*dg + pb*db) / (dr*dr + dg*dg + db*db)
+	return math.Max(0, math.Min(1, t))
 }
 
-func mirror(points [][2]float64) [][2]float64 {
-	out := make([][2]float64, len(points))
-	for i, p := range points {
-		out[i] = [2]float64{box - p[0], p[1]}
+func loadMaster() *image.NRGBA {
+	f, err := os.Open("tools/icon/mark.png")
+	if err != nil {
+		log.Fatal(err)
 	}
+	defer f.Close()
+	src, err := png.Decode(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	out := image.NewNRGBA(src.Bounds())
+	draw.Draw(out, out.Bounds(), src, src.Bounds().Min, draw.Src)
 	return out
 }
 
-// mask rasterises polygons into a coverage image of the given size.
-func mask(size int, polygons ...[][2]float64) *image.Alpha {
-	scale := float64(size) / box
-	r := vector.NewRasterizer(size, size)
-	for _, poly := range polygons {
-		for i, p := range poly {
-			x, y := float32(p[0]*scale), float32(p[1]*scale)
-			if i == 0 {
-				r.MoveTo(x, y)
-			} else {
-				r.LineTo(x, y)
-			}
-		}
-		r.ClosePath()
-	}
-	out := image.NewAlpha(image.Rect(0, 0, size, size))
-	r.Draw(out, out.Bounds(), image.Opaque, image.Point{})
-	return out
-}
-
-// roundedRect rasterises the background square with rounded corners.
-func roundedRect(size int) *image.Alpha {
-	scale := float64(size) / box
-	s, rad := float32(size), float32(cornerR*scale)
-	const k = 0.5523 // cubic approximation of a quarter circle
-	r := vector.NewRasterizer(size, size)
-	r.MoveTo(rad, 0)
-	r.LineTo(s-rad, 0)
-	r.CubeTo(s-rad+rad*k, 0, s, rad-rad*k, s, rad)
-	r.LineTo(s, s-rad)
-	r.CubeTo(s, s-rad+rad*k, s-rad+rad*k, s, s-rad, s)
-	r.LineTo(rad, s)
-	r.CubeTo(rad-rad*k, s, 0, s-rad+rad*k, 0, s-rad)
-	r.LineTo(0, rad)
-	r.CubeTo(0, rad-rad*k, rad-rad*k, 0, rad, 0)
-	r.ClosePath()
-	out := image.NewAlpha(image.Rect(0, 0, size, size))
-	r.Draw(out, out.Bounds(), image.Opaque, image.Point{})
-	return out
-}
-
-func render(size int, bg, fg color.NRGBA) *image.NRGBA {
-	return renderMark(size, bg, fg, false)
-}
-
-// renderMark draws the icon; bare leaves out the rounded square, so only the
-// mark itself is opaque (the site's header uses that in white).
-func renderMark(size int, bg, fg color.NRGBA, bare bool) *image.NRGBA {
-	base := roundedRect(size)
-	outer, inner := mask(size, hexagon(ringR+ringWidth/2)), mask(size, hexagon(ringR-ringWidth/2))
-	letter, clip := mask(size, leftM, mirror(leftM)), mask(size, hexagon(clipR))
-	img := image.NewNRGBA(image.Rect(0, 0, size, size))
-	for y := 0; y < size; y++ {
-		for x := 0; x < size; x++ {
-			i := y*size + x
-			a := float64(base.Pix[i]) / 255
-			ring := float64(outer.Pix[i]) / 255 * (1 - float64(inner.Pix[i])/255)
-			m := float64(letter.Pix[i]) / 255 * float64(clip.Pix[i]) / 255
-			f := math.Min(1, ring+m)
+// recolour maps the master onto bg and fg; bare leaves the background
+// transparent, with the mark's coverage as alpha.
+func recolour(master *image.NRGBA, bg, fg color.NRGBA, bare bool) *image.NRGBA {
+	out := image.NewNRGBA(master.Bounds())
+	for y := master.Bounds().Min.Y; y < master.Bounds().Max.Y; y++ {
+		for x := master.Bounds().Min.X; x < master.Bounds().Max.X; x++ {
+			t := coverage(master.NRGBAAt(x, y))
 			if bare {
-				a = f
+				out.SetNRGBA(x, y, color.NRGBA{fg.R, fg.G, fg.B, uint8(math.Round(255 * t))})
+				continue
 			}
-			// The mark over the background, both within the rounded square.
-			c := color.NRGBA{
-				R: uint8(math.Round(float64(bg.R)*(1-f) + float64(fg.R)*f)),
-				G: uint8(math.Round(float64(bg.G)*(1-f) + float64(fg.G)*f)),
-				B: uint8(math.Round(float64(bg.B)*(1-f) + float64(fg.B)*f)),
-				A: uint8(math.Round(255 * a)),
-			}
-			img.SetNRGBA(x, y, c)
+			out.SetNRGBA(x, y, color.NRGBA{
+				R: uint8(math.Round(float64(bg.R)*(1-t) + float64(fg.R)*t)),
+				G: uint8(math.Round(float64(bg.G)*(1-t) + float64(fg.G)*t)),
+				B: uint8(math.Round(float64(bg.B)*(1-t) + float64(fg.B)*t)),
+				A: 255,
+			})
 		}
 	}
-	return img
+	return out
+}
+
+func resize(src *image.NRGBA, size int) *image.NRGBA {
+	if src.Bounds().Dx() == size {
+		return src
+	}
+	out := image.NewNRGBA(image.Rect(0, 0, size, size))
+	draw.CatmullRom.Scale(out, out.Bounds(), src, src.Bounds(), draw.Over, nil)
+	return out
 }
 
 func encodePNG(img image.Image) []byte {
@@ -138,12 +96,12 @@ func encodePNG(img image.Image) []byte {
 }
 
 // ico writes a Windows icon whose entries are PNG images.
-func ico(sizes []int, bg, fg color.NRGBA) []byte {
+func ico(full *image.NRGBA, sizes []int) []byte {
 	var out bytes.Buffer
 	binary.Write(&out, binary.LittleEndian, [3]uint16{0, 1, uint16(len(sizes))})
 	var images [][]byte
 	for _, size := range sizes {
-		images = append(images, encodePNG(render(size, bg, fg)))
+		images = append(images, encodePNG(resize(full, size)))
 	}
 	offset := 6 + 16*len(sizes)
 	for i, size := range sizes {
@@ -172,36 +130,31 @@ func parse(hex string) color.NRGBA {
 }
 
 func main() {
-	bg := flag.String("bg", "2f3232", "background colour (rrggbb)")
-	fg := flag.String("fg", "cfd2d1", "mark colour (rrggbb)")
-	out := flag.String("out", "", "write only a preview PNG of this size's rendering here (with -size)")
-	size := flag.Int("size", 48, "preview size")
+	bg := flag.String("bg", "1a1a1a", "background colour (rrggbb)")
+	fg := flag.String("fg", "f2f2f2", "mark colour (rrggbb)")
+	out := flag.String("out", "", "write only one PNG of -size here")
+	size := flag.Int("size", 256, "size for -out")
 	bare := flag.Bool("bare", false, "with -out: only the mark, on a transparent background")
 	flag.Parse()
 	b, f := parse(*bg), parse(*fg)
+	master := loadMaster()
 	if *out != "" {
-		if err := os.WriteFile(*out, encodePNG(renderMark(*size, b, f, *bare)), 0o644); err != nil {
+		if err := os.WriteFile(*out, encodePNG(resize(recolour(master, b, f, *bare), *size)), 0o644); err != nil {
 			log.Fatal(err)
 		}
 		return
 	}
+	full, white := recolour(master, b, f, false), recolour(master, b, f, true)
 	must := func(err error) {
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-	must(os.WriteFile("build/appicon.png", encodePNG(render(1024, b, f)), 0o644))
-	must(os.WriteFile("frontend/public/favicon-32.png", encodePNG(render(32, b, f)), 0o644))
-	must(os.WriteFile("build/windows/icon.ico", ico([]int{16, 24, 32, 48, 64, 128, 256}, b, f), 0o644))
-	svg, err := os.ReadFile("frontend/public/favicon.svg")
-	must(err)
-	svg = regexp.MustCompile(`fill="#[0-9a-fA-F]{6}"`).ReplaceAllFunc(svg, func(m []byte) []byte {
-		if bytes.Contains(m, []byte("1b1c1a")) || bytes.Contains(m, []byte(*bg)) {
-			return []byte(`fill="#` + *bg + `"`)
-		}
-		return []byte(`fill="#` + *fg + `"`)
-	})
-	svg = regexp.MustCompile(`stroke="#[0-9a-fA-F]{6}"`).ReplaceAll(svg, []byte(`stroke="#`+*fg+`"`))
-	must(os.WriteFile("frontend/public/favicon.svg", svg, 0o644))
-	fmt.Println("wrote build/appicon.png, build/windows/icon.ico, frontend/public/favicon-32.png, frontend/public/favicon.svg")
+	must(os.WriteFile("build/appicon.png", encodePNG(full), 0o644))
+	must(os.WriteFile("build/windows/icon.ico", ico(full, []int{16, 24, 32, 48, 64, 128, 256}), 0o644))
+	must(os.WriteFile("frontend/public/favicon-32.png", encodePNG(resize(full, 32)), 0o644))
+	must(os.WriteFile("frontend/public/favicon-256.png", encodePNG(resize(full, 256)), 0o644))
+	must(os.WriteFile("site/public/assets/mayak-mark.png", encodePNG(full), 0o644))
+	must(os.WriteFile("site/public/assets/mayak-mark-white.png", encodePNG(resize(white, 512)), 0o644))
+	fmt.Println("wrote build/appicon.png, build/windows/icon.ico, frontend/public/favicon-32.png, favicon-256.png, site/public/assets/mayak-mark.png, mayak-mark-white.png")
 }
