@@ -487,11 +487,15 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .tracker-manage-key { display: grid; grid-template-columns: minmax(200px, 1fr) auto auto; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); }
 .tracker-manage-key .button { padding: 4px; height: 28px; width: 28px; }
 @media (max-width: 720px) { .tracker-unassigned-key, .tracker-manage-key { grid-template-columns: 1fr; } }
-/* Everything about keys sits in one block above the profiles: the token
-   input, the keys not yet on a profile, and the folded list of all keys. */
-.tracker-keys-block { display: grid; gap: 12px; padding: 12px 14px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
-.tracker-keys-block .tracker-unassigned { padding-top: 0; border-top: 0; }
-.tracker-keys-block .tracker-manage { padding-top: 10px; }
+/* Two steps, alike: add keys (the token input, the keys not yet on a
+   profile, the folded list of all keys), then assign them to profiles. */
+.tracker-step { display: grid; gap: 12px; }
+.tracker-step + .tracker-step { padding-top: 16px; border-top: 1px solid var(--border); }
+.tracker-step-heading { display: flex; align-items: flex-start; gap: 10px; }
+.tracker-step-heading > div { display: grid; gap: 4px; }
+.step-pill { flex-shrink: 0; margin-top: 1px; padding: 1px 9px; border-radius: 999px; background: var(--accent); color: var(--on-accent, #fff); font-size: 11px; font-weight: 600; line-height: 18px; letter-spacing: .02em; }
+.tracker-step .tracker-unassigned { padding-top: 0; border-top: 0; }
+.tracker-step .tracker-manage { padding-top: 10px; }
 /* The profiles by mode: a heading per mode, the mode played last first. */
 .tracker-mode-group { display: grid; gap: 6px; }
 .tracker-mode-group + .tracker-mode-group { margin-top: 6px; }
