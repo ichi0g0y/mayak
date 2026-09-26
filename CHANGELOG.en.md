@@ -4,6 +4,10 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Unreleased changes collect under `## Unreleased` and get a version heading at release time.
 
+## Unreleased
+
+- The app icon is black and white like the site (a white mark on near-black). The About logo could show the old image from a cache; fixed.
+
 ## v0.1.11 (2026-09-26)
 
 - The About section's "Source code" button is now "GitHub".
