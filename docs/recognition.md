@@ -26,7 +26,7 @@ Screenshots/*.png|jpg ─▶ watcher ─▶ processScreenshot(sequence++、前�
    └─ 完了後 afterScreenshotAnalysis: デバッグ保存・自動削除
 ```
 
-分析関数はすべて `internal/app/app.go` にあり、後処理は同じパッケージの `app_screenshots.go` にあります。
+分析関数はすべて `internal/app/app_recognition.go` にあり、後処理は同じパッケージの `app_screenshots.go` にあります。
 
 ## スクリーンショットの監視 (`internal/watcher`)
 

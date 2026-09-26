@@ -43,8 +43,8 @@ tarkov.dev は、名前を言語ごとの翻訳ファイルで公開していま
 
 ### ゲームの言語を知る方法
 
-- 設定の「ゲームの表示言語」（`GameLanguage`）は `auto`、`en`、`internal/locale` の `Languages` にある言語のどれかです。それ以外の値は `auto` に直します（`app.go` の `normalizeSettings`）。
-- `auto` のときは、EFT の設定ファイル（`%AppData%\Battlestate Games\Escape from Tarkov\Settings\Game.ini`）から読みます（`internal/eftdetect` の `GameLanguage`、`app.go` の `ocrLanguage`）。
+- 設定の「ゲームの表示言語」（`GameLanguage`）は `auto`、`en`、`internal/locale` の `Languages` にある言語のどれかです。それ以外の値は `auto` に直します（`app_settings.go` の `normalizeSettings`）。
+- `auto` のときは、EFT の設定ファイル（`%AppData%\Battlestate Games\Escape from Tarkov\Settings\Game.ini`）から読みます（`internal/eftdetect` の `GameLanguage`、`app_recognition.go` の `ocrLanguage`）。
 - 今は `ja`（または `jp`）を日本語、英字を使う言語（`en`、`es`、`fr`、`ge`／`de`、`it`、`pl` など）を英語として扱います。それ以外の言語（ロシア語や中国語など）と、設定ファイルが読めないときは、Windows の言語設定に合わせます（Windows OCR は `auto`、Tesseract は英語のモデル）。
 
 ## 言語を足す手順
@@ -74,7 +74,7 @@ MAYAK の画面の文言は、次の場所にあります。
 | `frontend/src/browser/shell.js` の `words` | ブラウザシェルとアイテム欄の文言 |
 | `frontend/src/i18n.ts` | 設定画面（Host settings）の文言 |
 | `frontend/src/browser/state.js` | 保存された言語の検証（今は `ja` と `en`） |
-| `app.go` の `normalizeSettings` | 設定の `Language` の検証（今は `ja` と `en`） |
+| `app_settings.go` の `normalizeSettings` | 設定の `Language` の検証（今は `ja` と `en`） |
 | `frontend/src/main.tsx` | ブラウザシェルの言語（`<html lang>`）を Host 設定へ移す処理（今は `ja` と `en`） |
 | `frontend/src/browser/item.js`、`frontend/src/browser/api.js` | 数値・相対時間の書式と、一部のエラー文 |
 | `tray.go` | タスクトレイのメニューの文言 |

@@ -4,7 +4,7 @@
 
 ## タスク認識後の流れ
 
-`handleTaskAnalysis`（`app.go`）の処理です。
+`handleTaskAnalysis`（`app_recognition.go`）の処理です。
 
 1. タスク画面と判定したら、OCR の結果を `QuestsForMode(effectiveCatalogMode(GameMode))` の一覧と照合します（一覧の中身は [ゲームデータ](catalog.md)）。
 2. 上位 5 件を `QuestCandidates` として状態に載せます。

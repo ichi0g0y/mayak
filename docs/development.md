@@ -30,7 +30,11 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `main.go`（直下） | `frontend/dist` とトレイアイコンを `go:embed` で埋め込み、`app.Run` を呼ぶ |
 | `run.go` | `application.New` でアプリを作成し、`App` をサービス登録、多重起動を防ぎ（2 つ目の起動は既存ウィンドウを表示）、フレームレスのメインウィンドウを作る。保存済みの位置・サイズはネイティブウィンドウ生成前のオプションで渡し、`startMinimized` なら配置の復元後に最小化する |
 | `tray.go` | Wails 標準の `SystemTray` によるトレイアイコンとメニュー（開く／終了、UI 言語に追従） |
-| `app.go` | `App` 本体。起動・終了、設定の読み書き（`PersistSettings` は即時保存、`SaveSettings` は稼働中の監視へ反映）、監視、状態、リモート送信など中核処理 |
+| `app.go` | `App` 本体。起動・終了、ログ、状態の通知、監視の開始・停止、ゲームログの追跡（マップ・レイド・走り抜け警告）、通知音 |
+| `app_settings.go` | 設定の読み書き（`PersistSettings` は即時保存、`SaveSettings` は稼働中の監視へも反映。どちらも `saveSettings`）、フォルダの自動検出と選択、値の正規化 |
+| `app_recognition.go` | スクリーンショット認識：位置、タスク・アイテムのタイトル、OCR エンジンの選択（[recognition.md](recognition.md)） |
+| `app_tracker.go` | TarkovTracker 連携：キーとプロフィール、進捗の取得、認識したタスクの同期（[settings-and-integrations.md](settings-and-integrations.md)） |
+| `app_remote.go` | 別の MAYAK へのマップ・タスク・位置の送信と接続テスト |
 | `app_lifecycle.go` | Wails v3 の `ServiceStartup` / `ServiceShutdown` を既存の起動・終了処理へ接続 |
 | `app_events.go` | Wails アプリ内イベントの発行（外部へのブリッジは起動しない） |
 | `app_browser.go` | ブラウザシェルの状態（`browser.json`）、ホスト／クライアントモード切替 |

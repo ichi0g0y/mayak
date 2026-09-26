@@ -19,7 +19,7 @@
 
 ### 開くきっかけ
 
-- **スクリーンショットで認識したアイテム**: OCR 結果の一致度が `0.82` 以上なら `app.go` が `showBrowserItem(mode, id)` を起動します（認識の詳細は [recognition.md](recognition.md)）。
+- **スクリーンショットで認識したアイテム**: OCR 結果の一致度が `0.82` 以上なら `app_recognition.go` が `showBrowserItem(mode, id)` を起動します（認識の詳細は [recognition.md](recognition.md)）。
   - まずカタログのデータで `browser:item` イベントを送り、続いてライブ価格を取得して再送します（タイムアウト 45 秒）。
   - ライブ取得の間に別のアイテムが認識された場合（`status.ItemID` が変わった場合）、2 回目は送りません。
   - シェルは `browser:item` を受けると `itemInfo()` で検証し、欄を開いて (`itemOpen=true`) 価格履歴を読み込み、状態を保存します。ローカル接続時は WebRTC の相手にも転送します。
