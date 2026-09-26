@@ -13,7 +13,7 @@ export const EventsOn = desktop.on
 export const BrowserOpenURL = desktop.openURL
 export const {
   AnalyzeLatestScreenshot, AutoDetectEFTDirectories, AutoDetectRemoteID, CheckForUpdates,
-  ChooseLogsDirectory, ChoosePlayerMarkerFile, ChooseScreenshotDirectory, ChooseSoundFile, ClearLogs,
+  ChooseLogsDirectory, ChooseScreenshotDirectory, ChooseSoundFile, ClearLogs,
   DiscoverTrackerProfiles, DownloadUpdate, GameLanguages, GetLogs, GetSettings, GetStatus, GetTrackerHistoryBreakpoints, GetUpdateStatus,
   ImportTrackerToken, InstallUpdate, OpenDebugDirectory, OpenLogsDirectory, OpenScreenshotDirectory,
   PersistSettings, PlayerMarkerPreviewCSS, PreviewSound, RefreshCatalog, OpenQuestPage, OpenHideoutDiagnostics,

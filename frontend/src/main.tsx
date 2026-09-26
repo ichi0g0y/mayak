@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Activity, Bug, Check, CircleX, Clock3, CloudSync, Download, ExternalLink, FolderOpen, History, KeyRound, MapPinned, MonitorCog, Play, Plus, Radio, RefreshCw, RotateCcw, ScanLine, Search, Trash2, Volume2, Wifi, X } from 'lucide-react'
 import { BrowserOpenURL, EventsOn, desktop } from './desktop'
-import { GameLanguages, AnalyzeLatestScreenshot, AutoDetectEFTDirectories, AutoDetectRemoteID, CheckForUpdates, DownloadUpdate, GetUpdateStatus, InstallUpdate, ChooseLogsDirectory, ChooseScreenshotDirectory, ChoosePlayerMarkerFile, ChooseSoundFile, PlayerMarkerPreviewCSS, ClearLogs, DiscoverTrackerProfiles, GetLogs, GetSettings, GetStatus, GetTrackerHistoryBreakpoints, ImportTrackerToken, OpenDebugDirectory, OpenLogsDirectory, OpenScreenshotDirectory, PersistSettings, PreviewSound, RefreshCatalog, OpenQuestPage, OpenHideoutDiagnostics, RefreshTracker, RemoveTrackerKey, RefreshTrackerKeyNames, SaveSettings, SetTrackerProfileKey, SyncTrackerHistory, TestRemote } from './desktop'
+import { GameLanguages, AnalyzeLatestScreenshot, AutoDetectEFTDirectories, AutoDetectRemoteID, CheckForUpdates, DownloadUpdate, GetUpdateStatus, InstallUpdate, ChooseLogsDirectory, ChooseScreenshotDirectory, ChooseSoundFile, PlayerMarkerPreviewCSS, ClearLogs, DiscoverTrackerProfiles, GetLogs, GetSettings, GetStatus, GetTrackerHistoryBreakpoints, ImportTrackerToken, OpenDebugDirectory, OpenLogsDirectory, OpenScreenshotDirectory, PersistSettings, PreviewSound, RefreshCatalog, OpenQuestPage, OpenHideoutDiagnostics, RefreshTracker, RemoveTrackerKey, RefreshTrackerKeyNames, SaveSettings, SetTrackerProfileKey, SyncTrackerHistory, TestRemote } from './desktop'
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
 import { Label } from './components/ui/label'
@@ -16,7 +16,7 @@ import './style.css'
 import {HideoutStatus, HideoutEvent, hideoutMessage} from './Hideout'
 
 type RemoteTarget={id:string;name:string;map:boolean;tasks:boolean}
-type Settings = { gameLanguage:string; questSite:string; hideoutErrorNotifications:boolean;hideoutErrorSoundPath:string; language:Language; screenshotDirectory:string; logsDirectory:string; remoteId:string; remoteTargets:RemoteTarget[]; browserRemoteId?:string; map:string; gameMode:string; ocrEngine:string; tesseractPath:string; debug:boolean; saveRecognitionDebug:boolean; screenshotCleanup:boolean; screenshotRetainCount:number; screenshotRetainHours:number; soundsEnabled:boolean; questSoundEnabled:boolean; questSoundPath:string; errorSoundEnabled:boolean; errorSoundPath:string; soundVolume:number; autoStartMonitoring:boolean; openMapOnRaidStart:boolean; navigateMapOnPositionScreenshot:boolean; playerMarker:string; playerMarkerImage:string; tarkovTrackerEnabled:boolean; matchFoundSoundEnabled:boolean; matchFoundSoundPath:string; raidStartSoundEnabled:boolean; raidStartSoundPath:string; runThroughSoundEnabled:boolean; runThroughSoundPath:string; runThroughSeconds:number; questItemsSoundEnabled:boolean; questItemsSoundPath:string; restartTasksSoundEnabled:boolean; restartTasksSoundPath:string; startMinimized:boolean; minimizeToTray:boolean;closeToTray:boolean; launchAtStartup:boolean; autoUpdate:boolean }
+type Settings = { gameLanguage:string; questSite:string; hideoutErrorNotifications:boolean;hideoutErrorSoundPath:string; language:Language; screenshotDirectory:string; logsDirectory:string; remoteId:string; remoteTargets:RemoteTarget[]; browserRemoteId?:string; map:string; gameMode:string; ocrEngine:string; tesseractPath:string; debug:boolean; saveRecognitionDebug:boolean; screenshotCleanup:boolean; screenshotRetainCount:number; screenshotRetainHours:number; soundsEnabled:boolean; questSoundEnabled:boolean; questSoundPath:string; errorSoundEnabled:boolean; errorSoundPath:string; soundVolume:number; autoStartMonitoring:boolean; openMapOnRaidStart:boolean; navigateMapOnPositionScreenshot:boolean; playerMarkerEffect:string; playerMarkerColor:string; tarkovTrackerEnabled:boolean; matchFoundSoundEnabled:boolean; matchFoundSoundPath:string; raidStartSoundEnabled:boolean; raidStartSoundPath:string; runThroughSoundEnabled:boolean; runThroughSoundPath:string; runThroughSeconds:number; questItemsSoundEnabled:boolean; questItemsSoundPath:string; restartTasksSoundEnabled:boolean; restartTasksSoundPath:string; startMinimized:boolean; minimizeToTray:boolean;closeToTray:boolean; launchAtStartup:boolean; autoUpdate:boolean }
 type Candidate = { id:string; name:string; trader:string; map:string; confidence:number }
 type ItemCandidate = { id:string; name:string; shortName:string; url:string; iconUrl:string; confidence:number }
 type Objective = { description:string; maps:string[] }
@@ -29,14 +29,16 @@ type Status = { hideout?:HideoutStatus; catalog?:CatalogStatus; connection:strin
 type LogEntry = { hideout?:HideoutEvent; id:number|string; timestamp:string; level:'Error'|'Warn'|'Info'|'Debug'; category:string; message:string }
 type UpdateStatus={current:string;latest:string;state:string;progress:number;platform:string;releaseUrl:string;releaseName:string;notes:string;publishedAt:string;checkedAt:string;lastError:string}
 
-const defaults:Settings={gameLanguage:"auto",questSite:"tarkov-dev",hideoutErrorNotifications:false,hideoutErrorSoundPath:"",language:'ja',screenshotDirectory:'',logsDirectory:'',remoteId:'',remoteTargets:[],map:'',gameMode:'auto',ocrEngine:'tesseract',tesseractPath:'',debug:false,saveRecognitionDebug:false,screenshotCleanup:false,screenshotRetainCount:500,screenshotRetainHours:168,soundsEnabled:true,questSoundEnabled:true,questSoundPath:'',errorSoundEnabled:true,errorSoundPath:'',soundVolume:28,autoStartMonitoring:true,openMapOnRaidStart:true,navigateMapOnPositionScreenshot:true,playerMarker:'default',playerMarkerImage:'',tarkovTrackerEnabled:false,matchFoundSoundEnabled:false,matchFoundSoundPath:'',raidStartSoundEnabled:false,raidStartSoundPath:'',runThroughSoundEnabled:false,runThroughSoundPath:'',runThroughSeconds:430,questItemsSoundEnabled:false,questItemsSoundPath:'',restartTasksSoundEnabled:false,restartTasksSoundPath:'',startMinimized:false,minimizeToTray:false,closeToTray:false,launchAtStartup:false,autoUpdate:true}
+const defaults:Settings={gameLanguage:"auto",questSite:"tarkov-dev",hideoutErrorNotifications:false,hideoutErrorSoundPath:"",language:'ja',screenshotDirectory:'',logsDirectory:'',remoteId:'',remoteTargets:[],map:'',gameMode:'auto',ocrEngine:'tesseract',tesseractPath:'',debug:false,saveRecognitionDebug:false,screenshotCleanup:false,screenshotRetainCount:500,screenshotRetainHours:168,soundsEnabled:true,questSoundEnabled:true,questSoundPath:'',errorSoundEnabled:true,errorSoundPath:'',soundVolume:28,autoStartMonitoring:true,openMapOnRaidStart:true,navigateMapOnPositionScreenshot:true,playerMarkerEffect:'none',playerMarkerColor:'',tarkovTrackerEnabled:false,matchFoundSoundEnabled:false,matchFoundSoundPath:'',raidStartSoundEnabled:false,raidStartSoundPath:'',runThroughSoundEnabled:false,runThroughSoundPath:'',runThroughSeconds:430,questItemsSoundEnabled:false,questItemsSoundPath:'',restartTasksSoundEnabled:false,restartTasksSoundPath:'',startMinimized:false,minimizeToTray:false,closeToTray:false,launchAtStartup:false,autoUpdate:true}
 const emptyUpdate:UpdateStatus={current:"",latest:"",state:"idle",progress:0,platform:"",releaseUrl:"",releaseName:"",notes:"",publishedAt:"",checkedAt:"",lastError:""}
 const emptyTracker:TrackerStatus={connection:'disabled',mode:'',profileId:'',accountId:'',displayName:'',playerLevel:0,completedTasks:0,failedTasks:0,pvpConfigured:false,pveConfigured:false,seasonalConfigured:false,lastSync:'',lastEvent:'',lastError:'',keys:[],profiles:[]}
 const emptyStatus:Status={connection:'disconnected',monitoring:false,currentMap:'',raidActive:false,raidStartedAt:'',runThroughAt:'',lastQueueSeconds:0,lastScreenshot:'',screenshotType:'unknown',lastError:'',detectionScore:0,detectionLayout:'',analysisStage:'待機中',ocrRaw:'',lastQuest:'',questTrader:'',questMap:'',matchConfidence:0,questCandidates:[],cropPreview:'',questUrl:'',questObjectives:[],lastItem:'',itemId:'',itemShortName:'',itemUrl:'',itemIconUrl:'',itemConfidence:0,itemCandidates:[],lastRemoteCommand:'',tracker:emptyTracker}
 const maps=['customs','factory','night-factory','ground-zero','ground-zero-21','interchange','icebreaker','the-lab','the-lab-dark','the-labyrinth','lighthouse','reserve','shoreline','streets-of-tarkov','terminal','woods']
-// The player marker styles (app_marker.go), in the gallery's order.
-const markerStyles=['default','outline','glow-red','glow-green','pulse','beacon','custom'] as const
-const markerNames:Record<string,Parameters<typeof translate>[1]>={default:'markerDefault',outline:'markerOutline','glow-red':'markerGlowRed','glow-green':'markerGlowGreen',pulse:'markerPulse',beacon:'markerBeacon',custom:'markerCustom'}
+// The player marker effects (app_marker.go), in the gallery's order, and
+// the colour each has until one is chosen.
+const markerEffects=['none','outline','glow','pulse','beacon'] as const
+const markerEffectNames:Record<string,Parameters<typeof translate>[1]>={none:'markerEffectNone',outline:'markerOutline',glow:'markerGlow',pulse:'markerPulse',beacon:'markerBeacon'}
+const markerOwnColor=(effect:string)=>effect==='outline'?'#ffffff':'#ff3b30'
 
 function normalizeStatus(value:Partial<Status>|null|undefined):Status{
   const next={...emptyStatus,...(value??{})}
@@ -75,9 +77,15 @@ function App(){
   const [logs,setLogs]=useState<LogEntry[]>([])
   const [logLevel,setLogLevel]=useState('all')
   const [logCategory,setLogCategory]=useState('all')
-  // The marker gallery's sheet, built by the Go side for the image chosen.
+  // The marker gallery's sheet, built by the Go side in the colour chosen.
+  // The colour control follows the pointer; the setting takes it once the
+  // pointer rests, so the map view is not rebuilt for every shade passed.
   const [markerCSS,setMarkerCSS]=useState('')
-  useEffect(()=>{let live=true;PlayerMarkerPreviewCSS(settings.playerMarkerImage).then(css=>{if(live)setMarkerCSS(css)}).catch(()=>{if(live)setMarkerCSS('')});return()=>{live=false}},[settings.playerMarkerImage])
+  const [markerColor,setMarkerColor]=useState('')
+  const markerColorTimer=useRef<number|undefined>(undefined)
+  useEffect(()=>{setMarkerColor(settings.playerMarkerColor)},[settings.playerMarkerColor])
+  useEffect(()=>{let live=true;PlayerMarkerPreviewCSS(markerColor).then(css=>{if(live)setMarkerCSS(css)}).catch(()=>{if(live)setMarkerCSS('')});return()=>{live=false}},[markerColor])
+  const pickMarkerColor=(color:string)=>{setMarkerColor(color);window.clearTimeout(markerColorTimer.current);markerColorTimer.current=window.setTimeout(()=>patch({playerMarkerColor:color}),400)}
   const [hideoutAlert,setHideoutAlert]=useState<HideoutEvent|null>(null)
   const [logQuery,setLogQuery]=useState('')
   const [trackerToken,setTrackerToken]=useState('')
@@ -184,9 +192,6 @@ function App(){
   const analyzeLatest=()=>run(()=>AnalyzeLatestScreenshot(),t('latestAnalyzed'))
   type SoundPathKey='hideoutErrorSoundPath'|'questSoundPath'|'errorSoundPath'|'matchFoundSoundPath'|'raidStartSoundPath'|'runThroughSoundPath'|'questItemsSoundPath'|'restartTasksSoundPath'
   const chooseSound=async(key:SoundPathKey)=>{try{const path=await ChooseSoundFile();if(path)patch({[key]:path} as Partial<Settings>)}catch(error){setNotice(String(error));setNoticeError(true)}}
-  // The player marker gallery: the styles the Go side offers, previewed with
-  // the sheet it builds (app_marker.go); the custom one with the image chosen.
-  const chooseMarkerImage=async()=>{try{const path=await ChoosePlayerMarkerFile();if(path)patch({playerMarkerImage:path,playerMarker:'custom'})}catch(error){setNotice(String(error));setNoticeError(true)}}
   const previewSound=async(kind:string,path:string)=>{try{await PreviewSound(kind,path,settings.soundVolume)}catch(error){setNotice(String(error));setNoticeError(true)}}
   const soundAlerts=[
     {id:"hideout-error",label:t("hideoutErrorNotifications"),kind:"error",enabledKey:"hideoutErrorNotifications",pathKey:"hideoutErrorSoundPath"},
@@ -275,8 +280,8 @@ function App(){
             </div>
             <div className="field marker-field"><Label>{t('markerTitle')}</Label><p className="help">{t('markerDescription')}</p>
               <style>{markerCSS}</style>
-              <div className="marker-gallery" role="radiogroup" aria-label={t('markerTitle')}>{markerStyles.map(style=><button type="button" key={style} role="radio" aria-checked={settings.playerMarker===style} className={`marker-choice${settings.playerMarker===style?' selected':''}`} onClick={()=>style==='custom'&&!settings.playerMarkerImage?void chooseMarkerImage():patch({playerMarker:style})}><span className="marker-preview" data-style={style}><span className="marker-icon"><img src="/marker-arrow.svg?v=2" alt="" style={{width:24,height:24,rotate:'35deg'}}/></span></span><span className="marker-name">{t(markerNames[style]??'markerCustom')}</span></button>)}</div>
-              <div className="marker-file-row"><Button type="button" size="sm" variant="secondary" onClick={chooseMarkerImage}><FolderOpen/>{t('markerChooseFile')}</Button><span className="marker-file-path" title={settings.playerMarkerImage}>{settings.playerMarkerImage||t('markerNoFile')}</span>{settings.playerMarkerImage&&<Button type="button" size="sm" variant="ghost" aria-label={t('markerClearFile')} onClick={()=>patch({playerMarkerImage:'',playerMarker:settings.playerMarker==='custom'?'default':settings.playerMarker})}><X/></Button>}</div>
+              <div className="marker-gallery" role="radiogroup" aria-label={t('markerTitle')}>{markerEffects.map(effect=><button type="button" key={effect} role="radio" aria-checked={settings.playerMarkerEffect===effect} className={`marker-choice${settings.playerMarkerEffect===effect?' selected':''}`} onClick={()=>patch({playerMarkerEffect:effect})}><span className="marker-preview" data-effect={effect}><span className="marker-icon"><img src="/marker-arrow.svg?v=2" alt="" style={{width:24,height:24,rotate:'35deg'}}/></span></span><span className="marker-name">{t(markerEffectNames[effect]??'markerEffectNone')}</span></button>)}</div>
+              <div className="marker-color-row"><Label htmlFor="marker-color">{t('markerColor')}</Label><input id="marker-color" type="color" className="marker-color-input" value={markerColor||markerOwnColor(settings.playerMarkerEffect)} disabled={settings.playerMarkerEffect==='none'} onChange={e=>pickMarkerColor(e.target.value)}/><span className="marker-color-value">{markerColor||t('markerColorOwn')}</span>{markerColor&&<Button type="button" size="sm" variant="ghost" onClick={()=>pickMarkerColor('')}><RotateCcw/>{t('markerColorReset')}</Button>}</div>
               <p className="help">{t('markerHelp')}</p>
             </div>
             <div className="connection-test-row"><Button type="button" variant="secondary" onClick={test} disabled={busy||!settings.remoteTargets.some(target=>target.id.trim())}><Wifi/>{t('testConnection')}</Button>{remoteTestResult!=='idle'&&<span className={`connection-test-result ${remoteTestResult}`}>{remoteTestResult==='success'?<Check/>:remoteTestResult==='error'?<CircleX/>:<RefreshCw className="spin"/>}{remoteTestResult==='success'?t('remoteConnected'):remoteTestResult==='error'?t('remoteConnectionFailed'):t('remoteConnecting')}</span>}</div>

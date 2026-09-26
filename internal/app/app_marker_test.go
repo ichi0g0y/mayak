@@ -1,104 +1,71 @@
 package app
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/local/mayak/internal/applog"
 	"github.com/local/mayak/internal/config"
 )
 
-func TestPlayerMarkerStylesAreKnownOrDefault(t *testing.T) {
-	for _, style := range playerMarkerStyles {
-		if normalizePlayerMarker(style) != style {
-			t.Fatalf("%q not kept", style)
+func TestPlayerMarkerEffectsAndColours(t *testing.T) {
+	for _, effect := range playerMarkerEffects {
+		if normalizePlayerMarkerEffect(effect) != effect {
+			t.Fatalf("%q not kept", effect)
 		}
 	}
-	for _, unknown := range []string{"", "huge", "Custom"} {
-		if got := normalizePlayerMarker(unknown); got != playerMarkerDefault {
+	for _, unknown := range []string{"", "huge", "Outline", "custom", "default", "glow-red"} {
+		if got := normalizePlayerMarkerEffect(unknown); got != playerMarkerNoEffect {
 			t.Fatalf("%q -> %q", unknown, got)
 		}
 	}
-	if normalizePlayerMarker("large") != "outline" {
-		t.Fatal("the 0.1.15 name of the outline is not carried over")
-	}
-	// Nothing scales the icon: it keeps tarkov.dev's size on the map.
-	for _, style := range playerMarkerStyles {
-		if rules := playerMarkerRules(style, "IMG", "BOX", "data:image/png;base64,AAAA"); strings.Contains(rules, "IMG{transform") || strings.Contains(rules, "48px") {
-			t.Fatalf("%s scales the icon: %s", style, rules)
+	for raw, want := range map[string]string{"#FF3B30": "#ff3b30", " #abcdef ": "#abcdef", "red": "", "#fff": "", "": ""} {
+		if got := normalizePlayerMarkerColor(raw); got != want {
+			t.Fatalf("colour %q -> %q, want %q", raw, got, want)
 		}
 	}
-	// Every style but tarkov.dev's own has rules on the marker image.
-	for _, style := range playerMarkerStyles[1:] {
-		rules := playerMarkerRules(style, "IMG", "BOX", "data:image/png;base64,AAAA")
-		if !strings.HasPrefix(rules, "IMG{") {
-			t.Fatalf("%s: %s", style, rules)
+	// 0.1.15's single choice: its effects carry over, the green glow keeps
+	// its colour, the custom image and the default are no effect.
+	for style, want := range map[string][2]string{"large": {"outline", ""}, "glow-red": {"glow", ""}, "glow-green": {"glow", "#3dff6e"}, "pulse": {"pulse", ""}, "custom": {"none", ""}, "default": {"none", ""}} {
+		if effect, color := legacyPlayerMarker(style); effect != want[0] || color != want[1] {
+			t.Fatalf("%q -> %q %q, want %v", style, effect, color, want)
 		}
 	}
-	if playerMarkerRules(playerMarkerDefault, "IMG", "BOX", "") != "" || playerMarkerRules("custom", "IMG", "BOX", "") != "" {
-		t.Fatal("rules for the default marker, or a custom one without an image")
+	// Every effect but none has rules on the marker image in its colour, and
+	// none scales the icon.
+	for _, effect := range playerMarkerEffects[1:] {
+		rules := playerMarkerRules(effect, "#123456", "IMG", "BOX")
+		if !strings.HasPrefix(rules, "IMG{") || strings.Contains(rules, "IMG{transform") || !strings.Contains(rules, "#123456") {
+			t.Fatalf("%s: %s", effect, rules)
+		}
 	}
-	// Rules on the box reach each of the selectors it is made of.
-	pulse := playerMarkerRules("pulse", "IMG", "A,B", "")
+	if playerMarkerRules(playerMarkerNoEffect, "#123456", "IMG", "BOX") != "" {
+		t.Fatal("rules for no effect")
+	}
+	// Without a colour the outline is white and the rest red.
+	if !strings.Contains(playerMarkerRules("outline", "", "IMG", "BOX"), "#ffffff") || !strings.Contains(playerMarkerRules("glow", "", "IMG", "BOX"), playerMarkerRed) {
+		t.Fatal("own colours")
+	}
+	// Rules on the box reach each of the selectors it is made of; the
+	// beacon's halo fades the colour out.
+	pulse := playerMarkerRules("pulse", "", "IMG", "A,B")
 	if !strings.Contains(pulse, "A::before") || !strings.Contains(pulse, "B::before") || !strings.Contains(pulse, "@keyframes mayak-marker-pulse") {
 		t.Fatal(pulse)
 	}
-}
-
-func TestPlayerMarkerImageBecomesADataURL(t *testing.T) {
-	dir := t.TempDir()
-	png := filepath.Join(dir, "marker.png")
-	if err := os.WriteFile(png, []byte("\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR"), 0o644); err != nil {
-		t.Fatal(err)
+	if beacon := playerMarkerRules("beacon", "#ffd60a", "IMG", "BOX"); !strings.Contains(beacon, "rgba(255,214,10,0.45)") || !strings.Contains(beacon, "rgba(255,214,10,0)") {
+		t.Fatal(beacon)
 	}
-	data, err := playerMarkerImageData(png)
-	if err != nil || !strings.HasPrefix(data, "data:image/png;base64,") {
-		t.Fatalf("png: %q %v", data, err)
-	}
-	svg := filepath.Join(dir, "marker.svg")
-	if err := os.WriteFile(svg, []byte(`<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"/>`), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if data, err := playerMarkerImageData(svg); err != nil || !strings.HasPrefix(data, "data:image/svg+xml;base64,") {
-		t.Fatalf("svg: %q %v", data, err)
-	}
-	text := filepath.Join(dir, "notes.txt")
-	if err := os.WriteFile(text, []byte("hello"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := playerMarkerImageData(text); err == nil || !strings.Contains(err.Error(), "notes.txt") {
-		t.Fatalf("a text file was accepted, or the error does not name it: %v", err)
-	}
-	// An SVG in UTF-16 and a WebP the sniffing does not know go by extension.
-	utf16 := filepath.Join(dir, "wide.svg")
-	if err := os.WriteFile(utf16, []byte("\xff\xfe<\x00s\x00v\x00g\x00/\x00>\x00"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if data, err := playerMarkerImageData(utf16); err != nil || !strings.HasPrefix(data, "data:image/svg+xml;base64,") {
-		t.Fatalf("utf-16 svg: %q %v", data, err)
-	}
-	odd := filepath.Join(dir, "odd.webp")
-	if err := os.WriteFile(odd, []byte("not really webp"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if data, err := playerMarkerImageData(odd); err != nil || !strings.HasPrefix(data, "data:image/webp;base64,") {
-		t.Fatalf("webp by extension: %q %v", data, err)
-	}
-	if _, err := playerMarkerImageData(""); err == nil {
-		t.Fatal("no path was accepted")
-	}
-	// The site's sheet carries the image; without one the default marker shows.
-	a := &App{logs: applog.New(10)}
-	if css := a.playerMarkerCSS(config.Settings{PlayerMarker: "custom", PlayerMarkerImage: png}); !strings.Contains(css, "data:image/png;base64,") || !strings.Contains(css, markerImageOnSite) {
+	a := &App{}
+	if css := a.playerMarkerCSS(config.Settings{PlayerMarkerEffect: "glow", PlayerMarkerColor: "#00ff00"}); !strings.Contains(css, markerImageOnSite) || !strings.Contains(css, "#00ff00") {
 		t.Fatal(css)
 	}
-	if css := a.playerMarkerCSS(config.Settings{PlayerMarker: "custom", PlayerMarkerImage: text}); css != "" {
+	if css := a.playerMarkerCSS(config.Settings{}); css != "" {
 		t.Fatal(css)
 	}
-	if css := a.playerMarkerCSS(config.Settings{PlayerMarker: "glow-red"}); !strings.Contains(css, "#ff3b30") {
-		t.Fatal(css)
+	if preview := a.PlayerMarkerPreviewCSS("#00ff00"); !strings.Contains(preview, `.marker-preview[data-effect="beacon"] .marker-icon::before`) || strings.Count(preview, "#00ff00") < 4 {
+		t.Fatal(preview)
+	}
+	if a.PlayerMarkerEffectColor("outline") != "#ffffff" || a.PlayerMarkerEffectColor("pulse") != playerMarkerRed {
+		t.Fatal("effect colours")
 	}
 }
 

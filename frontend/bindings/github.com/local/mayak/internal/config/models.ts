@@ -74,12 +74,14 @@ export class Settings {
     "navigateMapOnPositionScreenshot": boolean;
 
     /**
-     * PlayerMarker is how the built-in browser shows the player's position
-     * on tarkov.dev's map (see app_marker.go); PlayerMarkerImage is the
-     * image file of the "custom" marker.
+     * PlayerMarkerEffect is the effect the built-in browser gives the
+     * player's position marker on tarkov.dev's map, PlayerMarkerColor its
+     * colour (#rrggbb; empty for the effect's own); see app_marker.go.
+     * PlayerMarker was 0.1.15's single choice; it is read once and dropped.
      */
-    "playerMarker": string;
-    "playerMarkerImage": string;
+    "playerMarkerEffect": string;
+    "playerMarkerColor": string;
+    "playerMarker"?: string;
     "tarkovTrackerEnabled": boolean;
     "matchFoundSoundEnabled": boolean;
     "matchFoundSoundPath": string;
@@ -202,11 +204,11 @@ export class Settings {
         if (!("navigateMapOnPositionScreenshot" in $$source)) {
             this["navigateMapOnPositionScreenshot"] = false;
         }
-        if (!("playerMarker" in $$source)) {
-            this["playerMarker"] = "";
+        if (!("playerMarkerEffect" in $$source)) {
+            this["playerMarkerEffect"] = "";
         }
-        if (!("playerMarkerImage" in $$source)) {
-            this["playerMarkerImage"] = "";
+        if (!("playerMarkerColor" in $$source)) {
+            this["playerMarkerColor"] = "";
         }
         if (!("tarkovTrackerEnabled" in $$source)) {
             this["tarkovTrackerEnabled"] = false;

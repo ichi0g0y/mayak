@@ -213,13 +213,6 @@ export function ChooseLogsDirectory(): $CancellablePromise<string> {
     return $Call.ByID(4164457643);
 }
 
-/**
- * ChoosePlayerMarkerFile asks for a custom marker image and checks it can be used.
- */
-export function ChoosePlayerMarkerFile(): $CancellablePromise<string> {
-    return $Call.ByID(704134006);
-}
-
 export function ChooseScreenshotDirectory(): $CancellablePromise<string> {
     return $Call.ByID(1391905886);
 }
@@ -333,21 +326,29 @@ export function PersistSettings(s: config$0.Settings): $CancellablePromise<void>
 }
 
 /**
- * PlayerMarkerPreviewCSS is a style sheet for the settings page's gallery:
- * every style's rules on .marker-preview[data-style=<style>] .marker-icon
- * (the box) and its img, the custom one with the image at imagePath.
+ * PlayerMarkerEffectColor is the colour effect shows in without a colour
+ * chosen, for the settings' colour control.
  */
-export function PlayerMarkerPreviewCSS(imagePath: string): $CancellablePromise<string> {
-    return $Call.ByID(675497734, imagePath);
+export function PlayerMarkerEffectColor(effect: string): $CancellablePromise<string> {
+    return $Call.ByID(2215901919, effect);
 }
 
 /**
- * PlayerMarkerStyles lists the marker styles the settings offer.
+ * PlayerMarkerEffects lists the effects the settings offer.
  */
-export function PlayerMarkerStyles(): $CancellablePromise<string[]> {
-    return $Call.ByID(4005732563).then(($result: any) => {
+export function PlayerMarkerEffects(): $CancellablePromise<string[]> {
+    return $Call.ByID(504171073).then(($result: any) => {
         return $$createType11($result);
     });
+}
+
+/**
+ * PlayerMarkerPreviewCSS is a style sheet for the settings page: each
+ * effect's rules, in color (or its own), on
+ * .marker-preview[data-effect=<effect>] .marker-icon (the box) and its img.
+ */
+export function PlayerMarkerPreviewCSS(color: string): $CancellablePromise<string> {
+    return $Call.ByID(675497734, color);
 }
 
 export function PreviewSound(kind: string, path: string, volume: number): $CancellablePromise<void> {

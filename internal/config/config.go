@@ -41,11 +41,13 @@ type Settings struct {
 	AutoStartMonitoring   bool   `json:"autoStartMonitoring"`
 	OpenMapOnRaidStart    bool   `json:"openMapOnRaidStart"`
 	NavigateMapOnShot     bool   `json:"navigateMapOnPositionScreenshot"`
-	// PlayerMarker is how the built-in browser shows the player's position
-	// on tarkov.dev's map (see app_marker.go); PlayerMarkerImage is the
-	// image file of the "custom" marker.
-	PlayerMarker          string `json:"playerMarker"`
-	PlayerMarkerImage     string `json:"playerMarkerImage"`
+	// PlayerMarkerEffect is the effect the built-in browser gives the
+	// player's position marker on tarkov.dev's map, PlayerMarkerColor its
+	// colour (#rrggbb; empty for the effect's own); see app_marker.go.
+	// PlayerMarker was 0.1.15's single choice; it is read once and dropped.
+	PlayerMarkerEffect    string `json:"playerMarkerEffect"`
+	PlayerMarkerColor     string `json:"playerMarkerColor"`
+	PlayerMarker          string `json:"playerMarker,omitempty"`
 	TarkovTrackerEnabled  bool   `json:"tarkovTrackerEnabled"`
 	MatchFoundSound       bool   `json:"matchFoundSoundEnabled"`
 	MatchFoundSoundPath   string `json:"matchFoundSoundPath"`
