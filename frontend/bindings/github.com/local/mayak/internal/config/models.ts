@@ -102,6 +102,13 @@ export class Settings {
      */
     "minimizeToTray": boolean;
     "closeToTray": boolean;
+
+    /**
+     * KeepPriority puts MAYAK and its window's WebView2 processes back to
+     * normal priority when a priority manager (Process Lasso) lowered them
+     * (priority_windows.go); off unless such a tool makes the window sluggish.
+     */
+    "keepPriority": boolean;
     "launchAtStartup": boolean;
 
     /**
@@ -254,6 +261,9 @@ export class Settings {
         }
         if (!("closeToTray" in $$source)) {
             this["closeToTray"] = false;
+        }
+        if (!("keepPriority" in $$source)) {
+            this["keepPriority"] = false;
         }
         if (!("launchAtStartup" in $$source)) {
             this["launchAtStartup"] = false;

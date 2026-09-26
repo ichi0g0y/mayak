@@ -30,6 +30,14 @@ func Run(assets fs.FS, icon []byte) error {
 	// before anything reads it.
 	moved, moveErr := appdir.Migrate()
 	service := NewApp()
+	// With the KeepPriority setting, the window's WebView2 processes are kept
+	// at normal priority whatever a priority manager does to MAYAK while it
+	// starts (priority_windows.go).
+	go guardPriority(service.done, func() bool {
+		service.mu.RLock()
+		defer service.mu.RUnlock()
+		return service.settings.KeepPriority
+	})
 	if restarted {
 		service.addLog("Info", "Update", "Restarted into MAYAK "+version.Current())
 	}

@@ -208,6 +208,8 @@ Wails 本体はフォークせず公式モジュールを使います。
 
 - `production` タグなしのビルドでは、アセットは埋め込みの `frontend/dist` ではなく Vite 開発サーバーから配信されます。
 - WebUI（`frontend/`）の変更は Vite の HMR／リロードで反映されます。そのため `frontend` は Wails の監視対象から外しています。
+- `public/` の静的ファイル（`frontend/public/*.svg` など）は Vite が開いているページに差し込み直さないので、参照する URL に版（`?v=2`）を付けるか、Go ファイルを書き換えて再起動させます。
+- **UI が固まって見えるとき**: Process Lasso の ProBalance のような優先度管理ツールがあると、起動直後の CPU 使用（カタログの読み込み、フィルタリストの解析）で MAYAK が BelowNormal に下げられ、そのあいだに生まれた WebView2 のブラウザプロセスが低い優先度を引き継いだまま戻りません（ツールが戻すのは本体だけ）。`task dev` は再ビルドのたびに起動をやり直すので毎回起きます。設定 → 起動とウィンドウ →「ウィンドウの優先度を通常に保つ」（`keepPriority`）をオンにすると、MAYAK が `guardPriority`（`priority_windows.go`）で起動 3 秒後と以後 10 秒ごとに、自分と直下の `msedgewebview2.exe` が Idle / BelowNormal なら Normal に戻します（そうしたツールがある環境だけの話なので既定はオフ）。それでも重いときは、ツール側で `Mayak.exe` と `Mayak-dev.exe` を除外してください。
 - Go（`*.go`）の変更は、1000 ms のデバウンス後にバインディング生成と開発ビルドをやり直し、アプリを再起動します。一時ファイルに書いてから置き換えるアトミック保存では、Windows の監視が置き換え（名前変更）を再読み込みの対象にしないため、一時ファイル（`*.go.tmp.*`、GoLand の `*.go___jb_tmp___`）への書き込みでも開発ビルドを始めます。監視しないディレクトリは `.git`、`node_modules`、`frontend`、`client`、`third_party`、`build`、`docs`、`tools` です。`.gitignore` の対象も監視しません。
 
 開発ループの注意点（`build/config.yml` のコメントより）:

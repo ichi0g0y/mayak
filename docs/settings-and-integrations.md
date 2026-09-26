@@ -101,6 +101,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `startMinimized` | `false` | 最小化した状態で起動する（「起動とウィンドウ」）。ウインドウの位置を復元したあとで最小化し、`minimizeToTray` が真ならトレイに入る |
 | `minimizeToTray` | `false` | 最小化したときにウィンドウを隠し、タスクバーから消す |
 | `closeToTray` | `false` | 閉じるボタンでは終了せず、トレイに常駐する |
+| `keepPriority` | `false` | 起動 3 秒後と以後 10 秒ごとに、MAYAK 自身と直下の `msedgewebview2.exe` が Idle / BelowNormal なら Normal に戻す（`guardPriority`、Windows のみ）。Process Lasso の ProBalance などが起動直後の CPU 使用で優先度を下げ、そのあいだに生まれた WebView2 プロセスが低いまま残って UI が固まって見えるときに使う |
 | `launchAtStartup` | `false` | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` に登録する |
 | `autoUpdate` | `true` | GitHub Releases の新しい版を自動で確認・ダウンロードし、終了時に適用する（[自動アップデート](#自動アップデート)） |
 | `windowX` / `windowY` / `windowWidth` / `windowHeight` / `windowConfigured` | `0` / `false` | 旧形式のウィンドウ位置。現在は `window.json` を使う |

@@ -6,6 +6,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- Settings → Startup and window has "Keep the window at normal priority" (off by default). With a priority manager such as Process Lasso's ProBalance lowering MAYAK's priority during its start-up CPU work, the window's WebView2 processes spawned meanwhile keep the lower class and the UI looks frozen under load; switched on, MAYAK checks itself and its window processes every 10 seconds and puts them back to normal. It showed with `task dev`, which starts the app again after every rebuild.
 - Each key under TarkovTracker's saved keys has a dropdown for the EFT profile it is assigned to. Assigning from the key or from the profile comes to the same.
 
 ## v0.1.16 (2026-09-26)

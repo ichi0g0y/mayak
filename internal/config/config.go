@@ -63,8 +63,12 @@ type Settings struct {
 	StartMinimized        bool   `json:"startMinimized"`
 	// MinimizeToTray removes the taskbar entry when the window is minimized;
 	// CloseToTray keeps the app running in the tray when it is closed.
-	MinimizeToTray  bool `json:"minimizeToTray"`
-	CloseToTray     bool `json:"closeToTray"`
+	MinimizeToTray bool `json:"minimizeToTray"`
+	CloseToTray    bool `json:"closeToTray"`
+	// KeepPriority puts MAYAK and its window's WebView2 processes back to
+	// normal priority when a priority manager (Process Lasso) lowered them
+	// (priority_windows.go); off unless such a tool makes the window sluggish.
+	KeepPriority    bool `json:"keepPriority"`
 	LaunchAtStartup bool `json:"launchAtStartup"`
 	// AutoUpdate checks GitHub Releases for a newer MAYAK, downloads it in
 	// the background and installs it when MAYAK quits.
