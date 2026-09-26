@@ -102,7 +102,7 @@ URL は `https://json.tarkov.dev/<mode>/<resource>` です。
 ## アイテム一覧（`internal/itemapi`）
 
 - `ItemsForMode(mode)`: `""` / `auto` は `regular` として扱い、それ以外の不明モードはエラー。
-- モードごとに **12 時間**メモリにキャッシュ。ただしカタログのタスク部分が変わると `Invalidate` されるので、実際はカタログのスナップショットに追従します。
+- モードごとに **12 時間**メモリにキャッシュ。ただしカタログのアイテム部分が変わると `Invalidate` されるので、実際はカタログのスナップショットに追従します。
 - 名前・略称は `items_en` で英語化。`items_<lang>` の名前が英語と異なる場合、`Aliases` / `ShortAliases` に加え、`Names[lang]` に保持します（照合と表示言語に使用、[アイテム欄](item-panel.md)）。
 - 言語リソースが取れなくても英語名で動作します。
 - `NewWithSource` でカタログを取得元にします（アプリはこちら）。取得元なしの場合は JSON API を直接読みます（タイムアウト 30 秒）。
@@ -112,7 +112,7 @@ URL は `https://json.tarkov.dev/<mode>/<resource>` です。
 - `QuestsForMode(mode)`:
   - `regular` / `pve` / `pvp-season`: そのモードの `tasks`・`maps`・`traders` と英語名から構築し、補足タスクと Wiki タスクを加えます。
   - `""` / `auto`: `Quests()` が `regular` を基準に、`pve`・`pvp-season` にしかないタスクを ID 単位で追加した統合一覧を返します（マップ・トレーダー名は `regular` のもの）。
-- キャッシュは統合一覧・モード別とも **12 時間**。カタログのアイテム部分が変わると `Invalidate` されます。
+- キャッシュは統合一覧・モード別とも **12 時間**。カタログのタスク部分が変わると `Invalidate` されます。
 - 各タスクは ID・英語名・トレーダー名・マップ（`normalizedName`）・`normalizedName`・`wikiLink`・目標（説明と対象マップ）を持ちます。タスク自体にマップがなければ、最初にマップを持つ目標のマップを使います。
 - 別言語名: `tasks_<lang>` にある名前が英語名と異なれば `Aliases` に追加します。表示名と Wiki リンクは英語（正規）のまま。言語リソースが欠けても一覧は使えます。
 - 取得元なしの場合の HTTP タイムアウトは 20 秒。
