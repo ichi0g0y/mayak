@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"github.com/local/mayak/internal/imaging"
 	"image"
 	"image/color"
 	"image/png"
@@ -63,7 +64,8 @@ func (t Tesseract) Recognize(ctx context.Context, img image.Image) (string, erro
 // a white margin. Line models are trained on such tight lines (tools/ocrtrain).
 func preprocess(src image.Image) image.Image {
 	b := src.Bounds()
-	luma := func(x, y int) uint8 { return color.GrayModel.Convert(src.At(x, y)).(color.Gray).Y }
+	px := imaging.Of(src)
+	luma := func(x, y int) uint8 { return px.Gray(x-b.Min.X, y-b.Min.Y) }
 	left := titleStart(src, luma)
 	var histogram [256]int
 	for y := b.Min.Y; y < b.Max.Y; y++ {

@@ -11,6 +11,8 @@ import (
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/local/mayak/internal/imaging"
 )
 
 //go:embed windows_ocr.ps1
@@ -112,12 +114,13 @@ func (w Windows) Recognize(ctx context.Context, img image.Image) (string, error)
 // the text. A crop drawn all over (a title over a picture) stays as it is.
 func trimToText(src image.Image) image.Image {
 	const margin, contrast = 12, 48
-	b := src.Bounds()
-	back := int(lumaOf(src.At(b.Min.X, b.Min.Y)))
+	px := imaging.Of(src)
+	b := px.Bounds()
+	back := int(px.Luma(0, 0))
 	text := image.Rectangle{}
-	for y := b.Min.Y; y < b.Max.Y; y++ {
-		for x := b.Min.X; x < b.Max.X; x++ {
-			if diff := int(lumaOf(src.At(x, y))) - back; diff > contrast || diff < -contrast {
+	for y := 0; y < b.Max.Y; y++ {
+		for x := 0; x < b.Max.X; x++ {
+			if diff := int(px.Luma(x, y)) - back; diff > contrast || diff < -contrast {
 				text = text.Union(image.Rect(x, y, x+1, y+1))
 			}
 		}
@@ -129,41 +132,37 @@ func trimToText(src image.Image) image.Image {
 	if r == b {
 		return src
 	}
-	dst := image.NewRGBA(image.Rect(0, 0, r.Dx(), r.Dy()))
-	draw.Draw(dst, dst.Bounds(), src, r.Min, draw.Src)
-	return dst
-}
-
-func lumaOf(c color.Color) uint8 {
-	r, g, b, _ := c.RGBA()
-	return uint8((299*r + 587*g + 114*b) / 1000 >> 8)
+	return imaging.Crop(px.RGBA, r.Min.X, r.Min.Y, r.Dx(), r.Dy())
 }
 
 // upscale2x doubles the crop and surrounds it with a margin of its corner
 // color: Windows OCR returns nothing for text that touches the image edge.
 func upscale2x(src image.Image) image.Image {
 	const margin = 16
-	b := src.Bounds()
-	dst := image.NewRGBA(image.Rect(0, 0, b.Dx()*2+2*margin, b.Dy()*2+2*margin))
-	draw.Draw(dst, dst.Bounds(), image.NewUniform(src.At(b.Min.X, b.Min.Y)), image.Point{}, draw.Src)
-	for y := 0; y < b.Dy(); y++ {
-		for x := 0; x < b.Dx(); x++ {
-			pixel := src.At(b.Min.X+x, b.Min.Y+y)
-			dst.Set(margin+2*x, margin+2*y, pixel)
-			dst.Set(margin+2*x+1, margin+2*y, pixel)
-			dst.Set(margin+2*x, margin+2*y+1, pixel)
-			dst.Set(margin+2*x+1, margin+2*y+1, pixel)
+	px := imaging.Of(src)
+	w, h := px.Width(), px.Height()
+	dst := image.NewRGBA(image.Rect(0, 0, w*2+2*margin, h*2+2*margin))
+	draw.Draw(dst, dst.Bounds(), image.NewUniform(px.At(0, 0)), image.Point{}, draw.Src)
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			r, g, b := px.RGB(x, y)
+			pixel := color.RGBA{R: r, G: g, B: b, A: 255}
+			dst.SetRGBA(margin+2*x, margin+2*y, pixel)
+			dst.SetRGBA(margin+2*x+1, margin+2*y, pixel)
+			dst.SetRGBA(margin+2*x, margin+2*y+1, pixel)
+			dst.SetRGBA(margin+2*x+1, margin+2*y+1, pixel)
 		}
 	}
 	return dst
 }
 
 func thresholdImage(src image.Image, threshold uint8) image.Image {
-	b := src.Bounds()
+	px := imaging.Of(src)
+	b := px.Bounds()
 	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
 	for y := 0; y < b.Dy(); y++ {
 		for x := 0; x < b.Dx(); x++ {
-			gray := color.GrayModel.Convert(src.At(b.Min.X+x, b.Min.Y+y)).(color.Gray).Y
+			gray := px.Gray(x, y)
 			if gray < threshold {
 				gray = 0
 			} else {

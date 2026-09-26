@@ -4,6 +4,8 @@ import (
 	"image"
 	"image/color"
 	"testing"
+
+	"github.com/local/mayak/internal/imaging"
 )
 
 // A short title at the left of a wide title bar is cut to the text with a
@@ -25,7 +27,7 @@ func TestTrimToTextCutsAWideStripToItsTitle(t *testing.T) {
 		t.Fatalf("trimmed to %v", got)
 	}
 	// The left margin is the crop's own edge, so the text keeps its place.
-	if lumaOf(trimmed.At(4, 12)) < 200 || lumaOf(trimmed.At(125, 12)) > 40 {
+	if imaging.LumaOf(trimmed.At(4, 12)) < 200 || imaging.LumaOf(trimmed.At(125, 12)) > 40 {
 		t.Fatal("text moved")
 	}
 

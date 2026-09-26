@@ -1,14 +1,12 @@
 package itemdetect
 
 import (
-	"bytes"
-	"encoding/base64"
 	"errors"
 	"image"
-	"image/color"
-	"image/png"
+	_ "image/png"
 	"os"
 
+	"github.com/local/mayak/internal/imaging"
 	"github.com/local/mayak/internal/screenscale"
 )
 
@@ -46,7 +44,8 @@ func Analyze(original image.Image) (Result, error) {
 	if err != nil {
 		return Result{}, err
 	}
-	window, score := findInspectWindow(img)
+	px := imaging.Of(img)
+	window, score := findInspectWindow(px)
 	result := Result{IsItem: score >= .72, Score: score, WindowRect: window}
 	if !result.IsItem {
 		return result, nil
@@ -72,8 +71,8 @@ func Analyze(original image.Image) (Result, error) {
 	if err != nil {
 		return Result{}, err
 	}
-	result.Crop = copyCrop(text, crop)
-	result.CropDataURL, _ = dataURL(result.Crop)
+	result.Crop = imaging.Crop(text, crop.X, crop.Y, crop.W, crop.H)
+	result.CropDataURL, _ = imaging.PNGDataURL(result.Crop)
 	return result, nil
 }
 
@@ -90,11 +89,11 @@ const minWindowHeight = 200
 // the stacking order comes from occlusion: a window is behind another when
 // that window's header is drawn over its body, and a window whose close button
 // is hidden is behind something too.
-func findInspectWindow(img image.Image) (Rect, float64) {
-	headers := findHeaders(img)
+func findInspectWindow(px imaging.Pixels) (Rect, float64) {
+	headers := findHeaders(px)
 	heights := make([]int, len(headers))
 	for i, h := range headers {
-		heights[i] = windowHeight(img, h.rect)
+		heights[i] = windowHeight(px, h.rect)
 	}
 	best, bestScore, bestCovers := Rect{}, 0.0, -1
 	for i, a := range headers {
@@ -131,7 +130,7 @@ func covered(a Rect, aHeight int, b Rect, bHeight int) bool {
 		return true
 	}
 	besideB := a.Y > b.Y && a.Y < b.Y+bHeight
-	return besideB && (abs(a.X-(b.X+b.W)) <= 8 || abs(a.X+a.W-b.X) <= 8)
+	return besideB && (imaging.Abs(a.X-(b.X+b.W)) <= 8 || imaging.Abs(a.X+a.W-b.X) <= 8)
 }
 
 type header struct {
@@ -142,21 +141,20 @@ type header struct {
 }
 
 // findHeaders returns every inspect-window header on screen, once each.
-func findHeaders(img image.Image) []header {
-	bounds := img.Bounds()
+func findHeaders(px imaging.Pixels) []header {
 	var headers []header
 	// Windows can be dragged up to the top bar, just under the screen's top.
-	for y := 40; y < bounds.Dy()-120; y++ {
+	for y := 40; y < px.Height()-120; y++ {
 		runStart := -1
-		for x := 20; x < bounds.Dx()-20; x++ {
-			if isBorderPixel(img.At(x, y)) {
+		for x := 20; x < px.Width()-20; x++ {
+			if isBorderAt(px, x, y) {
 				if runStart < 0 {
 					runStart = x
 				}
 				continue
 			}
 			if runStart >= 0 {
-				if h, ok := headerAt(img, runStart, x-1, y); ok && !duplicate(headers, h) {
+				if h, ok := headerAt(px, runStart, x-1, y); ok && !duplicate(headers, h) {
 					headers = append(headers, h)
 				}
 				runStart = -1
@@ -168,7 +166,7 @@ func findHeaders(img image.Image) []header {
 
 func duplicate(headers []header, h header) bool {
 	for i, other := range headers {
-		if abs(other.rect.Y-h.rect.Y) <= 6 && abs(other.rect.X-h.rect.X) <= 12 && abs(other.rect.W-h.rect.W) <= 24 {
+		if imaging.Abs(other.rect.Y-h.rect.Y) <= 6 && imaging.Abs(other.rect.X-h.rect.X) <= 12 && imaging.Abs(other.rect.W-h.rect.W) <= 24 {
 			if h.score > other.score {
 				headers[i].score = h.score
 			}
@@ -180,21 +178,21 @@ func duplicate(headers []header, h header) bool {
 
 // headerAt checks a border run as the top of an inspect window: a long
 // neutral line over a dark title bar. The score rates its close button.
-func headerAt(img image.Image, left, right, top int) (header, bool) {
+func headerAt(px imaging.Pixels, left, right, top int) (header, bool) {
 	if right-left+1 < 100 {
 		return header{}, false
 	}
-	left = expandHeaderLeft(img, right, top)
+	left = expandHeaderLeft(px, right, top)
 	width := right - left + 1
-	if width < 480 || width > 1700 || !darkBar(img, left, right, top) {
+	if width < 480 || width > 1700 || !darkBar(px, left, right, top) {
 		return header{}, false
 	}
-	score := closeButtonScore(img, right, top, width)
+	score := closeButtonScore(px, right, top, width)
 	// A line of the same colour behind the window (an equipment grid) can
 	// carry on from its top border: then the close button is a little left of
 	// where the line ends, and the window ends there.
 	for shift := 2; score < .72 && shift <= 120 && width-shift >= 480; shift += 2 {
-		if candidate := closeButtonScore(img, right-shift, top, width-shift); candidate >= .72 {
+		if candidate := closeButtonScore(px, right-shift, top, width-shift); candidate >= .72 {
 			right, width, score = right-shift, width-shift, candidate
 		}
 	}
@@ -202,7 +200,7 @@ func headerAt(img image.Image, left, right, top int) (header, bool) {
 	// slot's frame at the height of its top border): the window starts where
 	// its side border runs down the title bar.
 	if score >= .72 {
-		left = windowLeft(img, left, right, top)
+		left = windowLeft(px, left, right, top)
 		width = right - left + 1
 	}
 	return header{rect: Rect{X: left, Y: top, W: width, H: 48}, score: score}, true
@@ -214,14 +212,13 @@ func headerAt(img image.Image, left, right, top int) (header, bool) {
 // inside it (an equipment slot's frame behind the window has a dimmer,
 // broken line and a lit label inside). Without one (a window hanging off
 // the screen's left edge) the run's start stands.
-func windowLeft(img image.Image, left, right, top int) int {
-	bottom := min(top+48, img.Bounds().Dy())
+func windowLeft(px imaging.Pixels, left, right, top int) int {
+	bottom := min(top+48, px.Height())
 	dark := func(x0, x1 int) bool {
 		sum, n := 0, 0
 		for y := top + 6; y < top+46 && y < bottom; y++ {
 			for x := x0; x < x1; x++ {
-				r, g, b := rgb8(img.At(x, y))
-				sum += int(luma8(r, g, b))
+				sum += int(px.Luma(x, y))
 				n++
 			}
 		}
@@ -230,7 +227,7 @@ func windowLeft(img image.Image, left, right, top int) int {
 	for x := left; x <= right-480; x++ {
 		rows := 0
 		for y := top; y < bottom; y++ {
-			if isBorderPixel(img.At(x, y)) || isBorderPixel(img.At(x+1, y)) {
+			if isBorderAt(px, x, y) || isBorderAt(px, x+1, y) {
 				rows++
 			}
 		}
@@ -243,12 +240,11 @@ func windowLeft(img image.Image, left, right, top int) int {
 	return left
 }
 
-func darkBar(img image.Image, left, right, top int) bool {
+func darkBar(px imaging.Pixels, left, right, top int) bool {
 	sum, n := 0, 0
-	for y := top + 8; y < top+40 && y < img.Bounds().Dy(); y += 4 {
+	for y := top + 8; y < top+40 && y < px.Height(); y += 4 {
 		for x := left + (right-left)/4; x < right-(right-left)/4; x += 8 {
-			r, g, b := rgb8(img.At(x, y))
-			sum += int(luma8(r, g, b))
+			sum += int(px.Luma(x, y))
 			n++
 		}
 	}
@@ -257,18 +253,18 @@ func darkBar(img image.Image, left, right, top int) bool {
 
 // closeButtonScore combines the red close button and its bright X glyph at
 // the right end of a header. Other red inventory cells lack the border.
-func closeButtonScore(img image.Image, right, top, width int) float64 {
+func closeButtonScore(px imaging.Pixels, right, top, width int) float64 {
 	red, bright, total := 0, 0, 0
-	for y := top + 4; y < top+42 && y < img.Bounds().Dy(); y += 2 {
+	for y := top + 4; y < top+42 && y < px.Height(); y += 2 {
 		for x := right - 44; x <= right-3; x += 2 {
-			if x < 0 || x >= img.Bounds().Dx() {
+			if x < 0 || x >= px.Width() {
 				continue
 			}
-			r, g, b := rgb8(img.At(x, y))
+			r, g, b := px.RGB(x, y)
 			if r > 45 && int(r) > int(g)*2 && int(r) > int(b)*3/2 {
 				red++
 			}
-			if luma8(r, g, b) > 155 {
+			if imaging.Luma(r, g, b) > 155 {
 				bright++
 			}
 			total++
@@ -286,20 +282,20 @@ func closeButtonScore(img image.Image, right, top, width int) float64 {
 
 // windowHeight follows the window's side borders down from its header. The
 // left one can be off screen, so the longer of the two counts.
-func windowHeight(img image.Image, r Rect) int {
+func windowHeight(px imaging.Pixels, r Rect) int {
 	// A scaled screenshot can put a side border a pixel or two off the
 	// header's ends: look around them.
 	height := 0
 	for _, dx := range []int{-2, 0, 2} {
-		height = max(height, borderHeight(img, r, r.X+dx, r.X+dx+1), borderHeight(img, r, r.X+r.W-1+dx, r.X+r.W-2+dx))
+		height = max(height, borderHeight(px, r, r.X+dx, r.X+dx+1), borderHeight(px, r, r.X+r.W-1+dx, r.X+r.W-2+dx))
 	}
 	return height
 }
 
-func borderHeight(img image.Image, r Rect, x0, x1 int) int {
+func borderHeight(px imaging.Pixels, r Rect, x0, x1 int) int {
 	gap, bottom := 0, r.Y+r.H
-	for y := r.Y; y < img.Bounds().Dy(); y++ {
-		if isBorderPixel(img.At(x0, y)) || isBorderPixel(img.At(x1, y)) {
+	for y := r.Y; y < px.Height(); y++ {
+		if isBorderAt(px, x0, y) || isBorderAt(px, x1, y) {
 			bottom, gap = y, 0
 			continue
 		}
@@ -310,17 +306,10 @@ func borderHeight(img image.Image, r Rect, x0, x1 int) int {
 	return max(bottom-r.Y, r.H)
 }
 
-func abs(v int) int {
-	if v < 0 {
-		return -v
-	}
-	return v
-}
-
-func expandHeaderLeft(img image.Image, right, top int) int {
+func expandHeaderLeft(px imaging.Pixels, right, top int) int {
 	left, gap := right, 0
 	for x := right; x >= 20 && right-x < 1700; x-- {
-		if isBorderPixel(img.At(x, top)) {
+		if isBorderAt(px, x, top) {
 			left = x
 			gap = 0
 			continue
@@ -335,39 +324,13 @@ func expandHeaderLeft(img image.Image, right, top int) int {
 	return left
 }
 
-func isBorderPixel(c color.Color) bool {
-	r, g, b := rgb8(c)
+func isBorderAt(px imaging.Pixels, x, y int) bool { return isBorderPixel(px.RGB(x, y)) }
+
+func isBorderPixel(r, g, b uint8) bool {
 	maxValue, minValue := max(r, g, b), min(r, g, b)
-	luma := luma8(r, g, b)
+	luma := imaging.Luma(r, g, b)
 	// The border is slightly translucent: over a blue item it reads as
 	// (58,62,71), so allow a faint tint.
 	// At 1080p it is drawn thinner and reads darker, (37,40,41).
 	return maxValue-minValue <= 16 && luma >= 34 && luma <= 115
-}
-
-func rgb8(c color.Color) (uint8, uint8, uint8) {
-	r, g, b, _ := c.RGBA()
-	return uint8(r >> 8), uint8(g >> 8), uint8(b >> 8)
-}
-
-func luma8(r, g, b uint8) uint8 {
-	return uint8((299*uint32(r) + 587*uint32(g) + 114*uint32(b)) / 1000)
-}
-
-func copyCrop(src image.Image, rect Rect) image.Image {
-	dst := image.NewRGBA(image.Rect(0, 0, rect.W, rect.H))
-	for y := 0; y < rect.H; y++ {
-		for x := 0; x < rect.W; x++ {
-			dst.Set(x, y, src.At(rect.X+x, rect.Y+y))
-		}
-	}
-	return dst
-}
-
-func dataURL(img image.Image) (string, error) {
-	var buffer bytes.Buffer
-	if err := png.Encode(&buffer, img); err != nil {
-		return "", err
-	}
-	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(buffer.Bytes()), nil
 }

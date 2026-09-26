@@ -4,6 +4,8 @@ import (
 	"image"
 	"image/color"
 	"testing"
+
+	"github.com/local/mayak/internal/imaging"
 )
 
 func TestRejectResolution(t *testing.T) {
@@ -48,7 +50,7 @@ func TestSelectedCharacterTitleNearBottom(t *testing.T) {
 		}
 	}
 
-	crop := selectedCharacterTitle(img)
+	crop := selectedCharacterTitle(imaging.Of(img))
 	if crop.Y > 710 || crop.Y+crop.H < 790 {
 		t.Fatalf("selected row was clipped: %+v", crop)
 	}
@@ -68,7 +70,7 @@ func TestSelectedCharacterTitleIgnoresBrighterThinContent(t *testing.T) {
 		}
 	}
 
-	crop := selectedCharacterTitle(img)
+	crop := selectedCharacterTitle(imaging.Of(img))
 	if crop.Y > 365 || crop.Y+crop.H < 425 {
 		t.Fatalf("selected row was not chosen: %+v", crop)
 	}

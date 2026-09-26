@@ -4,6 +4,8 @@ import (
 	"image"
 	"image/color"
 	"testing"
+
+	"github.com/local/mayak/internal/imaging"
 )
 
 func TestAnalyzeFindsMovedInspectWindow(t *testing.T) {
@@ -117,7 +119,7 @@ func TestAnalyzeStopsAtTheWindowsOwnLeftBorder(t *testing.T) {
 	}
 	// The frame's column next to the border counts as the border too (a
 	// blurred border of a scaled screenshot must), so a pixel off is fine.
-	if !result.IsItem || abs(result.WindowRect.X-left) > 1 || abs(result.WindowRect.W-width) > 1 {
+	if !result.IsItem || imaging.Abs(result.WindowRect.X-left) > 1 || imaging.Abs(result.WindowRect.W-width) > 1 {
 		t.Fatalf("window rect: %+v (item=%v)", result.WindowRect, result.IsItem)
 	}
 }

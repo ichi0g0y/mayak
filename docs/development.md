@@ -267,7 +267,7 @@ Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker
 主なテスト内容:
 
 - **ルートパッケージ**: 古い解析結果のリモート送信を捨てる処理、マップ設定の移行、設定と TarkovTracker 割り当ての保存、ウィンドウ位置の復元（負の座標、切断されたディスプレイ、最大化中のモニター移動）、タイトルバー色、タスクページ URL、アイテム検索（日本語名を含む）、favicon キャッシュ、ハイドアウト通知、Remote ID
-- **`internal/*`**: 検出器（`taskdetect`、`itemdetect`、`logdetect`、`hideoutlog`、`trackerlog`）、スクリーンショットの拡大・縮小（`screenscale`）、OCR 前処理（`ocr`）、照合（`questmatch`、`itemmatch`）、カタログ、設定、保存（`trackerstore`、`screenshotstore`、`applog`）、座標解析、広告ブロック、サウンド波形など。HTTP を使うものは `httptest` のローカルサーバーを使います
+- **`internal/*`**: 検出器（`taskdetect`、`itemdetect`、`logdetect`、`hideoutlog`、`trackerlog`）、検出器と OCR 前処理が共有する画素アクセス・輝度・切り出し・data URL（`imaging`。`image.Image.At` はピクセルごとにインターフェース呼び出しと色変換が入るので、RGBA のバイト列を直接読む）、スクリーンショットの拡大・縮小（`screenscale`）、OCR 前処理（`ocr`）、照合（`questmatch`、`itemmatch`）、カタログ、設定、保存（`trackerstore`、`screenshotstore`、`applog`）、座標解析、広告ブロック、サウンド波形など。HTTP を使うものは `httptest` のローカルサーバーを使います
 - **bun**: `state.test.js`（ブックマークの統合、タスク／マップタブの再利用とピン留め、状態の復元、URL 検証、ペアリングコード、STUN 設定の検証など 25 件）、`item.test.js`（アイテム情報の検証、最良の売却先、価格と経過時間の整形、履歴グラフなど 6 件）
 
 環境変数で有効にするテスト（既定ではスキップ）:

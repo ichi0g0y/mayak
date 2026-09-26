@@ -1,14 +1,12 @@
 package taskdetect
 
 import (
-	"bytes"
-	"encoding/base64"
 	"image"
-	"image/color"
 	"image/jpeg"
 	"image/png"
 	"os"
 
+	"github.com/local/mayak/internal/imaging"
 	"github.com/local/mayak/internal/screenscale"
 )
 
@@ -78,14 +76,15 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 	if b.Dx() != p.Width || b.Dy() < p.Height {
 		return Result{}, screenscale.ErrUnsupported
 	}
-	left := stats(img, p.LeftPanel)
-	right := stats(img, p.RightPanel)
-	anchor := stats(img, p.Anchor)
-	characterAnchor := stats(img, p.CharacterAnchor)
-	raidCharacterAnchor := stats(img, p.RaidCharacterAnchor)
-	traderScore := clamp(anchor.bright*.72 + (left.edges+right.edges)*1.2 + (left.dark+right.dark)*.08)
-	characterScore := clamp(characterAnchor.bright*.9 + (left.edges+right.edges)*.8 + (left.dark+right.dark)*.05)
-	raidCharacterScore := clamp(raidCharacterAnchor.bright*.9 + (left.edges+right.edges)*.8 + (left.dark+right.dark)*.05)
+	px := imaging.Of(img)
+	left := stats(px, p.LeftPanel)
+	right := stats(px, p.RightPanel)
+	anchor := stats(px, p.Anchor)
+	characterAnchor := stats(px, p.CharacterAnchor)
+	raidCharacterAnchor := stats(px, p.RaidCharacterAnchor)
+	traderScore := imaging.Clamp01(anchor.bright*.72 + (left.edges+right.edges)*1.2 + (left.dark+right.dark)*.08)
+	characterScore := imaging.Clamp01(characterAnchor.bright*.9 + (left.edges+right.edges)*.8 + (left.dark+right.dark)*.05)
+	raidCharacterScore := imaging.Clamp01(raidCharacterAnchor.bright*.9 + (left.edges+right.edges)*.8 + (left.dark+right.dark)*.05)
 	characterTabBright := characterAnchor.bright
 	if raidCharacterScore > characterScore {
 		characterScore = raidCharacterScore
@@ -93,23 +92,23 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 	}
 	score, layout, cropRect := traderScore, "trader-tasks", p.Title
 	if characterScore > traderScore {
-		score, layout, cropRect = characterScore, "character-tasks", selectedCharacterTitle(img)
+		score, layout, cropRect = characterScore, "character-tasks", selectedCharacterTitle(px)
 		// The Story tab shows one chapter, its name at a fixed place, rather
 		// than a list with a selected row.
-		if stats(img, p.StoryAnchor).bright >= storyTabBright {
+		if stats(px, p.StoryAnchor).bright >= storyTabBright {
 			layout, cropRect = "story-tasks", p.StoryTitle
 		}
 	}
 	isTasks := score >= p.MinScore
 	result := Result{IsTasks: isTasks, Score: score, TraderScore: traderScore, CharacterScore: characterScore, CharacterTabBright: characterTabBright, Layout: layout, CropRect: cropRect}
 	if isTasks {
-		result.Crop = copyCrop(text, cropRect)
-		result.CropDataURL, _ = dataURL(result.Crop)
+		result.Crop = imaging.Crop(text, cropRect.X, cropRect.Y, cropRect.W, cropRect.H)
+		result.CropDataURL, _ = imaging.PNGDataURL(result.Crop)
 	}
 	return result, nil
 }
 
-func selectedCharacterTitle(img image.Image) Rect {
+func selectedCharacterTitle(px imaging.Pixels) Rect {
 	// Search only the task-name column. Location, progress, objective and reward
 	// panels can all contain brighter pixels than the selected row, but the
 	// selected row is the only broad light band in this column. Average a band
@@ -119,7 +118,7 @@ func selectedCharacterTitle(img image.Image) Rect {
 	for y := y0; y < y1; y += 2 {
 		var sum, count uint32
 		for x := x0; x < x1; x += 8 {
-			sum += luma(img.At(x, y))
+			sum += uint32(px.Luma(x, y))
 			count++
 		}
 		average := float64(sum) / float64(count)
@@ -157,20 +156,20 @@ func selectedCharacterTitle(img image.Image) Rect {
 	if y < y0 {
 		y = y0
 	}
-	if y+96 > img.Bounds().Dy() {
-		y = img.Bounds().Dy() - 96
+	if y+96 > px.Height() {
+		y = px.Height() - 96
 	}
-	return Rect{X: x0, Y: y, W: nameColumnEnd(img, y, x1) - x0, H: 96}
+	return Rect{X: x0, Y: y, W: nameColumnEnd(px, y, x1) - x0, H: 96}
 }
 
 // nameColumnEnd returns the separator line right of the task-name column in
 // the selected row, so long names are not cut off, or fallback when there is
 // none. The column is wider than the band searched for the row.
-func nameColumnEnd(img image.Image, y, fallback int) int {
-	for x := fallback; x < 1300 && x < img.Bounds().Dx(); x++ {
+func nameColumnEnd(px imaging.Pixels, y, fallback int) int {
+	for x := fallback; x < 1300 && x < px.Width(); x++ {
 		dark := 0
 		for yy := y + 8; yy < y+88; yy++ {
-			if luma(img.At(x, yy)) < 60 {
+			if px.Luma(x, yy) < 60 {
 				dark++
 			}
 		}
@@ -183,20 +182,20 @@ func nameColumnEnd(img image.Image, y, fallback int) int {
 
 type metrics struct{ dark, bright, edges float64 }
 
-func stats(img image.Image, r Rect) metrics {
+func stats(px imaging.Pixels, r Rect) metrics {
 	step := 4
 	var dark, bright, edges, total int
 	for y := r.Y; y < r.Y+r.H; y += step {
 		var prev uint32
 		for x := r.X; x < r.X+r.W; x += step {
-			v := luma(img.At(x, y))
+			v := uint32(px.Luma(x, y))
 			if v < 95 {
 				dark++
 			}
 			if v > 155 {
 				bright++
 			}
-			if prev > 0 && abs(int(v)-int(prev)) > 38 {
+			if prev > 0 && imaging.Abs(int(v)-int(prev)) > 38 {
 				edges++
 			}
 			prev = v
@@ -207,38 +206,6 @@ func stats(img image.Image, r Rect) metrics {
 		return metrics{}
 	}
 	return metrics{float64(dark) / float64(total), float64(bright) / float64(total), float64(edges) / float64(total)}
-}
-func luma(c color.Color) uint32 { r, g, b, _ := c.RGBA(); return (299*r + 587*g + 114*b) / 1000 >> 8 }
-func abs(v int) int {
-	if v < 0 {
-		return -v
-	}
-	return v
-}
-func clamp(v float64) float64 {
-	if v < 0 {
-		return 0
-	}
-	if v > 1 {
-		return 1
-	}
-	return v
-}
-func copyCrop(src image.Image, r Rect) image.Image {
-	dst := image.NewRGBA(image.Rect(0, 0, r.W, r.H))
-	for y := 0; y < r.H; y++ {
-		for x := 0; x < r.W; x++ {
-			dst.Set(x, y, src.At(r.X+x, r.Y+y))
-		}
-	}
-	return dst
-}
-func dataURL(img image.Image) (string, error) {
-	var b bytes.Buffer
-	if err := png.Encode(&b, img); err != nil {
-		return "", err
-	}
-	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(b.Bytes()), nil
 }
 func init() {
 	image.RegisterFormat("png", "\x89PNG", png.Decode, png.DecodeConfig)
