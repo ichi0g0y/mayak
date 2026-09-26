@@ -99,7 +99,7 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `cmd/ocreval` | 認識デバッグデータ（`Mayak-Debug`）で OCR エンジンを比較評価 |
 | `cmd/ocrharvest` | スクリーンショットから、複数エンジンの読みが一致したタイトル画像をラベル付きで収集 |
 | `tools/tessbundle` | UB Mannheim 版から同梱用 Tesseract ランタイムを作る（必要な DLL だけコピーし、デバッグ情報を除去） |
-| `tools/icon` | 原画 `tools/icon/mark.png`（六角形と M、1024px）を塗り替えて、`build/appicon.png`（トレイと macOS の ICNS の元）、`build/windows/icon.ico`（16〜256px）、`frontend/public/favicon-32.png` と `favicon-256.png`（About のロゴ）、サイトの `mayak-mark.png` と白抜きの `mayak-mark-white.png` を作る。形は原画のまま、色だけ `go run ./tools/icon -bg 2e2e2e -fg f2f2f2`（公式ランチャーと同じ濃いグレー地に白）。 |
+| `tools/icon` | 原画 `tools/icon/mark.png`（六角形と M、1024px）を塗り替えて、`build/appicon.png`（トレイと macOS の ICNS の元）、`build/windows/icon.ico`（16〜256px）、`frontend/public/favicon-32.png` と `favicon-256.png`（About のロゴ）、サイトの `mayak-mark.png` と白抜きの `mayak-mark-white.png` を作る。形は原画のまま、装いだけ `go run ./tools/icon`（公式ランチャー風: 角丸の濃いグレーのグラデーション地に、白〜シルバーのグラデーションのマーク。色と角丸は `-bg-top` `-bg-bottom` `-fg-top` `-fg-bottom` `-corner` で変更）。 |
 | `tools/release` | `build/bin` をリリース用アーカイブ（`build/dist/Mayak-<os>-<arch>.zip` / `.tar.gz`）に固め、SHA-256 を書く。`build/dist` にインストーラーがあればその SHA-256 も書く（[リリース](#リリース)） |
 | `tools/nsis` | Windows のインストーラー（`build/windows/nsis/mayak.nsi`）を `build/dist/Mayak-Setup-<version>-windows-amd64.exe` に組む。`makensis` が無ければ NSIS の配布 zip をチェックサム検証付きで `build/nsis-cache` に一度だけ取得する |
 | `tools/ocrtrain` | Tesseract LSTM 学習データの生成（手順は `tools/ocrtrain/README.md` と [ocr-training.md](ocr-training.md)） |

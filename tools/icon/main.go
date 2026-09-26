@@ -1,16 +1,18 @@
 // Command icon derives every icon from the master artwork tools/icon/mark.png
-// (the hexagon and M as first drawn, khaki on near-black, 1024px) by
-// recolouring it: build/appicon.png (the tray icon and the source of the
-// macOS ICNS), build/windows/icon.ico (16 to 256px, PNG entries),
-// frontend/public/favicon-32.png and favicon-256.png (the About logo), and
-// the site's mark (site/public/assets/mayak-mark.png) plus its bare white
-// version for the header (mayak-mark-white.png, transparent).
+// (the hexagon and M as first drawn, khaki on near-black, 1024px):
+// build/appicon.png (the tray icon and the source of the macOS ICNS),
+// build/windows/icon.ico (16 to 256px, PNG entries), frontend/public/
+// favicon-32.png and favicon-256.png (the About logo), and the site's mark
+// (site/public/assets/mayak-mark.png) plus its bare white version for the
+// header (mayak-mark-white.png, transparent).
 //
-//	go run ./tools/icon -bg 2e2e2e -fg f2f2f2
+//	go run ./tools/icon
 //
 // The master's two colours are read as the ends of a scale; every pixel's
-// position on it (anti-aliased edges included) is kept and mapped onto the
-// new pair, so the shape never changes.
+// position on it (anti-aliased edges included) is kept, so the shape never
+// changes. What changes is the dressing, in the manner of the official
+// launcher's icon: a rounded square with a soft top-to-bottom gradient of
+// dark grey, and the mark in a light grey gradient over it.
 package main
 
 import (
@@ -56,22 +58,49 @@ func loadMaster() *image.NRGBA {
 	return out
 }
 
-// recolour maps the master onto bg and fg; bare leaves the background
-// transparent, with the mark's coverage as alpha.
-func recolour(master *image.NRGBA, bg, fg color.NRGBA, bare bool) *image.NRGBA {
-	out := image.NewNRGBA(master.Bounds())
-	for y := master.Bounds().Min.Y; y < master.Bounds().Max.Y; y++ {
-		for x := master.Bounds().Min.X; x < master.Bounds().Max.X; x++ {
-			t := coverage(master.NRGBAAt(x, y))
+// style is the icon's dressing: the square's corner radius as a fraction of
+// its side, and the top and bottom of the background and mark gradients.
+type style struct {
+	corner                           float64
+	bgTop, bgBottom, fgTop, fgBottom color.NRGBA
+}
+
+func lerp(a, b color.NRGBA, t float64) (float64, float64, float64) {
+	return float64(a.R)*(1-t) + float64(b.R)*t, float64(a.G)*(1-t) + float64(b.G)*t, float64(a.B)*(1-t) + float64(b.B)*t
+}
+
+// squareAlpha is the anti-aliased coverage of a rounded square of the given
+// side and corner radius at pixel (x, y).
+func squareAlpha(x, y, size int, radius float64) float64 {
+	half := float64(size) / 2
+	px, py := float64(x)+0.5-half, float64(y)+0.5-half
+	dx, dy := math.Max(math.Abs(px)-(half-radius), 0), math.Max(math.Abs(py)-(half-radius), 0)
+	d := math.Hypot(dx, dy) - radius
+	return math.Max(0, math.Min(1, 0.5-d))
+}
+
+// render dresses the master; bare gives only the mark in flat white on a
+// transparent background (the site's header).
+func render(master *image.NRGBA, s style, bare bool) *image.NRGBA {
+	size := master.Bounds().Dx()
+	radius := float64(size) * s.corner
+	out := image.NewNRGBA(image.Rect(0, 0, size, size))
+	for y := 0; y < size; y++ {
+		v := float64(y) / float64(size-1)
+		for x := 0; x < size; x++ {
+			t := coverage(master.NRGBAAt(master.Bounds().Min.X+x, master.Bounds().Min.Y+y))
 			if bare {
-				out.SetNRGBA(x, y, color.NRGBA{fg.R, fg.G, fg.B, uint8(math.Round(255 * t))})
+				out.SetNRGBA(x, y, color.NRGBA{0xff, 0xff, 0xff, uint8(math.Round(255 * t))})
 				continue
 			}
+			br, bg, bb := lerp(s.bgTop, s.bgBottom, v)
+			fr, fg, fb := lerp(s.fgTop, s.fgBottom, v)
+			a := squareAlpha(x, y, size, radius)
 			out.SetNRGBA(x, y, color.NRGBA{
-				R: uint8(math.Round(float64(bg.R)*(1-t) + float64(fg.R)*t)),
-				G: uint8(math.Round(float64(bg.G)*(1-t) + float64(fg.G)*t)),
-				B: uint8(math.Round(float64(bg.B)*(1-t) + float64(fg.B)*t)),
-				A: 255,
+				R: uint8(math.Round(br*(1-t) + fr*t)),
+				G: uint8(math.Round(bg*(1-t) + fg*t)),
+				B: uint8(math.Round(bb*(1-t) + fb*t)),
+				A: uint8(math.Round(255 * a)),
 			})
 		}
 	}
@@ -130,21 +159,24 @@ func parse(hex string) color.NRGBA {
 }
 
 func main() {
-	bg := flag.String("bg", "2e2e2e", "background colour (rrggbb)")
-	fg := flag.String("fg", "f2f2f2", "mark colour (rrggbb)")
+	bgTop := flag.String("bg-top", "3d3f40", "background gradient, top (rrggbb)")
+	bgBottom := flag.String("bg-bottom", "1f2021", "background gradient, bottom (rrggbb)")
+	fgTop := flag.String("fg-top", "f7f7f7", "mark gradient, top (rrggbb)")
+	fgBottom := flag.String("fg-bottom", "cfd2d3", "mark gradient, bottom (rrggbb)")
+	corner := flag.Float64("corner", 0.2, "corner radius as a fraction of the side")
 	out := flag.String("out", "", "write only one PNG of -size here")
 	size := flag.Int("size", 256, "size for -out")
-	bare := flag.Bool("bare", false, "with -out: only the mark, on a transparent background")
+	bare := flag.Bool("bare", false, "with -out: only the mark, flat white on a transparent background")
 	flag.Parse()
-	b, f := parse(*bg), parse(*fg)
+	s := style{corner: *corner, bgTop: parse(*bgTop), bgBottom: parse(*bgBottom), fgTop: parse(*fgTop), fgBottom: parse(*fgBottom)}
 	master := loadMaster()
 	if *out != "" {
-		if err := os.WriteFile(*out, encodePNG(resize(recolour(master, b, f, *bare), *size)), 0o644); err != nil {
+		if err := os.WriteFile(*out, encodePNG(resize(render(master, s, *bare), *size)), 0o644); err != nil {
 			log.Fatal(err)
 		}
 		return
 	}
-	full, white := recolour(master, b, f, false), recolour(master, b, f, true)
+	full, white := render(master, s, false), render(master, s, true)
 	must := func(err error) {
 		if err != nil {
 			log.Fatal(err)
