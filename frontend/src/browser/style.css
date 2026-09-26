@@ -826,3 +826,11 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 .snap-layer.base .snap-layer-name{padding:0 6px}
 .snap-layer.base>.icon{width:15px;height:15px;margin-right:8px;color:var(--muted)}
 @media(max-width:900px){.snap-body{flex-direction:column}.snap-layers{width:auto;align-self:stretch;flex-direction:row;flex-wrap:wrap}}
+
+/* The snap note editor's head in the toolbar row; the page starts with the tools. */
+.toolbar .snap-head{flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.toolbar .snap-title{flex:1;min-width:120px;height:32px;padding:0 10px;font-size:14px}
+.toolbar .snap-actions{flex:none;flex-wrap:nowrap}
+.toolbar .snap-actions button{height:32px}
+@media(max-width:1100px){.toolbar .snap-actions button span{display:none}}
+.page.snap-editor{padding-top:6px}
