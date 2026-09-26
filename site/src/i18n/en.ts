@@ -97,6 +97,7 @@ export const en: Messages = {
     kicker: 'FAQ',
     title: 'Questions',
     items: [
+      { q: 'How do you say MAYAK, and what does it mean?', a: 'Ma-YAK. It is the Russian word for lighthouse (маяк), which is why the logo is one.' },
       { q: 'Can this get me banned?', a: 'MAYAK never touches the game process; it only reads files the game saves itself (screenshots and logs). It does nothing an anti-cheat looks for, such as reading memory or automating input. Whether you use a companion tool at all is still your own decision.' },
       { q: 'Are my screenshots sent anywhere?', a: 'No. OCR and image analysis run locally with the bundled Tesseract or Windows OCR. The only outside services are tarkov.dev’s public API and Remote Control, TarkovTracker when you set it up, GitHub (update checks), the EFT wiki (task pages) and the ad-block filter lists for the built-in browser; no image ever leaves your PC.' },
       { q: 'Which resolutions and languages are supported?', a: 'Position sync works at any resolution. Tasks screen and item recognition are tuned for 2560×1440 and support common 16:9 and 16:10 resolutions. The game can be in English or Japanese.' },

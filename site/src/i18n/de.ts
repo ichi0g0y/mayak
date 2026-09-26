@@ -97,6 +97,7 @@ export const de: Messages = {
     kicker: 'FAQ',
     title: 'Fragen',
     items: [
+      { q: 'Wie spricht man MAYAK aus und was heißt es?', a: 'Ma-JAK. Es ist das russische Wort für Leuchtturm (маяк), deshalb zeigt das Logo einen.' },
       { q: 'Kann ich dafür gebannt werden?', a: 'MAYAK rührt den Spielprozess nie an; es liest nur Dateien, die das Spiel selbst speichert (Screenshots und Logs). Es tut nichts, wonach ein Anti-Cheat sucht, etwa Speicher auslesen oder Eingaben automatisieren. Ob du überhaupt ein Begleitprogramm nutzt, bleibt deine Entscheidung.' },
       { q: 'Werden meine Screenshots irgendwohin gesendet?', a: 'Nein. OCR und Bildanalyse laufen lokal mit dem mitgelieferten Tesseract oder Windows OCR. Die einzigen externen Dienste sind die öffentliche API und Remote Control von tarkov.dev, TarkovTracker, falls eingerichtet, GitHub (Update-Prüfung), das EFT-Wiki (Aufgabenseiten) und die Werbeblocker-Filterlisten für den eingebauten Browser; kein Bild verlässt deinen PC.' },
       { q: 'Welche Auflösungen und Sprachen werden unterstützt?', a: 'Die Positionssynchronisation funktioniert bei jeder Auflösung. Die Erkennung von Aufgabenbildschirm und Items ist auf 2560×1440 abgestimmt und unterstützt gängige 16:9- und 16:10-Auflösungen. Das Spiel kann auf Englisch oder Japanisch laufen.' },
