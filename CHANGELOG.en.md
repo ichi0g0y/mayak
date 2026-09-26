@@ -6,6 +6,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- Lighter: the catalog check every five minutes no longer rebuilds the task list and the hideout when they did not change (new flea prices update the items only).
+
 - Nightly builds are now published. Set "Update channel" under Settings → Startup & window to Nightly to update to the version in development, built every day. On nightly, a newer stable release is installed instead.
 
 - Assigning a TarkovTracker key to a profile now syncs that profile's past logs by itself, with the count shown in a toast. Before, only progress made after the assignment was sent, and earlier progress needed a manual sync.

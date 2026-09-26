@@ -31,6 +31,22 @@ func (a *App) effectiveCatalogMode(configured string) string {
 
 func (a *App) RefreshCatalog() error { return a.refreshCatalog(true) }
 
+// catalogChanged reports whether a part of mode's catalog differs from the
+// version seen last, and remembers the new one.
+func (a *App) catalogChanged(mode, part, version string) bool {
+	a.catalogVersionsMu.Lock()
+	defer a.catalogVersionsMu.Unlock()
+	if a.catalogVersions == nil {
+		a.catalogVersions = make(map[string]string)
+	}
+	key := mode + "/" + part
+	if a.catalogVersions[key] == version {
+		return false
+	}
+	a.catalogVersions[key] = version
+	return true
+}
+
 func (a *App) refreshCatalog(force bool) error {
 	a.catalogRefreshMu.Lock()
 	defer a.catalogRefreshMu.Unlock()
@@ -80,18 +96,33 @@ func (a *App) refreshCatalog(force bool) error {
 		return abandon()
 	}
 	data := model.CatalogStatus{State: "error", Mode: mode}
+	hideoutChanged := true
 	if snapshot != nil {
 		data = model.CatalogStatus{State: "ready", Mode: mode, UpdatedAt: snapshot.UpdatedAt.Format(time.RFC3339), Items: snapshot.Items, Maps: snapshot.Maps, Traders: snapshot.Traders, Tasks: snapshot.Tasks, HideoutStations: snapshot.HideoutStations, ScavCooldownSeconds: snapshot.ScavCooldownSeconds, PlayerLevels: snapshot.PlayerLevels}
 		if time.Since(snapshot.UpdatedAt) >= catalog.RefreshInterval {
 			data.State = "stale"
 		}
-		a.questClient.Invalidate()
-		a.itemClient.Invalidate()
+		// Only what changed is built again: a refresh that brought new flea
+		// prices keeps the task list, which is costly to build.
+		if a.catalogChanged(mode, "tasks", snapshot.Version(catalog.TaskResources...)) {
+			a.questClient.Invalidate()
+		}
+		if a.catalogChanged(mode, "items", snapshot.Version(catalog.ItemResources...)) {
+			a.itemClient.Invalidate()
+		}
+		hideoutChanged = a.catalogChanged(mode, "hideout", snapshot.Version(catalog.HideoutResources...))
 	}
 	if err != nil {
 		data.LastError = err.Error()
 	}
-	stations, hideoutErr := a.catalogClient.Hideout(ctx, mode)
+	a.mu.RLock()
+	hideoutKept := !hideoutChanged && a.hideoutCatalogMode == mode && a.hideoutStations != nil
+	a.mu.RUnlock()
+	var stations []catalog.HideoutStation
+	var hideoutErr error
+	if !hideoutKept {
+		stations, hideoutErr = a.catalogClient.Hideout(ctx, mode)
+	}
 	a.mu.Lock()
 	currentCatalogMode := a.settings.GameMode
 	if currentCatalogMode == "" || currentCatalogMode == "auto" {
@@ -101,11 +132,13 @@ func (a *App) refreshCatalog(force bool) error {
 		a.mu.Unlock()
 		return abandon()
 	}
-	if hideoutErr == nil {
+	if !hideoutKept && hideoutErr == nil {
 		a.hideoutStations = stations
 		a.hideoutCatalogMode = mode
 	}
-	a.updateHideoutLocked()
+	if !hideoutKept {
+		a.updateHideoutLocked()
+	}
 	a.status.Catalog = data
 	status = a.status
 	a.mu.Unlock()

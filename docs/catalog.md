@@ -82,7 +82,11 @@ URL は `https://json.tarkov.dev/<mode>/<resource>` です。
 | ハイドアウトの更新（`RefreshHideout`） | はい |
 
 - 1 回の更新は 60 秒でタイムアウト。完了時にモードが変わっていたら結果を捨て、状態表示を更新前のものに戻します（その間に新しい更新が始まっていれば、そちらの表示に任せます）。
-- スナップショットが得られたら `questapi` と `itemapi` のキャッシュを無効化し、ハイドアウト施設一覧も更新します（[ハイドアウト](hideout.md)）。
+- スナップショットが得られたら、変わった部分の使い手だけを作り直します。部分ごとの版（`Snapshot.Version`、各リソースの ETag。無ければ長さと CRC32）をモードごとに覚えておき（`catalogChanged`）、前回と違うときだけ次を行います。
+  - タスク（`catalog.TaskResources`: tasks・maps・traders とその各言語）: `questapi` を無効化。
+  - アイテム（`catalog.ItemResources`: items とその各言語）: `itemapi` を無効化。フリマ価格が入っているので、ほぼ毎回変わります。
+  - ハイドアウト（`catalog.HideoutResources`: hideout・items_en・traders とその英語名）: 施設一覧を読み直し（[ハイドアウト](hideout.md)）。items は価格で毎回変わるので対象にせず、新しいアイテムは items_en の変化で拾います。
+  5 分ごとの確認で価格だけが変わったときは、タスク一覧とハイドアウトを作り直しません。
 - `status.catalog`（`model.CatalogStatus`）の `state`:
 
 | `state` | 意味 | 画面表示 |
@@ -98,7 +102,7 @@ URL は `https://json.tarkov.dev/<mode>/<resource>` です。
 ## アイテム一覧（`internal/itemapi`）
 
 - `ItemsForMode(mode)`: `""` / `auto` は `regular` として扱い、それ以外の不明モードはエラー。
-- モードごとに **12 時間**メモリにキャッシュ。ただしカタログ更新のたびに `Invalidate` されるので、実際はカタログのスナップショットに追従します。
+- モードごとに **12 時間**メモリにキャッシュ。ただしカタログのタスク部分が変わると `Invalidate` されるので、実際はカタログのスナップショットに追従します。
 - 名前・略称は `items_en` で英語化。`items_<lang>` の名前が英語と異なる場合、`Aliases` / `ShortAliases` に加え、`Names[lang]` に保持します（照合と表示言語に使用、[アイテム欄](item-panel.md)）。
 - 言語リソースが取れなくても英語名で動作します。
 - `NewWithSource` でカタログを取得元にします（アプリはこちら）。取得元なしの場合は JSON API を直接読みます（タイムアウト 30 秒）。
@@ -108,7 +112,7 @@ URL は `https://json.tarkov.dev/<mode>/<resource>` です。
 - `QuestsForMode(mode)`:
   - `regular` / `pve` / `pvp-season`: そのモードの `tasks`・`maps`・`traders` と英語名から構築し、補足タスクと Wiki タスクを加えます。
   - `""` / `auto`: `Quests()` が `regular` を基準に、`pve`・`pvp-season` にしかないタスクを ID 単位で追加した統合一覧を返します（マップ・トレーダー名は `regular` のもの）。
-- キャッシュは統合一覧・モード別とも **12 時間**。カタログ更新時に `Invalidate` されます。
+- キャッシュは統合一覧・モード別とも **12 時間**。カタログのアイテム部分が変わると `Invalidate` されます。
 - 各タスクは ID・英語名・トレーダー名・マップ（`normalizedName`）・`normalizedName`・`wikiLink`・目標（説明と対象マップ）を持ちます。タスク自体にマップがなければ、最初にマップを持つ目標のマップを使います。
 - 別言語名: `tasks_<lang>` にある名前が英語名と異なれば `Aliases` に追加します。表示名と Wiki リンクは英語（正規）のまま。言語リソースが欠けても一覧は使えます。
 - 取得元なしの場合の HTTP タイムアウトは 20 秒。

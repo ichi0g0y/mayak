@@ -55,16 +55,20 @@ type App struct {
 	hideoutStore       *hideoutlog.Store
 	hideoutStations    []catalog.HideoutStation
 	hideoutCatalogMode string
-	hideoutProgress    map[string]bool
-	ctx                context.Context
-	mu                 sync.RWMutex
-	settingsWriteMu    sync.Mutex
-	screenshotStoreMu  sync.Mutex
-	remoteOperationMu  sync.Mutex
-	settings           config.Settings
-	status             model.Status
-	watcher            *watcher.Watcher
-	remotes            map[string]*remote.Client
+	// catalogVersions: the version of each part of a mode's catalog last
+	// applied (catalogChanged), so a refresh rebuilds only what changed.
+	catalogVersionsMu sync.Mutex
+	catalogVersions   map[string]string
+	hideoutProgress   map[string]bool
+	ctx               context.Context
+	mu                sync.RWMutex
+	settingsWriteMu   sync.Mutex
+	screenshotStoreMu sync.Mutex
+	remoteOperationMu sync.Mutex
+	settings          config.Settings
+	status            model.Status
+	watcher           *watcher.Watcher
+	remotes           map[string]*remote.Client
 	// The watch on the browser's Remote ID and the commands sent to it
 	// (app_browser_remote.go).
 	browserRemoteMu   sync.Mutex

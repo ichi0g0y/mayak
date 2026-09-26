@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/crc32"
+	"strings"
+
 	"github.com/local/mayak/internal/appdir"
 	"github.com/local/mayak/internal/locale"
 	"io"
@@ -35,6 +38,46 @@ var optionalResources = func() []string {
 }()
 
 func optional(name string) bool { return slices.Contains(optionalResources, name) }
+
+// The resources each consumer reads, for Snapshot.Version: the task list
+// (internal/questapi), the item data (internal/itemapi) and the hideout.
+// Flea prices change the items every few minutes; tasks and the hideout
+// rarely, so their consumers keep what they built while these stay the same.
+var (
+	TaskResources = append([]string{"tasks", "tasks_en", "maps", "maps_en", "traders", "traders_en"}, localized("tasks")...)
+	ItemResources = append([]string{"items", "items_en"}, localized("items")...)
+	// The hideout reads item and trader names: "items" carries the flea
+	// prices and changes with them, but a new item brings a new name to
+	// "items_en" too, so that one stands for it.
+	HideoutResources = []string{"hideout", "hideout_en", "items_en", "traders", "traders_en"}
+)
+
+func localized(resource string) []string {
+	names := make([]string, 0, len(locale.Languages))
+	for _, lang := range locale.Languages {
+		names = append(names, locale.Resource(resource, lang))
+	}
+	return names
+}
+
+// Version identifies the content of some of the snapshot's resources: it
+// changes when any of them does. A resource without an ETag counts by its
+// length and a checksum.
+func (s *Snapshot) Version(names ...string) string {
+	var b strings.Builder
+	for _, name := range names {
+		b.WriteString(name)
+		b.WriteByte('=')
+		if etag := s.ETags[name]; etag != "" {
+			b.WriteString(etag)
+		} else {
+			data := s.Resources[name]
+			fmt.Fprintf(&b, "%d:%08x", len(data), crc32.ChecksumIEEE(data))
+		}
+		b.WriteByte(';')
+	}
+	return b.String()
+}
 
 func allResources() []string {
 	return append(append([]string(nil), resources...), optionalResources...)
