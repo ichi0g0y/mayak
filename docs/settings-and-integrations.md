@@ -334,7 +334,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 | `processed-screenshot.json` | 最後に処理したスクリーンショットの指紋（パス、サイズ、更新時刻） |
 | `tracker-tokens.dat` | TarkovTracker のキーとプロフィールの割り当て（Windows では DPAPI で暗号化） |
 | `mayak.log` | アプリのログ |
-| `hideout\events.json` | Hideout イベントの履歴（最大 500 件・90 日）。診断ボタンでこのフォルダを開く |
+| `hideout\events.json` | Hideout イベントの履歴（最大 500 件・90 日）。診断ボタンでこのフォルダを開く。書き込みは変更から 0.5 秒後にまとめて 1 回（`hideoutlog.Store`。起動時のログ再生で数百件が続けて来るため）、終了時に残りを書く。重複判定は指紋の集合で行い、全件走査はしない |
 | `catalog\<mode>.json` | モード別のカタログキャッシュ（[catalog.md](catalog.md)） |
 | `favicons\` | サイトアイコンのキャッシュ |
 | `thumbs\` | スクリーンショットの縮小画像のキャッシュ（最大 1,500 件、古い順に間引き。[browser-shell.md](browser-shell.md)） |

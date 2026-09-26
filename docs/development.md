@@ -275,6 +275,8 @@ Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker
 - `MAYAK_EFT_LOGS=<EFT のログフォルダ>`: `hideoutlog` の実ログ検証
 - `MAYAK_LIVE_CATALOG=1`: `catalog` の公開 API 確認（ネットワークを使う）
 
+起動処理のプロファイル: `MAYAK_CPUPROFILE=<出力ファイル>` を付けてアプリ（`build\bin\Mayak-dev.exe` など）を起動すると、起動から 30 秒の CPU プロファイルを書きます（`run.go`、`runtime/pprof`）。`go tool pprof -top build\bin\Mayak-dev.exe <出力ファイル>` で内訳を見られます。単一インスタンスなので、動いている MAYAK を止めてから起動してください。
+
 ## アーキテクチャ上の制約
 
 詳細は [architecture-constraints.md](architecture-constraints.md)、[wails-browser.md](wails-browser.md)、[wails-v3-migration.md](wails-v3-migration.md)（英語）を参照してください。要点は次のとおりです。

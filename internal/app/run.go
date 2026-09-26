@@ -2,6 +2,8 @@ package app
 
 import (
 	"io/fs"
+	"os"
+	"runtime/pprof"
 	"sync"
 	"time"
 
@@ -20,6 +22,17 @@ import (
 func Run(assets fs.FS, icon []byte) error {
 	trayIcon = icon
 	raisePriority()
+	// MAYAK_CPUPROFILE=<file> writes a CPU profile of the first 30 seconds
+	// (the start-up work), for `go tool pprof`; a development aid only.
+	if path := os.Getenv("MAYAK_CPUPROFILE"); path != "" {
+		if file, err := os.Create(path); err == nil && pprof.StartCPUProfile(file) == nil {
+			go func() {
+				time.Sleep(30 * time.Second)
+				pprof.StopCPUProfile()
+				file.Close()
+			}()
+		}
+	}
 	// After an update, the version being replaced is still quitting: wait for
 	// it (the app runs as a single instance), then drop the files it kept.
 	restarted := update.WaitForPreviousInstance(30 * time.Second)
@@ -30,6 +43,7 @@ func Run(assets fs.FS, icon []byte) error {
 	// before anything reads it.
 	moved, moveErr := appdir.Migrate()
 	service := NewApp()
+	service.hideoutStore.OnSaved = service.hideoutSaved
 	// With the KeepPriority setting, the window's WebView2 processes are kept
 	// at normal priority whatever a priority manager does to MAYAK while it
 	// starts (priority_windows.go).

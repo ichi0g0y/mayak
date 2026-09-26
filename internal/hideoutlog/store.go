@@ -12,20 +12,39 @@ import (
 const HistoryLimit = 500
 const HistoryAge = 90 * 24 * time.Hour
 
+// saveDelay is how long the store waits after a change before writing the
+// file, so a burst of events (the logs replayed at a start: hundreds of
+// them) is written once, not once per event.
+const saveDelay = 500 * time.Millisecond
+
+// Store keeps the hideout events, newest first, in memory and in one JSON
+// file. Events are told apart by their fingerprint (kept in a set, so an
+// addition costs no scan), and writes are coalesced: Add marks the store
+// dirty and a timer writes it saveDelay later; Flush writes at once.
 type Store struct {
 	mu     sync.Mutex
 	path   string
 	events []Event
+	seen   map[string]struct{}
+	dirty  bool
+	timer  *time.Timer
+	// OnSaved receives every write's result from Flush (nil when it worked,
+	// or when nothing was pending), so the app can show a history file that
+	// fails to save and clear that once it works again. nil ignores it.
+	OnSaved func(error)
 }
 
 func NewStore(path string) *Store {
-	s := &Store{path: path}
+	s := &Store{path: path, seen: map[string]struct{}{}}
 	if data, err := os.ReadFile(path); err == nil && len(data) <= 2<<20 {
 		_ = json.Unmarshal(data, &s.events)
 	}
 	s.prune(time.Now())
 	return s
 }
+
+// prune drops events older than HistoryAge and beyond HistoryLimit, keeps
+// the rest newest first, and rebuilds the fingerprint set. s.mu is held.
 func (s *Store) prune(now time.Time) {
 	var kept []Event
 	for _, e := range s.events {
@@ -38,7 +57,12 @@ func (s *Store) prune(now time.Time) {
 		kept = kept[:HistoryLimit]
 	}
 	s.events = kept
+	s.seen = make(map[string]struct{}, len(kept))
+	for _, e := range kept {
+		s.seen[e.Fingerprint()] = struct{}{}
+	}
 }
+
 func (s *Store) Events() []Event {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -58,28 +82,72 @@ func (s *Store) Clear() error {
 	for i := range s.events {
 		s.events[i].Hidden = true
 	}
-	return s.save()
+	s.dirty = true
+	return s.flushLocked()
 }
-func (s *Store) Add(e Event) (bool, error) {
+
+// Add keeps e unless it is too old or already known, and reports whether
+// it was kept. The file is written later (see saveDelay); Flush forces it.
+func (s *Store) Add(e Event) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.prune(time.Now())
-	if e.OccurredAt.IsZero() || e.OccurredAt.Before(time.Now().Add(-HistoryAge)) {
-		return false, nil
+	now := time.Now()
+	if e.OccurredAt.IsZero() || e.OccurredAt.Before(now.Add(-HistoryAge)) {
+		return false
 	}
-	for _, old := range s.events {
-		if old.Fingerprint() == e.Fingerprint() {
-			return false, nil
-		}
+	fingerprint := e.Fingerprint()
+	if _, known := s.seen[fingerprint]; known {
+		return false
 	}
 	s.events = append(s.events, e)
-	s.prune(time.Now())
-	return true, s.save()
+	s.seen[fingerprint] = struct{}{}
+	s.prune(now)
+	s.scheduleSave()
+	return true
 }
-func (s *Store) save() error {
+
+// scheduleSave arranges one write saveDelay from now. s.mu is held.
+func (s *Store) scheduleSave() {
 	if s.path == "" {
+		return
+	}
+	s.dirty = true
+	if s.timer != nil {
+		return
+	}
+	s.timer = time.AfterFunc(saveDelay, func() { _ = s.Flush() })
+}
+
+// Flush writes the store now if it changed since the last write, and
+// tells OnSaved how it went.
+func (s *Store) Flush() error {
+	s.mu.Lock()
+	err := s.flushLocked()
+	s.mu.Unlock()
+	if s.OnSaved != nil {
+		s.OnSaved(err)
+	}
+	return err
+}
+
+func (s *Store) flushLocked() error {
+	if s.timer != nil {
+		s.timer.Stop()
+		s.timer = nil
+	}
+	if !s.dirty || s.path == "" {
+		s.dirty = false
 		return nil
 	}
+	s.dirty = false
+	if err := s.save(); err != nil {
+		s.dirty = true
+		return err
+	}
+	return nil
+}
+
+func (s *Store) save() error {
 	if err := os.MkdirAll(filepath.Dir(s.path), 0700); err != nil {
 		return err
 	}

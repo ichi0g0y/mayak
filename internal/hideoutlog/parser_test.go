@@ -3,6 +3,7 @@ package hideoutlog
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -67,28 +68,34 @@ func TestDedupePersistenceIsolationBounds(t *testing.T) {
 	for file := 0; file < 3; file++ {
 		for i := 0; i < 4; i++ {
 			e := Event{Identity: Identity{"a", "p", "pve"}, Kind: "upgrade-failed", Action: "HideoutUpgradeComplete", AreaType: 22, ActionTimestamp: int64(i + 1), OccurredAt: now, Source: fmt.Sprint(file)}
-			added, err := s.Add(e)
-			if err != nil || added != (file == 0) {
-				t.Fatalf("dedupe %d/%d %v %v", file, i, added, err)
+			if added := s.Add(e); added != (file == 0) {
+				t.Fatalf("dedupe %d/%d %v", file, i, added)
 			}
 		}
 	}
 	if len(s.Events()) != 4 {
 		t.Fatal("12 records did not become four")
 	}
+	// The writes are coalesced: the file holds the events once flushed.
+	if _, err := os.Stat(path); err == nil {
+		t.Fatal("written before the flush")
+	}
+	if err := s.Flush(); err != nil {
+		t.Fatal(err)
+	}
 	restored := NewStore(path)
 	e := s.Events()[0]
-	if added, _ := restored.Add(e); added {
+	if restored.Add(e) {
 		t.Fatal("restart replay")
 	}
 	for _, identity := range []Identity{{"a", "p", "pvp"}, {"a", "p", "seasonal"}, {"a", "other", "pve"}, {"other", "p", "pve"}} {
 		e.Identity = identity
-		if added, _ := s.Add(e); !added {
+		if !s.Add(e) {
 			t.Fatal("identities mixed")
 		}
 	}
 	e.OccurredAt = now.Add(-HistoryAge - time.Hour)
-	if added, _ := s.Add(e); added {
+	if s.Add(e) {
 		t.Fatal("expired event retained")
 	}
 	memory := NewStore("")
@@ -122,7 +129,7 @@ func TestClearKeepsReplayProtection(t *testing.T) {
 	if len(restored.Events()) != 0 {
 		t.Fatal("cleared rows restored")
 	}
-	if added, _ := restored.Add(e); added {
+	if restored.Add(e) {
 		t.Fatal("clearing history allowed replay")
 	}
 }

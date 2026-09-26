@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/local/mayak/internal/applog"
 	"github.com/local/mayak/internal/catalog"
 	"github.com/local/mayak/internal/config"
 	"github.com/local/mayak/internal/hideoutlog"
@@ -64,10 +65,12 @@ func TestHideoutSaveErrorClearsAfterRecovery(t *testing.T) {
 	if err := os.Mkdir(path, 0700); err != nil {
 		t.Fatal(err)
 	}
-	app := &App{hideoutStore: store}
+	app := &App{hideoutStore: store, logs: applog.New(10)}
+	store.OnSaved = app.hideoutSaved
 	event := hideoutlog.Event{AreaType: -1, OccurredAt: time.Now(), Action: "HideoutUpgradeComplete", ActionTimestamp: 1, Historical: true}
 	app.handleHideoutEvent(context.Background(), event)
-	if app.status.Hideout.LastError != "history-save-failed" {
+	// The write happens later, coalesced; flushing stands in for the timer.
+	if store.Flush() == nil || app.status.Hideout.LastError != "history-save-failed" {
 		t.Fatal("save failure was not reported")
 	}
 	if err := os.Remove(path); err != nil {
@@ -75,8 +78,8 @@ func TestHideoutSaveErrorClearsAfterRecovery(t *testing.T) {
 	}
 	event.ActionTimestamp = 2
 	app.handleHideoutEvent(context.Background(), event)
-	if app.status.Hideout.LastError != "" {
-		t.Fatal("recovered save error remained visible")
+	if err := store.Flush(); err != nil || app.status.Hideout.LastError != "" {
+		t.Fatalf("recovered save error remained visible: %v", err)
 	}
 	if len(hideoutlog.NewStore(path).Events()) != 2 {
 		t.Fatal("history did not recover")

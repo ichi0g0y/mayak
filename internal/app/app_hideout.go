@@ -81,21 +81,22 @@ func (a *App) handleHideoutEvent(parent context.Context, e hideoutlog.Event) {
 	if parent.Err() != nil || a.quitting.Load() {
 		return
 	}
-	added, err := a.hideoutStore.Add(e)
-	if !added {
+	if !a.hideoutStore.Add(e) {
 		return
 	}
 	a.mu.Lock()
 	a.status.Hideout.Events = a.hideoutStore.Events()
-	if err != nil {
-		a.status.Hideout.LastError = "history-save-failed"
-	} else {
-		a.status.Hideout.LastError = ""
-	}
 	settings := a.settings
 	status := a.status
 	a.mu.Unlock()
-	a.emitStatus(status)
+	// The logs replayed at a start bring hundreds of events in a row: the
+	// status (with the whole list in it) goes to the window once they pause,
+	// not once per event. A live event is shown at once.
+	if e.Historical {
+		a.emitStatusSoon()
+	} else {
+		a.emitStatus(status)
+	}
 	notify := shouldNotifyHideout(e, settings.HideoutErrorNotifications)
 	if notify {
 		if a.ctx != nil {
@@ -105,6 +106,23 @@ func (a *App) handleHideoutEvent(parent context.Context, e hideoutlog.Event) {
 			playNotification(sound.Error, settings.HideoutErrorSoundPath, settings.SoundVolume)
 		}
 	}
+}
+
+// hideoutSaved is told how each write of the hideout history went (the
+// writes happen later, coalesced): a failure shows in the status until a
+// later write works.
+func (a *App) hideoutSaved(err error) {
+	a.mu.Lock()
+	if err != nil {
+		a.status.Hideout.LastError = "history-save-failed"
+	} else if a.status.Hideout.LastError == "history-save-failed" {
+		a.status.Hideout.LastError = ""
+	}
+	a.mu.Unlock()
+	if err != nil {
+		a.addLog("Warn", "Hideout", "Could not save the hideout history: "+err.Error())
+	}
+	a.emitStatusSoon()
 }
 
 // shouldNotifyHideout alerts on new failed hideout actions. Actions whose

@@ -111,11 +111,14 @@ type App struct {
 	lastErrorSoundAt  time.Time
 	lastProcessed     config.ProcessedScreenshot
 	analysisCancel    context.CancelFunc
-	runThroughCancel  context.CancelFunc
-	done              chan struct{}
-	doneOnce          sync.Once
-	quitting          atomic.Bool
-	analysisSequence  atomic.Uint64
+	// statusSoon is the pending coalesced status emission (emitStatusSoon).
+	statusSoonMu     sync.Mutex
+	statusSoon       *time.Timer
+	runThroughCancel context.CancelFunc
+	done             chan struct{}
+	doneOnce         sync.Once
+	quitting         atomic.Bool
+	analysisSequence atomic.Uint64
 	// update is the newer release being fetched (app_update.go).
 	update updateState
 }
@@ -252,6 +255,8 @@ func (a *App) shutdown(context.Context) {
 	if a.browserViews != nil {
 		a.browserViews.Close()
 	}
+	// The hideout history is written on a timer; whatever is pending goes now.
+	_ = a.hideoutStore.Flush()
 	// Last, so nothing above runs on files that are no longer this version's.
 	a.applyStagedUpdateOnExit()
 }
@@ -589,6 +594,26 @@ func (a *App) emitStatus(status model.Status) {
 	if a.ctx != nil {
 		a.emitEvent("status:update", status)
 	}
+}
+
+// emitStatusSoon sends the status once, shortly, however often it is
+// called meanwhile: for bursts of changes (the hideout logs replayed at a
+// start) that would otherwise send the whole status hundreds of times.
+func (a *App) emitStatusSoon() {
+	a.statusSoonMu.Lock()
+	defer a.statusSoonMu.Unlock()
+	if a.statusSoon != nil {
+		return
+	}
+	a.statusSoon = time.AfterFunc(300*time.Millisecond, func() {
+		a.statusSoonMu.Lock()
+		a.statusSoon = nil
+		a.statusSoonMu.Unlock()
+		a.mu.RLock()
+		status := a.status
+		a.mu.RUnlock()
+		a.emitStatus(status)
+	})
 }
 
 func (a *App) StartMonitoring() error {
