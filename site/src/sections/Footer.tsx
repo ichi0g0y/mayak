@@ -36,7 +36,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-2.5">
-            <img src="/assets/mayak-mark.png" alt="" width={24} height={24} className="size-6" />
+            <img src="/assets/mayak-mark-white.png" alt="" width={24} height={24} className="size-6" />
             <span className="font-extrabold tracking-tight">MAYAK</span>
           </div>
           <p className="text-muted-foreground mt-3 max-w-sm text-sm">{t.footer.tagline}</p>

@@ -96,6 +96,12 @@ func roundedRect(size int) *image.Alpha {
 }
 
 func render(size int, bg, fg color.NRGBA) *image.NRGBA {
+	return renderMark(size, bg, fg, false)
+}
+
+// renderMark draws the icon; bare leaves out the rounded square, so only the
+// mark itself is opaque (the site's header uses that in white).
+func renderMark(size int, bg, fg color.NRGBA, bare bool) *image.NRGBA {
 	base := roundedRect(size)
 	outer, inner := mask(size, hexagon(ringR+ringWidth/2)), mask(size, hexagon(ringR-ringWidth/2))
 	letter, clip := mask(size, leftM, mirror(leftM)), mask(size, hexagon(clipR))
@@ -107,6 +113,9 @@ func render(size int, bg, fg color.NRGBA) *image.NRGBA {
 			ring := float64(outer.Pix[i]) / 255 * (1 - float64(inner.Pix[i])/255)
 			m := float64(letter.Pix[i]) / 255 * float64(clip.Pix[i]) / 255
 			f := math.Min(1, ring+m)
+			if bare {
+				a = f
+			}
 			// The mark over the background, both within the rounded square.
 			c := color.NRGBA{
 				R: uint8(math.Round(float64(bg.R)*(1-f) + float64(fg.R)*f)),
@@ -167,10 +176,11 @@ func main() {
 	fg := flag.String("fg", "cfd2d1", "mark colour (rrggbb)")
 	out := flag.String("out", "", "write only a preview PNG of this size's rendering here (with -size)")
 	size := flag.Int("size", 48, "preview size")
+	bare := flag.Bool("bare", false, "with -out: only the mark, on a transparent background")
 	flag.Parse()
 	b, f := parse(*bg), parse(*fg)
 	if *out != "" {
-		if err := os.WriteFile(*out, encodePNG(render(*size, b, f)), 0o644); err != nil {
+		if err := os.WriteFile(*out, encodePNG(renderMark(*size, b, f, *bare)), 0o644); err != nil {
 			log.Fatal(err)
 		}
 		return

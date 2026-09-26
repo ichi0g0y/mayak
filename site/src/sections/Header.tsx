@@ -34,7 +34,7 @@ export function Header({ home = true }: { home?: boolean }) {
     <header className={cn('fixed inset-x-0 top-0 z-20 transition-colors duration-300', scrolled ? 'bg-background/85 border-b backdrop-blur' : 'border-b border-transparent')}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-6 px-4 sm:px-6">
         <a href="/" className={cn('flex items-center gap-2.5 transition-opacity duration-300', scrolled ? 'opacity-100' : 'opacity-0')} aria-hidden={!scrolled}>
-          <img src="/assets/mayak-mark.png" alt="" width={28} height={28} className="size-7" />
+          <img src="/assets/mayak-mark-white.png" alt="" width={28} height={28} className="size-7" />
           <span className="text-lg font-extrabold tracking-tight">MAYAK</span>
         </a>
         <nav className="hidden items-center gap-6 text-sm md:flex">
