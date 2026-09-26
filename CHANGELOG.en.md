@@ -4,7 +4,7 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Unreleased changes collect under `## Unreleased` and get a version heading at release time.
 
-## Unreleased
+## v0.1.15 (2026-09-26)
 
 - The marker for your position on tarkov.dev's map can be replaced (Settings → tarkov.dev → Player position marker): five that stand out (large with a white outline, red glow, green glow, pulsing red ring, yellow beacon) or your own image (PNG / SVG / JPEG / WebP / GIF). The heading stays the rotation tarkov.dev applies. Only maps opened in MAYAK's built-in browser are affected.
 - The story tasks screen (Character → Tasks → Story) is recognized: the chapter's name ("Tour", "The Ticket", "Blue Fire", "They Are Already Here"…) is read and its page in the official wiki's "Story chapters" opens. tarkov.dev has no page for these tasks, so with tarkov.dev selected only the map shows.
