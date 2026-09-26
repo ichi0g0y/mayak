@@ -142,7 +142,10 @@ ocrtrain -catalog %AppData%\Mayak\catalog\pve.json -fonts <dir with Bender*.otf>
 | `src/browser/peer-code.js` / `transport.js` | WebRTC 手動ペアリングのコード化と、データチャネルでの送受信 |
 | `src/browser/tab-drag.js` | タブのドラッグ並べ替え |
 | `src/browser/popup.js` | ポップアップのヘッダー描画 |
-| `src/main.tsx` / `Hideout.tsx` / `i18n.ts` / `components/ui` | React の設定画面（shadcn 風 UI、Radix） |
+| `src/main.tsx` | React の設定画面の `App`: 状態の読み込みと保存、各セクションの描画（shadcn 風 UI、Radix） |
+| `src/settings-model.ts` | 設定画面のモデル: Go 側が送る型、既定値、`normalizeStatus`、セクション一覧、マーカーの一覧 |
+| `src/TrackerSection.tsx` / `LogsSection.tsx` / `Metric.tsx` | TarkovTracker セクション、ログセクション、ステータスの数値カード。状態は `App` が持ち props で渡す（Radix の Tabs は非表示のセクションをアンマウントするため） |
+| `src/Hideout.tsx` / `i18n.ts` / `components/ui` | Hideout の型と文言、設定画面の文言、UI 部品 |
 | `src/desktop.ts` | 設定画面から親ドキュメントのブリッジを使うための型付きラッパー。設定画面は Wails ランタイムを自分では初期化しない |
 | `bindings/` | `wails3 generate bindings` が生成する TypeScript（手で編集しない。Git には含める） |
 | `vite.config.ts` | `index.html`・`settings.html`・`popup.html` の 3 エントリをビルド |

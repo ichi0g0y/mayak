@@ -1,0 +1,29 @@
+import { Activity, Bug, Clock3, FolderOpen, MapPinned, Radio, Search, Trash2 } from 'lucide-react'
+import { ClearLogs, OpenDebugDirectory, OpenLogsDirectory, OpenScreenshotDirectory } from './desktop'
+import { Button } from './components/ui/button'
+import { Input } from './components/ui/input'
+import { Card, CardContent, CardHeader } from './components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
+import { hideoutMessage } from './Hideout'
+import { Settings, Status, LogEntry, hour12 } from './settings-model'
+import { MessageKey } from './i18n'
+import { Metric } from './Metric'
+import { Dispatch, SetStateAction } from 'react'
+
+type Props={settings:Settings;status:Status;t:(key:MessageKey)=>string;busy:boolean;run:(action:()=>Promise<unknown>,success:string)=>Promise<void>;trackerModeLabel:(mode:string)=>string;logs:LogEntry[];openFolder:(action:()=>Promise<void>)=>Promise<void>;raidElapsed:string;runThroughLabel:string;logLevel:string;setLogLevel:Dispatch<SetStateAction<string>>;logCategory:string;setLogCategory:Dispatch<SetStateAction<string>>;logQuery:string;setLogQuery:Dispatch<SetStateAction<string>>}
+
+// The logs section: the raid summary and the filtered log list.
+export function LogsSection({settings,status,t,busy,run,trackerModeLabel,logs,openFolder,raidElapsed,runThroughLabel,logLevel,setLogLevel,logCategory,setLogCategory,logQuery,setLogQuery}:Props){
+  const allLogs:LogEntry[]=[...logs,...(settings.debug||logCategory==='Hideout'?status.hideout?.events??[]:[]).map((event,index)=>({id:`hideout-${index}`,timestamp:event.occurredAt,level:(event.status==='failed'?'Error':event.status==='unknown'?'Warn':'Info') as LogEntry['level'],category:'Hideout',message:hideoutMessage(event,settings.language),hideout:event}))]
+  const filteredLogs=allLogs.filter(entry=>{
+    if(logCategory!=='all'&&entry.category!==logCategory)return false
+    if(logLevel!=='all'&&entry.level!==logLevel)return false
+    const query=logQuery.trim().toLocaleLowerCase()
+    return !query||`${entry.category} ${entry.message}`.toLocaleLowerCase().includes(query)
+  })
+  const displayedLogs=[...filteredLogs].sort((a,b)=>Date.parse(b.timestamp)-Date.parse(a.timestamp))
+  const clearLogs=()=>run(()=>ClearLogs(),t('logsCleared'))
+  return <>
+    <div className="log-dashboard"><div className="log-summary"><Metric icon={<MapPinned/>} label={t('currentMap')} value={status.currentMap||t('notDetected')}/><Metric icon={<Clock3/>} label={t('raidTimer')} value={raidElapsed}/><Metric icon={<Activity/>} label={t('runThroughTimer')} value={runThroughLabel}/><Metric icon={<Radio/>} label={t('lastQueueTime')} value={status.lastQueueSeconds>0?`${status.lastQueueSeconds.toFixed(1)}s`:'—'}/></div><Card className="logs-card"><CardHeader><div className="folder-toolbar"><Button type="button" variant="secondary" disabled={!settings.screenshotDirectory} onClick={()=>void openFolder(OpenScreenshotDirectory)}><FolderOpen/>{t('openScreenshots')}</Button><Button type="button" variant="secondary" disabled={!settings.logsDirectory} onClick={()=>void openFolder(OpenLogsDirectory)}><FolderOpen/>{t('openEftLogs')}</Button><Button type="button" variant="secondary" disabled={!settings.screenshotDirectory} onClick={()=>void openFolder(OpenDebugDirectory)}><Bug/>{t('openDebugFolder')}</Button></div><div className="logs-toolbar"><Select value={logCategory} onValueChange={setLogCategory}><SelectTrigger className="hideout-filter" aria-label={t('hideoutFilterAll')}><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">{t('hideoutFilterAll')}</SelectItem><SelectItem value="Hideout">{t('hideoutLogCategory')}</SelectItem></SelectContent></Select><div className="log-filter"><Select value={logLevel} onValueChange={setLogLevel}><SelectTrigger aria-label={t('logLevel')}><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">{t('allLevels')}</SelectItem><SelectItem value="Error">Error</SelectItem><SelectItem value="Warn">Warn</SelectItem><SelectItem value="Info">Info</SelectItem><SelectItem value="Debug">Debug</SelectItem></SelectContent></Select></div><div className="log-search"><Search/><Input value={logQuery} onChange={event=>setLogQuery(event.target.value)} placeholder={t('searchLogs')}/></div><span className="log-count">{filteredLogs.length} / {allLogs.length}</span><Button type="button" variant="secondary" onClick={clearLogs} disabled={busy||allLogs.length===0}><Trash2/>{t('clearLogs')}</Button></div></CardHeader><CardContent className="logs-content">{displayedLogs.length===0?<p className="empty">{t('noLogs')}</p>:<div className="log-list" role="log">{displayedLogs.map(entry=><div className="log-row" key={entry.id}><time dateTime={entry.timestamp}>{new Date(entry.timestamp).toLocaleTimeString(settings.language==='ja'?'ja-JP':'en-US',{hour12:hour12()})}</time><span className={`log-level ${entry.level.toLowerCase()}`}>{entry.hideout?t(entry.hideout.status==='failed'?'hideoutResultFailed':entry.hideout.status==='unknown'?'hideoutResultUnknown':'hideoutResultInfo'):entry.level}</span><span className="log-category">{entry.hideout?t('hideoutLogCategory'):entry.category}</span><span className="log-message">{entry.hideout&&(entry.hideout.status==='failed'?'⚠ ':entry.hideout.status==='unknown'?'? ':'ⓘ ')}{entry.message}{entry.hideout&&<small className="hideout-identity">{entry.hideout.mode?trackerModeLabel(entry.hideout.mode):t('unknown')} · {entry.hideout.accountId||t('unknown')} / {entry.hideout.profileId?`${entry.hideout.profileId.slice(0,6)}…${entry.hideout.profileId.slice(-4)}`:t('unknown')} · {new Date(entry.timestamp).toLocaleDateString(settings.language)} {entry.hideout.historical?`· ${t('hideoutHistory')}`:''}</small>}</span></div>)}</div>}</CardContent></Card></div>
+  </>
+}
