@@ -4,6 +4,10 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Unreleased changes collect under `## Unreleased` and get a version heading at release time.
 
+## Unreleased
+
+- The tutorial's wording is brought up to date: screenshots taken in the game, no step count that contradicts its seven screens, and the 8-digit pairing code in the other-PC step.
+
 ## v0.1.13 (2026-09-26)
 
 - The app icon is dressed like the official launcher's: a rounded (same ratio) dark grey plate, the mark in a silver gradient with a soft haze around it, fine grain and scanlines. The taskbar, tray, About, favicon and the site's mark share it.
