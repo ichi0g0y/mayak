@@ -9,7 +9,7 @@ export const de: Messages = {
     hints: { windows: 'Der Windows-Installer. Einfach ausführen, keine Administratorrechte nötig.', mac: 'dmg öffnen und Mayak.app nach Applications ziehen. Beim ersten Mal Rechtsklick → „Öffnen“. Vorschau-Build.', linux: 'tar.gz entpacken und ./Mayak starten (benötigt WebKitGTK). Vorschau-Build.' },
     otherPlatforms: 'Andere Plattformen →',
     download: 'Download',
-    quickstart: 'Dann der Anleitung folgen',
+    quickstart: 'Erste Schritte',
     fetching: 'Neueste Version wird von GitHub geladen…',
     releasesFallback: 'Von GitHub Releases herunterladen',
   },
@@ -19,7 +19,7 @@ export const de: Messages = {
     lead: 'Drücke die Screenshot-Taste von EFT. MAYAK liest die gespeicherte Datei und öffnet die passende Seite im Browser.',
     items: [
       { title: 'Deine Position auf der Karte', reads: 'Koordinaten im Dateinamen', body: 'Liest die im Dateinamen des Screenshots eingebetteten Koordinaten und die Blickrichtung und bewegt deinen Marker auf der tarkov.dev-Karte. Karte und Etage ergeben sich aus Logs und Koordinaten.' },
-      { title: 'Aufgabe öffnen', reads: 'OCR des Aufgabenbildschirms', body: 'Mach einen Screenshot der Aufgabenliste: Die lokale Texterkennung liest die ausgewählte Aufgabe und öffnet die passende Seite auf tarkov.dev oder im Wiki. Funktioniert auch mit dem Spiel auf Japanisch.' },
+      { title: 'Aufgabe nachschlagen', reads: 'OCR des Aufgabenbildschirms', body: 'Öffne die Aufgabe im Aufgabenbildschirm und mach dort den Screenshot: Die lokale Texterkennung liest ihren Namen und öffnet die passende Seite auf tarkov.dev oder im Wiki. Die Liste allein zeigt nicht, welche Aufgabe gewählt ist, also erst öffnen. Funktioniert auch mit dem Spiel auf Japanisch.' },
       { title: 'Preise und Verwendung von Items', reads: 'OCR des Item-Fensters', body: 'Ein Screenshot des Untersuchungsfensters genügt, und das Item-Panel zeigt Flohmarkt- und Händlerpreise, Preisverlauf sowie die Aufgaben und Versteck-Module, die das Item benötigen.' },
       { title: 'TarkovTracker-Sync', reads: 'EFT-Benachrichtigungslogs', body: 'Gestartete, fehlgeschlagene und abgeschlossene Aufgaben aus den Logs gehen an TarkovTracker, getrennt nach PvP-, Season- und PvE-Profil. Alte Logs lassen sich in einem Rutsch synchronisieren.' },
     ],
@@ -32,7 +32,7 @@ export const de: Messages = {
     steps: [
       { title: 'Installieren', body: 'Mayak-Setup-x.y.z-windows-amd64.exe über den Download-Button ausführen; Administratorrechte sind nicht nötig. Zeigt Windows beim ersten Mal „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken. Das erscheint bei jeder unsignierten Open-Source-App. Unter macOS die dmg öffnen, Mayak.app nach Programme ziehen und beim ersten Mal per Rechtsklick → „Öffnen“ starten.' },
       { title: 'Starten und der Anleitung folgen', body: 'Beim ersten Start öffnet sich ein Tutorial und führt durch die EFT-Ordner, die Screenshot-Taste, die Karte, die Nutzung von einem anderen PC und TarkovTracker. Es ist jederzeit unter Einstellungen → Darstellung wieder erreichbar.' },
-      { title: 'Im Raid einfach die Screenshot-Taste drücken', body: 'Der Karten-Tab folgt deiner Position. Ein Screenshot des Aufgabenbildschirms oder eines Item-Fensters zeigt auch diese Informationen an.' },
+      { title: 'Im Raid einfach die Screenshot-Taste drücken', body: 'Der Karten-Tab folgt deiner Position. Ein Screenshot einer geöffneten Aufgabe oder eines Item-Fensters zeigt auch diese Informationen an.' },
     ],
     tip: 'Lass MAYAK einfach laufen. Es minimiert sich in die Taskleiste und beginnt beim Start automatisch mit der Überwachung.',
   },

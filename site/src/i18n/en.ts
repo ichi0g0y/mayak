@@ -4,12 +4,12 @@ export const en: Messages = {
   nav: { features: 'Features', start: 'Getting started', safety: 'Safety', download: 'Download', faq: 'FAQ', github: 'GitHub', language: 'Language', downloadButton: 'Download', changelog: 'Changelog' },
   hero: {
     released: (version: string) => `MAYAK ${version} released`,
-    lead: 'MAYAK is a companion for Escape from Tarkov. It reads only the screenshots and logs the game saves, and shows your position on the tarkov.dev map, your tasks and item info in a browser. It never touches the process or its memory.',
+    lead: 'MAYAK is a companion for Escape from Tarkov. It reads only the screenshots you take in the game and the logs it writes, and shows your position on the tarkov.dev map, your tasks and item info in a browser. It never touches the process or its memory.',
     installLabel: (version: string, os: string) => `Install MAYAK  for `,
     hints: { windows: 'The Windows installer. Just run it; no administrator rights needed.', mac: 'Open the dmg and drag Mayak.app to Applications. The first time, right-click → Open. A preview build.', linux: 'Extract the tar.gz and run ./Mayak (needs WebKitGTK). A preview build.' },
     otherPlatforms: 'Other platforms →',
     download: 'Download',
-    quickstart: 'Then follow the setup guide',
+    quickstart: 'Getting started',
     fetching: 'Fetching the latest release from GitHub…',
     releasesFallback: 'Download from GitHub Releases',
   },
@@ -19,7 +19,7 @@ export const en: Messages = {
     lead: 'Press EFT’s screenshot key. MAYAK reads the saved file and puts the right page in your browser.',
     items: [
       { title: 'Your position on the map', reads: 'Coordinates in the file name', body: 'Reads the coordinates and heading embedded in the screenshot file name and moves your marker on the tarkov.dev map. Map and floor come from the logs and the coordinates.' },
-      { title: 'Open the task', reads: 'OCR of the Tasks screen', body: 'Screenshot the task list and local OCR reads the selected task name, then opens the matching tarkov.dev or wiki page. Works with the game in Japanese too.' },
+      { title: 'Check a task', reads: 'OCR of the task screen', body: 'Open the task in the Tasks screen and take the screenshot there: local OCR reads its name and opens the matching tarkov.dev or wiki page. The list alone does not show which task is selected, so open it first. Works with the game in Japanese too.' },
       { title: 'Item prices and uses', reads: 'OCR of the item window', body: 'Screenshot an item inspection window and the item panel shows flea and trader prices, price history, and the tasks and hideout stations that need it.' },
       { title: 'TarkovTracker sync', reads: 'EFT notification logs', body: 'Task started, failed and completed events from the logs go to TarkovTracker, per PvP, Season and PvE profile. Past logs can be synced in one go.' },
     ],
@@ -32,7 +32,7 @@ export const en: Messages = {
     steps: [
       { title: 'Install', body: 'Run Mayak-Setup-x.y.z-windows-amd64.exe from the download button; no admin rights needed. If Windows shows "Windows protected your PC" the first time, click "More info" and then "Run anyway". It appears for any unsigned open-source app. On macOS, open the dmg, drag Mayak.app to Applications and right-click → Open the first time.' },
       { title: 'Start it and follow the guide', body: 'On the first start a tutorial opens and walks through the EFT folders, the screenshot key, the map, use from another PC and TarkovTracker. It is always available again under Settings → Appearance.' },
-      { title: 'In a raid, just press the screenshot key', body: 'The map tab follows your position. Screenshot the Tasks screen or an item window and that information appears too.' },
+      { title: 'In a raid, just press the screenshot key', body: 'The map tab follows your position. Screenshot an opened task or an item window and that information appears too.' },
     ],
     tip: 'Leave MAYAK running. It minimizes to the tray and starts monitoring automatically on launch.',
   },

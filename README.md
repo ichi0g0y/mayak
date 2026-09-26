@@ -4,7 +4,7 @@
 
 <p align="center">
   An Escape from Tarkov companion that never touches the game.<br>
-  It reads the screenshots and logs the game saves, and keeps the tarkov.dev map, your tasks and item info in sync in a browser.
+  It reads the screenshots you take in the game and the logs it writes, and keeps the tarkov.dev map, your tasks and item info in sync in a browser.
 </p>
 
 <p align="center">
@@ -29,7 +29,7 @@ Get the latest release from [mayak.ich.sh](https://mayak.ich.sh) or the [release
 ## What it does
 
 - **Position on the map.** Press EFT's screenshot key in a raid: the coordinates and heading in the file name move your marker on the tarkov.dev map. Map and floor are detected from the logs and the coordinates.
-- **Tasks screen.** Screenshot the task list and local OCR reads the selected task, then opens it on tarkov.dev or the wiki. English and Japanese game text.
+- **Task screen.** Open a task in the Tasks screen and screenshot it: local OCR reads the task and opens it on tarkov.dev or the wiki (the list alone does not show which task is selected). English and Japanese game text.
 - **Item inspection.** Screenshot an item window and the item panel shows flea and trader prices, price history, and the tasks and hideout stations that need it.
 - **TarkovTracker sync.** Task started, failed and completed events from the notification logs go to TarkovTracker, per PvP, Season and PvE profile. Past logs can be synced in one go.
 - **Raid alerts.** Sounds for match found, raid start and the run-through timer, with custom WAV / MP3 files.

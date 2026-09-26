@@ -6,6 +6,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- The tutorial now says it right: to recognise a task, open it in the Tasks screen before taking the screenshot (the list alone does not show which task is selected).
 - The "All tabs" page listed the fixed tabs and the app's own pages (settings, bosses and so on), with close buttons; it now lists exactly what the sidebar's "Tabs" section does.
 
 ## v0.1.10 (2026-09-26)

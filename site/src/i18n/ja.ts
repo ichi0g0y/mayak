@@ -2,12 +2,12 @@ export const ja = {
   nav: { features: '機能', start: 'はじめかた', safety: '安全性', download: 'ダウンロード', faq: 'FAQ', github: 'GitHub', language: '言語', downloadButton: 'ダウンロード', changelog: '変更履歴' },
   hero: {
     released: (version: string) => `MAYAK ${version} を公開`,
-    lead: 'MAYAK は Escape from Tarkov のコンパニオンです。ゲームが保存したスクリーンショットとログを読むだけで、tarkov.dev のマップ上の現在地、タスク、アイテム情報をブラウザに映します。プロセスやメモリには一切触れません。',
+    lead: 'MAYAK は Escape from Tarkov のコンパニオンです。ゲーム内で撮影したスクリーンショットとログを読むだけで、tarkov.dev のマップ上の現在地、タスク、アイテム情報をブラウザに映します。プロセスやメモリには一切触れません。',
     installLabel: (version: string, os: string) => `MAYAK ${version} をインストール（${os}）`,
     hints: { windows: 'Windows 用インストーラー。実行するだけで、管理者権限は不要です。', mac: 'dmg を開いて Mayak.app を Applications へ。初回は右クリック →「開く」。プレビュー版です。', linux: 'tar.gz を展開して ./Mayak を実行（WebKitGTK が必要）。プレビュー版です。' },
     otherPlatforms: 'ほかの OS →',
     download: 'ダウンロード',
-    quickstart: 'はじめかたを読む',
+    quickstart: 'はじめかた',
     fetching: 'GitHub から最新版を取得しています…',
     releasesFallback: 'GitHub Releases からダウンロード',
   },
@@ -17,7 +17,7 @@ export const ja = {
     lead: 'EFT のスクリーンショットキーを押すだけ。あとは MAYAK が保存されたファイルを読んで、必要な画面をブラウザに出します。',
     items: [
       { title: '現在地をマップに', reads: 'ファイル名の座標と向き', body: 'スクリーンショットのファイル名に埋め込まれた座標と向きを読み、tarkov.dev のマップ上のマーカーを動かします。マップと階層はログと座標から判定します。' },
-      { title: 'タスクを開く', reads: 'タスク一覧画面の OCR', body: 'タスク一覧を撮ると、選択中のタスク名をローカル OCR で読み取り、tarkov.dev または Wiki の該当ページを開きます。日本語表示のゲームにも対応。' },
+      { title: 'タスクの内容を確認', reads: 'タスク画面の OCR', body: 'タスク一覧で該当のタスクを開いた状態で撮ると、そのタスク名をローカル OCR で読み取り、tarkov.dev または Wiki の該当ページを開きます。一覧だけの画面ではどれが選ばれているか分からないので、必ず開いてから撮ります。日本語表示のゲームにも対応。' },
       { title: 'アイテムの価格と用途', reads: 'アイテム詳細ウィンドウの OCR', body: 'アイテム詳細を撮るだけで、フリマ・トレーダー価格、価格の推移、必要なタスクとハイドアウトをアプリ内のアイテム欄に表示します。' },
       { title: 'TarkovTracker と同期', reads: 'EFT の通知ログ', body: 'タスクの開始・失敗・完了をログから検知して、PvP / Season / PvE のプロフィールごとに TarkovTracker へ送ります。過去ログの一括同期も可能。' },
     ],
@@ -30,7 +30,7 @@ export const ja = {
     steps: [
       { title: 'インストールする', body: 'ダウンロードボタンから Mayak-Setup-x.y.z-windows-amd64.exe を実行します。管理者権限は不要です。初回に「Windows によって PC が保護されました」と出たら、「詳細情報」→「実行」で進めます。署名のないオープンソースアプリに出る表示です。macOS は dmg を開いて Mayak.app を Applications へ入れ、初回だけ右クリック →「開く」。' },
       { title: '起動すると、アプリが案内します', body: '初回起動でチュートリアルが開き、EFT のフォルダ、スクリーンショットキー、マップ、別の PC からの利用、TarkovTracker を順に案内します。設定 → 表示 からいつでも見直せます。' },
-      { title: 'レイド中はスクリーンショットキーを押すだけ', body: 'マップのタブが現在地に追従します。タスク画面やアイテム詳細を撮れば、その情報も出ます。' },
+      { title: 'レイド中はスクリーンショットキーを押すだけ', body: 'マップのタブが現在地に追従します。タスクを開いた画面やアイテム詳細を撮れば、その情報も出ます。' },
     ],
     tip: 'MAYAK は常駐させたままで大丈夫です。トレイに最小化され、監視は起動時に自動で始まります。',
   },

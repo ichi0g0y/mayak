@@ -9,7 +9,7 @@ export const zh: Messages = {
     hints: { windows: 'Windows 安装程序。直接运行即可，无需管理员权限。', mac: '打开 dmg，把 Mayak.app 拖到 Applications。首次运行请右键 → “打开”。预览版。', linux: '解压 tar.gz 并运行 ./Mayak（需要 WebKitGTK）。预览版。' },
     otherPlatforms: '其他平台 →',
     download: '下载',
-    quickstart: '然后按照上手指南操作',
+    quickstart: '快速上手',
     fetching: '正在从 GitHub 获取最新版本…',
     releasesFallback: '从 GitHub Releases 下载',
   },
@@ -19,7 +19,7 @@ export const zh: Messages = {
     lead: '按下 EFT 的截图键，MAYAK 会读取保存的文件，并在浏览器中打开对应的页面。',
     items: [
       { title: '地图上的位置', reads: '文件名中的坐标', body: '读取截图文件名中内嵌的坐标和朝向，移动你在 tarkov.dev 地图上的标记。地图和楼层由日志和坐标判断。' },
-      { title: '打开任务', reads: '任务界面的 OCR', body: '截取任务列表后，本地 OCR 会识别当前选中的任务名称，并打开 tarkov.dev 或 Wiki 上对应的页面。游戏为日语界面时同样可用。' },
+      { title: '查看任务', reads: '任务界面的 OCR', body: '在任务界面打开该任务后再截图：本地 OCR 识别任务名称，并打开 tarkov.dev 或 Wiki 上对应的页面。只有列表时看不出选中了哪个任务，所以要先打开。游戏为日语界面时同样可用。' },
       { title: '物品价格与用途', reads: '物品窗口的 OCR', body: '截取物品检视窗口，物品面板即显示跳蚤市场和商人价格、价格走势，以及需要该物品的任务和藏身处模块。' },
       { title: '同步 TarkovTracker', reads: 'EFT 通知日志', body: '从日志中检测任务的开始、失败和完成，并按 PvP / Season / PvE 档案分别发送到 TarkovTracker。历史日志也可一次性同步。' },
     ],
@@ -32,7 +32,7 @@ export const zh: Messages = {
     steps: [
       { title: '安装', body: '点击下载按钮运行 Mayak-Setup-x.y.z-windows-amd64.exe，无需管理员权限。首次运行若出现"Windows 已保护你的电脑"，点击"更多信息"，再点"仍要运行"。未签名的开源应用都会出现这个提示。macOS 请打开 dmg，将 Mayak.app 拖入"应用程序"，首次通过右键 →"打开"启动。' },
       { title: '启动后跟着引导走', body: '首次启动会打开教程，依次介绍 EFT 文件夹、截图键、地图、在另一台电脑上使用以及 TarkovTracker。随时可在 设置 → 外观 中再次打开。' },
-      { title: '战局中只需按下截图键', body: '地图标签页会跟随你的位置。截取任务界面或物品窗口，相应信息也会显示出来。' },
+      { title: '战局中只需按下截图键', body: '地图标签页会跟随你的位置。截取已打开的任务或物品窗口，相应信息也会显示出来。' },
     ],
     tip: '让 MAYAK 一直运行即可。它会最小化到托盘，并在启动时自动开始监视。',
   },
