@@ -337,6 +337,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 | `hideout\events.json` | Hideout イベントの履歴（最大 500 件・90 日）。診断ボタンでこのフォルダを開く |
 | `catalog\<mode>.json` | モード別のカタログキャッシュ（[catalog.md](catalog.md)） |
 | `favicons\` | サイトアイコンのキャッシュ |
+| `thumbs\` | スクリーンショットの縮小画像のキャッシュ（最大 1,500 件、古い順に間引き。[browser-shell.md](browser-shell.md)） |
 | `adblock\<list>.txt` | 広告ブロックのフィルタ（`easylist`、`easyprivacy`、`adguard-japanese`。4 日で期限切れ、失敗時は 6 時間後に再試行） |
 | `browser-webdata\` | 内蔵ブラウザ（WebView2）のプロファイル |
 | `<Screenshots>\Mayak-Debug\` | `saveRecognitionDebug` で保存する原画像、crop、JSON |

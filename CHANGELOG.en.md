@@ -6,6 +6,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- Screenshot thumbnails are kept on disk too (`Mayak	humbs`). They were made again at every start, which kept the CPU busy for seconds right after it.
 - The built-in browser has a translate button (toolbar, web tabs). WebView2 has no page translation of its own, so the page is reopened through Google Translate (translate.goog); pressing again returns to the page itself. Settings → Tasks → "Open the official wiki (English) translated" opens task pages on the official wiki translated from the start.
 - Pressing the sidebar's monitoring dot with no Screenshots folder set opens Settings → Folders instead of starting the watch, so a failed folder detection leads straight to where the folder is chosen.
 
