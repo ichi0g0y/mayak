@@ -3,7 +3,7 @@ import type { Messages } from './ja'
 export const en: Messages = {
   nav: { features: 'Features', start: 'Getting started', safety: 'Safety', download: 'Download', faq: 'FAQ', github: 'GitHub', language: 'Language', downloadButton: 'Download', changelog: 'Changelog' },
   hero: {
-    tagline: 'Lights the raid. Never touches the game.',
+    tagline: 'Escape from Tarkov companion',
     lead: 'MAYAK is a companion for Escape from Tarkov. It reads only the screenshots you take in the game and the logs it writes, and shows your position on the tarkov.dev map, your tasks and item info in a browser. It never touches the process or its memory.',
     installLabel: (version: string, os: string) => `Install MAYAK  for `,
     hints: { windows: 'The Windows installer. Just run it; no administrator rights needed.', mac: 'Open the dmg and drag Mayak.app to Applications. The first time, right-click → Open. A preview build.', linux: 'Extract the tar.gz and run ./Mayak (needs WebKitGTK). A preview build.' },
@@ -132,7 +132,7 @@ export const en: Messages = {
     lead: 'The app’s update notice opens this page for "What changed". The source is CHANGELOG.md in the repository (Japanese and English).',
   },
   footer: {
-    tagline: 'The Escape from Tarkov companion that never touches the game.',
+    tagline: 'Escape from Tarkov companion',
     credit: 'Escape from Tarkov is a trademark of Battlestate Games. MAYAK is an independent project, not affiliated with Battlestate Games, tarkov.dev or TarkovTracker.',
     product: 'Product',
     community: 'Community',

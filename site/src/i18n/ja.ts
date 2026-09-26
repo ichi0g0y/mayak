@@ -1,7 +1,7 @@
 export const ja = {
   nav: { features: '機能', start: 'はじめかた', safety: '安全性', download: 'ダウンロード', faq: 'FAQ', github: 'GitHub', language: '言語', downloadButton: 'ダウンロード', changelog: '変更履歴' },
   hero: {
-    tagline: '触れずに、照らす。',
+    tagline: 'Escape from Tarkov companion',
     lead: 'MAYAK は Escape from Tarkov のコンパニオンです。ゲーム内で撮影したスクリーンショットとログを読むだけで、tarkov.dev のマップ上の現在地、タスク、アイテム情報をブラウザに映します。プロセスやメモリには一切触れません。',
     installLabel: (version: string, os: string) => `MAYAK ${version} をインストール（${os}）`,
     hints: { windows: 'Windows 用インストーラー。実行するだけで、管理者権限は不要です。', mac: 'dmg を開いて Mayak.app を Applications へ。初回は右クリック →「開く」。プレビュー版です。', linux: 'tar.gz を展開して ./Mayak を実行（WebKitGTK が必要）。プレビュー版です。' },
@@ -130,7 +130,7 @@ export const ja = {
     lead: 'アプリの更新通知の「変更点」もこのページを開きます。日本語と英語の原文はリポジトリの CHANGELOG.md にあります。',
   },
   footer: {
-    tagline: 'Escape from Tarkov のための、ゲームに触れないコンパニオン。',
+    tagline: 'Escape from Tarkov companion',
     credit: 'Escape from Tarkov は Battlestate Games の商標です。MAYAK は Battlestate Games、tarkov.dev、TarkovTracker とは無関係の個人プロジェクトです。',
     product: 'プロダクト',
     community: 'コミュニティ',
