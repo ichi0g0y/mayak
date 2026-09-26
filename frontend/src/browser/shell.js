@@ -1,25 +1,25 @@
 import './api.js';
 import './style.css';
-import {themes,sidebarWidths,clampSidebar,hostname,bookmarkGroups,webURL,browserSections,hostSections,resolveAddress,shortcut,isTranslated,originalURL} from './state.js';
+import {hostname,bookmarkGroups,browserSections,hostSections,themes,sidebarWidths,isTranslated,originalURL,webURL,resolveAddress,shortcut,clampSidebar} from './state.js';
 import {Window,Browser} from '@wailsio/runtime';
 import morphdom from 'morphdom';
-import {installTabDrag,tabDragActive} from './tab-drag.js';
+import {tabDragActive,installTabDrag} from './tab-drag.js';
 import {words} from './words.js';
-import {bestSale,price,age,chartSeries,chartPath,itemPanelWidths,clampItemPanel,itemPanelHeights,clampItemPanelHeight,itemPageURL} from './item.js';
-const api=window.mayak;
+import {age,clampItemPanelHeight,clampItemPanel,itemPanelHeights,itemPanelWidths} from './item.js';
+import {state,api,t,esc,icon,action,appVersion,select,siteChoices,option,clickHandlers,setState,loadVersion,setRender} from './shell-core.js';
+import {goonFresh,bossSection,bossesPage} from './view-bosses.js';
+import {shotBadges,screenshotsPage} from './view-screenshots.js';
+import {itemToggle,itemPanel} from './view-item.js';
+import {tutorialOpen,tutorialHTML,handleTutorial,openTutorial} from './view-tutorial.js';
+setRender(render);
+
 // The changelog page, rendered from CHANGELOG.md in the repository.
 const CHANGELOG_URL='https://mayak.ich.sh/changelog';
-let state,editingBookmark=null,bookmarkQuery='',tabQuery='',contextMenu=null,placeMenu=null;
+let editingBookmark=null,bookmarkQuery='',tabQuery='',contextMenu=null,placeMenu=null;
 const peerDrafts={offer:'',answer:'',pairCode:''};
 let copied=false,windowTheme='',renderDeferred=false;
-// The first-run tutorial: an overlay that walks through the setup after
-// installing. It shows on the Host until it is finished or skipped
-// (state.tutorialDone) and can be reopened from the appearance settings.
-let tutorialOpen=false,tutorialStep=0,tutorialSettings=null,tutorialStarted=false;
-// The build's version, for the About section; empty in development. The
-// desktop bridge (api.js) exists once the first state arrives, so it loads then.
-let appVersion='';
-async function loadVersion(){try{appVersion=(await window.mayakDesktop?.backend?.GetVersion?.())||'';}catch{}if(appVersion)render();}
+// The tutorial is offered once, when the first state arrives.
+let tutorialStarted=false;
 const themeNames={'mayak-dark':'MAYAK Dark','mayak-light':'MAYAK Light','catppuccin-latte':'Catppuccin Latte','catppuccin-frappe':'Catppuccin Frappé','catppuccin-macchiato':'Catppuccin Macchiato','catppuccin-mocha':'Catppuccin Mocha',nord:'Nord',dracula:'Dracula','gruvbox-dark':'Gruvbox Dark','tokyo-night':'Tokyo Night','solarized-dark':'Solarized Dark','solarized-light':'Solarized Light'};
 const lightScheme=matchMedia('(prefers-color-scheme: light)');
 // Applies the theme to the shell and to the same-origin Host settings frame.
@@ -33,53 +33,6 @@ function applyTheme(){
  const key=JSON.stringify(colors);
  if(key!==windowTheme){windowTheme=key;void api.action('windowTheme',colors);}
 }
-const t=key=>words[state?.language||'ja'][key]||key;
-const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-// Lucide icon paths (ISC), inlined so the shell stays dependency-free.
-const icons={
- flag:'<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"/>',
- info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
- skull:'<path d="m12.5 17-.5-1-.5 1h1z"/><path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="12" r="1"/>',
- placeLeft:'<rect width="18" height="18" x="3" y="3" rx="2"/><rect x="3" y="3" width="7" height="18" rx="2" fill="currentColor" stroke="none" opacity=".55"/>',placeRight:'<rect width="18" height="18" x="3" y="3" rx="2"/><rect x="14" y="3" width="7" height="18" rx="2" fill="currentColor" stroke="none" opacity=".55"/>',placeTop:'<rect width="18" height="18" x="3" y="3" rx="2"/><rect x="3" y="3" width="18" height="7" rx="2" fill="currentColor" stroke="none" opacity=".55"/>',placeBottom:'<rect width="18" height="18" x="3" y="3" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2" fill="currentColor" stroke="none" opacity=".55"/>',
- minus:'<path d="M5 12h14"/>',fit:'<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
- image:'<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
- back:'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',forward:'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
- reload:'<path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>',
- plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
- settings:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
- pin:'<path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>',
- map:'<path d="M14.1 4.1 9 2 3 4v18l6-2 6 2 6-2V2z"/><path d="M9 2v18"/><path d="M15 4v18"/>',
- task:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 13h4"/><path d="M10 17h4"/>',
- globe:'<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
- search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',chevron:'<path d="m6 9 6 6 6-6"/>',chevronRight:'<path d="m9 18 6-6-6-6"/>',
- host:'<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>',off:'<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
- panelLeft:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>',panelRight:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/>',panelTop:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/>',panelBottom:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 15h18"/>',
- minimise:'<path d="M5 12h14"/>',maximise:'<rect x="5" y="5" width="14" height="14" rx="1.5"/>',restore:'<rect x="5" y="8" width="11" height="11" rx="1.5"/><path d="M8 8V6.5A1.5 1.5 0 0 1 9.5 5h8A1.5 1.5 0 0 1 19 6.5v8a1.5 1.5 0 0 1-1.5 1.5H16"/>',
- pinOff:'<path d="M12 17v5"/><path d="M15 9.34V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H7.89"/><path d="m2 2 20 20"/><path d="M9 9v1.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h11"/>',
- bookmark:'<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>',
- list:'<path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/>',
- grid:'<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
- edit:'<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>',
- trash:'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
- tracker:'<path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
- external:'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3"/>',translate:'<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
- home:'<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
- linked:'<path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><path d="M8 12h8"/>',unlinked:'<path d="M9 17H7A5 5 0 0 1 7 7"/><path d="M15 7h2a5 5 0 0 1 4 8"/><path d="m2 2 20 20"/>',
- package:'<path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"/><path d="m7.5 4.27 9 5.15"/>',check:'<path d="M20 6 9 17l-5-5"/>',
- palette:'<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
- shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
- activity:'<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>',
- folder:'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
- scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
- volume:'<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>',
- power:'<path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>',
-bug:'<path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/>',
-};
-const icon=(name,cls='icon')=>`<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]}</svg>`;
-const btn=(action,label,extra='')=>`<button data-action="${action}" title="${esc(label)}" aria-label="${esc(label)}" ${extra}>${esc(label)}</button>`;
-const option=(value,label,current)=>`<option value="${esc(value)}" ${current===value?'selected':''}>${esc(label)}</option>`;
-function select(key,label,choices,value,scope='preferences'){return `<label class="field"><span>${esc(label)}</span><select data-scope="${scope}" data-key="${key}">${choices.map(([v,l])=>option(v,l,value)).join('')}</select></label>`;}
-const siteChoices=()=>[['tarkov-dev','tarkov.dev'],['official-wiki',t('official')],['japanese-wiki',t('japanese')]];
 const tabName=tab=>tab.role==='map'&&tab.fixed?t('mapTab'):tab.role==='tracker'?'TarkovTracker':tab.kind==='blank'?t('newTab'):tab.kind==='settings'?t('settings'):tab.kind==='bosses'?t('bosses'):tab.kind==='screenshots'?t('screenshots'):tab.kind==='bookmarks'?t('bookmarks'):tab.kind==='tabs'?t('allTabs'):tab.title||tab.url;
 // Tabs listed in the tab section (the strip sizes itself by their number).
 const listedTabs=()=>state.tabs.filter(tab=>!tab.fixed&&tab.kind!=='bookmarks'&&tab.kind!=='settings'&&tab.kind!=='screenshots'&&tab.kind!=='bosses'&&tab.kind!=='tabs');
@@ -178,149 +131,6 @@ function screenshotSection(){
  const latest=shots.list[0],thumb=latest&&shots.thumbs[latest.name];
  const preview=latest?`<button class="shot-latest" data-action="screenshotOpen" data-id="${esc(latest.name)}" title="${esc(latest.name)}">${thumb?`<img src="${thumb}" alt="">`:`<span class="shot-placeholder">${icon('image')}</span>`}<span class="shot-age">${esc(age(latest.time,state.language))}</span>${shotBadges(latest.meta)}</button>`:`<p class="shot-empty">${esc(t('noScreenshots'))}</p>`;
  return `<div class="section-label screenshot-section-label ${open?'active':''}"><button class="section-link" data-action="toggleScreenshotSection" aria-expanded="${!folded}" title="${esc(t(folded?'expandSection':'collapseSection'))}">${esc(t('screenshots'))}${icon('chevron','section-chevron')}</button><button class="new-tab shots-open" data-action="screenshots" title="${esc(t('allScreenshots'))}" aria-label="${esc(t('allScreenshots'))}" aria-pressed="${open}">${icon('image')}</button></div>${folded?'':`<div class="shot-section">${preview}</div>`}`;
-}
-// Sidebar section with the bosses: where the Goons were last reported and the
-// bosses of the map being played; its icon opens the boss page.
-// The heading opens and closes the section, back to how it was open; a row
-// under the Goons shows or hides the map's bosses.
-let bossOpenView='full';
-// The map and the game mode, by hand or (the first choice) following the game.
-function bossPick(info){
- const current=info.maps.find(m=>m.key===info.current),mode=info.mode==='pve'?'PvE':'PvP';
- const maps=[['',current?`${t('bossAuto')} (${current.name})`:t('bossAuto')],...info.maps.filter(m=>m.bosses.length).map(m=>[m.key,m.name])];
- const modes=[['',state.bossMode?t('bossAuto'):`${t('bossAuto')} (${mode})`],['regular','PvP'],['pve','PvE']];
- return `<div class="boss-pick"><select data-scope="preferences" data-key="bossMap" aria-label="${esc(t('bossMaps'))}">${maps.map(([v,l])=>option(v,l,state.bossMap)).join('')}</select><select data-scope="preferences" data-key="bossMode" aria-label="${esc(t('bossModeLabel'))}">${modes.map(([v,l])=>option(v,l,state.bossMode)).join('')}</select></div>`;
-}
-// The Goons report: the map, the account and mode (from the EFT logs) and the
-// raid; nothing is sent before the user confirms. goonDraft keeps what was
-// chosen across re-renders.
-let goonDraft={};
-function goonReportDialog(info){
- const r=state.goonReport,raid=r.raid;
- const close=`<button data-action="goonReportClose">${esc(t(r.done?'close':'cancel'))}</button>`;
- if(r.done)return `<div class="goon-dialog-backdrop"><div class="goon-dialog" role="dialog" aria-label="${esc(t('goonReport'))}"><h2>${esc(t('goonReport'))}</h2><p>${esc(t('goonReported'))}</p><div class="actions">${close}</div></div></div>`;
- const maps=info.maps.filter(m=>m.bosses.some(b=>b.id==='bossKnight'));
- const mapKey=goonDraft.map||(raid&&maps.some(m=>m.key===raid.map)?raid.map:maps.some(m=>m.key===(state.bossMap||info.current))?state.bossMap||info.current:maps[0]?.key||'');
- const modeName=mode=>mode==='pve'?'PvE':'PvP';
- const ids=r.identities.map(id=>({value:id.accountId+'|'+id.mode,label:[id.accountId,modeName(id.mode),id.current?t('goonCurrent'):'',id.lastSeen?`${t('goonLastSeen')} ${new Date(id.lastSeen).toLocaleDateString(state.language==='ja'?'ja-JP':'en-US')}`:''].filter(Boolean).join(' · ')}));
- const raidID=raid?raid.accountId+'|'+raid.mode:'';
- const account=goonDraft.account||(ids.some(i=>i.value===raidID)?raidID:ids[0]?.value||'');
- const canRaid=raid&&!raid.reported;
- const when=goonDraft.when??(canRaid?raid.startedAt:'');
- const raidLine=raid?`${raid.active?t('goonRaidNow'):t('goonRaidLast')}: ${maps.find(m=>m.key===raid.map)?.name||raid.map} · ${clock(raid.startedAt)} ${t('goonStarted')}${raid.reported?' · '+t('goonAlready'):''}`:'';
- return `<div class="goon-dialog-backdrop"><form class="goon-dialog" id="goon-form" role="dialog" aria-label="${esc(t('goonReport'))}"><h2>${esc(t('goonReport'))}</h2>
- <p class="hint">${esc(t('goonReportOnly'))}</p>
- <label class="field"><span>${esc(t('shotInfoMap'))}</span><select id="goon-map">${maps.map(m=>option(m.key,m.name,mapKey)).join('')}</select></label>
- <label class="field"><span>${esc(t('goonAccount'))}</span>${ids.length?`<select id="goon-account">${ids.map(i=>option(i.value,i.label,account)).join('')}</select>`:`<p class="notice">${esc(t('goonNoAccount'))}</p>`}</label>
- <fieldset class="goon-when"><legend>${esc(t('goonWhen'))}</legend>${raid?`<label class="check"><input type="radio" name="goon-when" value="${esc(raid.startedAt)}" ${when===raid.startedAt?'checked':''} ${canRaid?'':'disabled'}>${esc(raidLine)}</label>`:''}<label class="check"><input type="radio" name="goon-when" value="" ${when===''?'checked':''}>${esc(t('goonWhenNow'))}</label></fieldset>
- <p class="goon-consent">${esc(t('goonConsent'))}</p>
- ${r.error?`<p class="notice" role="alert">${esc(r.error)}</p>`:''}
- <div class="actions">${close}<button class="primary" data-action="goonReportSend" ${!ids.length||!maps.length||r.busy?'disabled':''}>${esc(t(r.busy?'goonSending':'goonSend'))}</button></div></form></div>`;
-}
-const bossName=b=>b.id==='bossKnight'?'Goons':b.name;
-const pct=value=>Math.round((Number(value)||0)*100)+'%';
-// How fresh a Goons report is: within an hour (a raid or two), three hours,
-// or older.
-function goonFresh(time){const minutes=(Date.now()-Date.parse(time))/60000;return !(minutes>=0)?'old':minutes<=60?'new':minutes<=180?'recent':'old';}
-const goonLabel=goon=>goon?`Goons · ${goon.map} · ${age(goon.time,state.language)}`:`Goons · ${t('noGoons')}`;
-function bossSection(){
- const info=state.bosses;
- const open=state.tabs.find(tab=>tab.id===state.active)?.kind==='bosses';
- const view=state.bossesView,goon=info?.goons[0];
- let body='';
- if(view!=='closed'){
-  const latest=!info?`<p class="shot-empty">${esc(t('bossesLoading'))}</p>`:goon?`<button class="goon-latest" data-action="bosses" data-fresh="${goonFresh(goon.time)}" title="${esc(goonLabel(goon))}"><span class="goon-dot"></span><span class="goon-name">Goons</span><span class="goon-age" data-goon-time="${esc(goon.time)}">${esc(age(goon.time,state.language))}</span><b>${esc(goon.map)}</b></button>`:`<p class="shot-empty">Goons · ${esc(t('noGoons'))}</p>`;
-  const map=info?.maps.find(m=>m.key===(state.bossMap||info.current));
-  const here=!info?'':`<div class="boss-here">${bossPick(info)}${!map?`<p class="shot-empty">${esc(t('bossPickHint'))}</p>`:map.bosses.length?map.bosses.slice(0,5).map(b=>`<div class="boss-line"><span>${esc(bossName(b))}</span><b>${pct(b.chance)}</b></div>`).join(''):`<p class="shot-empty">${esc(t('noBosses'))}</p>`}</div>`;
-  body=`<div class="boss-section">${latest}<button class="boss-more" data-action="bossDetail" aria-expanded="${view==='full'}">${esc(t('bossMapBosses'))}${icon('chevron','section-chevron')}</button>${view==='full'?here:''}</div>`;
- }
- return `<div class="section-label boss-section-label ${open?'active':''}"><button class="section-link" data-action="toggleBossSection" aria-expanded="${view!=='closed'}" title="${esc(t(view==='closed'?'expandSection':'collapseSection'))}">${esc(t('bosses'))}${icon('chevron','section-chevron')}</button><span class="section-actions"><button class="new-tab goon-report-open" data-action="goonReportFromSidebar" title="${esc(t('goonReport'))}" aria-label="${esc(t('goonReport'))}">${icon('flag')}</button><button class="new-tab bosses-open" data-action="bosses" title="${esc(info?goonLabel(goon):t('allBosses'))}" aria-label="${esc(t('allBosses'))}" aria-pressed="${open}">${icon('skull')}</button></span></div>${body}`;
-}
-// The boss page: the Goons reports and the maps they spawn on, then the
-// bosses of one map (the one being played, or the one chosen).
-function bossesPage(){
- const info=state.bosses;
- if(!info)return `<div class="page bosses-page"><p class="empty-tabs">${esc(t('bossesLoading'))}</p></div>`;
- const goons=info.goons.slice(0,10).map((g,i)=>`<li class="${i===0?'latest':''}" data-fresh="${goonFresh(g.time)}"><span class="goon-dot"></span><b>${esc(g.map)}</b><span class="goon-age" data-goon-time="${esc(g.time)}">${esc(age(g.time,state.language))}</span><time>${esc(clock(g.time))}</time></li>`).join('');
- const goonMaps=info.maps.map(m=>({m,b:m.bosses.find(b=>b.id==='bossKnight')})).filter(x=>x.b).sort((a,b)=>b.b.chance-a.b.chance).map(({m,b})=>`<button class="boss-chip" data-action="bossMap" data-id="${esc(m.key)}">${esc(m.name)} <b>${pct(b.chance)}</b></button>`).join('');
- const withBosses=info.maps.filter(m=>m.bosses.length);
- const chosen=withBosses.find(m=>m.key===(state.bossMap||info.current))||withBosses[0];
- const maps=withBosses.map(m=>`<button class="${m===chosen?'selected':''}" data-action="bossMap" data-id="${esc(m.key)}" aria-pressed="${m===chosen}">${esc(m.name)}${m.key===info.current?' ●':''}</button>`).join('');
- const cards=chosen?chosen.bosses.map(b=>`<article class="boss-card"><header>${b.portrait?`<img src="${esc(b.portrait)}" alt="" referrerpolicy="no-referrer" loading="lazy">`:`<span class="boss-portrait">${icon('skull')}</span>`}<h3>${esc(bossName(b))}${b.id==='bossKnight'?`<small>${esc([b.name,...b.escorts.map(e=>e.name)].join(' · '))}</small>`:''}</h3><strong>${pct(b.chance)}</strong></header>${b.locations.length?`<ul class="boss-places">${b.locations.map(l=>`<li><span>${esc(l.name)}</span><b>${pct(l.chance)}</b></li>`).join('')}</ul>`:''}${b.escorts.length?`<p class="boss-escorts">${esc(t('escorts'))}: ${b.escorts.map(e=>esc(e.name)+' ×'+(e.min===e.max?e.max:e.min+'–'+e.max)).join(', ')}</p>`:''}</article>`).join(''):'';
- return `<div class="page bosses-page"><div class="bookmarks-head"><h1>${esc(t('bosses'))}</h1>${bossPick(info)}</div>
- <section class="panel goon-panel"><div class="goon-head"><h2>Goons</h2><button data-action="goonReportOpen">${icon('flag')}<span>${esc(t('goonReport'))}</span></button></div>${goons?`<ul class="goon-list">${goons}</ul>`:`<p class="shot-empty">${esc(t('noGoons'))}</p>`}<p class="hint">${esc(t('goonHint'))}</p>${goonMaps?`<h3 class="goon-maps-head">${esc(t('goonMaps'))}</h3><div class="boss-chips">${goonMaps}</div>`:''}</section>
- <section class="boss-maps"><div class="boss-map-tabs" role="group" aria-label="${esc(t('bossMaps'))}">${maps}</div><div class="boss-grid">${cards}</div></section></div>${state.goonReport?goonReportDialog(info):''}`;
-}
-const clock=time=>{const d=new Date(time);return Number.isNaN(d.getTime())?'':d.toLocaleTimeString(state.language==='ja'?'ja-JP':'en-US',{hour:'2-digit',minute:'2-digit',hour12:state.clock==='12'});};
-// Zoom of the screenshot shown large: 1 fits it to the page area; x and y
-// move it (in screen pixels) while it is larger. Kept in the shell, so
-// zooming does not rebuild the page.
-let shotZoom={name:'',scale:1,x:0,y:0};
-const shotZoomMax=8;
-const shotTransform=()=>`translate(${shotZoom.x}px,${shotZoom.y}px) scale(${shotZoom.scale})`;
-function applyShotZoom(){
- const img=document.querySelector('.shot-viewer-body img'),level=document.querySelector('.shot-zoom-level');
- if(img)img.style.transform=shotTransform();
- if(level)level.textContent=Math.round(shotZoom.scale*100)+'%';
-}
-// zoomShot sets the scale, keeping the point at (px, py) from the image's
-// centre where it is; at the fitted size it is centred again.
-function zoomShot(scale,px=0,py=0){
- const next=Math.max(1,Math.min(shotZoomMax,scale));
- if(next===1){shotZoom={...shotZoom,scale:1,x:0,y:0};applyShotZoom();return;}
- const ratio=next/shotZoom.scale;
- shotZoom={...shotZoom,scale:next,x:px-(px-shotZoom.x)*ratio,y:py-(py-shotZoom.y)*ratio};
- applyShotZoom();
-}
-// The image's actual pixels on screen: the zoom that shows it at 100%.
-function shotActualScale(){
- const img=document.querySelector('.shot-viewer-body img');
- return img&&img.naturalWidth?Math.max(1,img.naturalWidth/img.getBoundingClientRect().width*shotZoom.scale):2;
-}
-// The screenshot page: a grid of all of them, newest first; one opened is
-// shown large over it, with the previous and next at hand.
-function screenshotsPage(){
- const shots=state.screenshots;
- if(!shots)return `<div class="page"><p class="empty-tabs">${esc(t('screenshotsHostOnly'))}</p></div>`;
- const grid=shots.list.map(s=>`<button class="shot-cell" data-action="screenshotView" data-id="${esc(s.name)}" title="${esc([s.name,shotSummary(s.meta)].filter(Boolean).join('\n'))}">${shots.thumbs[s.name]?`<img src="${shots.thumbs[s.name]}" alt="" loading="lazy">`:`<span class="shot-placeholder">${icon('image')}</span>`}<span class="shot-age">${esc(age(s.time,state.language))}</span>${shotBadges(s.meta)}</button>`).join('');
- return `<div class="page shots-page"><div class="bookmarks-head"><h1>${esc(t('screenshots'))}</h1><div class="bookmarks-tools"><button data-action="screenshotFolder">${icon('folder')}<span>${esc(t('openScreenshotFolder'))}</span></button></div></div>${shots.list.length?`<div class="shot-grid">${grid}</div>`:`<p class="shot-empty">${esc(t('noScreenshots'))}</p>`}</div>${shotViewer()}`;
-}
-// A screenshot's kind: a flea offer is an item screenshot of its own layout.
-const shotKind=meta=>meta.type==='item'&&meta.layout==='flea-offer'?'offer':meta.type;
-function shotBadges(meta){
- if(!meta)return '';
- const kind=shotKind(meta);
- return `<span class="shot-kind" data-kind="${kind}">${esc(t('shotKind_'+kind))}</span>${meta.match?`<span class="shot-match">${esc(meta.match)}</span>`:''}`;
-}
-const shotSummary=meta=>meta?[t('shotKind_'+shotKind(meta)),meta.match,meta.confidence?Math.round(meta.confidence*100)+'%':''].filter(Boolean).join(' · '):'';
-// The details of how a screenshot was recognized, beside it when shown large.
-let shotInfoOpen=false;
-function shotInfo(meta){
- const row=(label,value)=>value===''||value===undefined||value===null?'':`<div class="shot-info-row"><dt>${esc(label)}</dt><dd>${value}</dd></div>`;
- const pctText=v=>v?Math.round(v*100)+'%':'';
- return `<aside class="shot-info" aria-label="${esc(t('shotInfo'))}"><h3>${esc(t('shotInfo'))}</h3><dl>${[
-  row(t('shotInfoKind'),esc(t('shotKind_'+shotKind(meta)))),
-  row(t('shotInfoMatch'),esc([meta.match,meta.detail].filter(Boolean).join(' · '))),
-  row(t('shotInfoConfidence'),pctText(meta.confidence)),
-  row(t('shotInfoCandidates'),meta.candidates.map(c=>esc(c)).join('<br>')),
-  row(t('shotInfoLayout'),esc(meta.layout)),
-  row(t('shotInfoScore'),meta.score?meta.score.toFixed(2):''),
-  row(t('shotInfoMap'),esc(meta.map)),
-  row(t('shotInfoRaid'),esc(t(meta.raid?'yes':'no'))),
-  row(t('shotInfoPosition'),esc(meta.position)),
-  row(t('shotInfoStage'),esc(meta.stage)),
-  row(t('shotInfoError'),esc(meta.error)),
- ].join('')}</dl>${meta.ocr?`<h4>OCR</h4><pre class="shot-ocr">${esc(meta.ocr)}</pre>`:''}</aside>`;
-}
-function shotViewer(){
- const shots=state.screenshots,name=shots?.viewing;
- if(!name)return '';
- // Another screenshot starts fitted to the page again.
- if(shotZoom.name!==name)shotZoom={name,scale:1,x:0,y:0};
- const index=shots.list.findIndex(s=>s.name===name),shot=shots.list[index];
- const image=shots.full||shots.thumbs[name];
- const newer=shots.list[index-1],older=shots.list[index+1];
- return `<div class="shot-viewer" role="dialog" aria-label="${esc(name)}"><div class="shot-viewer-head"><span class="shot-viewer-name" title="${esc(name)}">${esc(name)}</span><span class="shot-age">${esc(shot?age(shot.time,state.language):'')}</span>${shot?.meta?`<span class="shot-kind" data-kind="${shotKind(shot.meta)}">${esc(t('shotKind_'+shotKind(shot.meta)))}</span>${shot.meta.match?`<span class="shot-viewer-match" title="${esc(shot.meta.match)}">${esc(shot.meta.match)}${shot.meta.confidence?` · ${Math.round(shot.meta.confidence*100)}%`:''}</span>`:''}`:''}<div class="shot-zoom"><button class="shot-tool" data-action="shotZoom" data-id="out" title="${esc(t('zoomOut'))}" aria-label="${esc(t('zoomOut'))}">${icon('minus')}</button><span class="shot-zoom-level">${Math.round(shotZoom.scale*100)}%</span><button class="shot-tool" data-action="shotZoom" data-id="in" title="${esc(t('zoomIn'))}" aria-label="${esc(t('zoomIn'))}">${icon('plus')}</button><button class="shot-tool" data-action="shotZoom" data-id="fit" title="${esc(t('zoomFit'))}" aria-label="${esc(t('zoomFit'))}">${icon('fit')}</button>${shot?.meta?`<button class="shot-tool shot-info-toggle ${shotInfoOpen?'selected':''}" data-action="shotInfo" title="${esc(t('shotInfo'))}" aria-label="${esc(t('shotInfo'))}" aria-pressed="${shotInfoOpen}">${icon('info')}</button>`:''}</div><button class="shot-viewer-close" data-action="screenshotView" data-id="" title="${esc(t('close'))}" aria-label="${esc(t('close'))}">${icon('x')}</button></div><div class="shot-viewer-body">${shot?.meta&&shotInfoOpen?shotInfo(shot.meta):''}${image?`<img src="${image}" alt="" draggable="false" style="transform:${shotTransform()}">`:''}${newer?`<button class="shot-nav shot-newer" data-action="screenshotView" data-id="${esc(newer.name)}" title="${esc(t('newerScreenshot'))}" aria-label="${esc(t('newerScreenshot'))}">${icon('back')}</button>`:''}${older?`<button class="shot-nav shot-older" data-action="screenshotView" data-id="${esc(older.name)}" title="${esc(t('olderScreenshot'))}" aria-label="${esc(t('olderScreenshot'))}">${icon('forward')}</button>`:''}</div></div>`;
 }
 // Favicons load without a referrer; a broken one falls back to the globe icon.
 // Icons come from the icon cache when it has them.
@@ -438,125 +248,12 @@ function peerPanel(){
   <p class="hint">${t('p2pLimit')}</p><details><summary>${t('stunLabel')}</summary><label class="field"><span>${t('stunLabel')}</span><input data-scope="connection" data-key="stun" value="${esc(state.connection.stun||'')}" placeholder="stun:stun.cloudflare.com:3478"></label><p class="hint">${t('stunHelp')}</p></details></section>`;
 }
 function settingsHost(){return state.tabs.find(tab=>tab.id===state.active)?.kind==='settings'&&hostSections.includes(state.settingsSection)&&state.localHost;}
-// The chart's range is a per-viewer convenience, remembered in this browser.
-let chartRange='7d',chart=null;
-try{chartRange=localStorage.getItem('mayak.chartRange')||'7d';}catch{}
-if(!['7d','30d','all'].includes(chartRange))chartRange='7d';
-// The plot keeps chartPad free above and below its lines; four grid lines
-// with prices mark the scale.
-const chartWidth=288,chartHeight=132,chartPad=14,chartTicks=4;
-const shortPrice=v=>v>=1e6?`${(v/1e6).toFixed(v>=1e7?0:1)}M`:v>=1e3?`${Math.round(v/1e3)}k`:String(Math.round(v));
-const chartDate=(t,withTime=false)=>new Date(t).toLocaleString(state.language==='ja'?'ja-JP':'en-US',chartRange==='all'&&!withTime?{year:'numeric',month:'numeric'}:withTime?{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:state.clock==='12'}:{month:'numeric',day:'numeric'});
-// The flea market price history: average and lowest offer. The lowest line
-// ends at the live price, since the history lags it by a few hours.
-function itemChart(item){
- const h=state.itemHistory;chart=null;
- if(!item.flea||!h||h.id!==item.id)return '';
- const money=v=>esc(price(v,'RUB',state.language));
- const ranges=[['7d','range7d'],['30d','range30d'],['all','rangeAll']];
- const head=`<h3>${esc(t('priceHistory'))}<span class="chart-ranges" role="group">${ranges.map(([k,l])=>`<button data-action="chartRange" data-id="${k}" class="${chartRange===k?'selected':''}" aria-pressed="${chartRange===k}">${esc(t(l))}</button>`).join('')}</span></h3>`;
- const at=Date.parse(item.pricedAt);
- const s=h.points.length?chartSeries(h.points,chartRange,Date.now(),item.flea.lastLow?{t:Number.isNaN(at)?Date.now():at,min:item.flea.lastLow}:null):null;
- if(!s)return `<section class="item-section item-chart">${head}<p class="item-empty">${esc(t(h.loading?'chartLoading':h.failed?'chartFailed':'chartEmpty'))}</p></section>`;
- chart=s;
- const change=s.change;
- return `<section class="item-section item-chart">${head}
- <div class="chart-stats"><span>${esc(t('chartHigh'))} <b>${money(s.high)}</b></span><span>${esc(t('chartLow'))} <b>${money(s.low)}</b></span><span class="${change>0?'up':change<0?'down':''}">${change>0?'+':''}${change.toFixed(1)}%</span></div>
- <div class="chart-box">${chartGrid(s)}<svg class="price-chart" viewBox="0 0 ${chartWidth} ${chartHeight}" preserveAspectRatio="none" aria-hidden="true">${Array.from({length:chartTicks},(_,i)=>{const y=chartPad+(chartHeight-2*chartPad)*i/(chartTicks-1);return `<line class="chart-grid" x1="0" x2="${chartWidth}" y1="${y}" y2="${y}"/>`;}).join('')}<g transform="translate(0 ${chartPad})"><path class="chart-min" d="${chartPath(s,'min',chartWidth,chartHeight-2*chartPad)}"/><path class="chart-avg" d="${chartPath(s,'price',chartWidth,chartHeight-2*chartPad)}"/></g><line class="chart-cursor" x1="0" x2="0" y1="0" y2="${chartHeight}"/></svg><div class="chart-tip" hidden></div></div>
- <div class="chart-axis"><span>${esc(chartDate(s.t0))}</span><span class="chart-legend"><i class="avg"></i>${esc(t('avgLine'))}<i class="min"></i>${esc(t('minLine'))}</span><span>${esc(chartDate(s.t1))}</span></div></section>`;
-}
-// Price labels for the grid lines, in a gutter left of the plot and as HTML
-// so the stretched SVG does not distort them. The top line is the highest
-// price of the scale.
-function chartGrid(s){
- return Array.from({length:chartTicks},(_,i)=>{
-  const top=(chartPad+(chartHeight-2*chartPad)*i/(chartTicks-1))/chartHeight*100;
-  const value=s.hi-(s.hi-s.lo)*i/(chartTicks-1);
-  return `<span class="chart-label" style="top:${top.toFixed(2)}%">${esc(shortPrice(value))}</span>`;
- }).join('');
-}
-// Hovering the chart shows the nearest sample without re-rendering the page.
-document.addEventListener('pointermove',event=>{
- const box=event.target.closest?.('.chart-box');
- if(!box||!chart)return;
- // Positions come from the plot, which starts after the price labels.
- const r=box.querySelector('.price-chart').getBoundingClientRect(),offset=r.left-box.getBoundingClientRect().left,frac=Math.min(1,Math.max(0,(event.clientX-r.left)/r.width));
- const t0=chart.t0,span=Math.max(1,chart.t1-t0),at=t0+frac*span;
- let p=chart.pts[0];for(const q of chart.pts)if(Math.abs(q.t-at)<Math.abs(p.t-at))p=q;
- const x=(p.t-t0)/span;
- const line=box.querySelector('.chart-cursor');line.setAttribute('x1',x*chartWidth);line.setAttribute('x2',x*chartWidth);line.style.opacity=1;
- const tip=box.querySelector('.chart-tip'),money=v=>price(v,'RUB',state.language);
- tip.textContent=`${p.now?t('chartNow'):chartDate(p.t,true)} · ${p.price?`${t('avgLine')} ${money(p.price)} / `:''}${t('minLine')} ${money(p.min)}`;
- tip.hidden=false;
- tip.style.left=`${Math.min(Math.max(0,offset+x*r.width-tip.offsetWidth/2),box.clientWidth-tip.offsetWidth)}px`;
-});
-document.addEventListener('pointerout',event=>{
- const box=event.target.closest?.('.chart-box');
- if(!box||box.contains(event.relatedTarget))return;
- box.querySelector('.chart-tip').hidden=true;box.querySelector('.chart-cursor').style.opacity=0;
-});
-const modeNames={regular:'PvP',pve:'PvE','pvp-season':'Season'};
-// The item sidebar: a search box, then the item (found or recognized):
-// prices first (what to do with the item now), then what still needs it.
-// Completed tasks and hideout levels sink to the bottom.
-function itemPanel(){
- if(!state.itemOpen)return '';
- const bottom=state.itemDock==='bottom';
- return `<aside class="item-panel" aria-label="${esc(t('itemPanel'))}"><div class="item-resizer" role="separator" aria-orientation="${bottom?'horizontal':'vertical'}" aria-valuemin="${bottom?itemPanelHeights.min:itemPanelWidths.min}" aria-valuemax="${bottom?itemPanelHeights.max:itemPanelWidths.max}" aria-valuenow="${bottom?state.itemPanelHeight:state.itemPanelWidth}" title="${esc(t('resizeSidebar'))}"></div><div class="item-titlebar"><button class="item-button" data-action="itemClose" title="${esc(t('itemHide'))}" aria-label="${esc(t('itemHide'))}">${icon({left:'panelLeft',bottom:'panelBottom'}[state.itemDock]||'panelRight')}</button><button class="item-button ${itemSearchOpen?'selected':''}" data-action="itemSearchToggle" title="${esc(t('itemSearch'))}" aria-label="${esc(t('itemSearch'))}" aria-expanded="${itemSearchOpen}">${icon('search')}</button></div>${itemSearchOpen?itemSearchPopup():''}<div class="item-body"><div class="item-flow">${state.item?itemDetails():`<p class="item-start">${esc(t('itemSearchHint'))}</p>`}</div></div></aside>`;
-}
-// The search popup floats over the item, so the item does not move.
-let itemSearchOpen=false;
-function itemSearchPopup(){
- const search=state.itemSearch||{query:'',results:[]};
- const results=search.query.trim()?(search.results.length?`<ul class="item-results">${search.results.map(r=>`<li><button data-action="itemSelect" data-id="${esc(r.id)}" title="${esc(r.name)}">${r.iconUrl?`<img src="${esc(r.iconUrl)}" alt="" referrerpolicy="no-referrer" loading="lazy">`:`<span class="result-icon">${icon('package')}</span>`}<span class="need-name">${esc(itemName(r))}<small>${esc(r.shortName)}</small></span></button></li>`).join('')}</ul>`:`<p class="item-empty">${esc(t('itemNoResults'))}</p>`):'';
- return `<div class="item-search-pop" role="dialog" aria-label="${esc(t('itemSearch'))}"><label class="item-search">${icon('search')}<input id="item-search" type="search" autocomplete="off" spellcheck="false" placeholder="${esc(t('itemSearch'))}" aria-label="${esc(t('itemSearch'))}" value="${esc(search.query)}"></label>${results}</div>`;
-}
-// The item's page opens on the task site, like the item's tasks.
-// A name in the shell's language, when the catalog has one (see
-// internal/locale); English otherwise.
-const localName=(names,english)=>names?.[state.language]||english;
-const itemName=item=>localName(item.names,item.name);
-// The item's icon and name open its page, in the popup.
-function itemPageLink(item){
- const site=state.localHost&&state.connection.mode==='local'?state.hostQuestSite:state.questSite==='host'?item.questSite:state.questSite;
- const url=itemPageURL(item,site);
- const label=siteChoices().find(([key])=>key===site)?.[1]||'tarkov.dev';
- return url?{url,label:`${t('openItemPage')} · ${label}`}:null;
-}
-function itemDetails(){
- const item=state.item;
- const lang=state.language,slots=item.width*item.height,best=bestSale(item),flea=item.flea;
- const money=(v,c='RUB')=>esc(price(v,c,lang));
- const row=(label,value,cls='')=>`<div class="item-row ${cls}"><span>${esc(label)}</span><b>${value}</b></div>`;
- const change=flea?.changePercent||0;
- const done=s=>s.state==='completed'||s.complete===true;
- // Rows with an action (tasks) are buttons that open their page.
- const needs=(rows,render,action)=>rows.length?`<ul class="item-needs">${[...rows].sort((a,b)=>done(a)-done(b)).map(s=>{const inner=`${render(s)}${s.foundInRaid?`<span class="fir" title="Found in raid">${t('fir')}</span>`:''}<span class="need-count">×${s.count.toLocaleString()}</span>${done(s)?`<span class="need-done" title="${esc(t('needDone'))}">${icon('check')}</span>`:''}`;return `<li class="${done(s)?'done':''}">${action?`<button class="need-row ${state.popup?.key==='task:'+s.id?'popup-source':''}" data-action="${action}" data-id="${esc(s.id)}" title="${esc(t('openTask'))}">${inner}</button>`:`<div class="need-row">${inner}</div>`}</li>`;}).join('')}</ul>`:`<p class="item-empty">${t('noNeeds')}</p>`;
- const open=rows=>rows.filter(s=>!done(s)).length;
- const unknown=item.tasks.some(s=>!s.state)||item.hideout.some(s=>s.complete===null);
- return `
- <div class="item-head">${(()=>{const link=itemPageLink(item),inner=`${item.iconUrl?`<img class="item-icon" src="${esc(item.iconUrl)}" alt="" referrerpolicy="no-referrer">`:`<span class="item-icon">${icon('package')}</span>`}<span class="item-title"><h2 title="${esc(item.name)}">${esc(itemName(item))}</h2><span>${esc(localName(item.shortNames,item.shortName))} · ${item.width}×${item.height} · ${esc(modeNames[item.mode]||item.mode)}</span></span>`;return link?`<button class="item-page-link ${state.popup?.key==='item:'+item.id?'popup-source':''}" data-action="itemPage" data-id="${esc(link.url)}" title="${esc(link.label)}">${inner}</button>`:`<div class="item-page-link">${inner}</div>`;})()}</div>
- <p class="item-fresh ${item.live?'live':''}"><span class="fresh-dot"></span>${esc(item.live?t('itemLive'):t('itemCatalog'))} · ${esc(t('itemPriced'))} <span class="item-age" data-time="${esc(item.pricedAt)}">${esc(age(item.pricedAt,lang))}</span><button class="item-refresh" data-action="itemRefresh" title="${esc(t('itemRefresh'))}" aria-label="${esc(t('itemRefresh'))}" aria-busy="${!!state.itemBusy}">${icon('reload',state.itemBusy?'icon spin':'icon')}</button></p>
- ${best?`<div class="item-best"><span>${esc(t('bestSale'))} · ${esc(best.where==='flea'?t('flea'):best.where)}</span><strong>${money(best.priceRub)}</strong><small>${money(best.priceRub/slots)} / ${esc(t('perSlot'))}</small></div>`:''}
- ${itemChart(item)}
- <section class="item-section"><h3>${esc(t('flea'))}</h3>${flea?row(t('fleaLow'),money(flea.lastLow))+row(t('fleaAvg'),money(flea.avg24h))+(flea.low24h&&flea.high24h?row(t('fleaRange'),`${money(flea.low24h)} – ${money(flea.high24h)}`):'')+row(t('fleaChange'),`${change>0?'+':''}${change.toFixed(1)}%`,change>0?'up':change<0?'down':'')+row(t('fleaOffers'),flea.offers.toLocaleString())+(flea.minLevel?row(t('fleaLevel'),'Lv.'+flea.minLevel):''):`<p class="item-empty">${t('noFlea')}</p>`}</section>
- <section class="item-section"><h3>${esc(t('traders'))}</h3>${item.traders.map((s,i)=>row(s.trader,s.currency==='RUB'?money(s.price):`${money(s.price,s.currency)} <small>(${money(s.priceRub)})</small>`,i===0?'best':'')).join('')||`<p class="item-empty">${t('noNeeds')}</p>`}</section>
- <section class="item-section"><h3>${esc(t('itemTasks'))}<span class="count">${open(item.tasks)}</span></h3>${needs(item.tasks,s=>`<span class="need-name" title="${esc(s.name)}">${esc(localName(s.names,s.name))}<small>${esc(s.trader)}</small></span>`,'itemTask')}</section>
- <section class="item-section"><h3>${esc(t('itemHideout'))}<span class="count">${open(item.hideout)}</span></h3>${needs(item.hideout,s=>`<span class="need-name">${esc(s.station)}<small>Lv.${s.level}</small></span>`)}</section>
- ${unknown&&(item.tasks.length||item.hideout.length)?`<p class="hint item-hint">${esc(t('progressUnknown'))}</p>`:''}
- `;
-}
-function itemToggle(){
- const label=t(state.itemOpen?'itemHide':'itemShow');
- return `<button class="dock-button item-toggle ${state.itemOpen?'selected':''}" data-action="${state.itemOpen?'itemClose':'itemOpen'}" title="${esc(label)}" aria-label="${esc(label)}" aria-pressed="${state.itemOpen}">${icon('package')}</button>`;
-}
 // Ages tick every half minute without re-rendering; prices refresh every
 // few minutes while the panel is visible.
 setInterval(()=>{
  document.querySelectorAll('.item-age').forEach(el=>{el.textContent=age(el.dataset.time,state?.language);});
  document.querySelectorAll('[data-goon-time]').forEach(el=>{el.textContent=age(el.dataset.goonTime,state?.language);el.closest('[data-fresh]')?.setAttribute('data-fresh',goonFresh(el.dataset.goonTime));});
 },30000);
-setInterval(()=>{if(state?.itemOpen&&document.visibilityState==='visible')void action('itemRefresh',{auto:true});},180000);
 
 // A thin bar along the bottom of the address field while the page loads.
 // Its animation is offset by the clock, so a re-render does not restart it.
@@ -576,61 +273,6 @@ function updateBarHTML(){
  const notes=u.releaseUrl?`<button data-action="updateNotes">${esc(t('updateNotes'))}</button>`:'';
  return `<div class="update-bar" role="status" title="${esc(u.state==='ready'?t('updateReadyHint'):'')}"><span class="update-text">${esc(text)}</span>${progress}<span class="update-actions">${notes}${action}<button data-action="updateDismiss">${esc(t('updateLater'))}</button></span></div>`;
 }
-const tutorialSteps=['welcome','folders','key','map','remote','tracker','done'];
-function tutorialHTML(){
- const key=tutorialSteps[tutorialStep],last=tutorialStep===tutorialSteps.length-1,first=tutorialStep===0;
- const body={
-  welcome:`<p>${esc(t('tutWelcome'))}</p>${appVersion?`<p class="hint">MAYAK ${esc(appVersion)}</p>`:''}`,
-  folders:`<p>${esc(t('tutFolders'))}</p><div class="tutorial-status"><span>${esc(t('tutFoldersScreens'))}: <code>${esc(tutorialSettings?.screenshotDirectory||t('tutNotFound'))}</code></span><span>${esc(t('tutFoldersLogs'))}: <code>${esc(tutorialSettings?.logsDirectory||t('tutNotFound'))}</code></span></div><button data-action="tutorialFolders">${icon('folder')}${esc(t('tutOpenFolders'))}</button>`,
-  key:`<p>${esc(t('tutKey'))}</p><p class="hint">${esc(t('tutKeyNote'))}</p>`,
-  map:`<p>${esc(t('tutMap'))}</p><button data-action="tutorialMap">${icon('map')}${esc(t('tutOpenMap'))}</button>`,
-  remote:`<p>${esc(t('tutRemote'))}</p><button data-action="tutorialRemote">${icon('linked')}${esc(t('tutOpenRemote'))}</button>`,
-  tracker:`<p>${esc(t('tutTracker'))}</p><button data-action="tutorialTracker">${icon('tracker')}${esc(t('tutOpenTracker'))}</button>`,
-  done:`<p>${esc(t('tutDone'))}</p>`,
- }[key];
- const title=t({welcome:'tutWelcomeTitle',folders:'tutFoldersTitle',key:'tutKeyTitle',map:'tutMapTitle',remote:'tutRemoteTitle',tracker:'tutTrackerTitle',done:'tutDoneTitle'}[key]);
- const dots=tutorialSteps.map((_,i)=>`<i class="${i===tutorialStep?'on':''}"></i>`).join('');
- const nav=first?`<div><button data-action="tutorialSkip">${esc(t('tutLater'))}</button></div><div><button class="primary" data-action="tutorialNext">${esc(t('tutStart'))}</button></div>`
-  :last?`<div></div><div><button data-action="tutorialBack">${esc(t('tutBack'))}</button><button class="primary" data-action="tutorialFinish">${esc(t('tutFinish'))}</button></div>`
-  :`<div><button data-action="tutorialSkip">${esc(t('tutSkip'))}</button></div><div><button data-action="tutorialBack">${esc(t('tutBack'))}</button><button class="primary" data-action="tutorialNext">${esc(t('tutNext'))}</button></div>`;
- return `<div class="tutorial-backdrop" data-action="tutorialSkip"></div><section class="tutorial" role="dialog" aria-modal="true" aria-labelledby="tutorial-title"><p class="tutorial-kicker">${esc(t('tutStep'))} ${tutorialStep+1} / ${tutorialSteps.length}</p><h2 id="tutorial-title">${esc(title)}</h2>${body}<div class="tutorial-steps">${dots}</div><div class="tutorial-actions">${nav}</div></section>`;
-}
-async function openTutorial(){
- tutorialOpen=true;tutorialStep=0;tutorialSettings=null;
- render();
- // The native web views sit above the shell; hide them while the overlay shows.
- await api.action('overlay',true);
- try{tutorialSettings=await window.mayakDesktop?.backend?.GetSettings?.();}catch{tutorialSettings=null;}
- if(tutorialOpen)render();
-}
-async function closeTutorial(){
- if(!tutorialOpen)return;
- tutorialOpen=false;
- await api.action('overlay',false);
- if(!state.tutorialDone)await action('preferences',{tutorialDone:true});
- render();
-}
-async function handleTutorial(type){
- switch(type){
-  case 'tutorial':return openTutorial();
-  case 'tutorialNext':tutorialStep=Math.min(tutorialSteps.length-1,tutorialStep+1);render();return;
-  case 'tutorialBack':tutorialStep=Math.max(0,tutorialStep-1);render();return;
-  case 'tutorialSkip':case 'tutorialFinish':return closeTutorial();
-  case 'tutorialMap':await closeTutorial();return action('activate',mapTabID);
-  case 'tutorialFolders':case 'tutorialRemote':case 'tutorialTracker':{
-   await closeTutorial();await action('settings');
-   return action('settingsSection',{tutorialFolders:'folders',tutorialRemote:'remote',tutorialTracker:'tracker'}[type]);
-  }
- }
-}
-document.addEventListener('keydown',event=>{
- if(!tutorialOpen)return;
- if(event.key==='Escape')void closeTutorial();
- else if(event.key==='Enter'||event.key==='ArrowRight')void handleTutorial(tutorialStep===tutorialSteps.length-1?'tutorialFinish':'tutorialNext');
- else if(event.key==='ArrowLeft')void handleTutorial('tutorialBack');
- else return;
- event.preventDefault();
-});
 function render(){
   if(!state)return;
   // Rebuilding the DOM would drop the tab being dragged; render when it lands.
@@ -664,7 +306,6 @@ function render(){
 // wiki search button on a task page, else after the address bar.
 function translateButton(tab){if(tab?.kind!=='web'||tab.fixed)return '';const on=isTranslated(tab.url);return `<button class="translate-page ${on?'on':''}" data-action="translate" aria-pressed="${on}" title="${esc(t(on?'translateOff':'translatePage'))}" aria-label="${esc(t(on?'translateOff':'translatePage'))}">${icon('translate')}</button>`;}
 function sitesForURL(tab){const url=originalURL(tab.url)||tab.url;return Object.keys(tab.task?.urls||{}).find(key=>tab.task.urls[key]===url)||'tarkov-dev';}
-async function action(type,data){const next=await api.action(type,data);if(next){state=next;render();}return next;}
 document.addEventListener('click',async event=>{
   const button=event.target.closest('[data-action]');if(!button||button.disabled)return;const type=button.dataset.action,id=button.dataset.id;
   if(type.startsWith('tutorial')){void handleTutorial(type);return;}
@@ -675,29 +316,15 @@ document.addEventListener('click',async event=>{
   if(type==='placeNav'){void action('preferences',{navPosition:id});return;}
   if(type==='placeItem'){void action('preferences',{itemDock:id});return;}
   if(type==='openExternal'){const url=webURL(state.tabs.find(t=>t.id===state.active)?.url);if(url)void Browser.OpenURL(url);return;}
-  if(type==='chartRange'){chartRange=id;try{localStorage.setItem('mayak.chartRange',id);}catch{}render();return;}
-  // The popup opens next to the row clicked.
-  if(type==='itemTask'||type==='itemPage'){const r=button.getBoundingClientRect();const at={anchor:r.top+r.height/2};void action(type,type==='itemTask'?{id,...at}:{url:id,...at});return;}
-  if(type==='itemSearchToggle'){if(itemSearchOpen)closeItemSearch();else openItemSearch();return;}
-  if(type==='itemSelect'){itemSearchOpen=false;void action('itemSelect',id);return;}
-  // Opened without an item, the sidebar starts with the search.
-  if(type==='itemOpen'&&!state.item){await action('itemOpen');openItemSearch();return;}
+  for(const handle of clickHandlers){if(await handle(type,id,button,event))return;}
   if(type==='newTab'){await action(type);await focusAddress();return;}
   if(type==='toggleSidebar'){void action('preferences',{sidebarCollapsed:!state.sidebarCollapsed});return;}
-  if(type==='toggleBossSection'){if(state.bossesView!=='closed')bossOpenView=state.bossesView;void action('preferences',{bossesView:state.bossesView==='closed'?bossOpenView:'closed'});return;}
-  if(type==='bossDetail'){void action('preferences',{bossesView:state.bossesView==='full'?'goons':'full'});return;}
-  if(type==='goonReportFromSidebar'){goonDraft={};await action('bosses');void action('goonReportOpen');return;}
-  if(type==='goonReportOpen'){goonDraft={};void action('goonReportOpen');return;}
-  if(type==='goonReportSend'){event.preventDefault();const [accountId,mode]=(document.querySelector('#goon-account')?.value||'').split('|');void action('goonReportSend',{map:document.querySelector('#goon-map')?.value||'',accountId,mode,startedAt:document.querySelector('input[name=goon-when]:checked')?.value||''});return;}
-  if(type==='bossMap'){void action('preferences',{bossMap:id});return;}
   if(type==='toggleScreenshotSection'){void action('preferences',{screenshotsCollapsed:!state.screenshotsCollapsed});return;}
   if(type==='toggleBookmarkSection'){void action('preferences',{bookmarksCollapsed:!state.bookmarksCollapsed});return;}
   if(type==='bookmarkView'){void action('preferences',{bookmarkView:id});return;}
   if(type==='windowMinimise'){void Window.Minimise();return;}
   if(type==='windowMaximise'){void Window.ToggleMaximise().then(syncMaximised);return;}
   if(type==='windowClose'){void Window.Close();return;}
-  if(type==='shotInfo'){shotInfoOpen=!shotInfoOpen;render();return;}
-  if(type==='shotZoom'){zoomShot(id==='fit'?1:shotZoom.scale*(id==='in'?1.25:0.8));return;}
   if(type==='adblock'||type==='translateWiki')return;
   if(type==='peerCopy'||type==='peerCopyPair')copied=true;
   if(['peerInvite','peerAccept','peerJoin','peerClose'].includes(type))copied=false;
@@ -708,60 +335,9 @@ document.addEventListener('click',async event=>{
   if(type==='wikiSearch'){const tab=state.tabs.find(t=>t.id===state.active);const japanese=sitesForURL(tab)==='japanese-wiki';void action('navigate',japanese?`https://wikiwiki.jp/eft/?cmd=search&word=${encodeURIComponent(tab.task.name)}`:`https://escapefromtarkov.fandom.com/wiki/Special:Search?query=${encodeURIComponent(tab.task.name)}`);return;}
   void action(type,id);
 });
-document.addEventListener('change',event=>{const input=event.target;if(input.id==='goon-map')goonDraft.map=input.value;if(input.id==='goon-account')goonDraft.account=input.value;if(input.name==='goon-when')goonDraft.when=input.value;if(input.closest('#bookmark-form')&&editingBookmark)editingBookmark[input.name]=input.value;if(input.dataset.scope)void action(input.dataset.scope,{[input.dataset.key]:input.value});else if(input.id==='task-site')void action('site',input.value);else if(input.id==='host-quest-site')void action('hostQuestSite',input.value);else if(input.dataset.action==='adblock')void action('preferences',{adblock:input.checked});if(input.dataset.action==='translateWiki')void action('preferences',{translateWiki:input.checked});});
-let itemSearchTimer=0;
-function openItemSearch(){itemSearchOpen=true;render();const input=document.querySelector('#item-search');input?.focus();input?.select();}
-function closeItemSearch(){if(!itemSearchOpen)return;itemSearchOpen=false;clearTimeout(itemSearchTimer);void action('itemSearch','');}
-// The screenshot shown large zooms with the wheel around the pointer, moves
-// by dragging while zoomed, and switches between fitted and actual size on a
-// double-click.
-const shotPoint=event=>{const body=document.querySelector('.shot-viewer-body').getBoundingClientRect();return [event.clientX-(body.left+body.width/2),event.clientY-(body.top+body.height/2)];};
-document.addEventListener('wheel',event=>{
- if(!event.target.closest?.('.shot-viewer-body'))return;
- event.preventDefault();
- const [px,py]=shotPoint(event);
- zoomShot(shotZoom.scale*(event.deltaY<0?1.15:1/1.15),px,py);
-},{passive:false});
-let shotDrag=null;
-document.addEventListener('pointerdown',event=>{
- if(event.button!==0||shotZoom.scale<=1||!event.target.closest?.('.shot-viewer-body img'))return;
- event.preventDefault();
- shotDrag={pointer:event.pointerId,x:event.clientX-shotZoom.x,y:event.clientY-shotZoom.y};
- try{document.documentElement.setPointerCapture(event.pointerId);}catch{}
- document.documentElement.classList.add('shot-dragging');
-});
-document.addEventListener('pointermove',event=>{
- if(!shotDrag||event.pointerId!==shotDrag.pointer)return;
- shotZoom={...shotZoom,x:event.clientX-shotDrag.x,y:event.clientY-shotDrag.y};applyShotZoom();
-});
-const endShotDrag=event=>{if(shotDrag&&event.pointerId===shotDrag.pointer){shotDrag=null;document.documentElement.classList.remove('shot-dragging');}};
-document.addEventListener('pointerup',endShotDrag);
-document.addEventListener('pointercancel',endShotDrag);
-document.addEventListener('dblclick',event=>{
- if(!event.target.closest?.('.shot-viewer-body img'))return;
- const [px,py]=shotPoint(event);
- zoomShot(shotZoom.scale>1?1:shotActualScale(),px,py);
-});
-// On the screenshot page, the arrows page through the one shown large and
-// Escape closes it; + and - zoom, 0 fits it again.
-document.addEventListener('keydown',event=>{
- const shots=state?.screenshots;
- if(!shots?.viewing||state.tabs.find(t=>t.id===state.active)?.kind!=='screenshots'||event.target.closest?.('input,textarea,select'))return;
- const index=shots.list.findIndex(s=>s.name===shots.viewing);
- if(['+','=',';'].includes(event.key)||event.key==='-'||event.key==='0'){event.preventDefault();zoomShot(event.key==='0'?1:shotZoom.scale*(event.key==='-'?0.8:1.25));return;}
- const next=event.key==='Escape'?'':event.key==='ArrowLeft'?shots.list[index-1]?.name:event.key==='ArrowRight'?shots.list[index+1]?.name:undefined;
- if(next===undefined)return;
- event.preventDefault();void action('screenshotView',next);
-});
-// A click outside the popup closes it.
-document.addEventListener('pointerdown',event=>{if(itemSearchOpen&&!event.target.closest('.item-search-pop,[data-action="itemSearchToggle"]'))closeItemSearch();},true);
-document.addEventListener('keydown',event=>{
- if(event.target.id!=='item-search')return;
- if(event.key==='Enter'){const first=state.itemSearch?.results?.[0];if(first){event.preventDefault();clearTimeout(itemSearchTimer);itemSearchOpen=false;void action('itemSelect',first.id);}}
- else if(event.key==='Escape'){event.preventDefault();closeItemSearch();}
-});
+document.addEventListener('change',event=>{const input=event.target;if(input.closest('#bookmark-form')&&editingBookmark)editingBookmark[input.name]=input.value;if(input.dataset.scope)void action(input.dataset.scope,{[input.dataset.key]:input.value});else if(input.id==='task-site')void action('site',input.value);else if(input.id==='host-quest-site')void action('hostQuestSite',input.value);else if(input.dataset.action==='adblock')void action('preferences',{adblock:input.checked});if(input.dataset.action==='translateWiki')void action('preferences',{translateWiki:input.checked});});
 document.addEventListener('input',event=>{
- if(event.target.id==='item-search'){const value=event.target.value;clearTimeout(itemSearchTimer);itemSearchTimer=setTimeout(()=>void action('itemSearch',value),150);return;}if(event.target.id==='bookmark-search'){bookmarkQuery=event.target.value;render();return;}if(event.target.id==='tab-search'){tabQuery=event.target.value;render();return;}if(event.target.closest('#bookmark-form')&&editingBookmark)editingBookmark[event.target.name]=event.target.value;if(event.target.name==='peerOffer')peerDrafts.offer=event.target.value;if(event.target.name==='peerAnswer')peerDrafts.answer=event.target.value;if(event.target.name==='pairCode')peerDrafts.pairCode=event.target.value;});
+ if(event.target.id==='bookmark-search'){bookmarkQuery=event.target.value;render();return;}if(event.target.id==='tab-search'){tabQuery=event.target.value;render();return;}if(event.target.closest('#bookmark-form')&&editingBookmark)editingBookmark[event.target.name]=event.target.value;if(event.target.name==='peerOffer')peerDrafts.offer=event.target.value;if(event.target.name==='peerAnswer')peerDrafts.answer=event.target.value;if(event.target.name==='pairCode')peerDrafts.pairCode=event.target.value;});
 document.addEventListener('submit',event=>{
   event.preventDefault();if(event.target.id==='peer-join-form'){copied=false;void action('peerJoin',peerDrafts.pairCode);return;}if(event.target.id==='peer-offer-form'){copied=false;void action('peerAccept',peerDrafts.offer);return;}if(event.target.id==='peer-answer-form'){void action('peerAnswer',peerDrafts.answer);return;}// Fixed views show their address read-only; Enter must not navigate them.
   if(event.target.id==='address-form'&&event.target.classList.contains('readonly'))return;
@@ -777,7 +353,7 @@ installTabDrag({
  over:tabOverBookmarks,
  dropElsewhere:id=>{clearBookmarkDrop();renderDeferred=false;void action('bookmarkTab',{id,before:tabBookmarkBefore});},
 });
-api.onState(next=>{state=next;render();if(!tutorialStarted){tutorialStarted=true;void loadVersion();if(!state.tutorialDone&&state.localHost)setTimeout(()=>{if(!state.tutorialDone&&!tutorialOpen)void openTutorial();},1500);}});
+api.onState(next=>{setState(next);render();if(!tutorialStarted){tutorialStarted=true;void loadVersion();if(!state.tutorialDone&&state.localHost)setTimeout(()=>{if(!state.tutorialDone&&!tutorialOpen)void openTutorial();},1500);}});
 // Title bar behavior for the frameless window: double-click toggles maximise;
 // maximising by any means (snap, keyboard) updates the caption button.
 document.addEventListener('dblclick',event=>{if(getComputedStyle(event.target).getPropertyValue('--wails-draggable').trim()==='drag')void Window.ToggleMaximise().then(syncMaximised);});
@@ -934,4 +510,3 @@ document.addEventListener('drop',event=>{
  event.preventDefault();
  void action('bookmarkPin',{id:event.dataTransfer.getData(bookmarkType),pin:true,before:drop.before?.dataset.sidebarBookmark??null});
 });
-

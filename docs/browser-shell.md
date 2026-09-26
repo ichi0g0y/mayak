@@ -8,7 +8,9 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 
 | ファイル | 役割 |
 | --- | --- |
-| `frontend/src/browser/shell.js` | DOM の描画、クリック・ドラッグ・キー操作、サイドバーのリサイズ、テーマ適用 |
+| `frontend/src/browser/shell.js` | DOM の描画（`render`）、タブ・ブックマーク・設定ページ、クリック・ドラッグ・キー操作、サイドバーのリサイズ、テーマ適用 |
+| `frontend/src/browser/shell-core.js` | シェルの各部が共有するもの: `window.mayak`、現在の状態 `state`、`action`、`render` の入口、`t` と HTML の部品（`esc`、`icon`、`select`）。ビューはここから import し、`shell.js` からは import しない |
+| `frontend/src/browser/view-bosses.js`, `view-screenshots.js`, `view-item.js`, `view-tutorial.js` | サイドバーのボス、スクリーンショットページ、アイテム欄、チュートリアル。それぞれ描画関数と自分のイベント処理を持ち、クリックは `clickHandlers` に登録した関数で受けます |
 | `frontend/src/browser/api.js` | 状態の保持と操作（`window.mayak.action`）、ネイティブビューへの命令、永続化、ナビゲーションイベントの受信 |
 | `frontend/src/browser/state.js` | 既定値、`browser.json` の復元と検証、タブ・ブックマークの並べ替え規則、URL 検証 |
 | `frontend/src/browser/tab-drag.js` | タブのドラッグによる並べ替え |

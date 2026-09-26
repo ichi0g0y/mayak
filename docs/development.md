@@ -134,6 +134,8 @@ ocrtrain -catalog %AppData%\Mayak\catalog\pve.json -fonts <dir with Bender*.otf>
 | `popup.html` | アイテムポップアップのヘッダー。`src/browser/popup.js` を読み込む |
 | `src/browser/shell.js` | シェルの描画（タブ、ブックマーク、アイテム欄、メニュー） |
 | `src/browser/words.js` | シェル・アイテム欄・ポップアップの文言（[languages.md](languages.md)） |
+| `src/browser/shell-core.js` | シェルの共有部分（状態、`action`、`render` の入口、HTML の部品） |
+| `src/browser/view-bosses.js` / `view-screenshots.js` / `view-item.js` / `view-tutorial.js` | ボス、スクリーンショット、アイテム欄、チュートリアルの描画とイベント処理 |
 | `src/browser/api.js` | バックエンド呼び出しとイベント処理、状態の保存。設定画面用のブリッジ `window.mayakDesktop` を用意する |
 | `src/browser/state.js` | タブ・ブックマークなどの状態操作（純粋関数中心） |
 | `src/browser/item.js` | アイテム欄の入力検証と価格・履歴の整形 |
