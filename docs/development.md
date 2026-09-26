@@ -224,7 +224,7 @@ Wails 本体はフォークせず公式モジュールを使います。
 配布物は GitHub Releases です。アプリはそこから自分自身を更新します（[設定と連携](settings-and-integrations.md#自動アップデート)）。
 
 1. `build/config.yml` と `build/windows/info.json` の版を上げてコミットします。
-2. `CHANGELOG.md` と `CHANGELOG.en.md` の「未公開」を `## v1.2.3 (日付)` に改名して、使う人向けの変更点を整えます（公開ページ https://mayak.ich.sh/changelog とアプリの「変更点」がここを表示します。サイトは `task site:deploy` で反映）。
+2. `CHANGELOG.md` と `CHANGELOG.en.md` の「開発中」を `## v1.2.3 (日付)` に改名して、使う人向けの変更点を整えます（公開ページ https://mayak.ich.sh/changelog とアプリの「変更点」がここを表示します。サイトは `task site:deploy` で反映）。
 3. `v1.2.3` の形のタグを打って push します: `git tag -a v1.2.3 -m "MAYAK 1.2.3" && git push origin v1.2.3`
 4. `.github/workflows/release.yml` が Windows（amd64）、macOS（arm64、amd64）、Linux（amd64）で `task build VERSION=v1.2.3` と `task release:archive` を実行し（Windows では間に `task installer`。macOS では `release:archive` が `Mayak.app` を組んで ad-hoc 署名し、`hdiutil` で `Mayak-darwin-<arch>.dmg` も作る）、`SHA256SUMS.txt` を付けてリリースを公開します。リリースノートは GitHub が自動生成します。
 
