@@ -97,6 +97,19 @@ func (c *Client) fetchWikiQuestTitles(ctx context.Context) ([]string, error) {
 			titles = append(titles, member.title)
 		}
 	}
+	// The story chapters (the Story tab of the Tasks screen: "Tour", "The
+	// Ticket"…) are tasks tarkov.dev's catalog does not carry; the wiki
+	// keeps them in a category of their own, all of them in the game, so
+	// none is too old to count.
+	chapters, err := c.wikiCategory(ctx, "Story chapters")
+	if err != nil {
+		return nil, err
+	}
+	for _, member := range chapters {
+		if !past[member.title] && !slices.Contains(titles, member.title) {
+			titles = append(titles, member.title)
+		}
+	}
 	return titles, nil
 }
 

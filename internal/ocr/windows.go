@@ -94,7 +94,7 @@ func (w Windows) Recognize(ctx context.Context, img image.Image) (string, error)
 	}
 	imagePath := imageFile.Name()
 	defer os.Remove(imagePath)
-	if err = png.Encode(imageFile, upscale2x(img)); err != nil {
+	if err = png.Encode(imageFile, upscale2x(trimToText(img))); err != nil {
 		_ = imageFile.Close()
 		return "", err
 	}
@@ -103,6 +103,40 @@ func (w Windows) Recognize(ctx context.Context, img image.Image) (string, error)
 	}
 
 	return sharedWindowsWorker.recognize(ctx, imagePath, windowsLanguage(w.Language))
+}
+
+// trimToText cuts the crop to what is drawn on it (pixels that differ from
+// its corner, the background), with a margin: Windows OCR returns nothing
+// for a short title at the left of a wide, empty strip (a six-glyph Japanese
+// item name on a 970 px title bar), but reads it from a crop that ends near
+// the text. A crop drawn all over (a title over a picture) stays as it is.
+func trimToText(src image.Image) image.Image {
+	const margin, contrast = 12, 48
+	b := src.Bounds()
+	back := int(lumaOf(src.At(b.Min.X, b.Min.Y)))
+	text := image.Rectangle{}
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			if diff := int(lumaOf(src.At(x, y))) - back; diff > contrast || diff < -contrast {
+				text = text.Union(image.Rect(x, y, x+1, y+1))
+			}
+		}
+	}
+	if text.Empty() {
+		return src
+	}
+	r := text.Inset(-margin).Intersect(b)
+	if r == b {
+		return src
+	}
+	dst := image.NewRGBA(image.Rect(0, 0, r.Dx(), r.Dy()))
+	draw.Draw(dst, dst.Bounds(), src, r.Min, draw.Src)
+	return dst
+}
+
+func lumaOf(c color.Color) uint8 {
+	r, g, b, _ := c.RGBA()
+	return uint8((299*r + 587*g + 114*b) / 1000 >> 8)
 }
 
 // upscale2x doubles the crop and surrounds it with a margin of its corner

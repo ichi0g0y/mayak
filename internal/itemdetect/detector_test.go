@@ -91,3 +91,33 @@ func TestAnalyzeReadsOfferWindowItemName(t *testing.T) {
 		t.Fatalf("crop = %+v, want %+v", result.CropRect, want)
 	}
 }
+
+// An equipment slot's frame behind the window can continue its top border to
+// the left; the window starts at its own side border, not at the frame's.
+func TestAnalyzeStopsAtTheWindowsOwnLeftBorder(t *testing.T) {
+	const left, top, width = 453, 196, 1068
+	img := syntheticInspectWindow(left, top, width)
+	border := color.RGBA{R: 58, G: 61, B: 62, A: 255}
+	// The frame: a box of the border colour, lit inside (a label), whose top
+	// edge joins the window's top border with a break of a pixel or two.
+	for y := top; y < top+180; y++ {
+		for x := 330; x < left; x++ {
+			img.Set(x, y, color.RGBA{R: 70, G: 72, B: 74, A: 255})
+		}
+	}
+	for x := 330; x < left-1; x++ {
+		img.Set(x, top, border)
+	}
+	for y := top; y < top+180; y += 7 {
+		img.Set(330, y, color.RGBA{R: 140, G: 140, B: 138, A: 255})
+	}
+	result, err := Analyze(img)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The frame's column next to the border counts as the border too (a
+	// blurred border of a scaled screenshot must), so a pixel off is fine.
+	if !result.IsItem || abs(result.WindowRect.X-left) > 1 || abs(result.WindowRect.W-width) > 1 {
+		t.Fatalf("window rect: %+v (item=%v)", result.WindowRect, result.IsItem)
+	}
+}

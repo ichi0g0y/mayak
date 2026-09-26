@@ -17,10 +17,18 @@ type Preset struct {
 	Width, Height                                int
 	Anchor, CharacterAnchor, RaidCharacterAnchor Rect
 	LeftPanel, RightPanel, Title                 Rect
-	MinScore                                     float64
+	// StoryAnchor is the "Story" tab of the character's Tasks screen, lit
+	// when a story chapter is shown; StoryTitle is the chapter's name under
+	// the "Chapter" label, at a fixed place (the chapter page has no list).
+	StoryAnchor, StoryTitle Rect
+	MinScore                float64
 }
 
-var Preset2560 = Preset{Width: 2560, Height: 1440, Anchor: Rect{150, 18, 240, 55}, CharacterAnchor: Rect{1430, 5, 300, 60}, RaidCharacterAnchor: Rect{1170, 5, 260, 60}, LeftPanel: Rect{10, 410, 740, 950}, RightPanel: Rect{770, 410, 1750, 950}, Title: Rect{810, 315, 720, 85}, MinScore: .42}
+var Preset2560 = Preset{Width: 2560, Height: 1440, Anchor: Rect{150, 18, 240, 55}, CharacterAnchor: Rect{1430, 5, 300, 60}, RaidCharacterAnchor: Rect{1170, 5, 260, 60}, LeftPanel: Rect{10, 410, 740, 950}, RightPanel: Rect{770, 410, 1750, 950}, Title: Rect{810, 315, 720, 85}, StoryAnchor: Rect{28, 66, 228, 52}, StoryTitle: Rect{224, 211, 620, 70}, MinScore: .42}
+
+// storyTabBright is the share of bright pixels the lit "Story" tab has at
+// least (.87 measured; the "Side" list lit next to it gives it .06–.14).
+const storyTabBright = .6
 
 type Result struct {
 	IsTasks            bool
@@ -86,6 +94,11 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 	score, layout, cropRect := traderScore, "trader-tasks", p.Title
 	if characterScore > traderScore {
 		score, layout, cropRect = characterScore, "character-tasks", selectedCharacterTitle(img)
+		// The Story tab shows one chapter, its name at a fixed place, rather
+		// than a list with a selected row.
+		if stats(img, p.StoryAnchor).bright >= storyTabBright {
+			layout, cropRect = "story-tasks", p.StoryTitle
+		}
 	}
 	isTasks := score >= p.MinScore
 	result := Result{IsTasks: isTasks, Score: score, TraderScore: traderScore, CharacterScore: characterScore, CharacterTabBright: characterTabBright, Layout: layout, CropRect: cropRect}

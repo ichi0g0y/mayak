@@ -198,7 +198,49 @@ func headerAt(img image.Image, left, right, top int) (header, bool) {
 			right, width, score = right-shift, width-shift, candidate
 		}
 	}
+	// The same line can carry on to the left of the window (an equipment
+	// slot's frame at the height of its top border): the window starts where
+	// its side border runs down the title bar.
+	if score >= .72 {
+		left = windowLeft(img, left, right, top)
+		width = right - left + 1
+	}
 	return header{rect: Rect{X: left, Y: top, W: width, H: 48}, score: score}, true
+}
+
+// windowLeft is the leftmost column of the header run left..right that is
+// the window's side border: border pixels down the title bar's 48 rows (45
+// of them at least, a scaled screenshot blurs a few) with the dark bar just
+// inside it (an equipment slot's frame behind the window has a dimmer,
+// broken line and a lit label inside). Without one (a window hanging off
+// the screen's left edge) the run's start stands.
+func windowLeft(img image.Image, left, right, top int) int {
+	bottom := min(top+48, img.Bounds().Dy())
+	dark := func(x0, x1 int) bool {
+		sum, n := 0, 0
+		for y := top + 6; y < top+46 && y < bottom; y++ {
+			for x := x0; x < x1; x++ {
+				r, g, b := rgb8(img.At(x, y))
+				sum += int(luma8(r, g, b))
+				n++
+			}
+		}
+		return n > 0 && sum/n < 30
+	}
+	for x := left; x <= right-480; x++ {
+		rows := 0
+		for y := top; y < bottom; y++ {
+			if isBorderPixel(img.At(x, y)) || isBorderPixel(img.At(x+1, y)) {
+				rows++
+			}
+		}
+		// The columns right inside the border are dark too: a frame of the
+		// border colour next to the window would pass on the wider block alone.
+		if rows >= 45 && dark(x+2, x+4) && dark(x+4, x+12) {
+			return x
+		}
+	}
+	return left
 }
 
 func darkBar(img image.Image, left, right, top int) bool {

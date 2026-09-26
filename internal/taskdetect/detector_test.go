@@ -99,3 +99,38 @@ func TestDetectRaidCharacterTasksTab(t *testing.T) {
 		t.Fatalf("result=%+v err=%v", got, err)
 	}
 }
+
+// The Story tab lit turns the character layout into the chapter page, whose
+// name is read from a fixed place instead of a selected row.
+func TestStoryTabSelectsTheChapterTitle(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 2560, 1440))
+	for y := 0; y < 1440; y++ {
+		for x := 0; x < 2560; x++ {
+			img.Set(x, y, color.RGBA{18, 20, 19, 255})
+		}
+	}
+	for _, r := range []Rect{Preset2560.LeftPanel, Preset2560.RightPanel} {
+		for y := r.Y; y < r.Y+r.H; y += 20 {
+			for x := r.X; x < r.X+r.W; x++ {
+				img.Set(x, y, color.RGBA{180, 180, 170, 255})
+			}
+		}
+	}
+	fill := func(r Rect) {
+		for y := r.Y; y < r.Y+r.H; y++ {
+			for x := r.X; x < r.X+r.W; x++ {
+				img.Set(x, y, color.RGBA{210, 210, 205, 255})
+			}
+		}
+	}
+	fill(Preset2560.CharacterAnchor)
+	got, err := Analyze(img, Preset2560)
+	if err != nil || !got.IsTasks || got.Layout != "character-tasks" {
+		t.Fatalf("side list: result=%+v err=%v", got, err)
+	}
+	fill(Preset2560.StoryAnchor)
+	got, err = Analyze(img, Preset2560)
+	if err != nil || !got.IsTasks || got.Layout != "story-tasks" || got.CropRect != Preset2560.StoryTitle {
+		t.Fatalf("story chapter: result=%+v err=%v", got, err)
+	}
+}
