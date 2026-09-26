@@ -4,8 +4,9 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Unreleased changes collect under `## Unreleased` and get a version heading at release time.
 
-## Unreleased
+## v0.1.11 (2026-09-26)
 
+- The About section's "Source code" button is now "GitHub".
 - The tutorial now says it right: to recognise a task, open it in the Tasks screen before taking the screenshot (the list alone does not show which task is selected).
 - The "All tabs" page listed the fixed tabs and the app's own pages (settings, bosses and so on), with close buttons; it now lists exactly what the sidebar's "Tabs" section does.
 
