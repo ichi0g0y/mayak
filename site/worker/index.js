@@ -20,7 +20,7 @@ const TTL_MS = 10 * 60 * 1000;
 const MAX_BODY = 100000;
 const CODE_PREFIX = 'MAYAK1.';
 const RELEASE_API = 'https://api.github.com/repos/ichi0g0y/mayak/releases/latest';
-const RELEASE_TTL = 300;
+const RELEASE_TTL = 120;
 
 async function latestRelease(env) {
   const headers = { accept: 'application/vnd.github+json', 'user-agent': 'mayak-site (https://mayak.ich.sh)' };
@@ -35,7 +35,7 @@ async function latestRelease(env) {
     published_at: data.published_at,
     assets: (data.assets || []).map((a) => ({ name: a.name, browser_download_url: a.browser_download_url, size: a.size })),
   };
-  return new Response(JSON.stringify(body), { status: 200, headers: { ...cors, 'content-type': 'application/json', 'cache-control': `public, max-age=${RELEASE_TTL}` } });
+  return new Response(JSON.stringify(body), { status: 200, headers: { ...cors, 'content-type': 'application/json', 'cache-control': 'public, max-age=60' } });
 }
 
 const cors = {
