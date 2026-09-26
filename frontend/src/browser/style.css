@@ -695,6 +695,19 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .about-links{display:flex;flex-wrap:wrap;gap:8px}
 .about-links button{display:inline-flex;align-items:center;gap:8px}
 .about-links button .icon{width:16px;height:16px}
+/* The update channel: its own block under the update status, with a rule
+   above it, and one card per choice. */
+.update-channel{margin-top:20px;padding-top:18px;border-top:1px solid var(--border)}
+.update-channel h3{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--text)}
+.channel-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.channel-option{display:grid;align-content:start;justify-content:stretch;justify-items:start;gap:4px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text);text-align:left;cursor:pointer}
+.channel-option:hover{background:var(--hover)}
+.channel-option strong{font-size:13px}
+.channel-option span{font-size:12px;line-height:1.55;color:var(--muted)}
+.channel-option.on{border-color:var(--accent);background:var(--accent-soft)}
+.panel .update-channel .hint{margin:0}
+.panel.about-update .about-links+.hint{margin-top:10px}
+@media(max-width:720px){.channel-options{grid-template-columns:1fr}}
 /* The 8-digit pairing code. */
 .pair-code{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
 .pair-code output{font:600 30px/1.2 ui-monospace,"Cascadia Code",Consolas,monospace;letter-spacing:.14em;color:var(--text)}

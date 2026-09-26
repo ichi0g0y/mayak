@@ -563,7 +563,7 @@ async function perform(type,data){
  case 'updateDownload':void go.DownloadUpdate().catch(messageError);return snapshot();
  case 'updateCheck':void go.CheckForUpdates().catch(messageError);return snapshot();
  // The update channel is a Host setting (updateChannel), shown under About.
- case 'updateChannel':{const channel=data?.channel;if(platform!=='windows'||state.connection.mode!=='local'||!['stable','nightly'].includes(channel))return snapshot();const s=await go.GetSettings();s.updateChannel=channel;await go.PersistSettings(s);hostUpdateChannel=channel;return snapshot();}
+ case 'updateChannel':{const channel=typeof data==='string'?data:data?.channel;if(platform!=='windows'||state.connection.mode!=='local'||!['stable','nightly'].includes(channel))return snapshot();const s=await go.GetSettings();s.updateChannel=channel;await go.PersistSettings(s);hostUpdateChannel=channel;return snapshot();}
  case 'updateDismiss':updateDismissed=updateStatus?.latest||'';await show();return snapshot();
  case 'dismiss':error='';update();await show();return snapshot();
  default:return snapshot();
