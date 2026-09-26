@@ -6,7 +6,7 @@
 // the site's mark (site/public/assets/mayak-mark.png) plus its bare white
 // version for the header (mayak-mark-white.png, transparent).
 //
-//	go run ./tools/icon -bg 1a1a1a -fg f2f2f2
+//	go run ./tools/icon -bg 2e2e2e -fg f2f2f2
 //
 // The master's two colours are read as the ends of a scale; every pixel's
 // position on it (anti-aliased edges included) is kept and mapped onto the
@@ -130,7 +130,7 @@ func parse(hex string) color.NRGBA {
 }
 
 func main() {
-	bg := flag.String("bg", "1a1a1a", "background colour (rrggbb)")
+	bg := flag.String("bg", "2e2e2e", "background colour (rrggbb)")
 	fg := flag.String("fg", "f2f2f2", "mark colour (rrggbb)")
 	out := flag.String("out", "", "write only one PNG of -size here")
 	size := flag.Int("size", 256, "size for -out")
