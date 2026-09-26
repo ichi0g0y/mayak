@@ -17,10 +17,7 @@ export function Hero() {
     <section className="relative flex min-h-svh flex-col items-center justify-center px-4 pt-20 pb-16 text-center">
       <div className="hero-fade flex w-full flex-col items-center">
         <img src="/assets/mayak-logo-white.png" alt="MAYAK" width={512} height={512} className="w-[min(72vw,520px,46svh)] opacity-90" fetchPriority="high" />
-        <a href={direct.href} download={direct.download} className="mt-2 inline-flex items-center gap-3 font-mono text-xs tracking-[0.14em] uppercase">
-          <span className="text-muted-foreground">{latest ? t.hero.released(version) : 'Escape from Tarkov companion'}</span>
-          <ArrowRight className="text-muted-foreground size-3.5" />
-        </a>
+        <p className="text-muted-foreground mt-2 font-mono text-xs tracking-[0.14em] uppercase">{t.hero.tagline}</p>
         <p className="text-muted-foreground mt-6 max-w-2xl text-base leading-relaxed sm:text-lg">{t.hero.lead}</p>
 
         <div className="mt-8 w-full max-w-xl text-left">

@@ -3,7 +3,7 @@ import type { Messages } from './ja'
 export const de: Messages = {
   nav: { features: 'Funktionen', start: 'Erste Schritte', safety: 'Sicherheit', download: 'Download', faq: 'FAQ', github: 'GitHub', language: 'Sprache', downloadButton: 'Download', changelog: 'Änderungen' },
   hero: {
-    released: (version: string) => `MAYAK ${version} veröffentlicht`,
+    tagline: 'Erhellt den Raid, ohne das Spiel anzurühren.',
     lead: 'MAYAK ist ein Begleiter für Escape from Tarkov. Er liest nur die Screenshots und Logs, die das Spiel selbst speichert, und zeigt deine Position auf der tarkov.dev-Karte, deine Aufgaben und Item-Infos im Browser. Prozess und Speicher des Spiels rührt er nie an.',
     installLabel: (version: string, os: string) => `MAYAK  für  installieren`,
     hints: { windows: 'Der Windows-Installer. Einfach ausführen, keine Administratorrechte nötig.', mac: 'dmg öffnen und Mayak.app nach Applications ziehen. Beim ersten Mal Rechtsklick → „Öffnen“. Vorschau-Build.', linux: 'tar.gz entpacken und ./Mayak starten (benötigt WebKitGTK). Vorschau-Build.' },

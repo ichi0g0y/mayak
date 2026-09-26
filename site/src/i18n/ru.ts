@@ -3,7 +3,7 @@ import type { Messages } from './ja'
 export const ru: Messages = {
   nav: { features: 'Функции', start: 'Начало работы', safety: 'Безопасность', download: 'Скачать', faq: 'FAQ', github: 'GitHub', language: 'Язык', downloadButton: 'Скачать', changelog: 'История изменений' },
   hero: {
-    released: (version: string) => `Вышла MAYAK ${version}`,
+    tagline: 'Освещает рейд, не касаясь игры.',
     lead: 'MAYAK — компаньон для Escape from Tarkov. Он читает только скриншоты и логи, которые сохраняет сама игра, и показывает в браузере вашу позицию на карте tarkov.dev, задания и информацию о предметах. К процессу игры и его памяти он не прикасается.',
     installLabel: (version: string, os: string) => `Установить MAYAK  для `,
     hints: { windows: 'Установщик для Windows. Просто запустите; права администратора не нужны.', mac: 'Откройте dmg и перетащите Mayak.app в Applications. В первый раз: правый клик → «Открыть». Превью-сборка.', linux: 'Распакуйте tar.gz и запустите ./Mayak (нужен WebKitGTK). Превью-сборка.' },

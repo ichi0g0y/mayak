@@ -3,7 +3,7 @@ import type { Messages } from './ja'
 export const zh: Messages = {
   nav: { features: '功能', start: '快速上手', safety: '安全性', download: '下载', faq: '常见问题', github: 'GitHub', language: '语言', downloadButton: '下载', changelog: '更新日志' },
   hero: {
-    released: (version: string) => `MAYAK ${version} 已发布`,
+    tagline: '不触碰游戏，照亮战局。',
     lead: 'MAYAK 是 Escape from Tarkov 的辅助伴侣。它只读取游戏自己保存的截图和日志，就能在浏览器中显示你在 tarkov.dev 地图上的位置、任务和物品信息。它绝不触碰游戏进程或内存。',
     installLabel: (version: string, os: string) => `安装 MAYAK （）`,
     hints: { windows: 'Windows 安装程序。直接运行即可，无需管理员权限。', mac: '打开 dmg，把 Mayak.app 拖到 Applications。首次运行请右键 → “打开”。预览版。', linux: '解压 tar.gz 并运行 ./Mayak（需要 WebKitGTK）。预览版。' },
