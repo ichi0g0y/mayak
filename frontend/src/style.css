@@ -467,3 +467,23 @@ select option { background: var(--raised); color: var(--text); }
    scrollbar's width to make up for it; the scrollbar is html's here and
    stays (scrollbar-gutter), so the padding only shifted the page. */
 html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !important; }
+/* TarkovTracker: each profile row carries its key; keys on no profile wait
+   below it with a one-click assignment; the keys' own list folds away. */
+.tracker-profile { grid-template-columns: minmax(240px, 1fr) minmax(260px, auto); }
+.tracker-profile.current { border-color: var(--accent); }
+.tracker-profile-key { display: grid; gap: 6px; justify-items: end; min-width: 0; }
+.tracker-key-chip { display: inline-flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; }
+.tracker-key-chip > svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--muted-foreground); }
+.tracker-key-chip strong { overflow-wrap: anywhere; }
+.tracker-key-chip code { color: var(--muted-foreground); font-size: 11px; }
+.tracker-key-select { min-width: 150px; }
+.tracker-no-key { color: var(--muted-foreground); font-size: 11px; }
+.badge.warn { color: var(--danger, #e06c75); border-color: var(--border-strong); background: var(--bg); }
+.tracker-unassigned { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+.tracker-unassigned-key { display: grid; grid-template-columns: minmax(200px, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px; border: 1px dashed var(--border-strong); border-radius: var(--radius); background: var(--surface-2); }
+.tracker-manage { padding-top: 12px; border-top: 1px solid var(--border); }
+.tracker-manage summary { cursor: pointer; font-size: 12px; color: var(--muted-foreground); }
+.tracker-manage-list { display: grid; gap: 6px; margin-top: 8px; }
+.tracker-manage-key { display: grid; grid-template-columns: minmax(200px, 1fr) auto auto; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); }
+.tracker-manage-key .button { padding: 4px; height: 28px; width: 28px; }
+@media (max-width: 720px) { .tracker-unassigned-key, .tracker-manage-key { grid-template-columns: 1fr; } }

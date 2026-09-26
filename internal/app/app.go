@@ -304,48 +304,94 @@ func (a *App) AutoDetectRemoteID() (string, error) {
 }
 func (a *App) GetStatus() model.Status { a.mu.RLock(); defer a.mu.RUnlock(); return a.status }
 
-func (a *App) ImportTrackerToken(token string) error {
+// ImportTrackerToken verifies a TarkovTracker token and stores it as a key.
+// The key goes straight onto the EFT profile it is for when that is plain:
+// the one profile of its mode without a key, or the profile being played.
+// It returns that profile's description, or "" when the key waits to be
+// assigned by hand.
+func (a *App) ImportTrackerToken(token string) (string, error) {
 	token = strings.TrimSpace(token)
 	mode, ok := tracker.ModeForToken(token)
 	if !ok {
-		return errors.New("expected a PVP_, PVE_, or SZN_ TarkovTracker token")
+		return "", errors.New("expected a PVP_, PVE_, or SZN_ TarkovTracker token")
 	}
 	ctx, cancel := context.WithTimeout(a.ctx, 20*time.Second)
 	defer cancel()
 	info, err := a.trackerClient.TokenInfo(ctx, token)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if tracker.Mode(info.GameMode) != mode {
-		return fmt.Errorf("TarkovTracker reports this token belongs to %s", info.GameMode)
+		return "", fmt.Errorf("TarkovTracker reports this token belongs to %s", info.GameMode)
 	}
 	if info.Token != "" && info.Token != token {
-		return errors.New("TarkovTracker returned a different token identity")
+		return "", errors.New("TarkovTracker returned a different token identity")
 	}
 	if !tracker.HasPermissions(info, "GP", "WP") {
-		return errors.New("TarkovTracker token requires Get Progress and Write Progress permissions")
+		return "", errors.New("TarkovTracker token requires Get Progress and Write Progress permissions")
 	}
 	a.trackerStoreMu.Lock()
 	defer a.trackerStoreMu.Unlock()
 	a.mu.Lock()
 	document := a.trackerData.Clone()
-	if _, err := document.AddKey(string(mode), token, info.Note); err != nil {
+	key, err := document.AddKey(string(mode), token, info.Note)
+	if err != nil {
 		a.mu.Unlock()
-		return err
+		return "", err
 	}
+	current := trackerstore.Profile{AccountID: a.status.Tracker.AccountID, ProfileID: a.status.Tracker.ProfileID, Mode: a.status.Tracker.Mode}
+	assigned, assignedTo := autoAssignTrackerKey(&document, key, current)
 	a.mu.Unlock()
 	if err := a.trackerStore.Save(document); err != nil {
-		return err
+		return "", err
 	}
 	a.mu.Lock()
 	a.trackerData = document
+	if assigned && current.AccountID == assignedTo.AccountID && current.ProfileID == assignedTo.ProfileID && current.Mode == assignedTo.Mode {
+		a.clearTrackerProgressLocked()
+	}
 	a.applyTrackerTokenFlagsLocked()
 	a.updateTrackerConnectionLocked()
 	status := a.status
+	active := assigned && status.Tracker.AccountID == assignedTo.AccountID && status.Tracker.ProfileID == assignedTo.ProfileID && status.Tracker.Mode == assignedTo.Mode && a.settings.TarkovTrackerEnabled
 	a.mu.Unlock()
 	a.emitStatus(status)
-	a.addLog("Info", "TarkovTracker", "Verified and stored an unassigned "+string(mode)+" key")
-	return nil
+	if !assigned {
+		a.addLog("Info", "TarkovTracker", "Verified and stored an unassigned "+string(mode)+" key")
+		return "", nil
+	}
+	description := string(mode) + " " + assignedTo.AccountID + " / " + maskProfileID(assignedTo.ProfileID)
+	a.addLog("Info", "TarkovTracker", "Verified and stored a "+string(mode)+" key, assigned to "+maskProfileID(assignedTo.ProfileID)+" ("+string(mode)+")")
+	if active {
+		go func() { _ = a.refreshTrackerMode(string(mode)) }()
+	}
+	return description, nil
+}
+
+// autoAssignTrackerKey puts a new key onto the one profile of its mode that
+// has no key, or onto the profile being played (current) when several have
+// none and it is one of them. With no such profile the key stays free.
+func autoAssignTrackerKey(document *trackerstore.Document, key trackerstore.Key, current trackerstore.Profile) (bool, trackerstore.Profile) {
+	var free []trackerstore.Profile
+	for _, profile := range document.Profiles {
+		if profile.Mode == key.Mode && document.TokenFor(profile.AccountID, profile.ProfileID, profile.Mode) == "" {
+			free = append(free, profile)
+		}
+	}
+	target, found := trackerstore.Profile{}, false
+	if len(free) == 1 {
+		target, found = free[0], true
+	} else {
+		for _, profile := range free {
+			if profile.AccountID == current.AccountID && profile.ProfileID == current.ProfileID && profile.Mode == current.Mode {
+				target, found = profile, true
+			}
+		}
+	}
+	if !found || document.SetProfileKey(target.AccountID, target.ProfileID, target.Mode, key.ID) != nil {
+		return false, trackerstore.Profile{}
+	}
+	return true, target
 }
 
 // clearTrackerProgressLocked forgets the TarkovTracker progress loaded for the

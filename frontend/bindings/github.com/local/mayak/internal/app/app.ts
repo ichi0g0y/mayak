@@ -286,7 +286,14 @@ export function GetVersion(): $CancellablePromise<string> {
     return $Call.ByID(3467524218);
 }
 
-export function ImportTrackerToken(token: string): $CancellablePromise<void> {
+/**
+ * ImportTrackerToken verifies a TarkovTracker token and stores it as a key.
+ * The key goes straight onto the EFT profile it is for when that is plain:
+ * the one profile of its mode without a key, or the profile being played.
+ * It returns that profile's description, or "" when the key waits to be
+ * assigned by hand.
+ */
+export function ImportTrackerToken(token: string): $CancellablePromise<string> {
     return $Call.ByID(3326162070, token);
 }
 
