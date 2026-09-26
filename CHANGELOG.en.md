@@ -4,7 +4,7 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Unreleased changes collect under `## Unreleased` and get a version heading at release time.
 
-## Unreleased
+## v0.1.17 (2026-09-26)
 
 - Settings → Startup and window has "Keep the window at normal priority" (off by default). With a priority manager such as Process Lasso's ProBalance lowering MAYAK's priority during its start-up CPU work, the window's WebView2 processes spawned meanwhile keep the lower class and the UI looks frozen under load; switched on, MAYAK checks itself and its window processes every 10 seconds and puts them back to normal. It showed with `task dev`, which starts the app again after every rebuild.
 - Assigning TarkovTracker keys is simpler. A key you add goes onto the only EFT profile of its mode, when its mode has one latest profile. The settings go in two steps: Step 1 "Add TarkovTracker keys" (the token input with the keys waiting to be assigned right under it, one click putting a key on the profile played last, and a folded "Manage keys") and Step 2 "Assign keys to EFT profiles" (a panel per mode, each profile with its key and a dropdown to change it; an account’s older profiles fold away and only the latest is marked). Opening a dropdown no longer shifts the page.
