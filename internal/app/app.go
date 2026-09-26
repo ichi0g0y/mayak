@@ -908,28 +908,33 @@ func (a *App) ChooseSoundFile() (string, error) {
 	return filepath.Clean(path), nil
 }
 
-func (a *App) SaveSettings(s config.Settings) error {
+// SaveSettings stores s and applies it, folders included: a running monitor
+// moves to changed folders. It is the settings page's explicit save.
+func (a *App) SaveSettings(s config.Settings) error { return a.saveSettings(s, true) }
+
+// PersistSettings stores s and applies it as an edit is made in the settings
+// page, without restarting the monitor for a changed folder (SaveSettings
+// does that).
+func (a *App) PersistSettings(s config.Settings) error { return a.saveSettings(s, false) }
+
+// saveSettings validates s, writes it and applies what changed: the
+// autostart entry, TarkovTracker, the catalog's game mode, updates, the
+// tray's language, the map marker's style sheet, the screenshot cleanup and,
+// with restartMonitor, the monitored folders.
+func (a *App) saveSettings(s config.Settings, restartMonitor bool) error {
 	a.settingsWriteMu.Lock()
 	defer a.settingsWriteMu.Unlock()
 	s = normalizeSettings(s)
 	a.mu.Lock()
-	oldTrackerEnabled := a.settings.TarkovTrackerEnabled
-	oldDir := a.settings.ScreenshotDirectory
-	oldGameMode := a.settings.GameMode
-	oldLogs := a.settings.LogsDirectory
-	oldLaunchAtStartup := a.settings.LaunchAtStartup
-	oldAutoUpdate := a.settings.AutoUpdate
-	oldLanguage := a.settings.Language
-	oldCleanup, oldRetainCount, oldRetainHours := a.settings.ScreenshotCleanup, a.settings.ScreenshotRetainCount, a.settings.ScreenshotRetainHours
-	oldMarker, oldMarkerColor := a.settings.PlayerMarkerEffect, a.settings.PlayerMarkerColor
+	old := a.settings
 	monitoring := a.status.Monitoring
 	s = a.keepWindowSettings(s)
 	a.mu.Unlock()
-	if err := applyAutostartChange(oldLaunchAtStartup, s.LaunchAtStartup); err != nil {
+	if err := applyAutostartChange(old.LaunchAtStartup, s.LaunchAtStartup); err != nil {
 		return err
 	}
 	if err := config.Save(s); err != nil {
-		_ = applyAutostartChange(s.LaunchAtStartup, oldLaunchAtStartup)
+		_ = applyAutostartChange(s.LaunchAtStartup, old.LaunchAtStartup)
 		return err
 	}
 	a.mu.Lock()
@@ -939,83 +944,38 @@ func (a *App) SaveSettings(s config.Settings) error {
 	status := a.status
 	a.mu.Unlock()
 	a.emitStatus(status)
-	if !oldTrackerEnabled && s.TarkovTrackerEnabled {
+	if !old.TarkovTrackerEnabled && s.TarkovTrackerEnabled {
 		go func() { _ = a.RefreshTracker() }()
 	}
-	if oldGameMode != s.GameMode {
+	if old.GameMode != s.GameMode {
 		go func() { _ = a.refreshCatalog(false) }()
 	}
-	if !oldAutoUpdate && s.AutoUpdate {
+	if !old.AutoUpdate && s.AutoUpdate {
 		go func() { _, _ = a.checkForUpdates(true) }()
 	}
-	if oldLanguage != s.Language {
+	if old.Language != s.Language {
 		a.setTrayLanguage(s.Language)
 	}
-	if oldMarker != s.PlayerMarkerEffect || oldMarkerColor != s.PlayerMarkerColor {
+	// The map view is created again with the new marker style (api.js).
+	if old.PlayerMarkerEffect != s.PlayerMarkerEffect || old.PlayerMarkerColor != s.PlayerMarkerColor {
 		a.applyBrowserScript()
 		a.emitEvent("browser:document-script")
 	}
-	if oldCleanup != s.ScreenshotCleanup || oldRetainCount != s.ScreenshotRetainCount || oldRetainHours != s.ScreenshotRetainHours {
+	if old.ScreenshotCleanup != s.ScreenshotCleanup || old.ScreenshotRetainCount != s.ScreenshotRetainCount || old.ScreenshotRetainHours != s.ScreenshotRetainHours {
 		go a.runScreenshotMaintenance()
 	}
-	if monitoring && oldLogs != s.LogsDirectory {
+	if !restartMonitor || !monitoring {
+		return nil
+	}
+	if old.LogsDirectory != s.LogsDirectory {
 		a.startLogDetector(s.LogsDirectory)
 	}
-	if monitoring && oldDir != s.ScreenshotDirectory {
+	if old.ScreenshotDirectory != s.ScreenshotDirectory {
 		if s.ScreenshotDirectory == "" {
 			a.StopMonitoring()
 			return nil
 		}
 		return a.startWatcher(s.ScreenshotDirectory)
-	}
-	return nil
-}
-
-// PersistSettings stores edits immediately without restarting active services.
-// Explicit SaveSettings still applies folder changes to a running monitor.
-func (a *App) PersistSettings(s config.Settings) error {
-	a.settingsWriteMu.Lock()
-	defer a.settingsWriteMu.Unlock()
-	s = normalizeSettings(s)
-	a.mu.Lock()
-	oldLaunchAtStartup := a.settings.LaunchAtStartup
-	oldAutoUpdate := a.settings.AutoUpdate
-	oldTrackerEnabled := a.settings.TarkovTrackerEnabled
-	oldGameMode := a.settings.GameMode
-	oldCleanup, oldRetainCount, oldRetainHours := a.settings.ScreenshotCleanup, a.settings.ScreenshotRetainCount, a.settings.ScreenshotRetainHours
-	oldMarker, oldMarkerColor := a.settings.PlayerMarkerEffect, a.settings.PlayerMarkerColor
-	s = a.keepWindowSettings(s)
-	a.mu.Unlock()
-	if err := applyAutostartChange(oldLaunchAtStartup, s.LaunchAtStartup); err != nil {
-		return err
-	}
-	if err := config.Save(s); err != nil {
-		_ = applyAutostartChange(s.LaunchAtStartup, oldLaunchAtStartup)
-		return err
-	}
-	a.mu.Lock()
-	a.settings = s
-	a.applyTrackerTokenFlagsLocked()
-	a.updateTrackerConnectionLocked()
-	status := a.status
-	a.mu.Unlock()
-	a.emitStatus(status)
-	// The map view is created again with the new marker style (api.js).
-	if oldMarker != s.PlayerMarkerEffect || oldMarkerColor != s.PlayerMarkerColor {
-		a.applyBrowserScript()
-		a.emitEvent("browser:document-script")
-	}
-	if !oldTrackerEnabled && s.TarkovTrackerEnabled {
-		go func() { _ = a.RefreshTracker() }()
-	}
-	if oldGameMode != s.GameMode {
-		go func() { _ = a.refreshCatalog(false) }()
-	}
-	if !oldAutoUpdate && s.AutoUpdate {
-		go func() { _, _ = a.checkForUpdates(true) }()
-	}
-	if oldCleanup != s.ScreenshotCleanup || oldRetainCount != s.ScreenshotRetainCount || oldRetainHours != s.ScreenshotRetainHours {
-		go a.runScreenshotMaintenance()
 	}
 	return nil
 }

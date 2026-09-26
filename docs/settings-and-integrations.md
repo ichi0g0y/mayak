@@ -37,7 +37,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 - 保存先: `%APPDATA%\Mayak\settings.json`（`os.UserConfigDir()` 配下）
 - 書き込みは一時ファイル経由のアトミック置換（パーミッション `0600`）です。書き込み前に、有効な JSON であれば直前の内容を `settings.json.bak` に退避します。
 - 読み込み時に JSON が壊れていれば `.bak` から復元し、それも失敗した場合は既定値を使います。
-- 設定ページは項目を変更するたびに `PersistSettings` を呼んで即時保存します。実行中のサービスは再起動しません。明示的な保存（エラー時の「再試行」）は `SaveSettings` を使い、監視中にフォルダが変わった場合はウォッチャーも張り替えます。
+- 設定ページは項目を変更するたびに `PersistSettings` を呼んで即時保存します。実行中のサービスは再起動しません。どちらも同じ `saveSettings` を通り、変更された項目（自動起動、TarkovTracker、ゲームモード、言語、マーカー、スクショ整理）だけを反映します。明示的な保存（エラー時の「再試行」）は `SaveSettings` を使い、監視中にフォルダが変わった場合はウォッチャーも張り替えます。
 - どちらの保存でも `normalizeSettings` が値を補正します。また `keepWindowSettings` により、`windowX/Y/Width/Height/Configured`、`browserRemoteId`、`ocrDefaultRevision` はフロントエンドから上書きできません。
 - `launchAtStartup` の変更は保存より先にレジストリへ適用され、保存に失敗すると元に戻します。
 

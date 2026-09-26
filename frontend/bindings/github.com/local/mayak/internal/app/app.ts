@@ -325,8 +325,9 @@ export function OpenScreenshotDirectory(): $CancellablePromise<void> {
 }
 
 /**
- * PersistSettings stores edits immediately without restarting active services.
- * Explicit SaveSettings still applies folder changes to a running monitor.
+ * PersistSettings stores s and applies it as an edit is made in the settings
+ * page, without restarting the monitor for a changed folder (SaveSettings
+ * does that).
  */
 export function PersistSettings(s: config$0.Settings): $CancellablePromise<void> {
     return $Call.ByID(914542567, s);
@@ -385,6 +386,10 @@ export function RemoveTrackerKey(keyID: string): $CancellablePromise<void> {
     return $Call.ByID(1661829381, keyID);
 }
 
+/**
+ * SaveSettings stores s and applies it, folders included: a running monitor
+ * moves to changed folders. It is the settings page's explicit save.
+ */
 export function SaveSettings(s: config$0.Settings): $CancellablePromise<void> {
     return $Call.ByID(3616322938, s);
 }
