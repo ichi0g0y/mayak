@@ -6,7 +6,7 @@ import {encode,decode,iceServers,PAIR_RELAY} from './peer-code.js';
 import {t} from './words.js';
 import './transport.js';
 
-let state,go,platform,returnTo='',remoteID='',host=null,hostQuestSite='tarkov-dev',popup=null,item=null,restoredItem=null,itemOpen=false,itemSearch={query:'',results:[]},searchSeq=0,itemBusy=false,itemHistory=null,notify=()=>{},onKey=()=>{},section='appearance',error='',peerState={phase:'idle'},invite=null;
+let state,go,platform,returnTo='',remoteID='',host=null,hostQuestSite='tarkov-dev',hostUpdateChannel='stable',popup=null,item=null,restoredItem=null,itemOpen=false,itemSearch={query:'',results:[]},searchSeq=0,itemBusy=false,itemHistory=null,notify=()=>{},onKey=()=>{},section='appearance',error='',peerState={phase:'idle'},invite=null;
 // Tabs closed in this session, newest last, for Ctrl+Shift+T (not saved).
 const closedTabs=[];
 let queue=Promise.resolve(),nativeQueue=Promise.resolve(),expiry;
@@ -43,7 +43,7 @@ function loadFavicon(url,refresh=false){
  go.BrowserFavicon(url,refresh).then(data=>{if(typeof data==='string'&&data.startsWith('data:image/')&&faviconData[url]!==data){faviconData[url]=data;update();}}).catch(()=>{});
 }
 
-const snapshot=()=>({...state,update:updateStatus,updateBar:updateBarVisible(),statusRows:statusRows(),goonReport,bosses:bosses&&{...bosses,current:host?.map||''},screenshots:shotsAvailable()?{list:shots.list,thumbs:shots.thumbs,viewing:shots.viewing,full:shots.full[shots.viewing]||''}:null,loadingTabs:[...loadingViews],popup:popup&&{key:popup.key},faviconData,host:state.connection.mode==='local'?host:null,hostQuestSite,item,itemOpen,itemSearch,itemBusy,itemHistory,settingsSection:section,localHost:platform==='windows',connectionStatus:state.connection.mode==='local'?'connected':state.connection.mode==='off'?'off':peerState.phase==='connected'?'connected':'disconnected',peer:peerState,error});
+const snapshot=()=>({...state,update:updateStatus,updateChannel:hostUpdateChannel,updateBar:updateBarVisible(),statusRows:statusRows(),goonReport,bosses:bosses&&{...bosses,current:host?.map||''},screenshots:shotsAvailable()?{list:shots.list,thumbs:shots.thumbs,viewing:shots.viewing,full:shots.full[shots.viewing]||''}:null,loadingTabs:[...loadingViews],popup:popup&&{key:popup.key},faviconData,host:state.connection.mode==='local'?host:null,hostQuestSite,item,itemOpen,itemSearch,itemBusy,itemHistory,settingsSection:section,localHost:platform==='windows',connectionStatus:state.connection.mode==='local'?'connected':state.connection.mode==='off'?'off':peerState.phase==='connected'?'connected':'disconnected',peer:peerState,error});
 const update=()=>notify(snapshot());
 // An error shows as a strip along the bottom, in a row of its own like the
 // update bar (see there): a toast over the page would be under it. The row
@@ -333,7 +333,7 @@ const ready=(async()=>{
  }));
  // The Host's monitoring state for the sidebar's monitoring button.
  if(platform==='windows'){
-  try{host=hostStatus(await go.GetStatus());hostQuestSite=(await go.GetSettings()).questSite||'tarkov-dev';}catch{}
+  try{host=hostStatus(await go.GetStatus());const s=await go.GetSettings();hostQuestSite=s.questSite||'tarkov-dev';hostUpdateChannel=s.updateChannel==='nightly'?'nightly':'stable';}catch{}
   // On the Host the task site is one setting, the Host's; a site chosen in
   // the browser before becomes that setting once.
   if(state.connection.mode==='local'&&state.questSite!=='host'){try{const s=await go.GetSettings();s.questSite=state.questSite;await go.PersistSettings(s);hostQuestSite=state.questSite;state.questSite='host';await persist();}catch{}}
@@ -562,6 +562,8 @@ async function perform(type,data){
  case 'updateInstall':void go.InstallUpdate().catch(messageError);return snapshot();
  case 'updateDownload':void go.DownloadUpdate().catch(messageError);return snapshot();
  case 'updateCheck':void go.CheckForUpdates().catch(messageError);return snapshot();
+ // The update channel is a Host setting (updateChannel), shown under About.
+ case 'updateChannel':{const channel=data?.channel;if(platform!=='windows'||state.connection.mode!=='local'||!['stable','nightly'].includes(channel))return snapshot();const s=await go.GetSettings();s.updateChannel=channel;await go.PersistSettings(s);hostUpdateChannel=channel;return snapshot();}
  case 'updateDismiss':updateDismissed=updateStatus?.latest||'';await show();return snapshot();
  case 'dismiss':error='';update();await show();return snapshot();
  default:return snapshot();

@@ -522,5 +522,3 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .tracker-older summary { padding: 8px 12px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted-foreground); cursor: pointer; }
 .tracker-older .tracker-profile { opacity: .85; }
 
-/* The update channel select sits where a switch row has its switch. */
-.update-channel-select { width: 190px; flex: none; }
