@@ -6,7 +6,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
-- Choosing an own image for the player position marker could leave the marker unchanged: the file's kind was told from its content alone, and a PNG or SVG that could not be told that way was refused. The extension decides when the content cannot, and a refusal names the file and what it read as. The preview in the settings now draws tarkov.dev's actual marker (a green disc with a white rim and a curved arrow).
+- Choosing an own image for the player position marker could leave the marker unchanged: the file's kind was told from its content alone, and a PNG or SVG that could not be told that way was refused. The extension decides when the content cannot, and a refusal names the file and what it read as. The preview in the settings now draws tarkov.dev's actual marker (a green disc with a white rim and a white arrow).
 - The player position marker keeps its size: the effects (white outline, glows, ring, beacon) reach beyond the icon, but the icon, and an own image, stay at tarkov.dev's 24 px. The "Own image" card opens the file chooser when no image is chosen yet.
 
 ## v0.1.15 (2026-09-26)
