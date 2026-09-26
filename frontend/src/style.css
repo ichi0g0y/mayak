@@ -501,3 +501,19 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .tracker-mode-group + .tracker-mode-group { margin-top: 6px; }
 .tracker-group-heading { display: flex; align-items: center; gap: 8px; }
 .tracker-group-heading small { color: var(--muted-foreground); font-size: 10px; }
+
+/* Each mode is a panel: a heading, column names, then a row per profile
+   (account and id, the key, the past-log button) on one grid. */
+.tracker-mode-group { display: grid; gap: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); overflow: hidden; }
+.tracker-mode-group + .tracker-mode-group { margin-top: 10px; }
+.tracker-group-heading { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card); border-bottom: 1px solid var(--border); }
+.tracker-group-heading strong { font-size: 13px; }
+.tracker-group-columns, .tracker-profile { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(240px, 1.2fr) auto; align-items: center; gap: 14px; }
+.tracker-group-columns { padding: 6px 12px 4px; font-size: 10px; color: var(--muted-foreground); }
+.tracker-profile { padding: 10px 12px; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
+.tracker-profile.current { border-color: var(--border); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.tracker-profile-info > span:empty { display: none; }
+.tracker-profile-key { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-items: start; }
+.tracker-profile-key .tracker-profile-actions { grid-template-columns: auto; }
+.tracker-profile-tools { display: flex; justify-content: flex-end; }
+@media (max-width: 720px) { .tracker-group-columns { display: none; } .tracker-profile { grid-template-columns: 1fr; } .tracker-profile-tools { justify-content: flex-start; } }
