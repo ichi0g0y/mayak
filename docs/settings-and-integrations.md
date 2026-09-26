@@ -178,7 +178,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | 表示 | 状態 |
 |---|---|
 | Host アイコン（`mode-status`） | `host`（`local`・Host モード）/ `linked`（Client で WebRTC 接続済み）/ `unlinked`（Client で未接続）/ `off`（受信 OFF）。ツールチップには「Hostモード · このPCで検出する」や「Clientモード · 直接接続中」などを表示する |
-| 監視ドット（`monitor-toggle`） | Windows の Host のときだけ表示する。`on` クラスで監視中を示す。ツールチップは「監視中/監視停止中 · マップ · レイド中/外 · TarkovTracker: 状態 · クリックで開始/停止」。クリックで `StartMonitoring` / `StopMonitoring` を呼ぶ |
+| 監視ドット（`monitor-toggle`） | Windows の Host のときだけ表示する。`on` クラスで監視中を示す。ツールチップは「監視中/監視停止中 · マップ · レイド中/外 · TarkovTracker: 状態 · クリックで開始/停止」。クリックで `StartMonitoring` / `StopMonitoring` を呼ぶ。監視停止中に押したとき Screenshots フォルダが未設定（`GetSettings` の `screenshotDirectory` が空）なら、監視を始める代わりに 設定 → フォルダ を開く（自動判別に失敗したまま「何も認識されない」状態から、選び直す場所へ直接行けるように） |
 
 状態は Host が送る `status:update` イベント（`monitoring`、`currentMap`、`raidActive`、`tracker.connection`）から更新します。
 

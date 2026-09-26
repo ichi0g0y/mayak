@@ -509,7 +509,15 @@ async function perform(type,data){
   const next={id:randomUUID(),kind:'web',url:popup.url,title:popup.title};if(popup.task)next.task=structuredClone(popup.task);
   state.tabs.push(next);state.active=next.id;await closePopup();break;
  }
- case 'monitor':if(platform!=='windows'||state.connection.mode!=='local')return snapshot();if(host?.monitoring)await go.StopMonitoring();else await go.StartMonitoring();return snapshot();
+ case 'monitor':{
+  if(platform!=='windows'||state.connection.mode!=='local')return snapshot();
+  if(host?.monitoring){await go.StopMonitoring();return snapshot();}
+  // Without a Screenshots folder there is nothing to watch: the folder
+  // settings open instead, where it is chosen (or found again).
+  let folder='';try{folder=String((await go.GetSettings()).screenshotDirectory||'');}catch{}
+  if(!folder){section='folders';if(tab?.kind!=='settings')returnTo=state.active;openLocal(state,'settings');break;}
+  await go.StartMonitoring();return snapshot();
+ }
  // The task site is the Host's setting (it also decides what goes to
  // tarkov.dev Remote Control); the browser follows it.
  case 'hostQuestSite':{if(platform!=='windows'||!['tarkov-dev','official-wiki','japanese-wiki'].includes(data))return snapshot();const s=await go.GetSettings();s.questSite=data;await go.PersistSettings(s);hostQuestSite=data;state.questSite='host';break;}
