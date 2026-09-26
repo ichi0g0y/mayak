@@ -79,27 +79,108 @@ func squareAlpha(x, y, size int, radius float64) float64 {
 	return math.Max(0, math.Min(1, 0.5-d))
 }
 
+// field is the master's coverage as a float image, for the shading passes.
+func field(master *image.NRGBA) ([]float64, int) {
+	size := master.Bounds().Dx()
+	f := make([]float64, size*size)
+	for y := 0; y < size; y++ {
+		for x := 0; x < size; x++ {
+			f[y*size+x] = coverage(master.NRGBAAt(master.Bounds().Min.X+x, master.Bounds().Min.Y+y))
+		}
+	}
+	return f, size
+}
+
+// blur is a separable box blur of radius r, applied twice for a soft falloff.
+func blur(f []float64, size, r int) []float64 {
+	if r < 1 {
+		return f
+	}
+	pass := func(in []float64, horizontal bool) []float64 {
+		out := make([]float64, len(in))
+		for a := 0; a < size; a++ {
+			sum, count := 0.0, 0
+			at := func(b int) int {
+				if horizontal {
+					return a*size + b
+				}
+				return b*size + a
+			}
+			for b := 0; b < r && b < size; b++ {
+				sum += in[at(b)]
+				count++
+			}
+			for b := 0; b < size; b++ {
+				if b+r < size {
+					sum += in[at(b+r)]
+					count++
+				}
+				if b-r-1 >= 0 {
+					sum -= in[at(b-r-1)]
+					count--
+				}
+				out[at(b)] = sum / float64(count)
+			}
+		}
+		return out
+	}
+	for i := 0; i < 2; i++ {
+		f = pass(pass(f, true), false)
+	}
+	return f
+}
+
 // render dresses the master; bare gives only the mark in flat white on a
 // transparent background (the site's header).
+//
+// The dressed mark reads as metal: its colour runs from light at the top to
+// darker at the bottom, its edges are lit from the top left and shaded at
+// the bottom right (a bevel from the coverage's slope), and it casts a soft
+// shadow on the square.
 func render(master *image.NRGBA, s style, bare bool) *image.NRGBA {
-	size := master.Bounds().Dx()
+	t, size := field(master)
 	radius := float64(size) * s.corner
 	out := image.NewNRGBA(image.Rect(0, 0, size, size))
+	if bare {
+		for i, v := range t {
+			out.SetNRGBA(i%size, i/size, color.NRGBA{0xff, 0xff, 0xff, uint8(math.Round(255 * v))})
+		}
+		return out
+	}
+	soft := blur(t, size, size/160)                // the bevel's slope
+	shadow := blur(t, size, size/50)               // the drop shadow
+	drop := int(math.Round(float64(size) * 0.014)) // its offset downwards
+	lx, ly := -0.6, -0.8                           // light from the top left
+	bevel := float64(size) / 24                    // how strongly the slope lights
 	for y := 0; y < size; y++ {
 		v := float64(y) / float64(size-1)
 		for x := 0; x < size; x++ {
-			t := coverage(master.NRGBAAt(master.Bounds().Min.X+x, master.Bounds().Min.Y+y))
-			if bare {
-				out.SetNRGBA(x, y, color.NRGBA{0xff, 0xff, 0xff, uint8(math.Round(255 * t))})
-				continue
-			}
+			i := y*size + x
 			br, bg, bb := lerp(s.bgTop, s.bgBottom, v)
+			if sy := y - drop; sy >= 0 {
+				// The shadow darkens the square around and below the mark.
+				k := 1 - 0.55*shadow[sy*size+x]*(1-t[i])
+				br, bg, bb = br*k, bg*k, bb*k
+			}
 			fr, fg, fb := lerp(s.fgTop, s.fgBottom, v)
+			if t[i] > 0 {
+				gx, gy := 0.0, 0.0
+				if x > 0 && x < size-1 {
+					gx = soft[i+1] - soft[i-1]
+				}
+				if y > 0 && y < size-1 {
+					gy = soft[i+size] - soft[i-size]
+				}
+				// Slopes facing the light brighten, those away from it darken.
+				light := math.Max(-0.35, math.Min(0.6, (gx*lx+gy*ly)*bevel))
+				fr, fg, fb = fr+(255-fr)*math.Max(0, light)+fr*math.Min(0, light), fg+(255-fg)*math.Max(0, light)+fg*math.Min(0, light), fb+(255-fb)*math.Max(0, light)+fb*math.Min(0, light)
+			}
 			a := squareAlpha(x, y, size, radius)
+			c := t[i]
 			out.SetNRGBA(x, y, color.NRGBA{
-				R: uint8(math.Round(br*(1-t) + fr*t)),
-				G: uint8(math.Round(bg*(1-t) + fg*t)),
-				B: uint8(math.Round(bb*(1-t) + fb*t)),
+				R: uint8(math.Round(math.Min(255, br*(1-c)+fr*c))),
+				G: uint8(math.Round(math.Min(255, bg*(1-c)+fg*c))),
+				B: uint8(math.Round(math.Min(255, bb*(1-c)+fb*c))),
 				A: uint8(math.Round(255 * a)),
 			})
 		}
@@ -161,8 +242,8 @@ func parse(hex string) color.NRGBA {
 func main() {
 	bgTop := flag.String("bg-top", "3d3f40", "background gradient, top (rrggbb)")
 	bgBottom := flag.String("bg-bottom", "1f2021", "background gradient, bottom (rrggbb)")
-	fgTop := flag.String("fg-top", "f7f7f7", "mark gradient, top (rrggbb)")
-	fgBottom := flag.String("fg-bottom", "cfd2d3", "mark gradient, bottom (rrggbb)")
+	fgTop := flag.String("fg-top", "f4f4f4", "mark gradient, top (rrggbb)")
+	fgBottom := flag.String("fg-bottom", "b4b7b8", "mark gradient, bottom (rrggbb)")
 	corner := flag.Float64("corner", 0.2, "corner radius as a fraction of the side")
 	out := flag.String("out", "", "write only one PNG of -size here")
 	size := flag.Int("size", 256, "size for -out")
