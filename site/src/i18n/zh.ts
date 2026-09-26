@@ -132,7 +132,7 @@ export const zh: Messages = {
     lead: '应用的更新提示会打开此页面。原文见仓库中的 CHANGELOG.md（英文和日文）。',
   },
   footer: {
-    tagline: 'Escape from Tarkov companion',
+    tagline: '绝不触碰游戏的 Escape from Tarkov 辅助伴侣。',
     credit: 'Escape from Tarkov 是 Battlestate Games 的商标。MAYAK 是独立项目，与 Battlestate Games、tarkov.dev、TarkovTracker 无关。',
     product: '产品',
     community: '社区',

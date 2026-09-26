@@ -130,7 +130,7 @@ export const ja = {
     lead: 'アプリの更新通知の「変更点」もこのページを開きます。日本語と英語の原文はリポジトリの CHANGELOG.md にあります。',
   },
   footer: {
-    tagline: 'Escape from Tarkov companion',
+    tagline: 'Escape from Tarkov のための、ゲームに触れないコンパニオン。',
     credit: 'Escape from Tarkov は Battlestate Games の商標です。MAYAK は Battlestate Games、tarkov.dev、TarkovTracker とは無関係の個人プロジェクトです。',
     product: 'プロダクト',
     community: 'コミュニティ',

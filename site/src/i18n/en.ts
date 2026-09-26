@@ -132,7 +132,7 @@ export const en: Messages = {
     lead: 'The app’s update notice opens this page for "What changed". The source is CHANGELOG.md in the repository (Japanese and English).',
   },
   footer: {
-    tagline: 'Escape from Tarkov companion',
+    tagline: 'The Escape from Tarkov companion that never touches the game.',
     credit: 'Escape from Tarkov is a trademark of Battlestate Games. MAYAK is an independent project, not affiliated with Battlestate Games, tarkov.dev or TarkovTracker.',
     product: 'Product',
     community: 'Community',

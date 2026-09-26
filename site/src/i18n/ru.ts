@@ -132,7 +132,7 @@ export const ru: Messages = {
     lead: 'Уведомление об обновлении в приложении открывает эту страницу. Исходный текст — CHANGELOG.md в репозитории (на английском и японском).',
   },
   footer: {
-    tagline: 'Escape from Tarkov companion',
+    tagline: 'Компаньон для Escape from Tarkov, который не прикасается к игре.',
     credit: 'Escape from Tarkov — товарный знак Battlestate Games. MAYAK — независимый проект, не связанный с Battlestate Games, tarkov.dev или TarkovTracker.',
     product: 'Продукт',
     community: 'Сообщество',
