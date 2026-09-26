@@ -17,8 +17,8 @@ export function Hero() {
     <section className="relative flex min-h-svh flex-col items-center justify-center px-4 pt-20 pb-16 text-center">
       <div className="hero-fade flex w-full flex-col items-center">
         <img src="/assets/mayak-logo-white.png" alt="MAYAK" width={512} height={512} className="w-[min(72vw,520px,46svh)] opacity-90" fetchPriority="high" />
-        <p className="text-muted-foreground mt-2 font-mono text-xs tracking-[0.14em] uppercase">{t.hero.tagline}</p>
-        <p className="text-muted-foreground mt-6 max-w-2xl text-base leading-relaxed sm:text-lg">{t.hero.lead}</p>
+        <p className="text-muted-foreground -mt-6 font-mono text-xs tracking-[0.18em] uppercase">{t.hero.tagline}</p>
+        <p className="text-muted-foreground mt-9 max-w-2xl text-base leading-relaxed sm:text-lg">{t.hero.lead}</p>
 
         <div className="mt-8 w-full max-w-xl text-left">
           <p className="text-sm font-semibold">{latest ? t.hero.installLabel(version, t.download[direct.platform === 'mac' ? 'mac' : direct.platform]) : t.hero.fetching}</p>
