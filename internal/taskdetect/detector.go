@@ -106,7 +106,7 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 		// The Story tab shows one chapter, its name at a fixed place, rather
 		// than a list with a selected row.
 		if story := stats(px, p.StoryAnchor); story.bright >= storyTabBright {
-			layout, cropRect = "story-tasks", p.StoryTitle
+			layout, cropRect = "story-tasks", storyTitle(px, p.StoryTitle)
 			if story.edges >= storyTabEdges && characterTabBright >= storyCharacterTab {
 				score = max(score, p.MinScore)
 			}
@@ -223,4 +223,42 @@ func stats(px imaging.Pixels, r Rect) metrics {
 func init() {
 	image.RegisterFormat("png", "\x89PNG", png.Decode, png.DecodeConfig)
 	image.RegisterFormat("jpeg", "\xff\xd8", jpeg.Decode, jpeg.DecodeConfig)
+}
+
+// storyTitle narrows the chapter's title area to its text: the chapter's
+// picture starts to the right of the name and would be read as letters. The
+// name is near-white; it ends at the first gap of storyTitleGap columns
+// without such pixels (a space between words is about 16 px).
+const storyTitleGap = 48
+
+func storyTitle(px imaging.Pixels, r Rect) Rect {
+	textAt := func(x int) bool {
+		n := 0
+		for y := r.Y; y < r.Y+r.H; y++ {
+			cr, cg, cb := px.RGB(x, y)
+			hi, lo := max(cr, cg, cb), min(cr, cg, cb)
+			if hi > 175 && int(hi)-int(lo) < 45 {
+				if n++; n >= 2 {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	last := -1
+	for x := r.X; x < r.X+r.W; x++ {
+		if textAt(x) {
+			last = x
+		} else if last >= 0 && x-last > storyTitleGap {
+			break
+		}
+	}
+	if last < 0 {
+		return r
+	}
+	width := min(last-r.X+16, r.W)
+	if width < 60 {
+		return r
+	}
+	return Rect{r.X, r.Y, width, r.H}
 }

@@ -182,3 +182,22 @@ func TestStoryChapterWithAPictureCounts(t *testing.T) {
 		t.Fatalf("dark Tasks tab counted: %+v", got)
 	}
 }
+
+// The chapter's picture right of its name is left out of the title area.
+func TestStoryTitleStopsBeforeThePicture(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 2560, 1440))
+	r := Preset2560.StoryTitle
+	white := color.RGBA{232, 230, 220, 255}
+	// Two words of "text" (a 16 px space between), then the picture 120 px on.
+	for _, span := range [][2]int{{10, 120}, {136, 260}, {380, 620}} {
+		for x := r.X + span[0]; x < r.X+span[1]; x += 3 {
+			for y := r.Y + 20; y < r.Y+50; y++ {
+				img.Set(x, y, white)
+			}
+		}
+	}
+	got := storyTitle(imaging.Of(img), r)
+	if got.X != r.X || got.W < 260 || got.W > 300 {
+		t.Fatalf("title area %+v, want it to end after the text (about 275 px)", got)
+	}
+}
