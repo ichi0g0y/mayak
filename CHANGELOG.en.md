@@ -4,7 +4,7 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Unreleased changes collect under `## Unreleased` and get a version heading at release time.
 
-## Unreleased
+## v0.1.10 (2026-09-26)
 
 - The app icon is now silver on dark grey, so it sits next to the official launcher's without clashing (Windows taskbar, Start menu and tray, macOS Dock).
 - "Check for updates" moved from Status to About, with this version, the latest one, the last check, and the download and restart buttons. The tray's right-click menu gets "Check for updates" too.
