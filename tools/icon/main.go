@@ -133,10 +133,10 @@ func blur(f []float64, size, r int) []float64 {
 // render dresses the master; bare gives only the mark in flat white on a
 // transparent background (the site's header).
 //
-// The dressed mark reads as metal: its colour runs from light at the top to
-// darker at the bottom, its edges are lit from the top left and shaded at
-// the bottom right (a bevel from the coverage's slope), and it casts a soft
-// shadow on the square.
+// The dressed mark reads as metal set into the square: its colour runs from
+// light at the top to darker at the bottom, and its edges are shaded at the
+// top left and lit at the bottom right (an inset bevel from the coverage's
+// slope), the way the launcher's emblem is cut into its plate.
 func render(master *image.NRGBA, s style, bare bool) *image.NRGBA {
 	t, size := field(master)
 	radius := float64(size) * s.corner
@@ -147,21 +147,14 @@ func render(master *image.NRGBA, s style, bare bool) *image.NRGBA {
 		}
 		return out
 	}
-	soft := blur(t, size, size/160)                // the bevel's slope
-	shadow := blur(t, size, size/50)               // the drop shadow
-	drop := int(math.Round(float64(size) * 0.014)) // its offset downwards
-	lx, ly := -0.6, -0.8                           // light from the top left
-	bevel := float64(size) / 24                    // how strongly the slope lights
+	soft := blur(t, size, size/160) // the bevel's slope
+	lx, ly := 0.6, 0.8              // light from the bottom right: the mark reads as set into the surface, not raised
+	bevel := float64(size) / 24     // how strongly the slope lights
 	for y := 0; y < size; y++ {
 		v := float64(y) / float64(size-1)
 		for x := 0; x < size; x++ {
 			i := y*size + x
 			br, bg, bb := lerp(s.bgTop, s.bgBottom, v)
-			if sy := y - drop; sy >= 0 {
-				// The shadow darkens the square around and below the mark.
-				k := 1 - 0.55*shadow[sy*size+x]*(1-t[i])
-				br, bg, bb = br*k, bg*k, bb*k
-			}
 			fr, fg, fb := lerp(s.fgTop, s.fgBottom, v)
 			if t[i] > 0 {
 				gx, gy := 0.0, 0.0
