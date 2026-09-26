@@ -400,14 +400,6 @@ export function StopMonitoring(): $CancellablePromise<void> {
     return $Call.ByID(1383325780);
 }
 
-/**
- * SyncTrackerProfileHistory sends the task states the EFT logs recorded for
- * one profile, from its first session on, to its TarkovTracker key: what was
- * done before the key was assigned, or while MAYAK was not running (the live
- * sync only follows the logs while it runs). A profile is one wipe, so its
- * first session is where its progress starts. It returns how many task
- * states were sent.
- */
 export function SyncTrackerProfileHistory(accountID: string, profileID: string, mode: string): $CancellablePromise<number> {
     return $Call.ByID(1759201672, accountID, profileID, mode);
 }

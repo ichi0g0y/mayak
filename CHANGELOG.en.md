@@ -6,6 +6,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- Assigning a TarkovTracker key to a profile now syncs that profile's past logs by itself, with the count shown in a toast. Before, only progress made after the assignment was sent, and earlier progress needed a manual sync.
+
 - TarkovTracker's past-log sync now lives on each profile's row. Every profile with a key has "Recheck past logs", which reads that profile's logs from its first session and sends them. The shared panel at the bottom and its wipe/version choice are gone (a profile is one wipe). By default it used to send only what followed the latest game version.
 
 - The first story task recognized after a start (Batya and the like) no longer fails once and matches only when the same screen is captured again. Story chapters come from the list read from the official wiki, and the first recognition matched without waiting for it. The list is now read at start, and the first match waits for it (up to 10 seconds).

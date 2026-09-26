@@ -77,6 +77,7 @@ func (a *App) ImportTrackerToken(token string) (string, error) {
 	if active {
 		go func() { _ = a.refreshTrackerMode(string(mode)) }()
 	}
+	go a.syncAssignedHistory(assignedTo.AccountID, assignedTo.ProfileID, assignedTo.Mode)
 	return description, nil
 }
 
@@ -174,7 +175,32 @@ func (a *App) SetTrackerProfileKey(accountID, profileID, mode, keyID string) err
 	if active {
 		go func() { _ = a.refreshTrackerMode(mode) }()
 	}
+	if keyID != "" {
+		go a.syncAssignedHistory(accountID, profileID, mode)
+	}
 	return nil
+}
+
+// syncAssignedHistory sends a profile's past logs once a key is assigned to
+// it, so the assignment alone brings TarkovTracker up to date: the live sync
+// only follows the logs while MAYAK runs. The settings page shows the result
+// ("tracker:history"); logs with nothing to send report nothing.
+func (a *App) syncAssignedHistory(accountID, profileID, mode string) {
+	a.mu.RLock()
+	enabled := a.settings.TarkovTrackerEnabled
+	a.mu.RUnlock()
+	if !enabled {
+		return
+	}
+	sent, err := a.SyncTrackerProfileHistory(accountID, profileID, mode)
+	if errors.Is(err, errNoTrackerHistory) {
+		return
+	}
+	result := map[string]any{"mode": mode, "profileId": profileID, "sent": sent}
+	if err != nil {
+		result["error"] = err.Error()
+	}
+	a.emitEvent("tracker:history", result)
 }
 
 func (a *App) RemoveTrackerKey(keyID string) error {
@@ -208,6 +234,10 @@ func (a *App) DiscoverTrackerProfiles() error { return a.discoverTrackerProfiles
 // sync only follows the logs while it runs). A profile is one wipe, so its
 // first session is where its progress starts. It returns how many task
 // states were sent.
+// errNoTrackerHistory: the profile's logs hold nothing to send. After an
+// assignment that is no failure, just nothing to report.
+var errNoTrackerHistory = errors.New("the EFT logs of this profile have no task changes")
+
 func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int, error) {
 	a.trackerSyncMu.Lock()
 	defer a.trackerSyncMu.Unlock()
@@ -224,7 +254,7 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 	}
 	points := trackerlog.HistoryBreakpoints(root, accountID, profileID, mode)
 	if len(points) == 0 {
-		return 0, errors.New("no EFT logs of this profile were found")
+		return 0, errNoTrackerHistory
 	}
 	states, err := trackerlog.TaskHistory(root, points[0].ID, accountID, profileID, mode)
 	if err != nil {
@@ -236,7 +266,7 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 	}
 	sort.Slice(updates, func(i, j int) bool { return updates[i].ID < updates[j].ID })
 	if len(updates) == 0 {
-		return 0, errors.New("the EFT logs of this profile have no task changes")
+		return 0, errNoTrackerHistory
 	}
 	ctx, cancel := context.WithTimeout(a.ctx, 45*time.Second)
 	defer cancel()
