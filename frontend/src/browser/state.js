@@ -83,7 +83,7 @@ function restoreItemPanel(raw){
 // The sidebar can be resized between these widths (logical pixels).
 const sidebarWidths={min:180,max:420,default:224};
 const clampSidebar=value=>Number.isFinite(value)?Math.round(Math.min(sidebarWidths.max,Math.max(sidebarWidths.min,value))):sidebarWidths.default;
-function defaults() { return {version:1,bookmarkRevision,language:'ja',tutorialDone:false,clock:'24',layout:'vertical',sidebarSide:'left',sidebarCollapsed:false,bookmarksCollapsed:false,screenshotsCollapsed:false,snapNotesCollapsed:false,bossesView:'full',bossMap:'',bossMode:'',sidebarWidth:224,itemPanelWidth:320,itemPanelHeight:280,itemDock:'right',itemPanel:{open:false,id:'',mode:''},favicons:{},bookmarkView:'grid',theme:'mayak-dark',adblock:true,taskMode:'new',questSite:'host',translateWiki:false,connection:{mode:'local',stun:DEFAULT_STUN},bookmarks:structuredClone(defaultBookmarks),tabs:[mapTab(),trackerTab(),{id:'settings',kind:'settings'}],active:mapTabID}; }
+function defaults() { return {version:1,bookmarkRevision,language:'ja',tutorialDone:false,clock:'24',layout:'vertical',sidebarSide:'left',sidebarCollapsed:false,bookmarksCollapsed:false,screenshotsCollapsed:false,snapNotesCollapsed:false,toolOrder:toolKeys.slice(),bossesView:'full',bossMap:'',bossMode:'',sidebarWidth:224,itemPanelWidth:320,itemPanelHeight:280,itemDock:'right',itemPanel:{open:false,id:'',mode:''},favicons:{},bookmarkView:'grid',theme:'mayak-dark',adblock:true,taskMode:'new',questSite:'host',translateWiki:false,connection:{mode:'local',stun:DEFAULT_STUN},bookmarks:structuredClone(defaultBookmarks),tabs:[mapTab(),trackerTab(),{id:'settings',kind:'settings'}],active:mapTabID}; }
 function restore(raw={}) {
   const state=defaults();
   state.bookmarkRevision=bookmarkRevision;
@@ -92,7 +92,7 @@ function restore(raw={}) {
   state.language=raw.language==='en'?'en':'ja'; state.layout=raw.layout==='horizontal'?'horizontal':'vertical';state.sidebarSide=raw.sidebarSide==='right'?'right':'left';
   // The settings choose the tab sidebar's place in one: left, right or top.
   if(['left','right','top'].includes(raw.navPosition)){state.layout=raw.navPosition==='top'?'horizontal':'vertical';if(raw.navPosition!=='top')state.sidebarSide=raw.navPosition;}
-  state.taskMode=raw.taskMode==='reuse'?'reuse':'new';state.adblock=raw.adblock!==false;const theme={'claude-dark':'mayak-dark','claude-light':'mayak-light'}[raw.theme]||raw.theme;state.theme=themes.includes(theme)?theme:'mayak-dark';state.clock=raw.clock==='12'?'12':'24';state.sidebarCollapsed=raw.sidebarCollapsed===true;state.bookmarksCollapsed=raw.bookmarksCollapsed===true;state.screenshotsCollapsed=raw.screenshotsCollapsed===true;state.snapNotesCollapsed=raw.snapNotesCollapsed===true;state.bossesView=['full','goons','closed'].includes(raw.bossesView)?raw.bossesView:raw.bossesCollapsed===true?'closed':'full';state.bossMap=typeof raw.bossMap==='string'&&/^[a-z0-9-]{1,40}$/.test(raw.bossMap)?raw.bossMap:'';state.bossMode=['regular','pve'].includes(raw.bossMode)?raw.bossMode:'';state.sidebarWidth=clampSidebar(raw.sidebarWidth);state.itemPanelWidth=clampItemPanel(raw.itemPanelWidth);state.itemPanelHeight=clampItemPanelHeight(raw.itemPanelHeight);state.itemDock=['left','bottom'].includes(raw.itemDock)?raw.itemDock:'right';state.itemPanel=restoreItemPanel(raw.itemPanel);state.bookmarkView=raw.bookmarkView==='list'?'list':'grid';state.favicons=restoreFavicons(raw.favicons);
+  state.taskMode=raw.taskMode==='reuse'?'reuse':'new';state.adblock=raw.adblock!==false;const theme={'claude-dark':'mayak-dark','claude-light':'mayak-light'}[raw.theme]||raw.theme;state.theme=themes.includes(theme)?theme:'mayak-dark';state.clock=raw.clock==='12'?'12':'24';state.sidebarCollapsed=raw.sidebarCollapsed===true;state.bookmarksCollapsed=raw.bookmarksCollapsed===true;state.screenshotsCollapsed=raw.screenshotsCollapsed===true;state.snapNotesCollapsed=raw.snapNotesCollapsed===true;state.toolOrder=toolOrderOf(raw.toolOrder);state.bossesView=['full','goons','closed'].includes(raw.bossesView)?raw.bossesView:raw.bossesCollapsed===true?'closed':'full';state.bossMap=typeof raw.bossMap==='string'&&/^[a-z0-9-]{1,40}$/.test(raw.bossMap)?raw.bossMap:'';state.bossMode=['regular','pve'].includes(raw.bossMode)?raw.bossMode:'';state.sidebarWidth=clampSidebar(raw.sidebarWidth);state.itemPanelWidth=clampItemPanel(raw.itemPanelWidth);state.itemPanelHeight=clampItemPanelHeight(raw.itemPanelHeight);state.itemDock=['left','bottom'].includes(raw.itemDock)?raw.itemDock:'right';state.itemPanel=restoreItemPanel(raw.itemPanel);state.bookmarkView=raw.bookmarkView==='list'?'list':'grid';state.favicons=restoreFavicons(raw.favicons);
   state.questSite=['host',...sites].includes(raw.questSite)?raw.questSite:'host';
   state.translateWiki=raw.translateWiki===true;
   // The LAN receiving mode ("remote") is gone; a browser saved in it starts off.
@@ -216,6 +216,20 @@ function goHome(state,id) {
   if(!tab||!webURL(tab.home))return false;
   tab.url=tab.home;return true;
 }
+// The toolbar's icons of a web page, in their default order: the snap note
+// left of the wiki search. The user reorders them by dragging (tool-drag.js).
+const toolKeys=['translate','snap','wikiSearch','external'];
+function toolOrderOf(value){
+ const order=Array.isArray(value)?value.filter((key,i)=>toolKeys.includes(key)&&value.indexOf(key)===i):[];
+ for(const key of toolKeys)if(!order.includes(key)){const at=toolKeys.indexOf(key);const after=toolKeys.slice(0,at).reverse().find(k=>order.includes(k));order.splice(after?order.indexOf(after)+1:0,0,key);}
+ return order;
+}
+// mergeToolOrder puts the icons shown (in their new order) back into the
+// whole order, the hidden ones keeping their places.
+function mergeToolOrder(order,shown){
+ const slots=order.map(key=>shown.includes(key));let next=0;
+ return order.map((key,i)=>slots[i]?shown[next++]:key);
+}
 function openLocal(state,kind) {let tab=state.tabs.find(t=>t.kind===kind);if(!tab){tab={id:randomUUID(),kind};state.tabs.push(tab);}state.active=tab.id;return tab;}
 // Settings sections: the browser's own, then the Host's (its settings page in a
 // frame, which shows the section named in its URL hash).
@@ -279,4 +293,4 @@ function receivePosition(state,name) {
   }
   return receiveMap(state,name);
 }
-export {browserSections,hostSections,randomUUID,mapTabID,trackerTabID,themes,bookmarkGroups,bookmarkGroup,rememberFavicon,hostname,sidebarWidths,clampSidebar,defaults,restore,webURL,pageURL,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,sites,translatedURL,originalURL,isTranslated,resolveAddress,searchURL,shortcut,tabAt,cycleTab,receivePosition};
+export {toolKeys,toolOrderOf,mergeToolOrder,browserSections,hostSections,randomUUID,mapTabID,trackerTabID,themes,bookmarkGroups,bookmarkGroup,rememberFavicon,hostname,sidebarWidths,clampSidebar,defaults,restore,webURL,pageURL,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,sites,translatedURL,originalURL,isTranslated,resolveAddress,searchURL,shortcut,tabAt,cycleTab,receivePosition};

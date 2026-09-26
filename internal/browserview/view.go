@@ -108,5 +108,8 @@ func New(window *application.WebviewWindow, notify func(Event)) *Manager {
 func (m *Manager) Command(command string, o Options) error { return m.command(command, o) }
 func (m *Manager) Close()                                  { m.close() }
 
-// Capture takes a PNG of tab id: what is on screen, or with full the whole page.
-func (m *Manager) Capture(id string, full bool) ([]byte, error) { return m.capture(id, full) }
+// Capture takes a PNG of tab id: what is on screen, or with full the whole
+// page. prepare runs in the page before (to hide a bar) and restore after.
+func (m *Manager) Capture(id string, full bool, prepare, restore string) ([]byte, error) {
+	return m.capture(id, full, prepare, restore)
+}

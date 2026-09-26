@@ -27,25 +27,35 @@ export function snapButton(tab){
  return `<button class="snap-page${count?' has-notes':''}${menu?' on':''}" data-action="snapMenu" title="${esc(t('snapTake'))}" aria-label="${esc(t('snapTake'))}" aria-haspopup="menu" ${state.snapNotes.busy?'disabled':''}>${icon('brush')}${count?`<span class="snap-count">${count}</span>`:''}</button>`;
 }
 
-// The menu under the button: the two captures, the page's notes and the list.
+// The menu under the button: the two captures, the page's notes and the
+// list. It opens in the menu window (app_menu.go), above the page, which
+// stays shown; the choice comes back through api.onMenu.
 let menu=null;
 const menuWidth=300;
 function openMenu(button){
- const r=button.getBoundingClientRect();
- menu={left:Math.round(Math.max(4,Math.min(r.right-menuWidth,innerWidth-menuWidth-4))),top:Math.round(r.bottom+6)};
- render();
- // The page's native view is above the shell: it steps aside while the menu shows.
- void api.action('overlay',true);
-}
-function closeMenu(){if(!menu)return;menu=null;render();void api.action('overlay',false);}
-export function snapMenuHTML(){
- if(!menu)return '';
  const tab=state.tabs.find(t=>t.id===state.active);
+ const r=button.getBoundingClientRect();
  const notes=tab?pageNotes(tab.url).slice(0,6):[];
- const item=(id,iconName,title,hint)=>`<button class="snap-menu-item" role="menuitem" data-action="snapCapture" data-id="${id}">${icon(iconName)}<span><strong>${esc(title)}</strong><small>${esc(hint)}</small></span></button>`;
- const list=notes.length?`<div class="snap-menu-label">${esc(t('snapThisPage'))}</div>${notes.map(n=>`<button class="snap-menu-note" role="menuitem" data-action="snapOpen" data-id="${esc(n.id)}"><span class="snap-menu-thumb">${thumbHTML(n)}</span><span><strong>${esc(n.title)}</strong><small>${esc(noteTime(n))}</small></span></button>`).join('')}`:'';
- return `<div class="context-backdrop" data-action="closeSnapMenu"></div><div class="snap-menu" role="menu" aria-label="${esc(t('snapNotes'))}" style="left:${menu.left}px;top:${menu.top}px;width:${menuWidth}px">${item('visible','scan',t('snapVisible'),t('snapVisibleHint'))}${item('full','file',t('snapFull'),t('snapFullHint'))}${list}<button class="snap-menu-all" role="menuitem" data-action="snapnotes">${icon('image')}${esc(t('snapShowAll'))}</button></div>`;
+ const items=[
+  {id:'capture:visible',icon:'scan',title:t('snapVisible'),hint:t('snapVisibleHint')},
+  {id:'capture:full',icon:'file',title:t('snapFull'),hint:t('snapFullHint')},
+  ...(notes.length?[{kind:'label',title:t('snapThisPage')},...notes.map(n=>({id:'open:'+n.id,title:n.title,hint:noteTime(n),thumb:state.snapNotes?.thumbs?.[n.id]||'',icon:'image'}))]:[]),
+  {kind:'label',title:''},
+  {id:'all',icon:'image',title:t('snapShowAll')},
+ ];
+ menu={tab:tab?.id};render();
+ const left=Math.round(Math.max(4,Math.min(r.right-menuWidth,innerWidth-menuWidth-4)));
+ void action('menuShow',{id:'snap',x:left,y:Math.round(r.bottom+6),width:menuWidth,items}).catch(()=>{menu=null;render();});
 }
+api.onMenu(choice=>{
+ if(!menu)return;
+ menu=null;render();
+ if(choice==='capture:visible'||choice==='capture:full')void action('snapCapture',{full:choice==='capture:full'});
+ else if(choice.startsWith('open:'))void action('snapOpen',choice.slice(5));
+ else if(choice==='all')void action('snapnotes');
+});
+// The menu draws in its own window; nothing in the shell.
+export function snapMenuHTML(){return '';}
 
 // The sidebar section: the latest note, and the button to the list.
 export function snapSection(){
@@ -87,11 +97,11 @@ const inkScale=note=>Math.min(1,Math.sqrt(24e6/(note.width*note.height)));
 function editorHTML(open){
  const note=open.note;
  const scale=inkScale(note);
- const tools=`<div class="snap-tools" role="toolbar"><button class="snap-tool${tool==='pen'?' on':''}" data-action="snapTool" data-id="pen" title="${esc(t('snapPen'))}" aria-pressed="${tool==='pen'}">${icon('brush')}</button><button class="snap-tool${tool==='eraser'?' on':''}" data-action="snapTool" data-id="eraser" title="${esc(t('snapEraser'))}" aria-pressed="${tool==='eraser'}">${icon('eraser')}</button><span class="snap-sep"></span>${colors.map(c=>`<button class="snap-color${color===c&&tool==='pen'?' on':''}" data-action="snapColor" data-id="${c}" title="${esc(t('snapColor'))} ${c}" style="--swatch:${c}"></button>`).join('')}<span class="snap-sep"></span>${sizes.map(([k,w])=>`<button class="snap-size${size===k?' on':''}" data-action="snapSize" data-id="${k}" title="${esc(t('snapSize'+k.toUpperCase()))}"><span style="--dot:${w+2}px"></span></button>`).join('')}<span class="snap-sep"></span><button data-action="snapUndo" title="${esc(t('snapUndo'))}" ${ed?.undo.length?'':'disabled'}>${icon('undo')}</button><button data-action="snapRedo" title="${esc(t('snapRedo'))}" ${ed?.redo.length?'':'disabled'}>${icon('redo')}</button><button data-action="snapClear" title="${esc(t('snapClear'))}" ${ed?.strokes.length?'':'disabled'}>${icon('trash')}</button><span class="snap-sep"></span><button data-action="snapZoom" title="${esc(t(zoom==='fit'?'snapActual':'snapFit'))}">${icon('fit')}</button></div>`;
+ const tools=`<div class="snap-tools" role="toolbar"><button class="snap-tool${tool==='pen'?' on':''}" data-action="snapTool" data-id="pen" title="${esc(t('snapPen'))}" aria-pressed="${tool==='pen'}">${icon('brush')}</button><button class="snap-tool${tool==='eraser'?' on':''}" data-action="snapTool" data-id="eraser" title="${esc(t('snapEraser'))}" aria-pressed="${tool==='eraser'}">${icon('eraser')}</button><span class="snap-sep"></span>${colors.map(c=>`<button class="snap-color${color===c&&tool==='pen'?' on':''}" data-action="snapColor" data-id="${c}" title="${esc(t('snapColor'))} ${c}" style="--swatch:${c}"></button>`).join('')}<span class="snap-sep"></span>${sizes.map(([k,w])=>`<button class="snap-size${size===k?' on':''}" data-action="snapSize" data-id="${k}" title="${esc(t('snapSize'+k.toUpperCase()))}"><span style="--dot:${w+2}px"></span></button>`).join('')}<span class="snap-sep"></span><button data-action="snapUndo" title="${esc(t('snapUndo'))}" ${ed?.undo.length?'':'disabled'}>${icon('undo')}</button><button data-action="snapRedo" title="${esc(t('snapRedo'))}" ${ed?.redo.length?'':'disabled'}>${icon('redo')}</button><button data-action="snapClear" title="${esc(t('snapClear'))}" ${ed?.strokes.length?'':'disabled'}>${icon('trash')}</button><span class="snap-sep"></span><button data-action="snapZoomOut" title="${esc(t('snapZoomOut'))}">${icon('minus')}</button><button class="snap-zoom-level" data-action="snapZoomReset" title="${esc(t('snapActual'))}">${Math.round(currentScale(note)*100)}%</button><button data-action="snapZoomIn" title="${esc(t('snapZoomIn'))}">${icon('plus')}</button><button class="${zoom==='fit'?'on':''}" data-action="snapZoomFit" title="${esc(t('snapFit'))}" aria-pressed="${zoom==='fit'}">${icon('fit')}</button></div>`;
  const link=note.url?(note.linked?`<button data-action="snapLinkToggle" title="${esc(t('snapUnlink'))}">${icon('unlinked')}<span>${esc(t('snapUnlink'))}</span></button>`:`<button data-action="snapLinkToggle" title="${esc(t('snapRelink'))}">${icon('linked')}<span>${esc(t('snapRelink'))}</span></button>`):'';
  const page=note.url?`<button data-action="snapOpenPage" data-id="${esc(note.id)}" title="${esc(note.url)}">${icon('external')}<span>${esc(t('snapOpenPage'))}</span></button>`:'';
  const status=saving?t('snapSaving'):ed?.dirty?'':t('snapSaved');
- return `<div class="page snap-editor"><div class="snap-head"><button data-action="snapBack" title="${esc(t('snapBack'))}" aria-label="${esc(t('snapBack'))}">${icon('back')}</button><input id="snap-title" class="snap-title" value="${esc(ed?.id===note.id?ed.title:note.title)}" aria-label="${esc(t('snapTitle'))}" maxlength="160"><span class="snap-status">${esc(status)}</span><div class="snap-actions">${page}${link}<button class="snap-delete${armedDelete===note.id?' armed':''}" data-action="snapDeleteNote" data-id="${esc(note.id)}">${icon('trash')}<span>${esc(t(armedDelete===note.id?'snapDeleteConfirm':'snapDelete'))}</span></button></div></div><p class="snap-where">${note.url?`${esc(t(note.linked?'snapLinked':'snapUnlinked'))}: <span title="${esc(note.url)}">${esc(note.pageTitle||note.url)}</span>`:esc(t('snapNoPage'))}</p>${tools}<div class="snap-stage ${zoom}" data-tool="${tool}"><div class="snap-sheet" style="width:${zoom==='fit'?'100%':note.width+'px'};max-width:${zoom==='fit'?note.width+'px':'none'};aspect-ratio:${note.width}/${note.height}"><img class="snap-base" data-keep="${esc(note.id)}" alt="" draggable="false"><canvas class="snap-ink" data-keep="${esc(note.id)}" width="${Math.round(note.width*scale)}" height="${Math.round(note.height*scale)}"></canvas></div></div></div>`;
+ return `<div class="page snap-editor"><div class="snap-head"><button data-action="snapBack" title="${esc(t('snapBack'))}" aria-label="${esc(t('snapBack'))}">${icon('back')}</button><input id="snap-title" class="snap-title" value="${esc(ed?.id===note.id?ed.title:note.title)}" aria-label="${esc(t('snapTitle'))}" maxlength="160"><span class="snap-status">${esc(status)}</span><div class="snap-actions">${page}${link}<button class="snap-delete${armedDelete===note.id?' armed':''}" data-action="snapDeleteNote" data-id="${esc(note.id)}">${icon('trash')}<span>${esc(t(armedDelete===note.id?'snapDeleteConfirm':'snapDelete'))}</span></button></div></div><p class="snap-where">${note.url?`${esc(t(note.linked?'snapLinked':'snapUnlinked'))}: <span title="${esc(note.url)}">${esc(note.pageTitle||note.url)}</span>`:esc(t('snapNoPage'))}</p>${tools}<div class="snap-stage ${zoom}" data-tool="${tool}"><div class="snap-sheet" style="width:${zoom==='fit'?'100%':Math.round(note.width*zoom)+'px'};aspect-ratio:${note.width}/${note.height}"><img class="snap-base" data-keep="${esc(note.id)}" alt="" draggable="false"><canvas class="snap-ink" data-keep="${esc(note.id)}" width="${Math.round(note.width*scale)}" height="${Math.round(note.height*scale)}"></canvas></div></div></div>`;
 }
 
 // The editor follows the note open: a new one starts with its strokes; a
@@ -132,6 +142,38 @@ function drawStroke(ctx,s,scale){
 }
 afterRenderHooks.push(()=>{syncEditor();paint();});
 const repaint=()=>{if(!ed)return;ed.version++;paint();};
+
+// Zoom: "fit" fills the stage's width (the default, like a page); a number
+// is the image's scale. Ctrl+wheel zooms around the pointer, Ctrl+plus and
+// Ctrl+minus by steps, Ctrl+0 back to fit; the toolbar has the same.
+const zoomLimits=[0.1,8];
+function currentScale(note){
+ if(zoom!=='fit')return zoom;
+ const stage=document.querySelector('.snap-stage');
+ const width=stage?stage.clientWidth-20:note.width;
+ return Math.max(0.01,width/note.width);
+}
+function setZoom(next,anchor){
+ if(!ed)return;
+ const stage=document.querySelector('.snap-stage'),sheet=document.querySelector('.snap-sheet');
+ let fx=0.5,fy=0,px=0,py=0;
+ if(stage&&sheet){
+  const r=sheet.getBoundingClientRect(),sr=stage.getBoundingClientRect();
+  px=anchor?anchor.x:sr.left+sr.width/2;py=anchor?anchor.y:sr.top+Math.min(sr.height/2,r.height/2);
+  fx=(px-r.left)/r.width;fy=(py-r.top)/r.height;
+ }
+ zoom=Math.min(zoomLimits[1],Math.max(zoomLimits[0],Math.round(next*1000)/1000));
+ render();
+ // The point under the pointer (or the middle) stays where it was.
+ const after=document.querySelector('.snap-sheet'),st=document.querySelector('.snap-stage');
+ if(after&&st){const r=after.getBoundingClientRect();st.scrollLeft+=r.left+fx*r.width-px;st.scrollTop+=r.top+fy*r.height-py;}
+}
+const zoomBy=(factor,anchor)=>{if(ed)setZoom(currentScale(ed.note)*factor,anchor);};
+document.addEventListener('wheel',event=>{
+ if(!event.ctrlKey||!ed||!event.target.closest?.('.snap-stage'))return;
+ event.preventDefault();
+ zoomBy(event.deltaY<0?1.15:1/1.15,{x:event.clientX,y:event.clientY});
+},{passive:false});
 
 // Saving: a moment after the last change, with a small picture for the lists
 // (the top of the image, drawing included).
@@ -201,6 +243,7 @@ document.addEventListener('keydown',event=>{
  if(!ed||state.tabs.find(t=>t.id===state.active)?.kind!=='snapnotes'||event.target.closest?.('input,textarea'))return;
  const key=event.key.toLowerCase();
  if(event.ctrlKey&&!event.altKey&&(key==='z'||key==='y')){event.preventDefault();if(key==='y'||event.shiftKey)redo();else undo();}
+ if(event.ctrlKey&&!event.altKey&&['+',';','=','-','0'].includes(event.key)){event.preventDefault();if(event.key==='0'){zoom='fit';render();}else zoomBy(event.key==='-'?1/1.25:1.25);}
 });
 document.addEventListener('input',event=>{if(event.target.id==='snap-title'&&ed){ed.title=event.target.value;changed();}});
 
@@ -225,10 +268,7 @@ document.addEventListener('change',event=>{
 });
 
 clickHandlers.push(async(type,id,button)=>{
- if(type==='snapMenu'){if(menu)closeMenu();else openMenu(button);return true;}
- if(type==='closeSnapMenu'){closeMenu();return true;}
- if(type==='snapCapture'){closeMenu();void action('snapCapture',{full:id==='full'});return true;}
- if((type==='snapOpen'||type==='snapnotes')&&menu){closeMenu();void action(type,id);return true;}
+ if(type==='snapMenu'){if(!menu)openMenu(button);return true;}
  if(type==='toggleSnapSection'){void action('preferences',{snapNotesCollapsed:!state.snapNotesCollapsed});return true;}
  if(type==='snapNewBlank'){void action('snapNew',{image:blankSheet(),title:''});return true;}
  if(type==='snapNewFile'){document.querySelector('#snap-file')?.click();return true;}
@@ -238,7 +278,10 @@ clickHandlers.push(async(type,id,button)=>{
  if(type==='snapUndo'){undo();return true;}
  if(type==='snapRedo'){redo();return true;}
  if(type==='snapClear'){if(ed?.strokes.length){remember();ed.strokes=[];repaint();changed();}return true;}
- if(type==='snapZoom'){zoom=zoom==='fit'?'actual':'fit';render();return true;}
+ if(type==='snapZoomIn'){zoomBy(1.25);return true;}
+ if(type==='snapZoomOut'){zoomBy(1/1.25);return true;}
+ if(type==='snapZoomReset'){setZoom(1);return true;}
+ if(type==='snapZoomFit'){zoom='fit';render();return true;}
  if(type==='snapBack'){if(ed?.dirty)await saveNow(ed);void action('snapClose');return true;}
  if(type==='snapLinkToggle'){if(ed)void action('snapLink',{id:ed.id,linked:!ed.note.linked});return true;}
  if(type==='snapDeleteNote'){

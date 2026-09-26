@@ -331,3 +331,16 @@ test('a detected task opens the official wiki translated when asked',()=>{
  assert.equal(restore({translateWiki:true}).translateWiki,true);
  assert.equal(restore({}).translateWiki,false);
 });
+
+import {toolKeys,toolOrderOf,mergeToolOrder} from './state.js';
+test('toolbar icons keep a whole order: snap left of the wiki search by default',()=>{
+ assert.deepEqual(restore({}).toolOrder,['translate','snap','wikiSearch','external']);
+ assert.deepEqual(toolOrderOf(['external','translate']),['external','translate','snap','wikiSearch']);
+ assert.deepEqual(toolOrderOf(['bogus','snap','snap','external']),['translate','snap','wikiSearch','external']);
+ assert.deepEqual(restore({toolOrder:['wikiSearch','snap','translate','external']}).toolOrder,['wikiSearch','snap','translate','external']);
+ assert.deepEqual(toolKeys,['translate','snap','wikiSearch','external']);
+});
+test('dragging the shown icons keeps the hidden ones in place',()=>{
+ // No wiki search on a page without a task: the other three are reordered.
+ assert.deepEqual(mergeToolOrder(['translate','snap','wikiSearch','external'],['snap','external','translate']),['snap','external','wikiSearch','translate']);
+});

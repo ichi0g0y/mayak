@@ -6,6 +6,9 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- Snap notes: the menu shows over the page (the page no longer disappears), the editor fills the page area and zooms with Ctrl+wheel or its toolbar, and captures of translated pages leave out Google Translate's bar.
+- The toolbar's icons on the right (translate, snap notes, wiki search, open in the default browser) can be reordered by dragging; the order is kept across restarts.
+
 - Snap notes: the brush button in the built-in browser's toolbar captures what is on screen or the whole page, to draw on with a pen. A note taken from a page stays linked to it: the page's button counts its notes and its menu opens them. Notes can be unlinked, or started from a blank sheet, an image file or an image on the clipboard. "Snap notes" in the sidebar opens the list.
 
 - Lighter: the catalog check every five minutes no longer rebuilds the task list and the hideout when they did not change (new flea prices update the items only).

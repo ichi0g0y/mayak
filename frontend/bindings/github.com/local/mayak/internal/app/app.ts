@@ -108,6 +108,28 @@ export function BrowserLoad(): $CancellablePromise<string> {
     return $Call.ByID(3043990910);
 }
 
+/**
+ * BrowserMenuChoose closes the menu with a choice ("" for none).
+ */
+export function BrowserMenuChoose(id: string): $CancellablePromise<void> {
+    return $Call.ByID(2938484100, id);
+}
+
+/**
+ * BrowserMenuReady shows the menu at the height its page drew it.
+ */
+export function BrowserMenuReady(height: number): $CancellablePromise<void> {
+    return $Call.ByID(2663145016, height);
+}
+
+/**
+ * BrowserMenuShow opens a menu. It shows once the menu page has drawn it
+ * (BrowserMenuReady), so it never flashes at a wrong size.
+ */
+export function BrowserMenuShow(request: $models.MenuRequest): $CancellablePromise<void> {
+    return $Call.ByID(2591647512, request);
+}
+
 export function BrowserPlatform(): $CancellablePromise<string> {
     return $Call.ByID(3877969133);
 }
@@ -397,10 +419,11 @@ export function SetTrackerProfileKey(accountID: string, profileID: string, mode:
 
 /**
  * SnapNoteCapture captures the page in tab viewID (what is on screen, or with
- * full the whole page) as a new note linked to that page.
+ * full the whole page) as a new note linked to that page. translated says
+ * the page shows through Google Translate, whose bar is hidden for it.
  */
-export function SnapNoteCapture(viewID: string, pageURL: string, pageTitle: string, full: boolean): $CancellablePromise<snapnote$0.Note> {
-    return $Call.ByID(2024184632, viewID, pageURL, pageTitle, full).then(($result: any) => {
+export function SnapNoteCapture(viewID: string, pageURL: string, pageTitle: string, full: boolean, translated: boolean): $CancellablePromise<snapnote$0.Note> {
+    return $Call.ByID(2024184632, viewID, pageURL, pageTitle, full, translated).then(($result: any) => {
         return $$createType16($result);
     });
 }

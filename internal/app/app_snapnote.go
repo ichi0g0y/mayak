@@ -46,8 +46,9 @@ type SnapNoteData struct {
 func (a *App) snapNoteChanged() { a.emitEvent("snapnote:changed") }
 
 // SnapNoteCapture captures the page in tab viewID (what is on screen, or with
-// full the whole page) as a new note linked to that page.
-func (a *App) SnapNoteCapture(viewID, pageURL, pageTitle string, full bool) (snapnote.Note, error) {
+// full the whole page) as a new note linked to that page. translated says
+// the page shows through Google Translate, whose bar is hidden for it.
+func (a *App) SnapNoteCapture(viewID, pageURL, pageTitle string, full, translated bool) (snapnote.Note, error) {
 	if a.browserViews == nil {
 		return snapnote.Note{}, errors.New("browser is not ready")
 	}
@@ -61,7 +62,11 @@ func (a *App) SnapNoteCapture(viewID, pageURL, pageTitle string, full bool) (sna
 	if err != nil {
 		return snapnote.Note{}, err
 	}
-	png, err := a.browserViews.Capture(viewID, full)
+	prepare, restore := "", ""
+	if translated {
+		prepare, restore = hideTranslateBar, showTranslateBar
+	}
+	png, err := a.browserViews.Capture(viewID, full, prepare, restore)
 	if err != nil {
 		a.addLog("Warn", "SnapNote", "Could not capture the page: "+err.Error())
 		return snapnote.Note{}, err

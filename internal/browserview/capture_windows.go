@@ -19,24 +19,37 @@ const MaxCaptureHeight = 15000
 
 const captureTimeout = 30 * time.Second
 
+// evaluate is the parameters of Runtime.evaluate for a script.
+func evaluate(script string) string {
+	params, _ := json.Marshal(map[string]any{"expression": script, "returnByValue": true, "awaitPromise": true})
+	return string(params)
+}
+
 // capture takes a PNG of the tab id through the DevTools protocol
 // (Page.captureScreenshot): what is on screen, or with full the whole page
 // down to MaxCaptureHeight. A page that scrolls inside an element of its own
-// (a map) has nothing beyond the screen, so full shows the same.
-func (m *Manager) capture(id string, full bool) ([]byte, error) {
+// (a map) has nothing beyond the screen, so full shows the same. prepare,
+// when set, runs in the page first (to hide a bar), and restore after.
+func (m *Manager) capture(id string, full bool, prepare, restore string) ([]byte, error) {
 	type result struct {
 		png []byte
 		err error
 	}
 	done := make(chan result, 1)
+	var view *nativeView
+	// finish hands the result over once. Every callback runs on the UI
+	// thread; restore goes first, so the page looks as before.
 	finish := func(png []byte, err error) {
+		if restore != "" && view != nil {
+			_ = view.chromium.DevToolsCall("Runtime.evaluate", evaluate(restore), func(string, error) {})
+		}
 		select {
 		case done <- result{png, err}:
 		default:
 		}
 	}
-	shoot := func(v *nativeView, params string) error {
-		return v.chromium.DevToolsCall("Page.captureScreenshot", params, func(text string, err error) {
+	shoot := func(params string) error {
+		return view.chromium.DevToolsCall("Page.captureScreenshot", params, func(text string, err error) {
 			if err != nil {
 				finish(nil, err)
 				return
@@ -52,15 +65,11 @@ func (m *Manager) capture(id string, full bool) ([]byte, error) {
 			finish(png, err)
 		})
 	}
-	err := application.InvokeSyncWithError(func() error {
-		v := m.native.views[id]
-		if v == nil || m.native.closed {
-			return errors.New("the page is not open")
-		}
+	take := func() error {
 		if !full {
-			return shoot(v, `{"format":"png","fromSurface":true}`)
+			return shoot(`{"format":"png","fromSurface":true}`)
 		}
-		return v.chromium.DevToolsCall("Page.getLayoutMetrics", "{}", func(text string, err error) {
+		return view.chromium.DevToolsCall("Page.getLayoutMetrics", "{}", func(text string, err error) {
 			if err != nil {
 				finish(nil, err)
 				return
@@ -80,7 +89,22 @@ func (m *Manager) capture(id string, full bool) ([]byte, error) {
 			}
 			width, height := math.Ceil(size.Width), math.Min(math.Ceil(size.Height), MaxCaptureHeight)
 			params := fmt.Sprintf(`{"format":"png","fromSurface":true,"captureBeyondViewport":true,"clip":{"x":0,"y":0,"width":%g,"height":%g,"scale":1}}`, width, height)
-			if err := shoot(v, params); err != nil {
+			if err := shoot(params); err != nil {
+				finish(nil, err)
+			}
+		})
+	}
+	err := application.InvokeSyncWithError(func() error {
+		v := m.native.views[id]
+		if v == nil || m.native.closed {
+			return errors.New("the page is not open")
+		}
+		view = v
+		if prepare == "" {
+			return take()
+		}
+		return v.chromium.DevToolsCall("Runtime.evaluate", evaluate(prepare), func(string, error) {
+			if err := take(); err != nil {
 				finish(nil, err)
 			}
 		})

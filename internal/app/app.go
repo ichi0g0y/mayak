@@ -45,10 +45,12 @@ type App struct {
 	trayMenu                      *application.Menu
 	trayShow, trayCheck, trayQuit *application.MenuItem
 	popup                         itemPopup
-	adblock                       *adblock.Blocker
-	browserClient                 atomic.Bool
-	browserBackgroundOnce         sync.Once
-	hideoutProgressToken          string
+	// menu is the window the shell's menus open in, above the page (app_menu.go).
+	menu                  shellMenu
+	adblock               *adblock.Blocker
+	browserClient         atomic.Bool
+	browserBackgroundOnce sync.Once
+	hideoutProgressToken  string
 	// catalogRefreshes counts the catalog refreshes started (app_catalog.go).
 	catalogRefreshes   uint64
 	hideoutDetector    *hideoutlog.Detector

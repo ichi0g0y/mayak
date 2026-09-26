@@ -6,6 +6,8 @@ import {encode,decode,iceServers,PAIR_RELAY} from './peer-code.js';
 import {t} from './words.js';
 import './transport.js';
 
+// onMenu gets the choice of a menu opened in the menu window ("" for none).
+let onMenu=()=>{};
 let state,go,platform,returnTo='',remoteID='',host=null,hostQuestSite='tarkov-dev',hostUpdateChannel='stable',popup=null,item=null,restoredItem=null,itemOpen=false,itemSearch={query:'',results:[]},searchSeq=0,itemBusy=false,itemHistory=null,notify=()=>{},onKey=()=>{},section='appearance',error='',peerState={phase:'idle'},invite=null;
 // Tabs closed in this session, newest last, for Ctrl+Shift+T (not saved).
 const closedTabs=[];
@@ -124,8 +126,8 @@ async function persist(){
  // Until a restored item has loaded, the saved one is kept.
  const shown=item||restoredItem;
  const itemPanel={open:itemOpen,id:shown?.id||'',mode:shown?.mode||''};
- const {version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,snapNotesCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,bookmarkView,favicons,theme,adblock,taskMode,questSite,translateWiki,bookmarks,tabs,active}=state;
- await go.BrowserSave(JSON.stringify({version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,snapNotesCollapsed,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,itemPanel,bookmarkView,favicons,theme,adblock,taskMode,questSite,translateWiki,bookmarks,tabs,active,connection:{mode:state.connection.mode,stun:state.connection.stun}}));
+ const {version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,snapNotesCollapsed,toolOrder,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,bookmarkView,favicons,theme,adblock,taskMode,questSite,translateWiki,bookmarks,tabs,active}=state;
+ await go.BrowserSave(JSON.stringify({version,bookmarkRevision,language,tutorialDone,clock,layout,sidebarSide,sidebarCollapsed,bookmarksCollapsed,screenshotsCollapsed,snapNotesCollapsed,toolOrder,bossesView,bossMap,bossMode,sidebarWidth,itemPanelWidth,itemPanelHeight,itemDock,itemPanel,bookmarkView,favicons,theme,adblock,taskMode,questSite,translateWiki,bookmarks,tabs,active,connection:{mode:state.connection.mode,stun:state.connection.stun}}));
 }
 async function changed(){update();await persist();void show().catch(messageError);}
 function enqueue(fn){const result=queue.then(fn);queue=result.catch(messageError);return result.catch(()=>snapshot());}
@@ -384,6 +386,7 @@ const ready=(async()=>{
  // A new screenshot shows in the sidebar (and on the screenshot page).
  window.mayakDesktop.on('browser:screenshot',()=>void loadShots());
  window.mayakDesktop.on('snapnote:changed',()=>void loadSnaps());
+ window.mayakDesktop.on('menu:choice',choice=>onMenu(String(choice?.id||'')));
  void loadSnaps();
  void loadShots();
  void loadBosses();
@@ -455,6 +458,13 @@ async function perform(type,data){
   })();
   return snapshot();
  }
+ // A menu over the page, in the menu window (app_menu.go).
+ case 'menuShow':{
+  if(platform!=='windows')return snapshot();
+  const theme=document.documentElement.dataset.theme||'';
+  await go.BrowserMenuShow({id:String(data?.id||''),x:Math.round(data?.x||0),y:Math.round(data?.y||0),width:Math.round(data?.width||280),items:Array.isArray(data?.items)?data.items:[],theme,language:state.language});
+  return snapshot();
+ }
  case 'snapnotes':openLocal(state,'snapnotes');snaps.open=null;void loadSnaps();break;
  // A capture shows the page first (a menu may have hidden it), then opens
  // the new note for drawing.
@@ -463,7 +473,7 @@ async function perform(type,data){
   overlay=false;await show();await new Promise(resolve=>setTimeout(resolve,150));
   snaps.busy=true;update();
   let note;
-  try{note=await go.SnapNoteCapture(tab.id,originalURL(tab.url)||tab.url,tab.title||'',!!data?.full);}
+  try{note=await go.SnapNoteCapture(tab.id,originalURL(tab.url)||tab.url,tab.title||'',!!data?.full,isTranslated(tab.url));}
   catch(e){snaps.busy=false;const shown=!!error;error=t(state.language,'snapCaptureFailed')+String(e?.message||e);update();if(!shown)void show().catch(()=>{});return snapshot();}
   snaps.busy=false;openLocal(state,'snapnotes');await openSnap(note.id);void loadSnaps();break;
  }
@@ -525,7 +535,7 @@ async function perform(type,data){
  case 'pin':togglePin(state,data);break;
  case 'move':moveTab(state,data?.id,data?.before??null);break;
  case 'preferences':{
-  const next=restore({...state,...data});state.language=next.language;state.tutorialDone=next.tutorialDone;state.layout=next.layout;state.sidebarSide=next.sidebarSide;state.theme=next.theme;state.clock=next.clock;state.sidebarCollapsed=next.sidebarCollapsed;state.bookmarksCollapsed=next.bookmarksCollapsed;state.screenshotsCollapsed=next.screenshotsCollapsed;state.snapNotesCollapsed=next.snapNotesCollapsed;state.bossesView=next.bossesView;state.bossMap=next.bossMap;state.bossMode=next.bossMode;if(data&&'bossMode' in data)void loadBosses();if(data&&'language' in data)void loadBosses();state.sidebarWidth=next.sidebarWidth;state.itemPanelWidth=next.itemPanelWidth;state.itemPanelHeight=next.itemPanelHeight;state.itemDock=next.itemDock;state.bookmarkView=next.bookmarkView;state.taskMode=next.taskMode;state.questSite=next.questSite;state.translateWiki=next.translateWiki;
+  const next=restore({...state,...data});state.language=next.language;state.tutorialDone=next.tutorialDone;state.layout=next.layout;state.sidebarSide=next.sidebarSide;state.theme=next.theme;state.clock=next.clock;state.sidebarCollapsed=next.sidebarCollapsed;state.bookmarksCollapsed=next.bookmarksCollapsed;state.screenshotsCollapsed=next.screenshotsCollapsed;state.snapNotesCollapsed=next.snapNotesCollapsed;state.toolOrder=next.toolOrder;state.bossesView=next.bossesView;state.bossMap=next.bossMap;state.bossMode=next.bossMode;if(data&&'bossMode' in data)void loadBosses();if(data&&'language' in data)void loadBosses();state.sidebarWidth=next.sidebarWidth;state.itemPanelWidth=next.itemPanelWidth;state.itemPanelHeight=next.itemPanelHeight;state.itemDock=next.itemDock;state.bookmarkView=next.bookmarkView;state.taskMode=next.taskMode;state.questSite=next.questSite;state.translateWiki=next.translateWiki;
   // Blocking applies to new requests; reload so the visible page matches the setting.
   if(next.adblock!==state.adblock){state.adblock=next.adblock;await go.BrowserSetAdblock(state.adblock);if(tab?.kind==='web')await native('reload',{id:tab.id});}
   break;
@@ -619,7 +629,7 @@ async function perform(type,data){
  await changed();return snapshot();
 }
 window.mayak={
- onState(fn){notify=fn;},onKey(fn){onKey=fn;},
+ onState(fn){notify=fn;},onKey(fn){onKey=fn;},onMenu(fn){onMenu=fn;},
  async action(type,data){await ready;if(type.startsWith('peer'))return pairing(type,data);return enqueue(()=>perform(type,data));},
 };
 window.addEventListener('beforeunload',()=>peer.close());

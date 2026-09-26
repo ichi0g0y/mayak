@@ -12,6 +12,8 @@ export {
     GoonReport,
     GoonReportInfo,
     ItemSearchHit,
+    MenuItem,
+    MenuRequest,
     PopupPage,
     PopupPlace,
     ScreenshotEntry,
