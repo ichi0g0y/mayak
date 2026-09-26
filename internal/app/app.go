@@ -123,6 +123,9 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.addLog("Info", "Application", "MAYAK started")
+	// Story chapters are known from the wiki only; fetch its list before the
+	// first recognition needs it.
+	a.questClient.WarmWiki()
 	if removed, err := autostart.RemoveLegacy(); err != nil {
 		a.addLog("Warn", "Application", "Could not remove the RaidLens startup entry: "+err.Error())
 	} else if removed {

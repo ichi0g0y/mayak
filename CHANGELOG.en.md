@@ -6,6 +6,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- The first story task recognized after a start (Batya and the like) no longer fails once and matches only when the same screen is captured again. Story chapters come from the list read from the official wiki, and the first recognition matched without waiting for it. The list is now read at start, and the first match waits for it (up to 10 seconds).
+
 - The tutorial's "open the map" step now opens the map tab.
 
 - Internal: the pixel access and brightness code the detectors and the OCR preprocessing each had of their own lives in `internal/imaging`, reading pixels straight from the byte buffer. Results are unchanged; a screenshot is analysed faster.

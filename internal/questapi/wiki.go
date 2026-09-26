@@ -25,6 +25,12 @@ const wikiPage = "https://escapefromtarkov.fandom.com/wiki/"
 const wikiRefresh = 12 * time.Hour
 const wikiRetry = 30 * time.Minute
 
+// wikiWait is how long building a task list waits for the wiki's first list.
+// Story chapters are known from the wiki only, so a list built without it
+// misses them: a story screenshot taken right after a start would fail once
+// and match on the next try.
+const wikiWait = 10 * time.Second
+
 // wikiRecent limits the wiki's tasks to those added to its task list lately:
 // the list also has Arena tasks and past events, which are not in the game
 // and would only add wrong matches.
@@ -37,24 +43,59 @@ func (c *Client) EnableWiki() *Client {
 	return c
 }
 
-// wikiQuestTitles returns the titles of the wiki's recent task pages that
-// are at hand, at once: building the task list never waits for the wiki. A
-// stale or missing list is fetched in the background; when it changes, the
-// task lists are built again with it.
-func (c *Client) wikiQuestTitles() []string {
+// WarmWiki starts fetching the wiki's task list now, so that the first
+// recognition after a start finds it at hand.
+func (c *Client) WarmWiki() {
+	if !c.wiki {
+		return
+	}
+	c.wikiMu.Lock()
+	c.startWikiLocked()
+	c.wikiMu.Unlock()
+}
+
+// startWikiLocked fetches the wiki's list in the background when it is due.
+// The caller holds wikiMu.
+func (c *Client) startWikiLocked() {
+	if !c.wikiFetching && time.Now().After(c.wikiNext) {
+		c.wikiFetching = true
+		c.wikiDone = make(chan struct{})
+		go c.refreshWiki(c.wikiDone)
+	}
+}
+
+// wikiQuestTitles returns the titles of the wiki's recent task pages. A
+// stale list is returned at once and fetched again in the background; when
+// it changes, the task lists are built again with it. Without any list yet,
+// it waits for the fetch under way, up to wikiWait (or until ctx ends), so
+// the first task list has the story chapters.
+func (c *Client) wikiQuestTitles(ctx context.Context) []string {
 	if !c.wiki {
 		return nil
 	}
 	c.wikiMu.Lock()
-	defer c.wikiMu.Unlock()
-	if !c.wikiFetching && time.Now().After(c.wikiNext) {
-		c.wikiFetching = true
-		go c.refreshWiki()
+	c.startWikiLocked()
+	titles, fetching, done := c.wikiTitles, c.wikiFetching, c.wikiDone
+	c.wikiMu.Unlock()
+	if len(titles) > 0 || !fetching {
+		return titles
 	}
+	timer := time.NewTimer(wikiWait)
+	defer timer.Stop()
+	select {
+	case <-done:
+	case <-timer.C:
+	case <-ctx.Done():
+	}
+	c.wikiMu.Lock()
+	defer c.wikiMu.Unlock()
 	return c.wikiTitles
 }
 
-func (c *Client) refreshWiki() {
+// refreshWiki fetches the wiki's list and closes done when it is stored.
+// done is closed before the task lists are invalidated: a task list being
+// built waits on it while it holds the client's lock, which Invalidate takes.
+func (c *Client) refreshWiki(done chan struct{}) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 	titles, err := c.fetchWikiQuestTitles(ctx)
@@ -63,12 +104,14 @@ func (c *Client) refreshWiki() {
 	// A failed fetch keeps the last list (or none) and is tried again soon.
 	if err != nil || len(titles) == 0 {
 		c.wikiNext = time.Now().Add(wikiRetry)
+		close(done)
 		c.wikiMu.Unlock()
 		return
 	}
 	c.wikiNext = time.Now().Add(wikiRefresh)
 	changed := !slices.Equal(c.wikiTitles, titles)
 	c.wikiTitles = titles
+	close(done)
 	c.wikiMu.Unlock()
 	if changed {
 		c.Invalidate()

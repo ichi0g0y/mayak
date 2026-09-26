@@ -76,6 +76,8 @@ type Client struct {
 	// wikiNext is when the wiki's list is due again; wikiFetching while it is fetched.
 	wikiNext     time.Time
 	wikiFetching bool
+	// wikiDone is closed when the fetch under way ends.
+	wikiDone chan struct{}
 }
 
 func NewWithSource(source interface {
@@ -172,7 +174,7 @@ func (c *Client) Quests(ctx context.Context) ([]Quest, error) {
 			out = append(out, quest)
 		}
 	}
-	out = appendWiki(out, c.wikiQuestTitles())
+	out = appendWiki(out, c.wikiQuestTitles(ctx))
 	c.quests = out
 	c.loaded = time.Now()
 	return append([]Quest(nil), out...), nil
@@ -196,7 +198,7 @@ func (c *Client) loadMode(ctx context.Context, mode string) ([]Quest, error) {
 	}
 	quests := buildQuests(tasks, taskText, maps, mapText, traders, traderText)
 	c.addLocaleNames(ctx, mode, tasks, quests)
-	return appendWiki(appendSupplemental(quests), c.wikiQuestTitles()), nil
+	return appendWiki(appendSupplemental(quests), c.wikiQuestTitles(ctx)), nil
 }
 
 // Aliases share the stable task ID. Display names and Wiki links stay canonical.
