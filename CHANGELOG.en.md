@@ -4,7 +4,7 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Unreleased changes collect under `## Unreleased` and get a version heading at release time.
 
-## Unreleased
+## v0.1.14 (2026-09-26)
 
 - The built-in browser takes Chrome's keyboard shortcuts: Ctrl+T for a new tab, Ctrl+W to close one, Ctrl+Shift+T to reopen the last closed tab, Ctrl+Tab and Ctrl+Shift+Tab to switch tabs, Ctrl+1 to 9 for the nth tab, Ctrl+L, Alt+D and F6 for the address bar, Ctrl+D to bookmark. They work with the keyboard in a page too (Windows).
 - Anything typed in the address bar that is not an address is searched on Google. Host names with a dot and `localhost:8080` open as before.
