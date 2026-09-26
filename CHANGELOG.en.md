@@ -4,7 +4,7 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Unreleased changes collect under `## Unreleased` and get a version heading at release time.
 
-## Unreleased
+## v0.1.16 (2026-09-26)
 
 - The player position marker is now tarkov.dev's own icon with an effect: the effect (none, outline, glow, pulsing ring, beacon) and its colour (white for the outline, red otherwise, until chosen) are picked separately. The icon keeps its size; only the effect reaches beyond it. 0.1.15's "own image" and "large" are gone, and what was chosen carries over as an effect (the green glow as glow in green). The preview in the settings draws tarkov.dev's actual marker (a green disc with a white rim and arrow).
 
