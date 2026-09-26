@@ -4,6 +4,10 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Unreleased changes collect under `## Unreleased` and get a version heading at release time.
 
+## Unreleased
+
+- Choosing an own image for the player position marker could leave the marker unchanged: the file's kind was told from its content alone, and a PNG or SVG that could not be told that way was refused. The extension decides when the content cannot, and a refusal names the file and what it read as. The preview in the settings now draws tarkov.dev's actual marker (a green disc with a white arrow).
+
 ## v0.1.15 (2026-09-26)
 
 - The marker for your position on tarkov.dev's map can be replaced (Settings → tarkov.dev → Player position marker): five that stand out (large with a white outline, red glow, green glow, pulsing red ring, yellow beacon) or your own image (PNG / SVG / JPEG / WebP / GIF). The heading stays the rotation tarkov.dev applies. Only maps opened in MAYAK's built-in browser are affected.

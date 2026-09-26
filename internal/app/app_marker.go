@@ -107,14 +107,19 @@ func playerMarkerImageData(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	mime := http.DetectContentType(data)
-	switch {
-	case strings.HasPrefix(mime, "image/png"), strings.HasPrefix(mime, "image/jpeg"), strings.HasPrefix(mime, "image/gif"), strings.HasPrefix(mime, "image/webp"):
-		mime = mime[:strings.IndexByte(mime+";", ';')]
-	case strings.EqualFold(filepath.Ext(path), ".svg") && strings.Contains(string(data[:min(len(data), 4096)]), "<svg"):
-		mime = "image/svg+xml"
-	default:
-		return "", errors.New("the marker image must be a PNG, JPEG, GIF, WebP or SVG file")
+	// The type from the content where it can be told (PNG, JPEG, GIF, WebP),
+	// else from the extension: an SVG is XML in any encoding, and a file the
+	// sniffing does not know is still handed to the page, which shows it or
+	// nothing. Only a file of no image kind at all is refused.
+	sniffed := http.DetectContentType(data)
+	sniffed = sniffed[:strings.IndexByte(sniffed+";", ';')]
+	byExtension := map[string]string{".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp", ".svg": "image/svg+xml"}[strings.ToLower(filepath.Ext(path))]
+	mime := sniffed
+	if !strings.HasPrefix(sniffed, "image/") {
+		mime = byExtension
+	}
+	if mime == "" {
+		return "", fmt.Errorf("%s is not an image MAYAK can use (a PNG, JPEG, GIF, WebP or SVG file; this reads as %s)", filepath.Base(path), sniffed)
 	}
 	return "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(data), nil
 }

@@ -59,8 +59,23 @@ func TestPlayerMarkerImageBecomesADataURL(t *testing.T) {
 	if err := os.WriteFile(text, []byte("hello"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := playerMarkerImageData(text); err == nil {
-		t.Fatal("a text file was accepted")
+	if _, err := playerMarkerImageData(text); err == nil || !strings.Contains(err.Error(), "notes.txt") {
+		t.Fatalf("a text file was accepted, or the error does not name it: %v", err)
+	}
+	// An SVG in UTF-16 and a WebP the sniffing does not know go by extension.
+	utf16 := filepath.Join(dir, "wide.svg")
+	if err := os.WriteFile(utf16, []byte("\xff\xfe<\x00s\x00v\x00g\x00/\x00>\x00"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if data, err := playerMarkerImageData(utf16); err != nil || !strings.HasPrefix(data, "data:image/svg+xml;base64,") {
+		t.Fatalf("utf-16 svg: %q %v", data, err)
+	}
+	odd := filepath.Join(dir, "odd.webp")
+	if err := os.WriteFile(odd, []byte("not really webp"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if data, err := playerMarkerImageData(odd); err != nil || !strings.HasPrefix(data, "data:image/webp;base64,") {
+		t.Fatalf("webp by extension: %q %v", data, err)
 	}
 	if _, err := playerMarkerImageData(""); err == nil {
 		t.Fatal("no path was accepted")
