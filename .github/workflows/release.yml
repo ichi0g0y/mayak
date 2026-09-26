@@ -67,6 +67,8 @@ jobs:
           name: ${{ matrix.target }}
           path: build/dist/*
           if-no-files-found: error
+          # Only the publish job reads it; the release keeps the files.
+          retention-days: 1
 
   release:
     name: Publish release
