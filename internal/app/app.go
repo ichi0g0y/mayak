@@ -54,13 +54,13 @@ type App struct {
 	windowPlacementReady atomic.Bool
 	browserViews         *browserview.Manager
 	// The tray menu, to follow a change of language (tray.go).
-	trayMenu              *application.Menu
-	trayShow, trayQuit    *application.MenuItem
-	popup                 itemPopup
-	adblock               *adblock.Blocker
-	browserClient         atomic.Bool
-	browserBackgroundOnce sync.Once
-	hideoutProgressToken  string
+	trayMenu                      *application.Menu
+	trayShow, trayCheck, trayQuit *application.MenuItem
+	popup                         itemPopup
+	adblock                       *adblock.Blocker
+	browserClient                 atomic.Bool
+	browserBackgroundOnce         sync.Once
+	hideoutProgressToken          string
 	// catalogRefreshes counts the catalog refreshes started (app_catalog.go).
 	catalogRefreshes   uint64
 	hideoutDetector    *hideoutlog.Detector

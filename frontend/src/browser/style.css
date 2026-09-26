@@ -44,7 +44,7 @@ textarea{font:12px ui-monospace,"Cascadia Code",Consolas,monospace;line-height:1
 .dock-button:hover{color:var(--text)}
 .mode-status:hover .status-tooltip,.mode-status:focus .status-tooltip{display:block}
 
-.tab-strip{position:fixed;left:0;top:48px;bottom:calc(48px + var(--status-bar));width:var(--sidebar-width);background:var(--sidebar);box-shadow:inset -1px 0 var(--border);padding:4px 8px 16px;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
+.tab-strip{position:fixed;left:0;top:48px;bottom:calc(48px + var(--status-bar));user-select:none;width:var(--sidebar-width);background:var(--sidebar);box-shadow:inset -1px 0 var(--border);padding:4px 8px 16px;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
 /* Section header: bold name with the new-tab icon at its right, like Claude's sidebar. */
 .section-label{display:flex;align-items:center;justify-content:space-between;margin:18px 2px 4px 10px;color:var(--text-2);font-size:13px;font-weight:600}
 .new-tab{width:26px;height:26px;padding:0;border:0;border-radius:6px;color:var(--muted)}
@@ -706,3 +706,14 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .update-bar button.primary{background:var(--on-accent);border-color:var(--on-accent);color:var(--accent)}
 .update-progress{flex:none;width:120px;height:5px;border-radius:3px;background:color-mix(in srgb,var(--on-accent) 25%,transparent);overflow:hidden}
 .update-progress i{display:block;height:100%;background:var(--on-accent)}
+/* The tabs page. */
+.tab-list .tab-row.current{border-color:var(--accent)}
+.tab-list .tab-favicon{width:16px;height:16px;flex:none;border-radius:3px}
+.tab-list .bookmark-url{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab-row-close{flex:none;width:30px;height:30px;margin-right:6px;padding:0;border:0;color:var(--muted)}
+.tab-row-close:hover{color:var(--text)}
+/* Updates in About. */
+.about-facts{display:flex;flex-wrap:wrap;gap:6px 28px;margin:6px 0 10px;font-size:13px}
+.about-facts dt{color:var(--muted);font-size:11.5px}
+.about-facts dd{margin:2px 0 0}
+.update-state{margin:0 0 12px;font-size:13px}

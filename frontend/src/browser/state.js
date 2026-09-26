@@ -85,7 +85,7 @@ function restore(raw={}) {
   }
   if (revision < 2) for (const b of state.bookmarks) if (b.url==='https://tarkovtracker.io/') b.url=trackerHome;
   if (Array.isArray(raw.tabs)) {
-    const ids=new Set();let settings=false,bookmarksPage=false,screenshotsPage=false,bossesPage=false;
+    const ids=new Set();let settings=false,bookmarksPage=false,screenshotsPage=false,bossesPage=false,tabsPage=false;
     const savedMap=raw.tabs.find(t=>t?.id===mapTabID),savedTracker=raw.tabs.find(t=>t?.id===trackerTabID);
     state.tabs=raw.tabs.filter(t=>{
       if(!t || typeof t.id!=='string' || !/^[a-zA-Z0-9_-]{1,80}$/.test(t.id) || fixedTabIDs.includes(t.id) || ids.has(t.id))return false;
@@ -93,6 +93,7 @@ function restore(raw={}) {
       else if(t.kind==='bookmarks'){if(bookmarksPage)return false;bookmarksPage=true;}
       else if(t.kind==='screenshots'){if(screenshotsPage)return false;screenshotsPage=true;}
       else if(t.kind==='bosses'){if(bossesPage)return false;bossesPage=true;}
+      else if(t.kind==='tabs'){if(tabsPage)return false;tabsPage=true;}
       else if(t.kind!=='blank' && !(t.kind==='web' && webURL(t.url)))return false;
       ids.add(t.id);return true;
     }).slice(0,79).map(t=>({id:t.id,kind:t.kind,url:t.kind==='web'?webURL(t.url):undefined,title:String(t.title||'').slice(0,160),pinned:!!t.pinned,favicon:t.kind==='web'&&webURL(t.favicon)||undefined,role:t.role==='task'?'task':undefined,task:validTask(t.task)?t.task:undefined}));

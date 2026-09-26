@@ -376,6 +376,7 @@ async function perform(type,data){
  // Closing settings returns to the tab it was opened from, or TARKOV.DEV.
  case 'closeSettings':{const back=state.tabs.find(t=>t.id===returnTo&&t.kind!=='settings')||state.tabs.find(t=>t.id===mapTabID);if(back)state.active=back.id;break;}
  case 'bookmarks':openLocal(state,'bookmarks');break;
+ case 'tabsPage':openLocal(state,'tabs');break;
  // The screenshot page: all of them (from the sidebar's heading), or one
  // shown large (from its thumbnail); screenshotView pages through them.
  case 'bosses':openLocal(state,'bosses');void loadBosses();break;
@@ -508,6 +509,7 @@ async function perform(type,data){
  // Applying restarts the app and downloading takes a while: neither holds the queue.
  case 'updateInstall':void go.InstallUpdate().catch(messageError);return snapshot();
  case 'updateDownload':void go.DownloadUpdate().catch(messageError);return snapshot();
+ case 'updateCheck':void go.CheckForUpdates().catch(messageError);return snapshot();
  case 'updateDismiss':updateDismissed=updateStatus?.latest||'';await show();return snapshot();
  case 'dismiss':error='';update();return snapshot();
  default:return snapshot();
