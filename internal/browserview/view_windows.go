@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"unsafe"
 )
 
@@ -178,6 +179,19 @@ func (m *Manager) command(command string, o Options) error {
 		}
 		views := m.native.views
 		v := views[o.ID]
+		// "focus" moves the keyboard to the shell (ID "shell") or to a page.
+		// The shell's own focus method exits the process on a WebView2 error;
+		// a page's focus is asked for directly and a refusal is ignored.
+		if command == "focus" {
+			if o.ID == "shell" {
+				m.window.Focus()
+			} else if v != nil {
+				if controller := v.chromium.GetController(); controller != nil {
+					_ = controller.MoveFocus(edge.COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC)
+				}
+			}
+			return nil
+		}
 		// "preload" creates and loads a tab without showing it, so it is ready
 		// when it is first shown.
 		if command == "preload" && v != nil {
@@ -196,6 +210,11 @@ func (m *Manager) command(command string, o Options) error {
 			c.DisableHostMessaging = true
 			c.DataPath = filepath.Join(dir, appdir.Name, "browser-webdata")
 			c.MessageCallback = func(string) {}
+			// The shell's shortcuts (Ctrl+T and the like) work with the
+			// keyboard in a page too: WebView2 offers every key with a modifier
+			// held before the page gets it.
+			id := o.ID
+			c.AcceleratorKeyCallback = func(vk uint) bool { return m.acceleratorKey(id, vk) }
 			host := w32.CreateWindowEx(0, w32.MustStringToUTF16Ptr("STATIC"), nil,
 				w32.WS_CHILD|w32.WS_CLIPCHILDREN|w32.WS_CLIPSIBLINGS,
 				0, 0, 1, 1, w32.HWND(m.native.hwnd), 0, w32.GetModuleHandle(""), nil)
@@ -357,3 +376,34 @@ func (m *Manager) closeNative() {
 	}
 }
 func (m *Manager) close() { application.InvokeSync(m.closeNative) }
+
+// acceleratorKey offers a key pressed in view id, with a modifier held, to
+// the key handler under the name the shell's keyboard events give it (F6
+// counts alone, as in Chrome). Other keys, and keys the handler declines,
+// stay with the page.
+func (m *Manager) acceleratorKey(id string, vk uint) bool {
+	down := func(key int32) bool { return w32.GetKeyState(key) < 0 }
+	ctrl, shift, alt := down(w32.VK_CONTROL), down(w32.VK_SHIFT), down(w32.VK_MENU)
+	var name string
+	switch {
+	case vk >= '0' && vk <= '9', vk >= 'A' && vk <= 'Z':
+		name = strings.ToLower(string(rune(vk)))
+	case vk == w32.VK_TAB:
+		name = "tab"
+	case vk == w32.VK_PRIOR:
+		name = "pageup"
+	case vk == w32.VK_NEXT:
+		name = "pagedown"
+	case vk == w32.VK_F4:
+		name = "f4"
+	case vk == w32.VK_F6:
+		name = "f6"
+	default:
+		return false
+	}
+	if !ctrl && !alt && name != "f6" {
+		return false
+	}
+	handler := m.keyHandler()
+	return handler != nil && handler(Key{ID: id, Key: name, Ctrl: ctrl, Shift: shift, Alt: alt})
+}

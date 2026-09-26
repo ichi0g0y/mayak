@@ -143,7 +143,7 @@ tarkov.dev のマップ・タスクページは、`wss://socket.tarkov.dev` 経�
 4. `Map` 役割の送信先と `BrowserRemoteID` に `playerPosition` を送ります。`NavigateMapOnShot` がオンなら、続けて `map` 命令も送ります。位置を先に送るのは、座標の高さから正しい階を選べるようにするためです。
 5. `ground-zero-21` は tarkov.dev では `ground-zero` として送ります。
 
-位置の送信では `browser:map` を送りません。内蔵ブラウザのマップタブは Remote Control 接続で追従します。
+位置の送信では `browser:map` を送りません。内蔵ブラウザのマップタブは Remote Control 接続で追従します。代わりに `browser:position`（マップ名）を送り、シェルはマップタブを前面にします（`state.js` の `receivePosition`）。マップタブがそのマップの `tarkov.dev/map/<name>` を表示していればページはそのまま（読み込み直すと tarkov.dev 側の状態が失われるため）、別のマップや別のページなら `browser:map` と同じく開き直します。最後に認識したもの（タスク → タスクのページ、位置 → マップ、アイテム → アイテム欄）が表示されるようにするためです。WebRTC の受信側にも同じイベントを転送します。
 
 ### 固定マップタブ
 

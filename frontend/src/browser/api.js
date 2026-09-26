@@ -1,11 +1,13 @@
 import * as AppService from '../../bindings/github.com/local/mayak/internal/app/app';
 import {Events,Clipboard} from '@wailsio/runtime';
 import {itemInfo,clampItemPanel,clampItemPanelHeight,historyPoints,names} from './item.js';
-import {browserSections,hostSections,mapTabID,randomUUID,bookmarkGroup,clampSidebar,rememberFavicon,hostname,defaults,restore,webURL,pageURL,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal} from './state.js';
+import {browserSections,hostSections,mapTabID,randomUUID,bookmarkGroup,clampSidebar,rememberFavicon,hostname,defaults,restore,webURL,pageURL,receiveTask,receiveMap,receivePosition,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,tabAt,cycleTab} from './state.js';
 import {encode,decode,iceServers,PAIR_RELAY} from './peer-code.js';
 import './transport.js';
 
-let state,go,platform,returnTo='',remoteID='',host=null,hostQuestSite='tarkov-dev',popup=null,item=null,restoredItem=null,itemOpen=false,itemSearch={query:'',results:[]},searchSeq=0,itemBusy=false,itemHistory=null,notify=()=>{},focusAddress=()=>{},section='appearance',error='',peerState={phase:'idle'},invite=null;
+let state,go,platform,returnTo='',remoteID='',host=null,hostQuestSite='tarkov-dev',popup=null,item=null,restoredItem=null,itemOpen=false,itemSearch={query:'',results:[]},searchSeq=0,itemBusy=false,itemHistory=null,notify=()=>{},onKey=()=>{},section='appearance',error='',peerState={phase:'idle'},invite=null;
+// Tabs closed in this session, newest last, for Ctrl+Shift+T (not saved).
+const closedTabs=[];
 let queue=Promise.resolve(),nativeQueue=Promise.resolve(),expiry;
 // While the shell shows an overlay (the tutorial), the native page views stay
 // hidden whatever else asks to show them; closing it shows the active tab again.
@@ -40,9 +42,13 @@ function loadFavicon(url,refresh=false){
  go.BrowserFavicon(url,refresh).then(data=>{if(typeof data==='string'&&data.startsWith('data:image/')&&faviconData[url]!==data){faviconData[url]=data;update();}}).catch(()=>{});
 }
 
-const snapshot=()=>({...state,update:updateStatus,updateBar:updateBarVisible(),goonReport,bosses:bosses&&{...bosses,current:host?.map||''},screenshots:shotsAvailable()?{list:shots.list,thumbs:shots.thumbs,viewing:shots.viewing,full:shots.full[shots.viewing]||''}:null,loadingTabs:[...loadingViews],popup:popup&&{key:popup.key},faviconData,host:state.connection.mode==='local'?host:null,hostQuestSite,item,itemOpen,itemSearch,itemBusy,itemHistory,settingsSection:section,localHost:platform==='windows',connectionStatus:state.connection.mode==='local'?'connected':state.connection.mode==='off'?'off':peerState.phase==='connected'?'connected':'disconnected',peer:peerState,error});
+const snapshot=()=>({...state,update:updateStatus,updateBar:updateBarVisible(),statusRows:statusRows(),goonReport,bosses:bosses&&{...bosses,current:host?.map||''},screenshots:shotsAvailable()?{list:shots.list,thumbs:shots.thumbs,viewing:shots.viewing,full:shots.full[shots.viewing]||''}:null,loadingTabs:[...loadingViews],popup:popup&&{key:popup.key},faviconData,host:state.connection.mode==='local'?host:null,hostQuestSite,item,itemOpen,itemSearch,itemBusy,itemHistory,settingsSection:section,localHost:platform==='windows',connectionStatus:state.connection.mode==='local'?'connected':state.connection.mode==='off'?'off':peerState.phase==='connected'?'connected':'disconnected',peer:peerState,error});
 const update=()=>notify(snapshot());
-const messageError=e=>{error=(state.language==='ja'?'操作を完了できませんでした: ':'Could not complete the action: ')+String(e?.message||e);update();};
+// An error shows as a strip along the bottom, in a row of its own like the
+// update bar (see there): a toast over the page would be under it. The row
+// appears when the first error arrives; a failure to show the pages after
+// that is not retried, or it would loop.
+const messageError=e=>{const shown=!!error;error=(state.language==='ja'?'操作を完了できませんでした: ':'Could not complete the action: ')+String(e?.message||e);update();if(!shown)void show().catch(()=>{});};
 const native=(command,o)=>{const result=nativeQueue.then(()=>go.BrowserView(command,o));nativeQueue=result.catch(()=>{});return result;};
 // Every page starts below the toolbar row; fixed views show it without an
 // address bar (reload and "open in browser" only).
@@ -57,9 +63,12 @@ function bounds(){
   left:(state.sidebarSide==='left'?nav:0)+(dock==='left'?item:0),
   top:state.layout==='horizontal'?96:48,
   right:(state.sidebarSide==='right'?nav:0)+(dock==='right'?item:0),
-  bottom:(dock==='bottom'?state.itemPanelHeight:0)+(updateBarVisible()?updateBarHeight:0),
+  bottom:(dock==='bottom'?state.itemPanelHeight:0)+statusRows()*updateBarHeight,
  };
 }
+// The rows along the bottom that the pages make room for: the update bar and
+// the error strip. The shell lays them out from the same count.
+const statusRows=()=>(updateBarVisible()?1:0)+(error?1:0);
 // The map view opens with the Host's Remote Control ID, so tarkov.dev connects
 // on load and follows map/position commands itself.
 function viewURL(tab){
@@ -117,7 +126,9 @@ function display(message,remote=false){
  return enqueue(async()=>{
   if(remote?state.connection.mode!=='webrtc':state.connection.mode!=='local')return;
   if(message.event==='browser:item'){const next=itemInfo(message.args[0]);if(!next)return;item=next;itemOpen=true;loadHistory();void persist().catch(()=>{});if(!remote)peer.send(message);update();await show();return;}
-  const tab=message.event==='browser:task'?receiveTask(state,message.args[0]):message.event==='browser:map'?receiveMap(state,message.args[0]):null;
+  // The last detection decides the tab shown: a task its page, a position
+  // (after a task, say) the map view again.
+  const tab=message.event==='browser:task'?receiveTask(state,message.args[0]):message.event==='browser:map'?receiveMap(state,message.args[0]):message.event==='browser:position'?receivePosition(state,message.args[0]):null;
   if(tab){if(!remote)peer.send(message);await changed();}
  });
 }
@@ -301,6 +312,10 @@ const ready=(async()=>{
  window.mayakDesktop.on('browser:menu',event=>{if(event.action==='settings')void window.mayak.action('settings');else if(event.action==='bookmark'){const b=state.bookmarks.find(b=>b.id===event.id);if(b)void window.mayak.action('open',b.url);}});
  window.mayakDesktop.on('browser:task',task=>void display({event:'browser:task',args:[task]}));
  window.mayakDesktop.on('browser:map',map=>void display({event:'browser:map',args:[map]}));
+ window.mayakDesktop.on('browser:position',map=>void display({event:'browser:position',args:[map]}));
+ // A shortcut pressed inside a page view (Ctrl+T and the like) is handled by
+ // the shell, like one pressed in the shell itself.
+ window.mayakDesktop.on('browser:key',key=>{if(key&&typeof key.key==='string')onKey({key:key.key,ctrl:!!key.ctrl,shift:!!key.shift,alt:!!key.alt});});
  // Another page used the map view's Remote ID, so Go replaced it: reopen the
  // map view with the new one (its tab keeps the old document script).
  window.mayakDesktop.on('browser:remote-id',id=>void enqueue(async()=>{
@@ -433,10 +448,24 @@ async function perform(type,data){
  }
  case 'close':{
   const index=state.tabs.findIndex(t=>t.id===data&&!t.pinned&&!t.fixed);if(index<0)break;
-  await native('close',{id:data});views.delete(data);loadingViews.delete(data);state.tabs.splice(index,1);
+  await native('close',{id:data});views.delete(data);loadingViews.delete(data);const [closed]=state.tabs.splice(index,1);
+  if(closed.kind==='web'){closedTabs.push({tab:closed,index});if(closedTabs.length>20)closedTabs.shift();}
   if(state.active===data)state.active=state.tabs[Math.min(index,state.tabs.length-1)]?.id;
   if(!state.tabs.length)state.active='';break;
  }
+ // Ctrl+Shift+T: the last closed page comes back where it was, as a new tab.
+ case 'reopenTab':{
+  const last=closedTabs.pop();if(!last)return snapshot();
+  if(state.tabs.length>=80)throw new Error('tab-limit');
+  const next={...last.tab,id:randomUUID()};delete next.pinned;
+  const before=state.tabs.slice(last.index).find(t=>!t.fixed)?.id??null;
+  state.tabs.push(next);moveTab(state,next.id,before);state.active=next.id;break;
+ }
+ case 'cycleTab':if(!cycleTab(state,data<0?-1:1))return snapshot();break;
+ case 'tabAt':if(!tabAt(state,Number(data)))return snapshot();break;
+ // Keyboard focus moves to the shell (its address bar) or to the page shown;
+ // the page views are native windows, so the shell cannot do it itself.
+ case 'focus':if(data==='shell')await native('focus',{id:'shell'});else if(tab?.kind==='web')await native('focus',{id:tab.id});return snapshot();
  case 'pin':togglePin(state,data);break;
  case 'move':moveTab(state,data?.id,data?.before??null);break;
  case 'preferences':{
@@ -511,14 +540,13 @@ async function perform(type,data){
  case 'updateDownload':void go.DownloadUpdate().catch(messageError);return snapshot();
  case 'updateCheck':void go.CheckForUpdates().catch(messageError);return snapshot();
  case 'updateDismiss':updateDismissed=updateStatus?.latest||'';await show();return snapshot();
- case 'dismiss':error='';update();return snapshot();
+ case 'dismiss':error='';update();await show();return snapshot();
  default:return snapshot();
  }
  await changed();return snapshot();
 }
 window.mayak={
- onState(fn){notify=fn;},onFocusAddress(fn){focusAddress=fn;},
+ onState(fn){notify=fn;},onKey(fn){onKey=fn;},
  async action(type,data){await ready;if(type.startsWith('peer'))return pairing(type,data);return enqueue(()=>perform(type,data));},
 };
-document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='l'){event.preventDefault();focusAddress();}});
 window.addEventListener('beforeunload',()=>peer.close());

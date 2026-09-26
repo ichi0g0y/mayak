@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mapTabID,trackerTabID,rememberFavicon,bookmarkGroup,defaults,restore,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,webURL,pageURL} from './state.js';
+import {mapTabID,trackerTabID,rememberFavicon,bookmarkGroup,defaults,restore,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,webURL,pageURL,resolveAddress,searchURL,shortcut,tabAt,cycleTab,receivePosition} from './state.js';
 import {encode,decode,iceServers} from './peer-code.js';
 test('curated bookmarks merge once and preserve user choices',()=>{
  const existing={id:'custom-market',name:'My prices',url:'https://tarkov-market.com',group:'other'};
@@ -233,4 +233,75 @@ test('the item sidebar is restored with its item',()=>{
  assert.equal(right.layout,'vertical');assert.equal(right.sidebarSide,'right');
  const top=restore({sidebarSide:'right',navPosition:'top'});
  assert.equal(top.layout,'horizontal');assert.equal(top.sidebarSide,'right');
+});
+test('the address bar opens addresses and searches everything else',()=>{
+ assert.equal(resolveAddress(''),null);
+ assert.equal(resolveAddress('   '),null);
+ assert.equal(resolveAddress('https://tarkov.dev/maps/'),'https://tarkov.dev/maps/');
+ assert.equal(resolveAddress(' HTTP://tarkov.dev '),'http://tarkov.dev/');
+ assert.equal(resolveAddress('tarkov.dev/maps'),'https://tarkov.dev/maps');
+ assert.equal(resolveAddress('escapefromtarkov.fandom.com/wiki/Quests?x=1#top'),'https://escapefromtarkov.fandom.com/wiki/Quests?x=1#top');
+ assert.equal(resolveAddress('localhost:5173/page'),'https://localhost:5173/page');
+ assert.equal(resolveAddress('192.168.1.10'),'https://192.168.1.10/');
+ assert.equal(resolveAddress('devbox:8080'),'https://devbox:8080/');
+ assert.equal(resolveAddress('flea market prices'),searchURL('flea market prices'));
+ assert.equal(resolveAddress('customs'),searchURL('customs'));
+ assert.equal(resolveAddress('タルコフ 攻略'),searchURL('タルコフ 攻略'));
+ assert.equal(resolveAddress('3.14'),searchURL('3.14'));
+ assert.equal(resolveAddress('v0.1.13 patch notes'),searchURL('v0.1.13 patch notes'));
+ assert.equal(resolveAddress('? tarkov.dev'),searchURL('tarkov.dev'));
+ assert.equal(resolveAddress('?'),null);
+ // Privileged and non-web schemes never navigate.
+ assert.equal(resolveAddress('https://user:pw@tarkov.dev/'),searchURL('https://user:pw@tarkov.dev/'));
+ assert.equal(resolveAddress('http://wails.localhost/'),searchURL('http://wails.localhost/'));
+ assert.equal(resolveAddress('javascript:alert(1)'),searchURL('javascript:alert(1)'));
+ assert.equal(resolveAddress('file:///C:/x'),searchURL('file:///C:/x'));
+});
+test('keyboard shortcuts follow Chrome',()=>{
+ const k=(key,mods={})=>shortcut({key,ctrl:false,shift:false,alt:false,...mods});
+ assert.deepEqual(k('t',{ctrl:true}),{type:'newTab'});
+ assert.deepEqual(k('T',{ctrl:true,shift:true}),{type:'reopenTab'});
+ assert.deepEqual(k('w',{ctrl:true}),{type:'closeTab'});
+ assert.deepEqual(k('F4',{ctrl:true}),{type:'closeTab'});
+ assert.deepEqual(k('Tab',{ctrl:true}),{type:'nextTab'});
+ assert.deepEqual(k('Tab',{ctrl:true,shift:true}),{type:'prevTab'});
+ assert.deepEqual(k('PageDown',{ctrl:true}),{type:'nextTab'});
+ assert.deepEqual(k('PageUp',{ctrl:true}),{type:'prevTab'});
+ assert.deepEqual(k('l',{ctrl:true}),{type:'address'});
+ assert.deepEqual(k('d',{alt:true}),{type:'address'});
+ assert.deepEqual(k('F6'),{type:'address'});
+ assert.deepEqual(k('d',{ctrl:true}),{type:'bookmark'});
+ assert.deepEqual(k('1',{ctrl:true}),{type:'tabAt',index:1});
+ assert.deepEqual(k('9',{ctrl:true}),{type:'tabAt',index:9});
+ assert.equal(k('t'),null);
+ assert.equal(k('t',{ctrl:true,alt:true}),null);
+ assert.equal(k('w',{ctrl:true,shift:true}),null);
+ assert.equal(k('0',{ctrl:true}),null);
+ assert.equal(k('l',{ctrl:true,shift:true}),null);
+});
+test('tab switching by number and cycling covers every tab',()=>{
+ const s=defaults();s.tabs=[...s.tabs.filter(t=>t.fixed),{id:'a',kind:'web',url:'https://a.example/'},{id:'b',kind:'web',url:'https://b.example/'},{id:'c',kind:'blank'}];
+ s.active='a';
+ assert.equal(tabAt(s,1).id,mapTabID);
+ assert.equal(tabAt(s,2).id,trackerTabID);
+ assert.equal(tabAt(s,3).id,'a');
+ assert.equal(tabAt(s,9).id,'c');
+ assert.equal(tabAt(s,6),null);
+ assert.equal(s.active,'c');
+ assert.equal(cycleTab(s,1).id,mapTabID);
+ assert.equal(cycleTab(s,-1).id,'c');
+ assert.equal(cycleTab(s,-1).id,'b');
+ s.tabs=[];assert.equal(cycleTab(s,1),null);assert.equal(tabAt(s,1),null);
+});
+test('a detected position brings the map view forward without reloading its map',()=>{
+ const s=defaults();
+ receiveMap(s,'customs');s.tabs.find(t=>t.id===mapTabID).url='https://tarkov.dev/map/customs?layer=2';
+ openLocal(s,'settings');
+ assert.equal(receivePosition(s,'customs').id,mapTabID);
+ assert.equal(s.active,mapTabID);
+ assert.equal(s.tabs.find(t=>t.id===mapTabID).url,'https://tarkov.dev/map/customs?layer=2');
+ receivePosition(s,'woods');
+ assert.equal(s.tabs.find(t=>t.id===mapTabID).url,'https://tarkov.dev/map/woods');
+ assert.equal(receivePosition(s,'ground-zero-21').url,'https://tarkov.dev/map/ground-zero');
+ assert.equal(receivePosition(s,'Bad Map'),null);
 });

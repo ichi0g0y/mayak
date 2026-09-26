@@ -198,4 +198,62 @@ function openLocal(state,kind) {let tab=state.tabs.find(t=>t.kind===kind);if(!ta
 // frame, which shows the section named in its URL hash).
 const browserSections=['appearance','tasks','adblock','connection','about'];
 const hostSections=['status','logs','folders','recognition','remote','tracker','sounds','startup','debug'];
-export {browserSections,hostSections,randomUUID,mapTabID,trackerTabID,themes,bookmarkGroups,bookmarkGroup,rememberFavicon,hostname,sidebarWidths,clampSidebar,defaults,restore,webURL,pageURL,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,sites};
+// The address bar takes a URL or a search. Anything that is not an address
+// (a scheme, a host name with a dot or a port, an IPv4 address, localhost)
+// is searched on Google, as in Chrome; "? words" always searches.
+const searchURL=query=>'https://www.google.com/search?q='+encodeURIComponent(query);
+const hostLike=/^(localhost|(\d{1,3}\.){3}\d{1,3}|([a-z0-9¡-￿-]+\.)+[a-z¡-￿]{2,}|[a-z0-9-]+:\d{1,5})(:\d{1,5})?([/?#].*)?$/i;
+function resolveAddress(value) {
+  const text=String(value||'').trim();
+  if(!text)return null;
+  if(text.startsWith('?')){const query=text.slice(1).trim();return query?searchURL(query):null;}
+  if(/^https?:\/\//i.test(text))return webURL(text)||searchURL(text);
+  if(/\s/.test(text))return searchURL(text);
+  if(hostLike.test(text))return webURL('https://'+text)||searchURL(text);
+  return searchURL(text);
+}
+// Chrome's tab shortcuts, from a key event (key as event.key, lower-cased)
+// in the shell or forwarded from a page view. Returns what to do, or null.
+function shortcut({key,ctrl,shift,alt}) {
+  key=String(key||'').toLowerCase();
+  if(!ctrl&&!shift&&(key==='f6'||(alt&&key==='d')))return {type:'address'};
+  if(!ctrl||alt)return null;
+  if(key==='t')return {type:shift?'reopenTab':'newTab'};
+  if(key==='tab')return {type:shift?'prevTab':'nextTab'};
+  if(shift)return null;
+  if(key==='w'||key==='f4')return {type:'closeTab'};
+  if(key==='pageup')return {type:'prevTab'};
+  if(key==='pagedown')return {type:'nextTab'};
+  if(key==='l')return {type:'address'};
+  if(key==='d')return {type:'bookmark'};
+  if(/^[1-9]$/.test(key))return {type:'tabAt',index:Number(key)};
+  return null;
+}
+// Ctrl+1..8 pick the nth tab in the sidebar's order (the fixed views first),
+// Ctrl+9 the last one; Ctrl+Tab and Ctrl+PageDown cycle through them.
+function tabAt(state,index) {
+  const tabs=state.tabs;if(!tabs.length)return null;
+  const tab=index>=9?tabs[tabs.length-1]:tabs[index-1];
+  if(!tab)return null;
+  state.active=tab.id;return tab;
+}
+function cycleTab(state,delta) {
+  const tabs=state.tabs;if(!tabs.length)return null;
+  const current=Math.max(0,tabs.findIndex(t=>t.id===state.active));
+  const tab=tabs[(current+delta+tabs.length)%tabs.length];
+  state.active=tab.id;return tab;
+}
+// A detected position brings the map view forward. Its page is kept when it
+// already shows that map (a navigation would lose the state tarkov.dev holds);
+// another map, or another page, is opened like a detected map.
+function receivePosition(state,name) {
+  if(typeof name!=='string'||!name.match(/^[a-z0-9-]{1,60}$/))return null;
+  if(name==='ground-zero-21')name='ground-zero';
+  const tab=state.tabs.find(t=>t.id===mapTabID);
+  if(tab&&tab.kind==='web'){
+    let url=null;try{url=new URL(tab.url);}catch{}
+    if(url&&url.hostname==='tarkov.dev'&&url.pathname.replace(/\/$/,'')===`/map/${name}`){state.active=tab.id;return tab;}
+  }
+  return receiveMap(state,name);
+}
+export {browserSections,hostSections,randomUUID,mapTabID,trackerTabID,themes,bookmarkGroups,bookmarkGroup,rememberFavicon,hostname,sidebarWidths,clampSidebar,defaults,restore,webURL,pageURL,receiveTask,receiveMap,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,sites,resolveAddress,searchURL,shortcut,tabAt,cycleTab,receivePosition};

@@ -50,6 +50,10 @@ func (m *Manager) command(command string, o Options) error {
 		if m.native.closed {
 			return fmt.Errorf("browser has closed")
 		}
+		// Keyboard focus is not moved between the shell and the pages here.
+		if command == "focus" {
+			return nil
+		}
 		if m.native.views == nil {
 			m.native.views = map[string]*nativeView{}
 		}

@@ -145,12 +145,15 @@ h3{font-size:12px;font-weight:500;color:var(--muted);margin:0 0 10px}
 .notice{font-size:12px;color:var(--warn)}
 .empty-tabs{margin:64px 24px;color:var(--muted);font-size:13px;text-align:center}
 /* Stays in the toolbar row: the native web view covers everything below it. */
-/* Errors show as a toast at the bottom right, like the settings' toasts. */
-.toast{position:fixed;right:20px;bottom:calc(20px + var(--status-bar));z-index:30;display:flex;align-items:center;gap:10px;max-width:min(440px,calc(100vw - 40px));padding:10px 8px 10px 14px;border:1px solid var(--border-strong);border-radius:10px;background:var(--raised);color:var(--text);font-size:13px;box-shadow:0 10px 28px var(--shadow);animation:toast-in .18s ease-out}
-.toast.error{border-color:color-mix(in srgb,var(--danger) 55%,var(--border-strong))}
-.toast button{flex:none;width:26px;height:26px;padding:0;border:0;color:var(--muted)}
-.toast button .icon{width:14px;height:14px}
-@keyframes toast-in{from{opacity:0;transform:translateY(8px)}}
+/* Errors take a status row along the bottom, like the update bar (a toast
+   over the page would be under the native page view). With both shown, the
+   error row sits above the update bar. */
+.error-bar{position:fixed;z-index:12;left:0;right:0;bottom:0;height:32px;display:flex;align-items:center;gap:10px;padding:0 4px 0 14px;overflow:hidden;background:var(--raised);color:var(--text);font-size:12.5px;box-shadow:inset 0 1px var(--border-strong),inset 4px 0 var(--danger);animation:error-in .18s ease-out}
+body[data-update-bar=on] .error-bar{bottom:32px}
+.error-bar span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.error-bar button{flex:none;width:26px;height:26px;padding:0;border:0;color:var(--muted)}
+.error-bar button .icon{width:14px;height:14px}
+@keyframes error-in{from{opacity:0;transform:translateY(8px)}}
 
 .peer-panel form,.code-output{margin:18px 0}
 .peer-panel>button{margin:0 8px 16px 0}
@@ -522,7 +525,9 @@ body{--nav-left:var(--sidebar-width);--nav-right:0px;--item-left:0px;--item-righ
 body[data-nav=right]{--nav-left:0px;--nav-right:var(--sidebar-width)}
 body[data-nav=top]{--nav-left:0px;--nav-right:0px;--page-top:96px}
 /* The update bar along the bottom lifts everything above it. */
-body[data-update-bar=on]{--status-bar:32px}
+/* One 32px row per status strip shown (the update bar, the error row). */
+body[data-status-rows="1"]{--status-bar:32px}
+body[data-status-rows="2"]{--status-bar:64px}
 body[data-item=right]{--item-right:var(--item-width)}
 body[data-item=left]{--item-left:var(--item-width)}
 body[data-item=bottom]{--item-bottom:var(--item-height)}
@@ -698,7 +703,7 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 /* The update bar: a status strip along the window's bottom edge, below the
    sidebar, the pages and the item panel (see --status-bar and bounds() in
    api.js); nothing floats over the page views. */
-.update-bar{position:fixed;z-index:12;left:0;right:0;bottom:0;height:var(--status-bar);display:flex;align-items:center;gap:10px;padding:0 4px 0 14px;overflow:hidden;background:var(--accent);color:var(--on-accent);font-size:12.5px;font-weight:500}
+.update-bar{position:fixed;z-index:12;left:0;right:0;bottom:0;height:32px;display:flex;align-items:center;gap:10px;padding:0 4px 0 14px;overflow:hidden;background:var(--accent);color:var(--on-accent);font-size:12.5px;font-weight:500}
 .update-bar .update-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .update-actions{display:flex;flex:none;gap:4px}
 .update-bar button{flex:none;height:24px;padding:0 10px;font-size:12px;font-weight:500;white-space:nowrap;border:1px solid color-mix(in srgb,var(--on-accent) 30%,transparent);background:color-mix(in srgb,var(--on-accent) 12%,transparent);color:var(--on-accent)}

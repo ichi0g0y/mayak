@@ -30,6 +30,18 @@ type Event struct {
 	Favicon    string `json:"favicon"`
 	Loading    bool   `json:"loading"`
 }
+
+// Key is a key pressed in a page view with a modifier held, offered to the
+// shell before the page sees it. Key is the key's name as the shell's own
+// keyboard events spell it, lower-cased: a letter or digit, "tab", "pageup",
+// "pagedown", "f4", "f6".
+type Key struct {
+	ID    string `json:"id"`
+	Key   string `json:"key"`
+	Ctrl  bool   `json:"ctrl"`
+	Shift bool   `json:"shift"`
+	Alt   bool   `json:"alt"`
+}
 type Manager struct {
 	window *application.WebviewWindow
 	notify func(Event)
@@ -38,6 +50,22 @@ type Manager struct {
 	scriptMu       sync.Mutex
 	documentScript string
 	blocker        ContentBlocker
+	keys           func(Key) bool
+}
+
+// SetKeyHandler receives the modifier keys pressed in page views. A handler
+// that returns true takes the key from the page; a page never sees it then.
+// Only Windows forwards keys so far.
+func (m *Manager) SetKeyHandler(handler func(Key) bool) {
+	m.scriptMu.Lock()
+	defer m.scriptMu.Unlock()
+	m.keys = handler
+}
+
+func (m *Manager) keyHandler() func(Key) bool {
+	m.scriptMu.Lock()
+	defer m.scriptMu.Unlock()
+	return m.keys
 }
 
 // ContentBlocker decides which subresources of a page are blocked, and which

@@ -6,6 +6,10 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- The built-in browser takes Chrome's keyboard shortcuts: Ctrl+T for a new tab, Ctrl+W to close one, Ctrl+Shift+T to reopen the last closed tab, Ctrl+Tab and Ctrl+Shift+Tab to switch tabs, Ctrl+1 to 9 for the nth tab, Ctrl+L, Alt+D and F6 for the address bar, Ctrl+D to bookmark. They work with the keyboard in a page too (Windows).
+- Anything typed in the address bar that is not an address is searched on Google. Host names with a dot and `localhost:8080` open as before.
+- Error notices such as "Could not complete the action" were hidden under the page. They now take a row of their own along the bottom of the window, like the update notice.
+- The tab shown follows the last recognition: a position screenshot after a task screen brings the map tab back (the page stays as it is when it already shows that map).
 - The tutorial's wording is brought up to date: screenshots taken in the game, no step count that contradicts its seven screens, and the 8-digit pairing code in the other-PC step.
 
 ## v0.1.13 (2026-09-26)

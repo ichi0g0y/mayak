@@ -194,8 +194,10 @@ Host がスクリーンショットを解析するたびに、何と判定した
 ## ツールバーとアドレス欄
 
 - 通常の `web` / `blank` タブ: 戻る・進む・再読み込み・アドレス欄。`web` タブでは右端に「既定のブラウザで開く」ボタンが付きます（`Browser.OpenURL`、http/https のみ）。
-- アドレス欄はスキームがなければ `https://` を補います。http/https 以外はエラーになります。`web` / `blank` タブでは現在のタブを移動させ、それ以外のタブからは新しいタブを開きます。
-- Ctrl+L（macOS では Cmd+L）でアドレス欄にフォーカスします。新規タブを作ったときもアドレス欄にフォーカスします。
+- アドレス欄は Chrome と同じく URL と検索の両方を受け付けます（`state.js` の `resolveAddress`）。`http://` / `https://` で始まるもの、ドットを含むホスト名、`host:port`、IPv4、`localhost` は URL として開き（スキームがなければ `https://` を補います）、それ以外（空白を含むもの、単語だけ、`3.14` のようなもの）は Google 検索（`https://www.google.com/search?q=`）にします。先頭に `?` を付けると必ず検索です。`file:` や `javascript:`、認証情報付きの URL は開かず検索になります。`web` / `blank` タブでは現在のタブを移動させ、それ以外のタブからは新しいタブを開きます。Enter で移動したあとはページにキーボードフォーカスが移り、Esc はタブの URL に戻してページへ戻ります。
+- キーボードショートカットは Chrome に合わせています（`state.js` の `shortcut()`。macOS では Ctrl の代わりに Cmd も使えます）。Ctrl+T 新しいタブ（アドレス欄にフォーカス）、Ctrl+W / Ctrl+F4 タブを閉じる（固定表示とピン留めは除く）、Ctrl+Shift+T 最後に閉じた Web タブを元の位置に開き直す（起動中に閉じた 20 件まで、保存はしない）、Ctrl+Tab / Ctrl+PageDown 次のタブ、Ctrl+Shift+Tab / Ctrl+PageUp 前のタブ、Ctrl+1〜8 サイドバー順で n 番目のタブ（固定表示が 1・2 番目）、Ctrl+9 最後のタブ、Ctrl+L / Alt+D / F6 アドレス欄にフォーカス、Ctrl+D 表示中のページをブックマークしてサイドバーにピン留め。
+  - ページビュー（WebView2 の子ウインドウ）にフォーカスがあるときは、シェルの `keydown` には届きません。Windows では各ビューの `AcceleratorKeyPressed`（`view_windows.go` の `acceleratorKey`）が修飾キー付きのキーをキー名（`event.key` を小文字にしたもの）に直して `SetKeyHandler` に渡し、Go 側の許可リスト（`app_browser.go` の `browserShortcutKey`。`shortcut()` と同じ組み合わせ）にあるものだけ `browser:key` イベントでシェルに送り、ページには渡しません。それ以外のキー（Ctrl+R、Ctrl+F、Ctrl+C など）はページのままです。macOS / Linux ではページ内のキーは転送しません。
+  - タブを切り替えたあとのキーボードフォーカスは、Web タブならそのページ、シェルのページ（設定など）ならシェルに移します（`BrowserView` の `focus` コマンド。ID `shell` はウインドウの `Focus()`、それ以外はビューの `MoveFocus`）。ページビューはネイティブのウインドウなので、シェルからは `focus()` だけでは移せません。
 - 戻る・進むのボタンは、ナビゲーションイベントの `canBack` / `canForward` に合わせて有効・無効が切り替わります。
 - 再読み込みは Ctrl+Shift+R と同じくキャッシュを無視します。DevTools プロトコルの `Page.reload`（`ignoreCache: true`）を使い、失敗した場合だけ通常の再読み込みになります（`browser_tabs.go` の `BrowserCommand`）。キャッシュが壊れたときも再読み込みで回復させるためです。
 

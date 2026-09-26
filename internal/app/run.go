@@ -91,6 +91,7 @@ func Run(assets fs.FS, icon []byte) error {
 		})
 	})
 	service.browserViews = browserview.New(service.window, func(e browserview.Event) { service.emitEvent("browser:navigation", e) })
+	service.browserViews.SetKeyHandler(service.browserShortcut)
 	for _, event := range []events.WindowEventType{events.Common.WindowDidMove, events.Common.WindowDidResize, events.Common.WindowMaximise, events.Common.WindowUnMaximise} {
 		service.window.OnWindowEvent(event, func(*application.WindowEvent) { go service.saveWindow(service.ctx) })
 	}

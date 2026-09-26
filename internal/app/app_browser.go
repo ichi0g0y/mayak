@@ -141,7 +141,7 @@ func (a *App) BrowserView(command string, v browserview.Options) error {
 		if e != nil || u.Host == "" || u.User != nil || (u.Scheme != "https" && u.Scheme != "http") || strings.EqualFold(u.Hostname(), "wails.localhost") {
 			return errors.New("invalid browser URL")
 		}
-	case "hideAll", "close", "back", "forward", "reload":
+	case "hideAll", "close", "back", "forward", "reload", "focus":
 	default:
 		return errors.New("invalid browser command")
 	}
@@ -156,4 +156,37 @@ func (a *App) showBrowserTask(status model.Status, site string) {
 		urls[s] = questStatusURL(s, status)
 	}
 	a.emitEvent("browser:task", map[string]interface{}{"id": status.QuestID, "name": status.LastQuest, "site": normalizeQuestSite(site), "urls": urls})
+}
+
+// browserShortcutKey is the set of keys the shell takes from a page: Chrome's
+// tab shortcuts, as state.js shortcut() reads them (the two must agree, or a
+// page loses a key nobody uses). Ctrl+T and Ctrl+Shift+T, Ctrl+Tab with or
+// without Shift, Ctrl+W, Ctrl+F4, Ctrl+PageUp/PageDown, Ctrl+L, Alt+D, F6,
+// Ctrl+D and Ctrl+1..9.
+func browserShortcutKey(k browserview.Key) bool {
+	switch {
+	case !k.Ctrl && !k.Shift && (k.Key == "f6" || (k.Alt && k.Key == "d")):
+		return true
+	case !k.Ctrl || k.Alt:
+		return false
+	case k.Key == "t" || k.Key == "tab":
+		return true
+	case k.Shift:
+		return false
+	}
+	switch k.Key {
+	case "w", "f4", "pageup", "pagedown", "l", "d", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+		return true
+	}
+	return false
+}
+
+// browserShortcut hands a page's shortcut to the shell, which acts on it as
+// on one pressed in the shell itself.
+func (a *App) browserShortcut(k browserview.Key) bool {
+	if !browserShortcutKey(k) {
+		return false
+	}
+	a.emitEvent("browser:key", k)
+	return true
 }

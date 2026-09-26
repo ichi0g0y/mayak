@@ -1860,6 +1860,11 @@ func (a *App) handleCoordinateScreenshot(ctx context.Context, sequence uint64, p
 		a.addLog("Info", "Raid", fmt.Sprintf("Map refreshed from latest EFT session: %s", latestMap))
 	}
 	a.addLog("Info", "Position", fmt.Sprintf("Detected x=%.2f y=%.2f z=%.2f rotation=%.2f map=%s", parsed.X, parsed.Y, parsed.Z, parsed.Rotation, settings.Map))
+	// The built-in browser brings its map view forward: the last detection
+	// decides the tab shown (a task's page after a task, the map after this).
+	if settings.Map != "" {
+		a.emitEvent("browser:position", settings.Map)
+	}
 	if len(remoteTargetIDs(settings, "map")) > 0 && settings.Map != "" {
 		sent, err := a.runRemoteIfCurrent(sequence, func() error {
 			return a.sendPosition(settings, parsed)

@@ -42,3 +42,25 @@ func TestBrowserRejectsPrivilegedNavigationBeforeNativeCalls(t *testing.T) {
 		t.Fatal("accepted traversal ID")
 	}
 }
+
+func TestBrowserShortcutKeysMatchTheShell(t *testing.T) {
+	key := func(name string, ctrl, shift, alt bool) browserview.Key {
+		return browserview.Key{ID: "tab", Key: name, Ctrl: ctrl, Shift: shift, Alt: alt}
+	}
+	taken := []browserview.Key{key("t", true, false, false), key("t", true, true, false), key("w", true, false, false), key("f4", true, false, false), key("tab", true, false, false), key("tab", true, true, false), key("pageup", true, false, false), key("pagedown", true, false, false), key("l", true, false, false), key("d", true, false, false), key("d", false, false, true), key("f6", false, false, false), key("1", true, false, false), key("9", true, false, false)}
+	for _, k := range taken {
+		if !browserShortcutKey(k) {
+			t.Errorf("not taken: %+v", k)
+		}
+	}
+	left := []browserview.Key{key("t", false, false, false), key("t", true, false, true), key("w", true, true, false), key("0", true, false, false), key("l", true, true, false), key("r", true, false, false), key("f", true, false, false), key("c", true, false, false), key("f5", false, false, false), key("d", false, true, true), key("f6", true, false, false)}
+	for _, k := range left {
+		if browserShortcutKey(k) {
+			t.Errorf("taken: %+v", k)
+		}
+	}
+	a := &App{}
+	if !a.browserShortcut(key("t", true, false, false)) || a.browserShortcut(key("r", true, false, false)) {
+		t.Fatal("shortcut handler disagrees with the key set")
+	}
+}
