@@ -6,6 +6,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- The marker for your position on tarkov.dev's map can be replaced (Settings → tarkov.dev → Player position marker): five that stand out (large with a white outline, red glow, green glow, pulsing red ring, yellow beacon) or your own image (PNG / SVG / JPEG / WebP / GIF). The heading stays the rotation tarkov.dev applies. Only maps opened in MAYAK's built-in browser are affected.
 - The story tasks screen (Character → Tasks → Story) is recognized: the chapter's name ("Tour", "The Ticket", "Blue Fire", "They Are Already Here"…) is read and its page in the official wiki's "Story chapters" opens. tarkov.dev has no page for these tasks, so with tarkov.dev selected only the map shows.
 - Items with a short name, such as the Dorm overseer key, were recognized as items but did not show in the item panel. Two causes: an equipment slot's frame ("Headwear" and the like) to the left of the window made the name crop extend over it, and Windows OCR read nothing from a short name at the left of a wide title bar. The name is read from the window's own left border, and only where text is drawn.
 

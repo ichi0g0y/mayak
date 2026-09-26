@@ -72,6 +72,14 @@ export class Settings {
     "autoStartMonitoring": boolean;
     "openMapOnRaidStart": boolean;
     "navigateMapOnPositionScreenshot": boolean;
+
+    /**
+     * PlayerMarker is how the built-in browser shows the player's position
+     * on tarkov.dev's map (see app_marker.go); PlayerMarkerImage is the
+     * image file of the "custom" marker.
+     */
+    "playerMarker": string;
+    "playerMarkerImage": string;
     "tarkovTrackerEnabled": boolean;
     "matchFoundSoundEnabled": boolean;
     "matchFoundSoundPath": string;
@@ -193,6 +201,12 @@ export class Settings {
         }
         if (!("navigateMapOnPositionScreenshot" in $$source)) {
             this["navigateMapOnPositionScreenshot"] = false;
+        }
+        if (!("playerMarker" in $$source)) {
+            this["playerMarker"] = "";
+        }
+        if (!("playerMarkerImage" in $$source)) {
+            this["playerMarkerImage"] = "";
         }
         if (!("tarkovTrackerEnabled" in $$source)) {
             this["tarkovTrackerEnabled"] = false;

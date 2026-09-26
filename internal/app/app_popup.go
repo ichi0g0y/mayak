@@ -82,9 +82,7 @@ func (a *App) BrowserPopupShow(page PopupPage, place PopupPlace) error {
 		if a.adblock != nil {
 			p.views.SetContentBlocker(a.adblock)
 		}
-		if id := a.BrowserRemoteID(); id != "" {
-			p.views.SetDocumentScript(tarkovDevConnectScript(id))
-		}
+		p.views.SetDocumentScript(a.tarkovDevScript())
 		popup := p.window
 		popup.OnWindowEvent(events.Common.WindowRuntimeReady, func(*application.WindowEvent) { ownPopup(popup, a.window) })
 		p.window.OnWindowEvent(events.Windows.WindowInactive, func(*application.WindowEvent) {

@@ -313,6 +313,13 @@ const ready=(async()=>{
  window.mayakDesktop.on('browser:task',task=>void display({event:'browser:task',args:[task]}));
  window.mayakDesktop.on('browser:map',map=>void display({event:'browser:map',args:[map]}));
  window.mayakDesktop.on('browser:position',map=>void display({event:'browser:position',args:[map]}));
+ // The document script changed (the player marker style): a page keeps the
+ // script it was created with, so the map view is created again.
+ window.mayakDesktop.on('browser:document-script',()=>void enqueue(async()=>{
+  const tab=state.tabs.find(t=>t.id===mapTabID);if(!tab||!views.has(tab.id))return;
+  await native('close',{id:tab.id});views.delete(tab.id);loadingViews.delete(tab.id);
+  if(state.active===tab.id)await show();else await preloadMap();
+ }));
  // A shortcut pressed inside a page view (Ctrl+T and the like) is handled by
  // the shell, like one pressed in the shell itself.
  window.mayakDesktop.on('browser:key',key=>{if(key&&typeof key.key==='string')onKey({key:key.key,ctrl:!!key.ctrl,shift:!!key.shift,alt:!!key.alt});});

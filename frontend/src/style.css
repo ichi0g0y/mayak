@@ -445,3 +445,17 @@ select option { background: var(--raised); color: var(--text); }
 
 .update-progress { display: block; width: 100%; height: 6px; margin: 12px 0 0; accent-color: var(--accent); }
 .update-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+/* The player marker gallery (settings, tarkov.dev): each choice shows the
+   arrow with its style, from the sheet the Go side builds (app_marker.go). */
+.marker-field { margin-top: 6px; }
+.marker-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; margin: 8px 0 10px; }
+.marker-choice { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 6px 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; }
+.marker-choice:hover { border-color: var(--border-strong, var(--border)); color: var(--text); }
+.marker-choice.selected { border-color: var(--accent); color: var(--text); box-shadow: 0 0 0 1px var(--accent) inset; }
+.marker-preview { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 8px; background: #2b2f2a radial-gradient(circle at 50% 50%, #3a4036 0, #262a24 70%); overflow: hidden; }
+.marker-preview .marker-icon { position: relative; display: block; width: 24px; height: 24px; }
+.marker-preview .marker-icon img { display: block; width: 24px; height: 24px; }
+.marker-name { text-align: center; line-height: 1.3; }
+.marker-file-row { display: grid; grid-template-columns: auto minmax(80px, 1fr) auto; align-items: center; gap: 7px; }
+.marker-file-path { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--muted); }

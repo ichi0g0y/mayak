@@ -65,7 +65,7 @@ func TestBrowserRemoteIDReceivesMapButNotTasks(t *testing.T) {
 }
 
 func TestTarkovDevConnectScriptTargetsMapPages(t *testing.T) {
-	script := tarkovDevConnectScript("AB12")
+	script := tarkovDevScript("AB12", "")
 	for _, want := range []string{`"tarkov.dev"`, `"/map/"`, `"/maps/"`, `"connection"`, `"sessionId"`, `"AB12"`} {
 		if !strings.Contains(script, want) {
 			t.Fatalf("script lacks %s: %s", want, script)

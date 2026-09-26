@@ -44,26 +44,57 @@ func ensureBrowserRemoteID(s *config.Settings) bool {
 	return true
 }
 
-// tarkovDevConnectScript runs before tarkov.dev's own scripts. tarkov.dev reads
-// ?connection=<ID> on start-up, stores it as its session ID and enables Remote
-// Control. Only map pages and the map index (the map view's start page before
-// a map is detected) connect: a connected task page would be navigated away by
-// map commands. The browser shell strips the parameter from tab URLs.
+// tarkovDevScript runs before tarkov.dev's own scripts, on map pages and the
+// map index (the map view's start page before a map is detected) only.
+// It adds the player marker's style sheet (css, see app_marker.go; none for
+// tarkov.dev's own marker) and connects the page to Remote Control: tarkov.dev
+// reads ?connection=<ID> on start-up, stores it as its session ID and enables
+// Remote Control. A connected task page would be navigated away by map
+// commands, hence map pages only. The browser shell strips the parameter
+// from tab URLs.
 // The page connects with the session ID it read from localStorage before that
 // effect ran, so the ID is also written there first: otherwise a page that
 // once had its own ID keeps connecting with it.
 // A tab keeps the script it was created with, so after the ID is replaced
 // (replaceBrowserRemoteID) an ID in the address wins over the one built in:
-// the shell reopens its map view with the new one.
-func tarkovDevConnectScript(id string) string {
+// the shell reopens its map view with the new one (and after the marker
+// style changes, browser:document-script).
+func tarkovDevScript(id, css string) string {
 	quoted, _ := json.Marshal(id)
+	sheet, _ := json.Marshal(css)
 	return `(()=>{try{
 const p=location.pathname;if(location.hostname!=="tarkov.dev"||!(p.startsWith("/map/")||p==="/maps"||p==="/maps/"))return;
+const css=` + string(sheet) + `;
+if(css){const add=()=>{if(document.getElementById("mayak-player-marker"))return;const s=document.createElement("style");s.id="mayak-player-marker";s.textContent=css;(document.head||document.documentElement).appendChild(s);};if(document.documentElement)add();else document.addEventListener("DOMContentLoaded",add);}
 const u=new URL(location.href),given=u.searchParams.get("connection"),id=/^[A-Z0-9]{4,32}$/.test(given||"")?given:` + string(quoted) + `;
+if(!id)return;
 localStorage.setItem("sessionId",JSON.stringify(id));
 if(given===id)return;
 u.searchParams.set("connection",id);history.replaceState(history.state,"",u);
 }catch(e){}})();`
+}
+
+// tarkovDevScript builds the document script from the current settings.
+func (a *App) tarkovDevScript() string {
+	a.mu.RLock()
+	settings := a.settings
+	a.mu.RUnlock()
+	return tarkovDevScript(settings.BrowserRemoteID, a.playerMarkerCSS(settings))
+}
+
+// applyBrowserScript gives the page views, the popup's too, the document
+// script for the current settings. Pages already open keep their script:
+// the shell recreates its map view on browser:document-script.
+func (a *App) applyBrowserScript() {
+	script := a.tarkovDevScript()
+	if a.browserViews != nil {
+		a.browserViews.SetDocumentScript(script)
+	}
+	a.popup.mu.Lock()
+	if a.popup.views != nil {
+		a.popup.views.SetDocumentScript(script)
+	}
+	a.popup.mu.Unlock()
 }
 
 // BrowserRemoteID lets the browser shell open its fixed map view with
@@ -81,7 +112,7 @@ func (a *App) setupBrowserRemote() {
 	if a.browserViews == nil || id == "" {
 		return
 	}
-	a.browserViews.SetDocumentScript(tarkovDevConnectScript(id))
+	a.applyBrowserScript()
 	a.watchBrowserRemote(id)
 }
 

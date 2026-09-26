@@ -13,10 +13,10 @@ export const EventsOn = desktop.on
 export const BrowserOpenURL = desktop.openURL
 export const {
   AnalyzeLatestScreenshot, AutoDetectEFTDirectories, AutoDetectRemoteID, CheckForUpdates,
-  ChooseLogsDirectory, ChooseScreenshotDirectory, ChooseSoundFile, ClearLogs,
+  ChooseLogsDirectory, ChoosePlayerMarkerFile, ChooseScreenshotDirectory, ChooseSoundFile, ClearLogs,
   DiscoverTrackerProfiles, DownloadUpdate, GameLanguages, GetLogs, GetSettings, GetStatus, GetTrackerHistoryBreakpoints, GetUpdateStatus,
   ImportTrackerToken, InstallUpdate, OpenDebugDirectory, OpenLogsDirectory, OpenScreenshotDirectory,
-  PersistSettings, PreviewSound, RefreshCatalog, OpenQuestPage, OpenHideoutDiagnostics,
+  PersistSettings, PlayerMarkerPreviewCSS, PreviewSound, RefreshCatalog, OpenQuestPage, OpenHideoutDiagnostics,
   RefreshTracker, RemoveTrackerKey, RefreshTrackerKeyNames, SaveSettings,
   SetTrackerProfileKey, StartMonitoring, StopMonitoring, SyncTrackerHistory, TestRemote,
 } = desktop.backend

@@ -213,6 +213,13 @@ export function ChooseLogsDirectory(): $CancellablePromise<string> {
     return $Call.ByID(4164457643);
 }
 
+/**
+ * ChoosePlayerMarkerFile asks for a custom marker image and checks it can be used.
+ */
+export function ChoosePlayerMarkerFile(): $CancellablePromise<string> {
+    return $Call.ByID(704134006);
+}
+
 export function ChooseScreenshotDirectory(): $CancellablePromise<string> {
     return $Call.ByID(1391905886);
 }
@@ -323,6 +330,24 @@ export function OpenScreenshotDirectory(): $CancellablePromise<void> {
  */
 export function PersistSettings(s: config$0.Settings): $CancellablePromise<void> {
     return $Call.ByID(914542567, s);
+}
+
+/**
+ * PlayerMarkerPreviewCSS is a style sheet for the settings page's gallery:
+ * every style's rules on .marker-preview[data-style=<style>] .marker-icon
+ * (the box) and its img, the custom one with the image at imagePath.
+ */
+export function PlayerMarkerPreviewCSS(imagePath: string): $CancellablePromise<string> {
+    return $Call.ByID(675497734, imagePath);
+}
+
+/**
+ * PlayerMarkerStyles lists the marker styles the settings offer.
+ */
+export function PlayerMarkerStyles(): $CancellablePromise<string[]> {
+    return $Call.ByID(4005732563).then(($result: any) => {
+        return $$createType11($result);
+    });
 }
 
 export function PreviewSound(kind: string, path: string, volume: number): $CancellablePromise<void> {

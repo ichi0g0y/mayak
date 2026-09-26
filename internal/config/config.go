@@ -41,6 +41,11 @@ type Settings struct {
 	AutoStartMonitoring   bool   `json:"autoStartMonitoring"`
 	OpenMapOnRaidStart    bool   `json:"openMapOnRaidStart"`
 	NavigateMapOnShot     bool   `json:"navigateMapOnPositionScreenshot"`
+	// PlayerMarker is how the built-in browser shows the player's position
+	// on tarkov.dev's map (see app_marker.go); PlayerMarkerImage is the
+	// image file of the "custom" marker.
+	PlayerMarker          string `json:"playerMarker"`
+	PlayerMarkerImage     string `json:"playerMarkerImage"`
 	TarkovTrackerEnabled  bool   `json:"tarkovTrackerEnabled"`
 	MatchFoundSound       bool   `json:"matchFoundSoundEnabled"`
 	MatchFoundSoundPath   string `json:"matchFoundSoundPath"`

@@ -824,6 +824,7 @@ func (a *App) SaveSettings(s config.Settings) error {
 	oldAutoUpdate := a.settings.AutoUpdate
 	oldLanguage := a.settings.Language
 	oldCleanup, oldRetainCount, oldRetainHours := a.settings.ScreenshotCleanup, a.settings.ScreenshotRetainCount, a.settings.ScreenshotRetainHours
+	oldMarker, oldMarkerImage := a.settings.PlayerMarker, a.settings.PlayerMarkerImage
 	monitoring := a.status.Monitoring
 	s = a.keepWindowSettings(s)
 	a.mu.Unlock()
@@ -853,6 +854,10 @@ func (a *App) SaveSettings(s config.Settings) error {
 	if oldLanguage != s.Language {
 		a.setTrayLanguage(s.Language)
 	}
+	if oldMarker != s.PlayerMarker || oldMarkerImage != s.PlayerMarkerImage {
+		a.applyBrowserScript()
+		a.emitEvent("browser:document-script")
+	}
 	if oldCleanup != s.ScreenshotCleanup || oldRetainCount != s.ScreenshotRetainCount || oldRetainHours != s.ScreenshotRetainHours {
 		go a.runScreenshotMaintenance()
 	}
@@ -881,6 +886,7 @@ func (a *App) PersistSettings(s config.Settings) error {
 	oldTrackerEnabled := a.settings.TarkovTrackerEnabled
 	oldGameMode := a.settings.GameMode
 	oldCleanup, oldRetainCount, oldRetainHours := a.settings.ScreenshotCleanup, a.settings.ScreenshotRetainCount, a.settings.ScreenshotRetainHours
+	oldMarker, oldMarkerImage := a.settings.PlayerMarker, a.settings.PlayerMarkerImage
 	s = a.keepWindowSettings(s)
 	a.mu.Unlock()
 	if err := applyAutostartChange(oldLaunchAtStartup, s.LaunchAtStartup); err != nil {
@@ -897,6 +903,11 @@ func (a *App) PersistSettings(s config.Settings) error {
 	status := a.status
 	a.mu.Unlock()
 	a.emitStatus(status)
+	// The map view is created again with the new marker style (api.js).
+	if oldMarker != s.PlayerMarker || oldMarkerImage != s.PlayerMarkerImage {
+		a.applyBrowserScript()
+		a.emitEvent("browser:document-script")
+	}
 	if !oldTrackerEnabled && s.TarkovTrackerEnabled {
 		go func() { _ = a.RefreshTracker() }()
 	}
@@ -925,6 +936,8 @@ func normalizeSettings(s config.Settings) config.Settings {
 		s.GameLanguage = "auto"
 	}
 	s.QuestSite = normalizeQuestSite(s.QuestSite)
+	s.PlayerMarker = normalizePlayerMarker(s.PlayerMarker)
+	s.PlayerMarkerImage = normalizeSoundPath(s.PlayerMarkerImage)
 	s.HideoutErrorSoundPath = normalizeSoundPath(s.HideoutErrorSoundPath)
 	if s.ScreenshotDirectory != "" {
 		s.ScreenshotDirectory = filepath.Clean(s.ScreenshotDirectory)
