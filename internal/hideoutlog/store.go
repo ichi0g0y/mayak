@@ -44,7 +44,8 @@ func NewStore(path string) *Store {
 }
 
 // prune drops events older than HistoryAge and beyond HistoryLimit, keeps
-// the rest newest first, and rebuilds the fingerprint set. s.mu is held.
+// the rest newest first, and rebuilds the fingerprint set when anything
+// was dropped. s.mu is held.
 func (s *Store) prune(now time.Time) {
 	var kept []Event
 	for _, e := range s.events {
@@ -56,10 +57,13 @@ func (s *Store) prune(now time.Time) {
 	if len(kept) > HistoryLimit {
 		kept = kept[:HistoryLimit]
 	}
+	dropped := len(kept) != len(s.events)
 	s.events = kept
-	s.seen = make(map[string]struct{}, len(kept))
-	for _, e := range kept {
-		s.seen[e.Fingerprint()] = struct{}{}
+	if dropped || len(s.seen) != len(kept) {
+		s.seen = make(map[string]struct{}, len(kept))
+		for _, e := range kept {
+			s.seen[e.Fingerprint()] = struct{}{}
+		}
 	}
 }
 
@@ -99,9 +103,17 @@ func (s *Store) Add(e Event) bool {
 	if _, known := s.seen[fingerprint]; known {
 		return false
 	}
-	s.events = append(s.events, e)
+	// Kept newest first: the event goes where its time falls (replayed logs
+	// come in order, so usually the front), and the list is pruned only when
+	// it is over the limit or its oldest event has aged out.
+	at := sort.Search(len(s.events), func(i int) bool { return !s.events[i].OccurredAt.After(e.OccurredAt) })
+	s.events = append(s.events, Event{})
+	copy(s.events[at+1:], s.events[at:])
+	s.events[at] = e
 	s.seen[fingerprint] = struct{}{}
-	s.prune(now)
+	if len(s.events) > HistoryLimit || s.events[len(s.events)-1].OccurredAt.Before(now.Add(-HistoryAge)) {
+		s.prune(now)
+	}
 	s.scheduleSave()
 	return true
 }

@@ -68,12 +68,10 @@ func (a *App) handleHideoutEvent(parent context.Context, e hideoutlog.Event) {
 	}
 	if mode := catalogMode(e.Mode); e.AreaType >= 0 && catalog.ValidMode(mode) {
 		ctx, cancel := context.WithTimeout(parent, 60*time.Second)
-		if stations, err := a.catalogClient.Hideout(ctx, mode); err == nil {
-			for _, s := range stations {
-				if s.AreaType == e.AreaType {
-					e.StationName = s.Name
-					break
-				}
+		for _, s := range a.hideoutStationsFor(ctx, mode) {
+			if s.AreaType == e.AreaType {
+				e.StationName = s.Name
+				break
 			}
 		}
 		cancel()
@@ -106,6 +104,34 @@ func (a *App) handleHideoutEvent(parent context.Context, e hideoutlog.Event) {
 			playNotification(sound.Error, settings.HideoutErrorSoundPath, settings.SoundVolume)
 		}
 	}
+}
+
+// hideoutStationsFor is the catalog's hideout stations of a mode, kept for
+// ten minutes: the logs replayed at a start ask for them once per event,
+// and each answer is a decode of the catalog otherwise.
+func (a *App) hideoutStationsFor(ctx context.Context, mode string) []catalog.HideoutStation {
+	a.hideoutStationsMu.Lock()
+	cached, ok := a.hideoutStationsCache[mode]
+	a.hideoutStationsMu.Unlock()
+	if ok && time.Since(cached.at) < 10*time.Minute {
+		return cached.stations
+	}
+	stations, err := a.catalogClient.Hideout(ctx, mode)
+	if err != nil {
+		return cached.stations
+	}
+	a.hideoutStationsMu.Lock()
+	if a.hideoutStationsCache == nil {
+		a.hideoutStationsCache = map[string]hideoutStationsEntry{}
+	}
+	a.hideoutStationsCache[mode] = hideoutStationsEntry{stations: stations, at: time.Now()}
+	a.hideoutStationsMu.Unlock()
+	return stations
+}
+
+type hideoutStationsEntry struct {
+	stations []catalog.HideoutStation
+	at       time.Time
 }
 
 // hideoutSaved is told how each write of the hideout history went (the

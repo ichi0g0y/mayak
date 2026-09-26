@@ -112,13 +112,16 @@ type App struct {
 	lastProcessed     config.ProcessedScreenshot
 	analysisCancel    context.CancelFunc
 	// statusSoon is the pending coalesced status emission (emitStatusSoon).
-	statusSoonMu     sync.Mutex
-	statusSoon       *time.Timer
-	runThroughCancel context.CancelFunc
-	done             chan struct{}
-	doneOnce         sync.Once
-	quitting         atomic.Bool
-	analysisSequence atomic.Uint64
+	statusSoonMu sync.Mutex
+	statusSoon   *time.Timer
+	// The catalog's hideout stations by mode (hideoutStationsFor).
+	hideoutStationsMu    sync.Mutex
+	hideoutStationsCache map[string]hideoutStationsEntry
+	runThroughCancel     context.CancelFunc
+	done                 chan struct{}
+	doneOnce             sync.Once
+	quitting             atomic.Bool
+	analysisSequence     atomic.Uint64
 	// update is the newer release being fetched (app_update.go).
 	update updateState
 }
