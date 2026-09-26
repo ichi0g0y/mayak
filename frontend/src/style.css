@@ -492,3 +492,8 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .tracker-keys-block { display: grid; gap: 12px; padding: 12px 14px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
 .tracker-keys-block .tracker-unassigned { padding-top: 0; border-top: 0; }
 .tracker-keys-block .tracker-manage { padding-top: 10px; }
+/* The profiles by mode: a heading per mode, the mode played last first. */
+.tracker-mode-group { display: grid; gap: 6px; }
+.tracker-mode-group + .tracker-mode-group { margin-top: 6px; }
+.tracker-group-heading { display: flex; align-items: center; gap: 8px; }
+.tracker-group-heading small { color: var(--muted-foreground); font-size: 10px; }
