@@ -91,52 +91,12 @@ func field(master *image.NRGBA) ([]float64, int) {
 	return f, size
 }
 
-// blur is a separable box blur of radius r, applied twice for a soft falloff.
-func blur(f []float64, size, r int) []float64 {
-	if r < 1 {
-		return f
-	}
-	pass := func(in []float64, horizontal bool) []float64 {
-		out := make([]float64, len(in))
-		for a := 0; a < size; a++ {
-			sum, count := 0.0, 0
-			at := func(b int) int {
-				if horizontal {
-					return a*size + b
-				}
-				return b*size + a
-			}
-			for b := 0; b < r && b < size; b++ {
-				sum += in[at(b)]
-				count++
-			}
-			for b := 0; b < size; b++ {
-				if b+r < size {
-					sum += in[at(b+r)]
-					count++
-				}
-				if b-r-1 >= 0 {
-					sum -= in[at(b-r-1)]
-					count--
-				}
-				out[at(b)] = sum / float64(count)
-			}
-		}
-		return out
-	}
-	for i := 0; i < 2; i++ {
-		f = pass(pass(f, true), false)
-	}
-	return f
-}
-
 // render dresses the master; bare gives only the mark in flat white on a
 // transparent background (the site's header).
 //
-// The dressed mark reads as metal set into the square: its colour runs from
-// light at the top to darker at the bottom, and its edges are shaded at the
-// top left and lit at the bottom right (an inset bevel from the coverage's
-// slope), the way the launcher's emblem is cut into its plate.
+// The dressed mark reads as metal by its gradient alone, flat like the
+// launcher's emblem: light at the top left running to darker at the bottom
+// right, with no bevel or shadow.
 func render(master *image.NRGBA, s style, bare bool) *image.NRGBA {
 	t, size := field(master)
 	radius := float64(size) * s.corner
@@ -147,27 +107,14 @@ func render(master *image.NRGBA, s style, bare bool) *image.NRGBA {
 		}
 		return out
 	}
-	soft := blur(t, size, size/160) // the bevel's slope
-	lx, ly := 0.6, 0.8              // light from the bottom right: the mark reads as set into the surface, not raised
-	bevel := float64(size) / 24     // how strongly the slope lights
 	for y := 0; y < size; y++ {
 		v := float64(y) / float64(size-1)
 		for x := 0; x < size; x++ {
 			i := y*size + x
 			br, bg, bb := lerp(s.bgTop, s.bgBottom, v)
-			fr, fg, fb := lerp(s.fgTop, s.fgBottom, v)
-			if t[i] > 0 {
-				gx, gy := 0.0, 0.0
-				if x > 0 && x < size-1 {
-					gx = soft[i+1] - soft[i-1]
-				}
-				if y > 0 && y < size-1 {
-					gy = soft[i+size] - soft[i-size]
-				}
-				// Slopes facing the light brighten, those away from it darken.
-				light := math.Max(-0.35, math.Min(0.6, (gx*lx+gy*ly)*bevel))
-				fr, fg, fb = fr+(255-fr)*math.Max(0, light)+fr*math.Min(0, light), fg+(255-fg)*math.Max(0, light)+fg*math.Min(0, light), fb+(255-fb)*math.Max(0, light)+fb*math.Min(0, light)
-			}
+			// The mark's gradient runs mostly down, a little across, like a brushed sheet.
+			w := math.Max(0, math.Min(1, 0.8*v+0.2*float64(x)/float64(size-1)))
+			fr, fg, fb := lerp(s.fgTop, s.fgBottom, w)
 			a := squareAlpha(x, y, size, radius)
 			c := t[i]
 			out.SetNRGBA(x, y, color.NRGBA{
@@ -235,8 +182,8 @@ func parse(hex string) color.NRGBA {
 func main() {
 	bgTop := flag.String("bg-top", "3d3f40", "background gradient, top (rrggbb)")
 	bgBottom := flag.String("bg-bottom", "1f2021", "background gradient, bottom (rrggbb)")
-	fgTop := flag.String("fg-top", "f4f4f4", "mark gradient, top (rrggbb)")
-	fgBottom := flag.String("fg-bottom", "b4b7b8", "mark gradient, bottom (rrggbb)")
+	fgTop := flag.String("fg-top", "f8f8f8", "mark gradient, top (rrggbb)")
+	fgBottom := flag.String("fg-bottom", "a9adaf", "mark gradient, bottom (rrggbb)")
 	corner := flag.Float64("corner", 0.2, "corner radius as a fraction of the side")
 	out := flag.String("out", "", "write only one PNG of -size here")
 	size := flag.Int("size", 256, "size for -out")
