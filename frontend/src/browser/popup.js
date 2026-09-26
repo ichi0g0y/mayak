@@ -4,11 +4,8 @@
 import './style.css';
 import {Events,Browser} from '@wailsio/runtime';
 import {BrowserPopupPin} from '../../bindings/github.com/local/mayak/internal/app/app';
+import {t as word} from './words.js';
 
-const words={
- ja:{pin:'ピン留め (ほかをクリックしても閉じない)',unpin:'ピン留めを外す',toTab:'タブで開く',external:'外部ブラウザで開く',close:'閉じる'},
- en:{pin:'Pin (stays open when you click elsewhere)',unpin:'Unpin',toTab:'Open in a tab',external:'Open in external browser',close:'Close'},
-};
 // Lucide icon paths (ISC), as in the shell.
 const icons={
  task:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 13h4"/><path d="M10 17h4"/>',
@@ -23,11 +20,11 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;
 
 let page={url:'',title:'',task:false,theme:'',language:'ja',pinned:false,loading:false};
 function render(){
- const t=key=>(words[page.language]||words.ja)[key];
+ const t=key=>word(page.language,key);
  if(page.theme)document.documentElement.dataset.theme=page.theme;
  document.documentElement.lang=page.language;
  document.title=page.title||'MAYAK';
- document.querySelector('#app').innerHTML=`<header class="popup-head popup-window-head">${icon(page.task?'task':'globe','popup-icon')}<span class="popup-title" title="${esc(page.url)}">${esc(page.title)}</span><button class="popup-icon-button popup-pin ${page.pinned?'pinned':''}" data-action="pin" title="${esc(t(page.pinned?'unpin':'pin'))}" aria-label="${esc(t(page.pinned?'unpin':'pin'))}" aria-pressed="${page.pinned}">${icon('pin')}</button><button data-action="toTab">${icon('plus')}<span>${esc(t('toTab'))}</span></button><button class="popup-icon-button" data-action="external" title="${esc(t('external'))}" aria-label="${esc(t('external'))}">${icon('external')}</button><button class="popup-icon-button" data-action="close" title="${esc(t('close'))}" aria-label="${esc(t('close'))}">${icon('x')}</button>${page.loading?`<span class="load-bar" style="--load-offset:-${Date.now()%1400}ms"></span>`:''}</header>`;
+ document.querySelector('#app').innerHTML=`<header class="popup-head popup-window-head">${icon(page.task?'task':'globe','popup-icon')}<span class="popup-title" title="${esc(page.url)}">${esc(page.title)}</span><button class="popup-icon-button popup-pin ${page.pinned?'pinned':''}" data-action="pin" title="${esc(t(page.pinned?'popupUnpin':'popupPin'))}" aria-label="${esc(t(page.pinned?'popupUnpin':'popupPin'))}" aria-pressed="${page.pinned}">${icon('pin')}</button><button data-action="toTab">${icon('plus')}<span>${esc(t('openInTab'))}</span></button><button class="popup-icon-button" data-action="external" title="${esc(t('openExternalBrowser'))}" aria-label="${esc(t('openExternalBrowser'))}">${icon('external')}</button><button class="popup-icon-button" data-action="close" title="${esc(t('close'))}" aria-label="${esc(t('close'))}">${icon('x')}</button>${page.loading?`<span class="load-bar" style="--load-offset:-${Date.now()%1400}ms"></span>`:''}</header>`;
 }
 Events.On('popup:page',event=>{page={...page,...event.data};render();});
 // Following links inside the page keeps the title current.

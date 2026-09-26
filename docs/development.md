@@ -133,6 +133,7 @@ ocrtrain -catalog %AppData%\Mayak\catalog\pve.json -fonts <dir with Bender*.otf>
 | `settings.html` | 同一オリジンの iframe で開く設定画面。`src/main.tsx`（React）を読み込む |
 | `popup.html` | アイテムポップアップのヘッダー。`src/browser/popup.js` を読み込む |
 | `src/browser/shell.js` | シェルの描画（タブ、ブックマーク、アイテム欄、メニュー） |
+| `src/browser/words.js` | シェル・アイテム欄・ポップアップの文言（[languages.md](languages.md)） |
 | `src/browser/api.js` | バックエンド呼び出しとイベント処理、状態の保存。設定画面用のブリッジ `window.mayakDesktop` を用意する |
 | `src/browser/state.js` | タブ・ブックマークなどの状態操作（純粋関数中心） |
 | `src/browser/item.js` | アイテム欄の入力検証と価格・履歴の整形 |
@@ -265,7 +266,7 @@ Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker
 | `go test ./...` | Go の全ユニットテスト |
 | `go test -run '^$' ./...` | コンパイルのみ |
 | `go test -run '^TestBrowser' ./internal/app` | ブラウザ状態の一時ファイル保存、特権ナビゲーション・ID の拒否、内蔵ブラウザ用 Remote ID の生成と送信先 |
-| `bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js` | ブラウザシェルの純粋ロジック |
+| `bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js ./frontend/src/browser/words.test.js` | ブラウザシェルの純粋ロジック |
 | `task check:offline` | 上記のコンパイル、`TestBrowser*`、bun のテストをまとめて実行 |
 
 主なテスト内容:

@@ -143,7 +143,7 @@ tasks:
     cmds:
       - go test -p 2 -run '^$' ./...
       - go test -p 2 -run '^TestBrowser' ./internal/app
-      - bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js
+      - bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js ./frontend/src/browser/words.test.js
 
   run:
     summary: Launch the application (only when explicitly requested)

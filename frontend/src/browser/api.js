@@ -3,6 +3,7 @@ import {Events,Clipboard} from '@wailsio/runtime';
 import {itemInfo,clampItemPanel,clampItemPanelHeight,historyPoints,names} from './item.js';
 import {browserSections,hostSections,mapTabID,randomUUID,bookmarkGroup,clampSidebar,rememberFavicon,hostname,defaults,restore,webURL,pageURL,receiveTask,receiveMap,receivePosition,translatedURL,originalURL,isTranslated,moveTab,togglePin,pinBookmark,bookmarkTab,goHome,openLocal,tabAt,cycleTab} from './state.js';
 import {encode,decode,iceServers,PAIR_RELAY} from './peer-code.js';
+import {t} from './words.js';
 import './transport.js';
 
 let state,go,platform,returnTo='',remoteID='',host=null,hostQuestSite='tarkov-dev',popup=null,item=null,restoredItem=null,itemOpen=false,itemSearch={query:'',results:[]},searchSeq=0,itemBusy=false,itemHistory=null,notify=()=>{},onKey=()=>{},section='appearance',error='',peerState={phase:'idle'},invite=null;
@@ -48,7 +49,7 @@ const update=()=>notify(snapshot());
 // update bar (see there): a toast over the page would be under it. The row
 // appears when the first error arrives; a failure to show the pages after
 // that is not retried, or it would loop.
-const messageError=e=>{const shown=!!error;error=(state.language==='ja'?'操作を完了できませんでした: ':'Could not complete the action: ')+String(e?.message||e);update();if(!shown)void show().catch(()=>{});};
+const messageError=e=>{const shown=!!error;error=t(state.language,'actionFailed')+String(e?.message||e);update();if(!shown)void show().catch(()=>{});};
 const native=(command,o)=>{const result=nativeQueue.then(()=>go.BrowserView(command,o));nativeQueue=result.catch(()=>{});return result;};
 // Every page starts below the toolbar row; fixed views show it without an
 // address bar (reload and "open in browser" only).
@@ -448,7 +449,7 @@ async function perform(type,data){
  // openOrFocus goes to a tab already showing the address, if any, so a
  // link pressed twice (the changelog, About) does not open a second tab.
  case 'open':case 'navigate':case 'openOrFocus':{
-  const url=webURL(data);if(!url)throw new Error(state.language==='ja'?'http / https のURLを入力してください':'Enter an http or https URL');
+  const url=webURL(data);if(!url)throw new Error(t(state.language,'enterWebURL'));
   if(type==='openOrFocus'){const same=state.tabs.find(t=>t.kind==='web'&&t.url===url);if(same){state.active=same.id;break;}}
   if(type==='navigate'&&tab&&['web','blank'].includes(tab.kind)){tab.kind='web';tab.url=url;delete tab.task;}
   else{if(state.tabs.length>=80)throw new Error('tab-limit');const item={id:randomUUID(),kind:'web',url};state.tabs.push(item);state.active=item.id;}break;

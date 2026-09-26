@@ -71,12 +71,12 @@ MAYAK の画面の文言は、次の場所にあります。
 
 | 場所 | 内容 |
 |---|---|
-| `frontend/src/browser/shell.js` の `words` | ブラウザシェルとアイテム欄の文言 |
-| `frontend/src/i18n.ts` | 設定画面（Host settings）の文言 |
+| `frontend/src/browser/words.js` | ブラウザシェル、アイテム欄、ポップアップの文言（`words.ja` / `words.en`、`t(language, key)`）。両言語のキーが揃っていることは `words.test.js` が確かめます |
+| `frontend/src/i18n.ts` | 設定画面（Host settings）の文言。TypeScript の `as const` でキーが型付けされ、両言語のキーの一致はコンパイル時に確かめられます。シェルと共通の文言はごくわずか（12 キー、うち 7 は文脈が違い文言も違う）なので、表は分けたままです |
 | `frontend/src/browser/state.js` | 保存された言語の検証（今は `ja` と `en`） |
 | `app_settings.go` の `normalizeSettings` | 設定の `Language` の検証（今は `ja` と `en`） |
 | `frontend/src/main.tsx` | ブラウザシェルの言語（`<html lang>`）を Host 設定へ移す処理（今は `ja` と `en`） |
-| `frontend/src/browser/item.js`、`frontend/src/browser/api.js` | 数値・相対時間の書式と、一部のエラー文 |
+| `frontend/src/browser/item.js` | 数値・相対時間の書式 |
 | `tray.go` | タスクトレイのメニューの文言 |
 
 表示の言語を足すには、これらすべてに訳文と選択肢を足します。アイテム欄の名前は、表示の言語と同じ言語の名前（`names`）があればそれを出し、なければ英語名を出します。
