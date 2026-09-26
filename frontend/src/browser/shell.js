@@ -391,9 +391,10 @@ function closeContextMenu(){
 // "Tabs" heading in the sidebar opens it.
 function tabsPage(){
  const query=tabQuery.trim().toLowerCase();
- const all=state.tabs.filter(tab=>tab.kind!=='tabs');
+ // The same tabs as the sidebar's list: not the fixed map and tracker, nor the app's own pages.
+ const all=listedTabs();
  const found=all.filter(tab=>{const name=String(tabName(tab)||'');return !query||name.toLowerCase().includes(query)||String(tab.url||'').toLowerCase().includes(query);});
- const row=tab=>`<div class="bookmark-item tab-row ${state.active===tab.id?'current':''}"><button class="bookmark-open" data-action="activate" data-id="${esc(tab.id)}">${tabIcon(tab)?`<img class="tab-favicon" src="${esc(tabIcon(tab))}" alt="">`:icon(tab.kind==='web'?'globe':tab.kind==='settings'?'settings':'panelLeft','tab-icon')}<span class="bookmark-name">${esc(tabName(tab))}</span>${tab.kind==='web'?`<span class="bookmark-url">${esc(tab.url)}</span>`:''}</button>${!tab.fixed&&!tab.pinned?`<button class="tab-row-close" data-action="close" data-id="${esc(tab.id)}" title="${esc(t('tabsClose'))}" aria-label="${esc(t('tabsClose'))}">${icon('x')}</button>`:''}</div>`;
+ const row=tab=>`<div class="bookmark-item tab-row ${state.active===tab.id?'current':''}"><button class="bookmark-open" data-action="activate" data-id="${esc(tab.id)}">${tabIcon(tab)?`<img class="tab-favicon" src="${esc(tabIcon(tab))}" alt="">`:icon(tab.kind==='web'?'globe':'plus','tab-icon')}<span class="bookmark-name">${esc(tabName(tab))}</span>${tab.kind==='web'?`<span class="bookmark-url">${esc(tab.url)}</span>`:''}</button>${!tab.pinned?`<button class="tab-row-close" data-action="close" data-id="${esc(tab.id)}" title="${esc(t('tabsClose'))}" aria-label="${esc(t('tabsClose'))}">${icon('x')}</button>`:''}</div>`;
  return `<div class="page bookmarks-page tabs-page"><div class="bookmarks-head"><h1>${esc(t('allTabs'))}</h1><div class="bookmarks-tools"><label class="bookmark-search">${icon('search')}<input id="tab-search" type="search" autocomplete="off" placeholder="${esc(t('searchTabs'))}" aria-label="${esc(t('searchTabs'))}" value="${esc(tabQuery)}"></label></div></div><p class="hint">${esc(t('tabsHint'))}</p>${found.length?`<div class="bookmark-list tab-list">${found.map(row).join('')}</div>`:`<p class="hint">${esc(t('noTabResults'))}</p>`}</div>`;
 }
 function bookmarksPage(){
