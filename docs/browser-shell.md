@@ -302,7 +302,7 @@ Host で初めて起動したとき（`browser.json` の `tutorialDone` が `tru
 ## セキュリティ上の制限
 
 - **URL の検証**: シェル（`webURL()`）、Go（`BrowserView`）、WebView2（`browserURL()`）のすべてで、http/https のみ、ユーザー名・パスワードを含まない、`wails.localhost` ではないことを確認します。`NavigationStarting` でも検査するため、リダイレクト先も対象になります。
-- **新しいウインドウ**: ページの `window.open` などは常に WebView2 側で処理して新しいウインドウを作りません。ユーザー操作によるものだけが新しいタブとして開きます（ポップアップウインドウからの場合も新しいタブ）。
+- **新しいウインドウ**: ページの `window.open` などは `NewWindowRequested` で受けます（`browser_tabs.go`）。ユーザー操作によらないものは開きません（ポップアップブロック）。ユーザー操作によるもののうち、`target=_blank` のリンクのようにサイズも位置も指定しないものは新しいタブとして開きます（ポップアップウインドウからの場合も新しいタブ）。サイズか位置を指定した `window.open`（`ICoreWebView2WindowFeatures` の `HasSize` / `HasPosition`）は、開いた側に結果を返すダイアログ（Google ログインの `accounts.google.com/gsi/transform` は `window.opener` に postMessage して自分で閉じる）なので、イベントを未処理のままにして WebView2 に本物のポップアップウインドウを作らせます。タブにすると `window.opener` がなく、そこで止まってしまうためです。このウインドウは同じプロファイル（Cookie）を使いますが、広告ブロックや Remote Control のスクリプトは付きません。
 - **分離**（`BrowserIsolation`）: Web メッセージングは無効、ホストオブジェクトの登録なし、権限要求はすべて拒否します。外部ページには Wails のバインディングも `window.mayakDesktop` も渡りません（`window.mayakDesktop` は信頼できるシェル文書だけのものです）。
 - **命令の検証**: `BrowserView` はビュー ID（`^[a-zA-Z0-9_-]{1,80}$`）、インセット（0〜4096）、命令名（`show` / `preload` / `navigate` / `hideAll` / `close` / `back` / `forward` / `reload`）を検証します。`BrowserPopupShow` も配置の範囲を検証します。
 - **保存データ**: `browser.json` には接続キーや WebRTC の SDP を保存しません。ファビコンの取得先はローカル・LAN のアドレスを除外しています。

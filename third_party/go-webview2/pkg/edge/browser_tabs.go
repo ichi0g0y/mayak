@@ -163,13 +163,26 @@ func (e *Chromium) BrowserIsolation(notify func(BrowserEvent)) (func(), error) {
 	}
 	if err = add(w.vtbl.AddNewWindowRequested, w.vtbl.RemoveNewWindowRequested, "{D4C185FE-C81C-4989-97AF-2D3FA7AB5651}", func(args uintptr) {
 		v := *(**[11]ComProc)(unsafe.Pointer(args))
-		v[6].Call(args, 1)
 		var user int32
 		v[8].Call(args, uintptr(unsafe.Pointer(&user)))
 		u := browserString(v[3], args)
-		if user != 0 && browserURL(u) {
-			notify(BrowserEvent{URL: u, Popup: true})
+		if user == 0 || !browserURL(u) {
+			// Windows a page opens by itself are blocked (popup blocker).
+			v[6].Call(args, 1)
+			return
 		}
+		// A window.open with a size or position is a dialog that reports back
+		// to its opener (Google sign-in: accounts.google.com/gsi/transform
+		// posts the result to window.opener and closes). Left unhandled,
+		// WebView2 opens it in a popup window of its own, with the opener;
+		// as a tab it would have none and hang there. Links to a new
+		// window (target=_blank) name no size and open in a tab.
+		if popupWindow(v[10], args) {
+			v[6].Call(args, 0)
+			return
+		}
+		v[6].Call(args, 1)
+		notify(BrowserEvent{URL: u, Popup: true})
 	}); err != nil {
 		cleanup()
 		return nil, err
@@ -195,6 +208,24 @@ func (e *Chromium) BrowserIsolation(notify func(BrowserEvent)) (func(), error) {
 		}
 	}
 	return cleanup, nil
+}
+
+// popupWindow reports whether a new-window request names a size or a
+// position for the window (ICoreWebView2WindowFeatures, which follows
+// IUnknown with get_HasPosition, get_HasSize, get_Left, get_Top, get_Height,
+// get_Width and the four display flags). getFeatures is the event args'
+// get_WindowFeatures.
+func popupWindow(getFeatures ComProc, args uintptr) bool {
+	var features uintptr
+	if hr, _, _ := getFeatures.Call(args, uintptr(unsafe.Pointer(&features))); hr != 0 || features == 0 {
+		return false
+	}
+	f := *(**[13]ComProc)(unsafe.Pointer(features))
+	defer f[2].Call(features)
+	var hasPosition, hasSize int32
+	f[3].Call(features, uintptr(unsafe.Pointer(&hasPosition)))
+	f[4].Call(features, uintptr(unsafe.Pointer(&hasSize)))
+	return hasPosition != 0 || hasSize != 0
 }
 
 // webview15 returns an AddRef'd ICoreWebView2_15 pointer, or 0 if unsupported.
