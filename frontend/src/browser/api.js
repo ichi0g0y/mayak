@@ -477,6 +477,13 @@ async function perform(type,data){
   catch(e){snaps.busy=false;const shown=!!error;error=t(state.language,'snapCaptureFailed')+String(e?.message||e);update();if(!shown)void show().catch(()=>{});return snapshot();}
   snaps.busy=false;openLocal(state,'snapnotes');await openSnap(note.id);void loadSnaps();break;
  }
+ // A screenshot of the game becomes a note of its own, opened for drawing.
+ case 'snapFromShot':{
+  const name=String(data||''),shot=shots.list.find(s=>s.name===name);
+  const when=shot?.time?new Date(shot.time).toLocaleString(state.language==='ja'?'ja-JP':'en-US',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+  const note=await go.SnapNoteFromScreenshot(name,[t(state.language,'screenshots'),when].filter(Boolean).join(' '));
+  shots.viewing='';openLocal(state,'snapnotes');await openSnap(note.id);void loadSnaps();break;
+ }
  case 'snapOpen':openLocal(state,'snapnotes');await openSnap(String(data||''));break;
  case 'snapClose':snaps.open=null;void loadSnaps();return snapshot();
  case 'snapFilter':snaps.filter=['all','linked','single'].includes(data)?data:'all';return snapshot();

@@ -834,3 +834,6 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 .toolbar .snap-actions button{height:32px}
 @media(max-width:1100px){.toolbar .snap-actions button span{display:none}}
 .page.snap-editor{padding-top:6px}
+
+/* The screenshot viewer's "Make a snap note" button: an icon with a label. */
+.shot-tool.shot-to-snap{width:auto;display:inline-flex;align-items:center;gap:6px;padding:0 10px}

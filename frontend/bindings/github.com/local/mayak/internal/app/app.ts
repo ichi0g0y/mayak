@@ -456,6 +456,17 @@ export function SnapNoteDelete(id: string): $CancellablePromise<void> {
 }
 
 /**
+ * SnapNoteFromScreenshot starts a note on its own (not linked to a page)
+ * from a game screenshot in the Screenshots folder, named as the gallery
+ * lists it.
+ */
+export function SnapNoteFromScreenshot(name: string, title: string): $CancellablePromise<snapnote$0.Note> {
+    return $Call.ByID(3622921050, name, title).then(($result: any) => {
+        return $$createType18($result);
+    });
+}
+
+/**
  * SnapNoteLink links a note to the page it was taken from, or unlinks it.
  */
 export function SnapNoteLink(id: string, linked: boolean): $CancellablePromise<snapnote$0.Note> {

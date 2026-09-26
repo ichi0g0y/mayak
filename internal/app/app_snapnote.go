@@ -98,6 +98,31 @@ func (a *App) SnapNoteCreate(imageDataURL, title string) (snapnote.Note, error) 
 	return note, nil
 }
 
+// SnapNoteFromScreenshot starts a note on its own (not linked to a page)
+// from a game screenshot in the Screenshots folder, named as the gallery
+// lists it.
+func (a *App) SnapNoteFromScreenshot(name, title string) (snapnote.Note, error) {
+	dir := a.screenshotDir()
+	// Only a file directly in the screenshot folder: no paths.
+	if dir == "" || name != filepath.Base(name) || !screenshotName(name) {
+		return snapnote.Note{}, errors.New("invalid screenshot")
+	}
+	data, err := os.ReadFile(filepath.Join(dir, name))
+	if err != nil {
+		return snapnote.Note{}, err
+	}
+	store, err := snapNotes()
+	if err != nil {
+		return snapnote.Note{}, err
+	}
+	note, err := store.Create(data, snapnote.Note{Title: title})
+	if err != nil {
+		return snapnote.Note{}, err
+	}
+	a.snapNoteChanged()
+	return note, nil
+}
+
 // SnapNoteList returns every note (without strokes), the latest changed first.
 func (a *App) SnapNoteList() ([]snapnote.Note, error) {
 	store, err := snapNotes()
