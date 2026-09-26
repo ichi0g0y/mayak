@@ -63,6 +63,9 @@ func loadMaster() *image.NRGBA {
 type style struct {
 	corner                           float64
 	bgTop, bgBottom, fgTop, fgBottom color.NRGBA
+	haze                             float64     // strength of the light haze around the mark
+	hazeColor                        color.NRGBA // its colour
+	grain                            float64     // amplitude of the grain, in levels
 }
 
 func lerp(a, b color.NRGBA, t float64) (float64, float64, float64) {
@@ -91,12 +94,62 @@ func field(master *image.NRGBA) ([]float64, int) {
 	return f, size
 }
 
+// blur is a separable box blur of radius r, applied twice for a soft falloff.
+func blur(f []float64, size, r int) []float64 {
+	if r < 1 {
+		return f
+	}
+	pass := func(in []float64, horizontal bool) []float64 {
+		out := make([]float64, len(in))
+		at := func(a, b int) int {
+			if horizontal {
+				return a*size + b
+			}
+			return b*size + a
+		}
+		for a := 0; a < size; a++ {
+			sum, count := 0.0, 0
+			for b := 0; b < r && b < size; b++ {
+				sum += in[at(a, b)]
+				count++
+			}
+			for b := 0; b < size; b++ {
+				if b+r < size {
+					sum += in[at(a, b+r)]
+					count++
+				}
+				if b-r-1 >= 0 {
+					sum -= in[at(a, b-r-1)]
+					count--
+				}
+				out[at(a, b)] = sum / float64(count)
+			}
+		}
+		return out
+	}
+	for i := 0; i < 2; i++ {
+		f = pass(pass(f, true), false)
+	}
+	return f
+}
+
+// grain is a deterministic noise value in [-1, 1) for a pixel, so builds
+// are reproducible.
+func grain(x, y int) float64 {
+	h := uint32(x)*374761393 + uint32(y)*668265263
+	h = (h ^ (h >> 13)) * 1274126177
+	h ^= h >> 16
+	return float64(h&0xffff)/32768 - 1
+}
+
 // render dresses the master; bare gives only the mark in flat white on a
 // transparent background (the site's header).
 //
-// The dressed mark reads as metal by its gradient alone, flat like the
-// launcher's emblem: light at the top left running to darker at the bottom
-// right, with no bevel or shadow.
+// The dressing follows the launcher's icon: a rounded square in a cool dark
+// grey gradient, the mark in a mid-grey gradient (light at the top, darker
+// at the bottom) with a soft light haze around it on the square, and a fine
+// grain over everything, so both read as brushed metal rather than flat
+// paint. No bevel: the mark stays flush.
 func render(master *image.NRGBA, s style, bare bool) *image.NRGBA {
 	t, size := field(master)
 	radius := float64(size) * s.corner
@@ -107,20 +160,28 @@ func render(master *image.NRGBA, s style, bare bool) *image.NRGBA {
 		}
 		return out
 	}
+	haze := blur(t, size, size/36)
 	for y := 0; y < size; y++ {
 		v := float64(y) / float64(size-1)
 		for x := 0; x < size; x++ {
 			i := y*size + x
-			br, bg, bb := lerp(s.bgTop, s.bgBottom, v)
-			// The mark's gradient runs mostly down, a little across, like a brushed sheet.
-			w := math.Max(0, math.Min(1, 0.8*v+0.2*float64(x)/float64(size-1)))
-			fr, fg, fb := lerp(s.fgTop, s.fgBottom, w)
+			u := float64(x) / float64(size-1)
+			br, bg, bb := lerp(s.bgTop, s.bgBottom, math.Max(0, math.Min(1, 0.85*v+0.15*u)))
+			// The haze lightens the square around the mark.
+			if h := haze[i] * s.haze; h > 0 {
+				br, bg, bb = br+(float64(s.hazeColor.R)-br)*h, bg+(float64(s.hazeColor.G)-bg)*h, bb+(float64(s.hazeColor.B)-bb)*h
+			}
+			fr, fg, fb := lerp(s.fgTop, s.fgBottom, math.Max(0, math.Min(1, 0.9*v+0.1*u)))
+			cov := t[i]
+			r, g, b := br*(1-cov)+fr*cov, bg*(1-cov)+fg*cov, bb*(1-cov)+fb*cov
+			// Grain, a little stronger on the mark.
+			g0 := grain(x, y) * s.grain * (1 + 0.6*cov)
+			r, g, b = r+g0, g+g0, b+g0
 			a := squareAlpha(x, y, size, radius)
-			c := t[i]
 			out.SetNRGBA(x, y, color.NRGBA{
-				R: uint8(math.Round(math.Min(255, br*(1-c)+fr*c))),
-				G: uint8(math.Round(math.Min(255, bg*(1-c)+fg*c))),
-				B: uint8(math.Round(math.Min(255, bb*(1-c)+fb*c))),
+				R: uint8(math.Round(math.Max(0, math.Min(255, r)))),
+				G: uint8(math.Round(math.Max(0, math.Min(255, g)))),
+				B: uint8(math.Round(math.Max(0, math.Min(255, b)))),
 				A: uint8(math.Round(255 * a)),
 			})
 		}
@@ -180,16 +241,19 @@ func parse(hex string) color.NRGBA {
 }
 
 func main() {
-	bgTop := flag.String("bg-top", "3d3f40", "background gradient, top (rrggbb)")
-	bgBottom := flag.String("bg-bottom", "1f2021", "background gradient, bottom (rrggbb)")
-	fgTop := flag.String("fg-top", "f8f8f8", "mark gradient, top (rrggbb)")
-	fgBottom := flag.String("fg-bottom", "a9adaf", "mark gradient, bottom (rrggbb)")
+	bgTop := flag.String("bg-top", "33383a", "background gradient, top (rrggbb)")
+	bgBottom := flag.String("bg-bottom", "24272a", "background gradient, bottom (rrggbb)")
+	fgTop := flag.String("fg-top", "d2d2d2", "mark gradient, top (rrggbb)")
+	fgBottom := flag.String("fg-bottom", "7c7e80", "mark gradient, bottom (rrggbb)")
+	haze := flag.Float64("haze", 0.5, "strength of the light haze around the mark, 0 to 1")
+	hazeColor := flag.String("haze-color", "9a9ea0", "colour of the haze (rrggbb)")
+	grainLevels := flag.Float64("grain", 5, "amplitude of the grain, in levels of 255")
 	corner := flag.Float64("corner", 0.2, "corner radius as a fraction of the side")
 	out := flag.String("out", "", "write only one PNG of -size here")
 	size := flag.Int("size", 256, "size for -out")
 	bare := flag.Bool("bare", false, "with -out: only the mark, flat white on a transparent background")
 	flag.Parse()
-	s := style{corner: *corner, bgTop: parse(*bgTop), bgBottom: parse(*bgBottom), fgTop: parse(*fgTop), fgBottom: parse(*fgBottom)}
+	s := style{corner: *corner, bgTop: parse(*bgTop), bgBottom: parse(*bgBottom), fgTop: parse(*fgTop), fgBottom: parse(*fgBottom), haze: *haze, hazeColor: parse(*hazeColor), grain: *grainLevels}
 	master := loadMaster()
 	if *out != "" {
 		if err := os.WriteFile(*out, encodePNG(resize(render(master, s, *bare), *size)), 0o644); err != nil {
