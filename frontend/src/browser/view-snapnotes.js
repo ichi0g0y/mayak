@@ -45,7 +45,7 @@ function openMenu(button){
  ];
  menu={tab:tab?.id};render();
  const left=Math.round(Math.max(4,Math.min(r.right-menuWidth,innerWidth-menuWidth-4)));
- void action('menuShow',{id:'snap',x:left,y:Math.round(r.bottom+6),width:menuWidth,items}).catch(()=>{menu=null;render();});
+ void action('menuShow',{id:'snap',x:left,y:Math.round(r.bottom+6),width:menuWidth,items}).catch(error=>{console.error('snap menu',error);menu=null;render();});
 }
 api.onMenu(choice=>{
  if(!menu)return;

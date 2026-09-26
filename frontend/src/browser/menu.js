@@ -3,7 +3,7 @@
 // height so the window fits it, and passes the choice back.
 import './style.css';
 import {Events} from '@wailsio/runtime';
-import {BrowserMenuReady,BrowserMenuChoose} from '../../bindings/github.com/local/mayak/internal/app/app';
+import {BrowserMenuReady,BrowserMenuChoose,BrowserMenuCurrent} from '../../bindings/github.com/local/mayak/internal/app/app';
 import {icon,esc} from './shell-core.js';
 
 let current=null;
@@ -24,6 +24,8 @@ function draw(menu){
  });
 }
 Events.On('menu:page',event=>draw(event.data));
+// The window's first menu was sent before this page loaded: ask for it.
+BrowserMenuCurrent().then(menu=>{if(menu&&!current)draw(menu);}).catch(()=>{});
 document.addEventListener('click',event=>{const row=event.target.closest('[data-id]');if(row&&current)void BrowserMenuChoose(row.dataset.id);});
 document.addEventListener('keydown',event=>{
  if(event.key==='Escape'){event.preventDefault();void BrowserMenuChoose('');return;}

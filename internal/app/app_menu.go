@@ -22,6 +22,9 @@ type shellMenu struct {
 	window *application.WebviewWindow
 	open   bool
 	width  int
+	// request is the menu shown now, for a menu page that loads after it
+	// was sent (the window's first menu): it asks for it (BrowserMenuCurrent).
+	request MenuRequest
 	// gen counts the menus shown, so a focus loss of an older one is dropped.
 	gen int
 }
@@ -57,6 +60,7 @@ func (a *App) BrowserMenuShow(request MenuRequest) error {
 		return errors.New("browser is not ready")
 	}
 	if request.Width < 120 || request.Width > 800 || request.X < -4000 || request.X > 8000 || request.Y < -4000 || request.Y > 8000 || len(request.Items) == 0 || len(request.Items) > 40 {
+		a.addLog("Warn", "Browser", "Menu not shown: invalid menu")
 		return errors.New("invalid menu")
 	}
 	for i, item := range request.Items {
@@ -100,13 +104,49 @@ func (a *App) BrowserMenuShow(request MenuRequest) error {
 	m.gen++
 	m.open = true
 	m.width = request.Width
+	m.request = request
 	window := m.window
 	m.mu.Unlock()
+	// The window shows at once, at the height its rows should take; the
+	// menu page sets the exact height when it has drawn them.
 	x, y := a.window.Position()
 	window.SetPosition(x+request.X, y+request.Y)
-	window.SetSize(request.Width, 60)
+	window.SetSize(request.Width, menuHeight(request.Items))
 	a.emitEvent("menu:page", request)
+	ownPopup(window, a.window)
+	window.Show()
+	ownPopup(window, a.window)
+	window.Focus()
 	return nil
+}
+
+// menuHeight estimates a menu's height from its rows (menu.js draws them).
+func menuHeight(items []MenuItem) int {
+	height := 14
+	for _, item := range items {
+		switch {
+		case item.Kind == "label":
+			height += 24
+		case item.Hint != "" || item.Thumb != "":
+			height += 54
+		default:
+			height += 38
+		}
+	}
+	return min(height, 900)
+}
+
+// BrowserMenuCurrent is the menu shown now, for the menu page to draw when it
+// has just loaded; none when no menu is open.
+func (a *App) BrowserMenuCurrent() *MenuRequest {
+	m := &a.menu
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if !m.open {
+		return nil
+	}
+	request := m.request
+	return &request
 }
 
 // BrowserMenuReady shows the menu at the height its page drew it.
@@ -119,10 +159,6 @@ func (a *App) BrowserMenuReady(height int) {
 		return
 	}
 	window.SetSize(width, min(max(height, 40), 900))
-	ownPopup(window, a.window)
-	window.Show()
-	ownPopup(window, a.window)
-	window.Focus()
 }
 
 // BrowserMenuChoose closes the menu with a choice ("" for none).
