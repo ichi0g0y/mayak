@@ -12,7 +12,7 @@ import { Tabs, TabsContent } from './components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
 import { translate, translateAnalysisStage } from './i18n'
 import { HideoutEvent, hideoutMessage } from './Hideout'
-import { RemoteTarget, Settings, TrackerProfile, TrackerHistoryBreakpoint, Status, LogEntry, UpdateStatus, defaults, emptyUpdate, emptyStatus, maps, markerEffects, markerEffectNames, markerOwnColor, normalizeStatus, HostSection, hour12, hashSection, sectionTitles, languageNames } from './settings-model'
+import { RemoteTarget, Settings, Status, LogEntry, UpdateStatus, defaults, emptyUpdate, emptyStatus, maps, markerEffects, markerEffectNames, markerOwnColor, normalizeStatus, HostSection, hour12, hashSection, sectionTitles, languageNames } from './settings-model'
 import { TrackerSection } from './TrackerSection'
 import { LogsSection } from './LogsSection'
 import { Metric } from './Metric'
@@ -42,9 +42,6 @@ function App(){
   const [hideoutAlert,setHideoutAlert]=useState<HideoutEvent|null>(null)
   const [logQuery,setLogQuery]=useState('')
   const [trackerToken,setTrackerToken]=useState('')
-  const [historyProfile,setHistoryProfile]=useState<TrackerProfile|null>(null)
-  const [historyBreakpoints,setHistoryBreakpoints]=useState<TrackerHistoryBreakpoint[]>([])
-  const [historyBreakpoint,setHistoryBreakpoint]=useState('')
   const [now,setNow]=useState(Date.now())
   const settingsRef=useRef<Settings>(defaults)
   const [saveState,setSaveState]=useState<'idle'|'saving'|'saved'|'error'>('idle')
@@ -225,7 +222,7 @@ function App(){
             <div className="connection-test-row"><Button type="button" variant="secondary" onClick={test} disabled={busy||!settings.remoteTargets.some(target=>target.id.trim())}><Wifi/>{t('testConnection')}</Button>{remoteTestResult!=='idle'&&<span className={`connection-test-result ${remoteTestResult}`}>{remoteTestResult==='success'?<Check/>:remoteTestResult==='error'?<CircleX/>:<RefreshCw className="spin"/>}{remoteTestResult==='success'?t('remoteConnected'):remoteTestResult==='error'?t('remoteConnectionFailed'):t('remoteConnecting')}</span>}</div>
           </CardContent></Card>
       </div></TabsContent>
-      <TabsContent value="tracker"><TrackerSection settings={settings} status={status} t={t} busy={busy} run={run} patch={patch} setBusy={setBusy} setNotice={setNotice} setNoticeError={setNoticeError} trackerModeLabel={trackerModeLabel} trackerToken={trackerToken} setTrackerToken={setTrackerToken} historyProfile={historyProfile} setHistoryProfile={setHistoryProfile} historyBreakpoints={historyBreakpoints} setHistoryBreakpoints={setHistoryBreakpoints} historyBreakpoint={historyBreakpoint} setHistoryBreakpoint={setHistoryBreakpoint}/></TabsContent>
+      <TabsContent value="tracker"><TrackerSection settings={settings} status={status} t={t} busy={busy} run={run} patch={patch} setBusy={setBusy} setNotice={setNotice} setNoticeError={setNoticeError} trackerModeLabel={trackerModeLabel} trackerToken={trackerToken} setTrackerToken={setTrackerToken}/></TabsContent>
       <TabsContent value="sounds"><div className="settings-stack">
           <Card><CardHeader><div className="icon-title"><Volume2/><div><CardTitle>{t('soundsTitle')}</CardTitle><CardDescription>{t('soundsDescription')}</CardDescription></div></div></CardHeader><CardContent>
             <div className="switch-stack"><div className="switch-row"><div><Label htmlFor="sounds-enabled">{t('soundsEnabled')}</Label><p className="help">{t('soundsHelp')}</p></div><Switch id="sounds-enabled" checked={settings.soundsEnabled} onCheckedChange={soundsEnabled=>patch({soundsEnabled})}/></div></div>

@@ -128,12 +128,6 @@ type TrackerProfileSummary struct {
 	Current    bool   `json:"current"`
 }
 
-type TrackerHistoryBreakpoint struct {
-	ID      string `json:"id"`
-	Version string `json:"version"`
-	StartAt string `json:"startAt"`
-}
-
 type ItemCandidate struct {
 	ID         string  `json:"id"`
 	Name       string  `json:"name"`

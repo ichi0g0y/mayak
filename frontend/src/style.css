@@ -302,7 +302,6 @@ select option { background: var(--raised); color: var(--text); }
 .tracker-profile-info strong { font-size: 12px; }
 .tracker-profile-info small, .tracker-key small { color: var(--muted-foreground); font-size: 10px; }
 .tracker-profile-actions { display: grid; grid-template-columns: minmax(150px, 1fr) auto; align-items: center; gap: 8px; }
-.tracker-history { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(220px, 300px) auto; align-items: end; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
 .badge.current { color: var(--success); border-color: var(--border-strong); background: var(--bg); }
 .tracker-keys { padding-top: 14px; border-top: 1px solid var(--border); }
 .tracker-key-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
@@ -396,7 +395,7 @@ select option { background: var(--raised); color: var(--text); }
   .shell { padding: 18px 16px; }
   .remote-target-inputs { grid-template-columns: minmax(0, 1fr) auto; }
   .remote-target-inputs > :first-child { grid-column: 1 / -1; }
-  .tracker-import, .tracker-profile, .tracker-history { grid-template-columns: 1fr; }
+  .tracker-import, .tracker-profile { grid-template-columns: 1fr; }
   .tracker-token-row { grid-template-columns: 1fr auto auto; }
   .tracker-token-row .secret-input { grid-column: 1 / -1; }
   .sound-file-row { grid-template-columns: 1fr 1fr; }

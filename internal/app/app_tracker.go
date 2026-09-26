@@ -202,21 +202,13 @@ func (a *App) RemoveTrackerKey(keyID string) error {
 
 func (a *App) DiscoverTrackerProfiles() error { return a.discoverTrackerProfiles() }
 
-func (a *App) GetTrackerHistoryBreakpoints(accountID, profileID, mode string) []model.TrackerHistoryBreakpoint {
-	a.mu.RLock()
-	root := a.settings.LogsDirectory
-	a.mu.RUnlock()
-	points := trackerlog.HistoryBreakpoints(root, accountID, profileID, mode)
-	result := make([]model.TrackerHistoryBreakpoint, 0, len(points))
-	for _, point := range points {
-		result = append(result, model.TrackerHistoryBreakpoint{
-			ID: point.ID, Version: point.Version, StartAt: point.StartAt.Format(time.RFC3339),
-		})
-	}
-	return result
-}
-
-func (a *App) SyncTrackerHistory(accountID, profileID, mode, breakpointID string) error {
+// SyncTrackerProfileHistory sends the task states the EFT logs recorded for
+// one profile, from its first session on, to its TarkovTracker key: what was
+// done before the key was assigned, or while MAYAK was not running (the live
+// sync only follows the logs while it runs). A profile is one wipe, so its
+// first session is where its progress starts. It returns how many task
+// states were sent.
+func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int, error) {
 	a.trackerSyncMu.Lock()
 	defer a.trackerSyncMu.Unlock()
 	a.mu.RLock()
@@ -225,14 +217,18 @@ func (a *App) SyncTrackerHistory(accountID, profileID, mode, breakpointID string
 	token := a.trackerData.TokenFor(accountID, profileID, mode)
 	a.mu.RUnlock()
 	if !enabled {
-		return errors.New("TarkovTracker sync is disabled")
+		return 0, errors.New("TarkovTracker sync is disabled")
 	}
 	if token == "" {
-		return errors.New("no key is assigned to this EFT profile")
+		return 0, errors.New("no key is assigned to this EFT profile")
 	}
-	states, err := trackerlog.TaskHistory(root, breakpointID, accountID, profileID, mode)
+	points := trackerlog.HistoryBreakpoints(root, accountID, profileID, mode)
+	if len(points) == 0 {
+		return 0, errors.New("no EFT logs of this profile were found")
+	}
+	states, err := trackerlog.TaskHistory(root, points[0].ID, accountID, profileID, mode)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	updates := make([]tracker.TaskUpdate, 0, len(states))
 	for taskID, state := range states {
@@ -240,13 +236,13 @@ func (a *App) SyncTrackerHistory(accountID, profileID, mode, breakpointID string
 	}
 	sort.Slice(updates, func(i, j int) bool { return updates[i].ID < updates[j].ID })
 	if len(updates) == 0 {
-		return errors.New("no task changes were found after the selected breakpoint")
+		return 0, errors.New("the EFT logs of this profile have no task changes")
 	}
 	ctx, cancel := context.WithTimeout(a.ctx, 45*time.Second)
 	defer cancel()
 	if err = a.trackerClient.SetTasks(ctx, token, updates); err != nil {
 		a.addLog("Error", "TarkovTracker", "Historical sync failed: "+err.Error())
-		return err
+		return 0, err
 	}
 	a.addLog("Info", "TarkovTracker", fmt.Sprintf("Synced %d task states from existing logs for %s (%s)", len(updates), maskProfileID(profileID), mode))
 	a.mu.RLock()
@@ -255,7 +251,7 @@ func (a *App) SyncTrackerHistory(accountID, profileID, mode, breakpointID string
 	if active {
 		go func() { _ = a.refreshTrackerIdentity(mode, profileID, accountID) }()
 	}
-	return nil
+	return len(updates), nil
 }
 
 func (a *App) RefreshTracker() error {

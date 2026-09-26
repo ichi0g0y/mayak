@@ -264,12 +264,6 @@ export function GetStatus(): $CancellablePromise<model$0.Status> {
     });
 }
 
-export function GetTrackerHistoryBreakpoints(accountID: string, profileID: string, mode: string): $CancellablePromise<model$0.TrackerHistoryBreakpoint[]> {
-    return $Call.ByID(547782838, accountID, profileID, mode).then(($result: any) => {
-        return $$createType17($result);
-    });
-}
-
 /**
  * GetUpdateStatus returns the update's state for the settings page.
  */
@@ -406,8 +400,16 @@ export function StopMonitoring(): $CancellablePromise<void> {
     return $Call.ByID(1383325780);
 }
 
-export function SyncTrackerHistory(accountID: string, profileID: string, mode: string, breakpointID: string): $CancellablePromise<void> {
-    return $Call.ByID(2148743105, accountID, profileID, mode, breakpointID);
+/**
+ * SyncTrackerProfileHistory sends the task states the EFT logs recorded for
+ * one profile, from its first session on, to its TarkovTracker key: what was
+ * done before the key was assigned, or while MAYAK was not running (the live
+ * sync only follows the logs while it runs). A profile is one wipe, so its
+ * first session is where its progress starts. It returns how many task
+ * states were sent.
+ */
+export function SyncTrackerProfileHistory(accountID: string, profileID: string, mode: string): $CancellablePromise<number> {
+    return $Call.ByID(1759201672, accountID, profileID, mode);
 }
 
 export function TestRemote(): $CancellablePromise<void> {
@@ -431,5 +433,3 @@ const $$createType12 = model$0.LogEntry.createFrom;
 const $$createType13 = $Create.Array($$createType12);
 const $$createType14 = config$0.Settings.createFrom;
 const $$createType15 = model$0.Status.createFrom;
-const $$createType16 = model$0.TrackerHistoryBreakpoint.createFrom;
-const $$createType17 = $Create.Array($$createType16);

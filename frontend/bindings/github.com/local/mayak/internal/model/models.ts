@@ -559,35 +559,6 @@ export class Status {
     }
 }
 
-export class TrackerHistoryBreakpoint {
-    "id": string;
-    "version": string;
-    "startAt": string;
-
-    /** Creates a new TrackerHistoryBreakpoint instance. */
-    constructor($$source: Partial<TrackerHistoryBreakpoint> = {}) {
-        if (!("id" in $$source)) {
-            this["id"] = "";
-        }
-        if (!("version" in $$source)) {
-            this["version"] = "";
-        }
-        if (!("startAt" in $$source)) {
-            this["startAt"] = "";
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new TrackerHistoryBreakpoint instance from a string or object.
-     */
-    static createFrom($$source: any = {}): TrackerHistoryBreakpoint {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new TrackerHistoryBreakpoint($$parsedSource as Partial<TrackerHistoryBreakpoint>);
-    }
-}
-
 export class TrackerKeySummary {
     "id": string;
     "name": string;

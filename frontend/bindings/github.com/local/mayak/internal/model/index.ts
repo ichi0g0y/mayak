@@ -11,7 +11,6 @@ export {
     QuestCandidate,
     QuestObjective,
     Status,
-    TrackerHistoryBreakpoint,
     TrackerKeySummary,
     TrackerProfileSummary,
     TrackerStatus,
