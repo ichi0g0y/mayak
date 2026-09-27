@@ -34,17 +34,28 @@ func (a *App) RefreshCatalog() error { return a.refreshCatalog(true) }
 // catalogChanged reports whether a part of mode's catalog differs from the
 // version seen last, and remembers the new one.
 func (a *App) catalogChanged(mode, part, version string) bool {
+	if a.catalogSeen(mode, part, version) {
+		return false
+	}
+	a.catalogRemember(mode, part, version)
+	return true
+}
+
+// catalogSeen reports whether a part of mode's catalog was last applied at
+// version; catalogRemember records that it was.
+func (a *App) catalogSeen(mode, part, version string) bool {
+	a.catalogVersionsMu.Lock()
+	defer a.catalogVersionsMu.Unlock()
+	return a.catalogVersions[mode+"/"+part] == version
+}
+
+func (a *App) catalogRemember(mode, part, version string) {
 	a.catalogVersionsMu.Lock()
 	defer a.catalogVersionsMu.Unlock()
 	if a.catalogVersions == nil {
 		a.catalogVersions = make(map[string]string)
 	}
-	key := mode + "/" + part
-	if a.catalogVersions[key] == version {
-		return false
-	}
-	a.catalogVersions[key] = version
-	return true
+	a.catalogVersions[mode+"/"+part] = version
 }
 
 func (a *App) refreshCatalog(force bool) error {
@@ -96,7 +107,7 @@ func (a *App) refreshCatalog(force bool) error {
 		return abandon()
 	}
 	data := model.CatalogStatus{State: "error", Mode: mode}
-	hideoutChanged := true
+	hideoutChanged, hideoutVersion := true, ""
 	if snapshot != nil {
 		data = model.CatalogStatus{State: "ready", Mode: mode, UpdatedAt: snapshot.UpdatedAt.Format(time.RFC3339), Items: snapshot.Items, Maps: snapshot.Maps, Traders: snapshot.Traders, Tasks: snapshot.Tasks, HideoutStations: snapshot.HideoutStations, ScavCooldownSeconds: snapshot.ScavCooldownSeconds, PlayerLevels: snapshot.PlayerLevels}
 		if time.Since(snapshot.UpdatedAt) >= catalog.RefreshInterval {
@@ -110,7 +121,10 @@ func (a *App) refreshCatalog(force bool) error {
 		if a.catalogChanged(mode, "items", snapshot.Version(catalog.ItemResources...)) {
 			a.itemClient.Invalidate()
 		}
-		hideoutChanged = a.catalogChanged(mode, "hideout", snapshot.Version(catalog.HideoutResources...))
+		// The hideout's version is remembered only once its stations are
+		// read (below): a failed read is tried again at the next refresh.
+		hideoutVersion = snapshot.Version(catalog.HideoutResources...)
+		hideoutChanged = !a.catalogSeen(mode, "hideout", hideoutVersion)
 	}
 	if err != nil {
 		data.LastError = err.Error()
@@ -131,6 +145,9 @@ func (a *App) refreshCatalog(force bool) error {
 	if currentCatalogMode != mode {
 		a.mu.Unlock()
 		return abandon()
+	}
+	if !hideoutKept && hideoutErr == nil && hideoutVersion != "" {
+		a.catalogRemember(mode, "hideout", hideoutVersion)
 	}
 	if !hideoutKept && hideoutErr == nil {
 		a.hideoutStations = stations

@@ -85,7 +85,7 @@ URL は `https://json.tarkov.dev/<mode>/<resource>` です。
 - スナップショットが得られたら、変わった部分の使い手だけを作り直します。部分ごとの版（`Snapshot.Version`、各リソースの ETag。無ければ長さと CRC32）をモードごとに覚えておき（`catalogChanged`）、前回と違うときだけ次を行います。
   - タスク（`catalog.TaskResources`: tasks・maps・traders とその各言語）: `questapi` を無効化。
   - アイテム（`catalog.ItemResources`: items とその各言語）: `itemapi` を無効化。フリマ価格が入っているので、ほぼ毎回変わります。
-  - ハイドアウト（`catalog.HideoutResources`: hideout・items_en・traders とその英語名）: 施設一覧を読み直し（[ハイドアウト](hideout.md)）。items は価格で毎回変わるので対象にせず、新しいアイテムは items_en の変化で拾います。
+  - ハイドアウト（`catalog.HideoutResources`: hideout・items_en・traders とその英語名）: 施設一覧を読み直し（[ハイドアウト](hideout.md)）。この部分の版は読み直しに成功してから記録するので（`catalogSeen` / `catalogRemember`）、失敗したら次の確認で読み直します。items は価格で毎回変わるので対象にせず、新しいアイテムは items_en の変化で拾います。
   5 分ごとの確認で価格だけが変わったときは、タスク一覧とハイドアウトを作り直しません。
 - `status.catalog`（`model.CatalogStatus`）の `state`:
 
