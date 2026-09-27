@@ -235,7 +235,7 @@ Wails 本体はフォークせず公式モジュールを使います。
 
 ## リリース
 
-開発は `main` に直接コミットします。`main` は毎晩 nightly としてビルドされ（[nightly ビルド](#nightly-ビルド)）、安定版はタグを打ったときだけ出ます。`main` に未リリースの変更があっても、安定版を使う人には届きません。
+開発は `main` に直接コミットします。`main` へのプッシュごとに `.github/workflows/check.yml` が、Windows・macOS・Linux でのビルド（`task build`）、`go vet`、staticcheck（Windows と Linux）、Go と シェルのテストを走らせます。`main` は毎晩 nightly としてビルドされ（[nightly ビルド](#nightly-ビルド)）、安定版はタグを打ったときだけ出ます。`main` に未リリースの変更があっても、安定版を使う人には届きません。
 
 配布物は GitHub Releases です。アプリはそこから自分自身を更新します（[設定と連携](settings-and-integrations.md#自動アップデート)）。
 
@@ -285,6 +285,7 @@ Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker
 | `go test -run '^$' ./...` | コンパイルのみ |
 | `go test -run '^TestBrowser' ./internal/app` | ブラウザ状態の一時ファイル保存、特権ナビゲーション・ID の拒否、内蔵ブラウザ用 Remote ID の生成と送信先 |
 | `bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js ./frontend/src/browser/words.test.js ./frontend/src/browser/shell-core.test.js` | ブラウザシェルの純粋ロジック |
+| `task lint` | Go の静的解析（staticcheck。設定は `staticcheck.conf`。エラー文は画面にそのまま出すので ST1005 は外している） |
 | `task check:offline` | 上記のコンパイル、`TestBrowser*`、bun のテストをまとめて実行 |
 
 主なテスト内容:

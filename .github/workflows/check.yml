@@ -56,6 +56,12 @@ jobs:
       - name: Go vet
         run: go vet ./...
 
+      # Windows and Linux: most of the platform code is Windows-only, and
+      # macOS would only repeat Linux.
+      - name: Staticcheck
+        if: runner.os != 'macOS'
+        run: task lint
+
       - name: Go tests
         run: go test -p 2 ./...
 

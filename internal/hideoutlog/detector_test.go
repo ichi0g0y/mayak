@@ -48,7 +48,8 @@ func TestMonitorHistoryLiveRestartAndFallback(t *testing.T) {
 	restarted := New(root, func(e Event) { events <- e })
 	restarted.Start(context.Background())
 	defer restarted.Close()
-	if !receive().Historical || !receive().Historical {
+	first, second := receive(), receive()
+	if !first.Historical || !second.Historical {
 		t.Fatal("restart replay was live")
 	}
 	restarted.Close()

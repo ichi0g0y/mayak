@@ -138,6 +138,11 @@ tasks:
       - task: syso
       - 'go build -p 2 -buildvcs=false -ldflags="{{.VERSION_LDFLAGS}}" -o build/bin/Mayak-dev{{exeExt}} .'
 
+  lint:
+    summary: Static analysis of the Go code (staticcheck; staticcheck.conf)
+    cmds:
+      - go run honnef.co/go/tools/cmd/staticcheck@2025.1.1 ./...
+
   check:offline:
     summary: Compile Go and run isolated browser state tests without opening the application
     cmds:
