@@ -12,7 +12,7 @@ import (
 
 func TestAppendWikiAddsOnlyUnknownTasks(t *testing.T) {
 	quests := []Quest{{Quest: questmatch.Quest{ID: "a", Name: "Debut"}}}
-	out := appendWiki(quests, []wikiQuest{{Title: "Debut"}, {Title: "Quests"}, {Title: "To the Light - Trust but Verify", Trader: "Mechanic"}})
+	out := appendWiki(quests, []wikiQuest{{Title: "Debut"}, {Title: "Quests"}, {Title: "Story chapters"}, {Title: "To the Light - Trust but Verify", Trader: "Mechanic"}})
 	if len(out) != 2 {
 		t.Fatalf("got %+v", out)
 	}

@@ -297,8 +297,8 @@ func appendWiki(quests []Quest, titles []wikiQuest) []Quest {
 	for _, wq := range titles {
 		title := strings.TrimSpace(wq.Title)
 		key := questmatch.Normalize(title)
-		// "Quests" is the category's own overview page.
-		if key == "" || known[key] || strings.EqualFold(title, "Quests") {
+		// "Quests" and "Story chapters" are the categories' own overview pages.
+		if key == "" || known[key] || strings.EqualFold(title, "Quests") || strings.EqualFold(title, "Story chapters") {
 			continue
 		}
 		known[key] = true

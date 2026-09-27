@@ -35,7 +35,10 @@ func questPageURL(site, name, trader, tarkovURL string) string {
 	case "japanese-wiki":
 		// The wiki titles pages without commas or the " [PVE ZONE]" suffix
 		// ("Camera Action!" for "Camera, Action!").
+		// The official wiki tells a story chapter from a task of the same name
+		// with " (story chapter)"; the Japanese one files it under ストーリータスク.
 		name = strings.TrimSuffix(strings.ReplaceAll(name, ",", ""), " [PVE ZONE]")
+		name = strings.TrimSuffix(name, " (story chapter)")
 		if trader != "" {
 			return "https://wikiwiki.jp/eft/" + url.PathEscape(trader) + "/" + url.PathEscape(name)
 		}

@@ -18,6 +18,9 @@ func TestWithTaskURLs(t *testing.T) {
 		t.Fatalf("japanese wiki URL = %s", got)
 	}
 	// Story chapters have no trader; the wiki keeps them under ストーリータスク.
+	if got := questPageURL("japanese-wiki", "The Labyrinth (story chapter)", "", ""); got != "https://wikiwiki.jp/eft/%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AA%E3%83%BC%E3%82%BF%E3%82%B9%E3%82%AF/The%20Labyrinth" {
+		t.Fatalf("story chapter with its wiki suffix = %s", got)
+	}
 	if got := questPageURL("japanese-wiki", "The Ticket", "", ""); got != "https://wikiwiki.jp/eft/%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AA%E3%83%BC%E3%82%BF%E3%82%B9%E3%82%AF/The%20Ticket" {
 		t.Fatalf("story chapter = %s", got)
 	}
