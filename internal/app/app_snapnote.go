@@ -14,6 +14,8 @@ import (
 	"github.com/local/mayak/internal/appdir"
 	"github.com/local/mayak/internal/clipimage"
 	"github.com/local/mayak/internal/imaging"
+	"github.com/local/mayak/internal/model"
+	"github.com/local/mayak/internal/position"
 	"github.com/local/mayak/internal/snapnote"
 	"github.com/local/mayak/internal/sysfonts"
 )
@@ -120,12 +122,86 @@ func (a *App) SnapNoteFromScreenshot(name, title string) (snapnote.Note, error) 
 	if err != nil {
 		return snapnote.Note{}, err
 	}
-	note, err := store.Create(data, snapnote.Note{Title: title})
+	note, err := store.Create(data, snapnote.Note{Title: title, Spot: a.screenshotSpot(name)})
 	if err != nil {
 		return snapnote.Note{}, err
 	}
 	a.snapNoteChanged()
 	return note, nil
+}
+
+// screenshotSpot is where a screenshot was taken: the position from its file
+// name, and the map MAYAK recorded for it when it read it in a raid (the
+// user can set it later when it did not).
+func (a *App) screenshotSpot(name string) *snapnote.Spot {
+	p, err := position.ParseFilename(name)
+	if err != nil {
+		return nil
+	}
+	spot := &snapnote.Spot{X: p.X, Y: p.Y, Z: p.Z, Rotation: p.Rotation}
+	if a.screenshotIndex != nil {
+		if r, ok := a.screenshotIndex.Get(name); ok && r.Raid && validMapName(r.Map) {
+			spot.Map = r.Map
+		}
+	}
+	return spot
+}
+
+// validMapName is a tarkov.dev map route name ("customs", "streets-of-tarkov").
+func validMapName(name string) bool {
+	if name == "" || len(name) > 60 {
+		return false
+	}
+	for _, r := range name {
+		if (r < 'a' || r > 'z') && (r < '0' || r > '9') && r != '-' {
+			return false
+		}
+	}
+	return true
+}
+
+// SnapNoteSetMap sets the map of a note's position.
+func (a *App) SnapNoteSetMap(id, mapName string) (snapnote.Note, error) {
+	if !validMapName(mapName) {
+		return snapnote.Note{}, errors.New("invalid map")
+	}
+	store, err := snapNotes()
+	if err != nil {
+		return snapnote.Note{}, err
+	}
+	note, err := store.SetSpotMap(id, mapName)
+	if err != nil {
+		return snapnote.Note{}, err
+	}
+	a.snapNoteChanged()
+	return note, nil
+}
+
+// SnapNoteShowSpot shows a note's position on the tarkov.dev map: the
+// built-in browser brings its map forward, and the position (with the map)
+// goes to the maps connected by Remote Control, as a screenshot's would.
+func (a *App) SnapNoteShowSpot(id string) error {
+	store, err := snapNotes()
+	if err != nil {
+		return err
+	}
+	note, err := store.Get(id)
+	if err != nil {
+		return err
+	}
+	if note.Spot == nil || note.Spot.Map == "" {
+		return errors.New("this note has no position on a map")
+	}
+	a.mu.RLock()
+	settings := a.settings
+	a.mu.RUnlock()
+	settings.Map = note.Spot.Map
+	settings.NavigateMapOnShot = true
+	if len(remoteTargetIDs(settings, "map")) == 0 {
+		return errors.New("no tarkov.dev map is connected")
+	}
+	a.emitEvent("browser:position", settings.Map)
+	return a.sendPosition(settings, model.Position{X: note.Spot.X, Y: note.Spot.Y, Z: note.Spot.Z, Rotation: note.Spot.Rotation})
 }
 
 // SnapNoteList returns every note (without strokes), the latest changed first.

@@ -1192,6 +1192,17 @@ async function perform(type, data) {
       void loadSnaps()
       return snapshot()
     }
+    // A note's position (from a game screenshot): its map chosen, or the
+    // position shown on the tarkov.dev map (app_snapnote.go).
+    case 'snapSetMap': {
+      const note = await go.SnapNoteSetMap(String(data?.id || ''), String(data?.map || ''))
+      if (snaps.open?.note.id === note.id) snaps.open.note = { ...snaps.open.note, spot: note.spot }
+      void loadSnaps()
+      return snapshot()
+    }
+    case 'snapShowSpot':
+      await go.SnapNoteShowSpot(String(data || ''))
+      return snapshot()
     case 'snapDelete': {
       const id = String(data || '')
       await go.SnapNoteDelete(id)

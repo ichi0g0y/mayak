@@ -31,7 +31,54 @@ const thumbHTML = (note) => {
   return src ? `<img src="${src}" alt="">` : `<span class="shot-placeholder">${icon('image')}</span>`
 }
 const siteLine = (note) =>
-  note.url ? `${esc(hostname(note.url))}${note.linked ? '' : ` · ${esc(t('snapUnlinked'))}`}` : esc(t('snapSingle'))
+  (note.url ? `${esc(hostname(note.url))}${note.linked ? '' : ` · ${esc(t('snapUnlinked'))}`}` : esc(t('snapSingle'))) +
+  (note.spot?.map ? ` · ${esc(mapLabel(note.spot.map))}` : '')
+
+// A note's position, from a game screenshot's file name: {map (tarkov.dev's
+// route, "" when not known), x, y, z, rotation}. tarkov.dev's map page takes
+// no position in its address, so a position is shown through the map
+// connection (Remote Control), and a post carries it as text with the map's
+// link.
+const mapNames = {
+  customs: 'Customs',
+  factory: 'Factory',
+  'night-factory': 'Night Factory',
+  'ground-zero': 'Ground Zero',
+  'ground-zero-21': 'Ground Zero 21+',
+  interchange: 'Interchange',
+  icebreaker: 'Icebreaker',
+  'the-lab': 'The Lab',
+  'the-labyrinth': 'The Labyrinth',
+  lighthouse: 'Lighthouse',
+  reserve: 'Reserve',
+  shoreline: 'Shoreline',
+  'streets-of-tarkov': 'Streets of Tarkov',
+  terminal: 'Terminal',
+  woods: 'Woods',
+}
+const mapLabel = (key) => mapNames[key] || key
+const mapRoute = (key) => (key === 'ground-zero-21' ? 'ground-zero' : key)
+const facing = (rotation) => Math.round(((Number(rotation) % 360) + 360) % 360)
+const spotText = (spot) =>
+  `X ${Math.round(spot.x)} / Z ${Math.round(spot.z)} · ${t('snapFacing')} ${facing(spot.rotation)}°`
+function spotHTML(note) {
+  const spot = note.spot
+  if (!spot) return ''
+  const place = spot.map
+    ? `<strong>${esc(mapLabel(spot.map))}</strong> · ${esc(spotText(spot))}<button class="snap-spot-show" data-action="snapShowSpot" data-id="${esc(note.id)}" title="${esc(t('snapShowSpotHint'))}">${icon('map')}<span>${esc(t('snapShowSpot'))}</span></button>`
+    : `${esc(spotText(spot))}<select class="snap-spot-map" data-spot-map="${esc(note.id)}" title="${esc(t('snapPickMapHint'))}" aria-label="${esc(t('snapPickMap'))}"><option value="">${esc(t('snapPickMap'))}</option>${Object.entries(
+        mapNames,
+      )
+        .map(([k, name]) => `<option value="${k}">${esc(name)}</option>`)
+        .join('')}</select>`
+  return `<span class="snap-spot">${icon('map')}<span>${esc(t('snapSpot'))}:</span> ${place}</span>`
+}
+// A post's text: the title, and where it was taken with the map's link.
+function postText(note, title) {
+  const spot = note.spot
+  if (!spot?.map) return title
+  return `${title}\n${mapLabel(spot.map)} · ${spotText(spot)}\nhttps://tarkov.dev/map/${mapRoute(spot.map)}`
+}
 
 // The toolbar button of a web page: it opens the snap menu, and counts the
 // page's notes.
@@ -188,7 +235,7 @@ function editorHTML(open) {
   const note = open.note
   const scale = inkScale(note)
   const tools = `<div class="snap-tools" role="toolbar"><button class="snap-tool${tool === 'pen' ? ' on' : ''}" data-action="snapTool" data-id="pen" title="${esc(t('snapPen'))}" aria-pressed="${tool === 'pen'}">${icon('brush')}</button><button class="snap-tool${tool === 'text' ? ' on' : ''}" data-action="snapTool" data-id="text" title="${esc(t('snapText'))}" aria-pressed="${tool === 'text'}">${icon('type')}</button><button class="snap-tool${tool === 'eraser' ? ' on' : ''}" data-action="snapTool" data-id="eraser" title="${esc(t('snapEraser'))}" aria-pressed="${tool === 'eraser'}">${icon('eraser')}</button><span class="snap-sep"></span>${colors.map((c) => `<button class="snap-color${color === c && tool !== 'eraser' ? ' on' : ''}" data-action="snapColor" data-id="${c}" title="${esc(t('snapColor'))} ${c}" style="--swatch:${c}"></button>`).join('')}${customColorHTML()}<span class="snap-sep"></span>${tool === 'text' ? '' : sizes.map(([k, w]) => `<button class="snap-size${size === k ? ' on' : ''}" data-action="snapSize" data-id="${k}" title="${esc(t('snapSize' + k.toUpperCase()))}"><span style="--dot:${w + 2}px"></span></button>`).join('') + '<span class="snap-sep"></span>'}<button data-action="snapUndo" title="${esc(t('snapUndo'))}" ${ed?.undo.length ? '' : 'disabled'}>${icon('undo')}</button><button data-action="snapRedo" title="${esc(t('snapRedo'))}" ${ed?.redo.length ? '' : 'disabled'}>${icon('redo')}</button><button data-action="snapClear" title="${esc(t('snapClear'))}" ${ed?.layers[ed.active].strokes.length ? '' : 'disabled'}>${icon('trash')}</button><span class="snap-sep"></span><button data-action="snapZoomOut" title="${esc(t('snapZoomOut'))}">${icon('minus')}</button><button class="snap-zoom-level" data-action="snapZoomReset" title="${esc(t('snapActual'))}">${Math.round(currentScale(note) * 100)}%</button><button data-action="snapZoomIn" title="${esc(t('snapZoomIn'))}">${icon('plus')}</button><button class="${zoom === 'fit' ? 'on' : ''}" data-action="snapZoomFit" title="${esc(t('snapFit'))}" aria-pressed="${zoom === 'fit'}">${icon('fit')}</button>${tool === 'text' ? textPaletteHTML() : ''}</div>`
-  return `<div class="page snap-editor"><p class="snap-where">${note.url ? `${esc(t(note.linked ? 'snapLinked' : 'snapUnlinked'))}: <span title="${esc(note.url)}">${esc(note.pageTitle || note.url)}</span>` : esc(t('snapNoPage'))}</p>${tools}<div class="snap-body"><div class="snap-stage ${zoom}" data-tool="${tool}">${adjustFilterSVG()}<div class="snap-sheet${ed && !ed.baseVisible ? ' base-hidden' : ''}" style="--snap-filter:${ed ? filterOf(ed.adjust) : 'none'};width:${zoom === 'fit' ? '100%' : Math.round(note.width * zoom) + 'px'};aspect-ratio:${note.width}/${note.height}"><img class="snap-base" data-keep="${esc(note.id)}" alt="" draggable="false"><canvas class="snap-ink" data-keep="${esc(note.id)}" width="${Math.round(note.width * scale)}" height="${Math.round(note.height * scale)}"></canvas>${textBoxHTML(note)}</div></div>${layersHTML()}</div></div>`
+  return `<div class="page snap-editor"><p class="snap-where">${note.url ? `${esc(t(note.linked ? 'snapLinked' : 'snapUnlinked'))}: <span title="${esc(note.url)}">${esc(note.pageTitle || note.url)}</span>` : esc(t('snapNoPage'))}${spotHTML(note)}</p>${tools}<div class="snap-body"><div class="snap-stage ${zoom}" data-tool="${tool}">${adjustFilterSVG()}<div class="snap-sheet${ed && !ed.baseVisible ? ' base-hidden' : ''}" style="--snap-filter:${ed ? filterOf(ed.adjust) : 'none'};width:${zoom === 'fit' ? '100%' : Math.round(note.width * zoom) + 'px'};aspect-ratio:${note.width}/${note.height}"><img class="snap-base" data-keep="${esc(note.id)}" alt="" draggable="false"><canvas class="snap-ink" data-keep="${esc(note.id)}" width="${Math.round(note.width * scale)}" height="${Math.round(note.height * scale)}"></canvas>${textBoxHTML(note)}</div></div>${layersHTML()}</div></div>`
 }
 
 // The layer panel: the three drawing layers over the original, top first.
@@ -737,7 +784,7 @@ async function share(kind) {
       if (next?.snapExported) shareDone(t('snapExported'))
       return
     }
-    await request('snapCopyImage', { image, post: kind === 'x' ? target.title : undefined })
+    await request('snapCopyImage', { image, post: kind === 'x' ? postText(target.note, target.title) : undefined })
     if (kind === 'x') shareDone(t('snapPostXReady'), 10000)
     else shareDone(t('snapCopied'))
   } catch {
@@ -968,6 +1015,10 @@ document.addEventListener('keydown', (event) => {
 })
 document.addEventListener('change', (event) => {
   const data = event.target.dataset
+  if (data?.spotMap && event.target.value) {
+    void action('snapSetMap', { id: data.spotMap, map: event.target.value })
+    return
+  }
   if (ed && data && 'textFont' in data) {
     textStyle.font = event.target.value
     if (textEdit) {
@@ -1208,6 +1259,13 @@ clickHandlers.push(async (type, id, button) => {
     const note =
       state.snapNotes?.open?.note.id === id ? state.snapNotes.open.note : state.snapNotes?.list.find((n) => n.id === id)
     if (note) void action('snapFavorite', { id, favorite: !note.favorite })
+    return true
+  }
+  if (type === 'snapShowSpot') {
+    try {
+      await request('snapShowSpot', id)
+      shareDone(t('snapSpotShown'))
+    } catch {}
     return true
   }
   if (type === 'snapShare') {

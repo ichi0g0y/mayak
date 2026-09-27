@@ -530,6 +530,24 @@ export function SnapNoteSave(id: string, title: string, strokes: string, thumbDa
 }
 
 /**
+ * SnapNoteSetMap sets the map of a note's position.
+ */
+export function SnapNoteSetMap(id: string, mapName: string): $CancellablePromise<snapnote$0.Note> {
+    return $Call.ByID(683081412, id, mapName).then(($result: any) => {
+        return $$createType18($result);
+    });
+}
+
+/**
+ * SnapNoteShowSpot shows a note's position on the tarkov.dev map: the
+ * built-in browser brings its map forward, and the position (with the map)
+ * goes to the maps connected by Remote Control, as a screenshot's would.
+ */
+export function SnapNoteShowSpot(id: string): $CancellablePromise<void> {
+    return $Call.ByID(3347874839, id);
+}
+
+/**
  * SnapNoteThumb returns a note's thumbnail as a data URL, empty before one
  * was saved.
  */

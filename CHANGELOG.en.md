@@ -8,6 +8,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - Snap notes can be starred. The star on a card and next to the name in the editor toggles it, the list has a Favorites filter (and a card can be deleted from its other corner, with a second press), and a page's menu lists its starred notes first.
 - The snap note list's filter (All / Page notes / Standalone notes) did not show.
 - Requests to web services always gave the app's version as 0.1.0.
+- A snap note made from a game screenshot with a position keeps where it was taken (map, position, direction). "Show on tarkov.dev" in the editor shows that position and direction on the map tab (and the maps connected by Remote Control); a screenshot whose map is not known lets you choose it. A post to X carries the place and a link to the tarkov.dev map (a tarkov.dev link cannot hold a position, so the position and direction go as text).
 
 ## Nightly
 

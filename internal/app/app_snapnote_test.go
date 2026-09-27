@@ -15,3 +15,11 @@ func TestExportName(t *testing.T) {
 		}
 	}
 }
+
+func TestValidMapName(t *testing.T) {
+	for name, want := range map[string]bool{"customs": true, "streets-of-tarkov": true, "ground-zero-21": true, "": false, "Customs": false, "../x": false} {
+		if got := validMapName(name); got != want {
+			t.Errorf("validMapName(%q) = %v", name, got)
+		}
+	}
+}

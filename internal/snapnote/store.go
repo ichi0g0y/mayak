@@ -28,12 +28,15 @@ import (
 
 // Note is one snap note. Strokes is the shell's drawing, kept as it sends it.
 type Note struct {
-	ID        string          `json:"id"`
-	Title     string          `json:"title"`
-	URL       string          `json:"url,omitempty"`
-	PageTitle string          `json:"pageTitle,omitempty"`
-	Linked    bool            `json:"linked"`
-	Favorite  bool            `json:"favorite,omitempty"`
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	URL       string `json:"url,omitempty"`
+	PageTitle string `json:"pageTitle,omitempty"`
+	Linked    bool   `json:"linked"`
+	Favorite  bool   `json:"favorite,omitempty"`
+	// Spot is where a note from a game screenshot was taken, when its file
+	// name has the position.
+	Spot      *Spot           `json:"spot,omitempty"`
 	Full      bool            `json:"full,omitempty"`
 	Width     int             `json:"width"`
 	Height    int             `json:"height"`
@@ -262,6 +265,36 @@ func (s *Store) SetLinked(id string, linked bool) (Note, error) {
 		return Note{}, errors.New("this note was not taken from a page")
 	}
 	note.Linked = linked
+	if err := s.writeNote(note); err != nil {
+		return Note{}, err
+	}
+	note.Strokes = nil
+	return note, nil
+}
+
+// Spot is a place in a raid: the map (tarkov.dev's name for it, "" when not
+// known), the position and the direction faced (degrees).
+type Spot struct {
+	Map      string  `json:"map,omitempty"`
+	X        float64 `json:"x"`
+	Y        float64 `json:"y"`
+	Z        float64 `json:"z"`
+	Rotation float64 `json:"rotation"`
+}
+
+// SetSpotMap sets the map of the note's spot (for one whose map was not
+// known when it was made).
+func (s *Store) SetSpotMap(id, mapName string) (Note, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	note, err := s.readNote(id)
+	if err != nil {
+		return Note{}, err
+	}
+	if note.Spot == nil {
+		return Note{}, errors.New("this note has no position")
+	}
+	note.Spot.Map = mapName
 	if err := s.writeNote(note); err != nil {
 		return Note{}, err
 	}

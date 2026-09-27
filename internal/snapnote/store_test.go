@@ -137,3 +137,22 @@ func TestFavorite(t *testing.T) {
 		t.Fatal("starred a missing note")
 	}
 }
+
+func TestSpot(t *testing.T) {
+	s := New(t.TempDir())
+	created, err := s.Create(testPNG(t, 4, 4), Note{Spot: &Spot{X: 1.5, Y: 2, Z: -3, Rotation: 90}})
+	if err != nil || created.Spot == nil || created.Spot.Map != "" {
+		t.Fatalf("created %+v %v", created, err)
+	}
+	note, err := s.SetSpotMap(created.ID, "customs")
+	if err != nil || note.Spot.Map != "customs" || note.Spot.X != 1.5 {
+		t.Fatalf("map set %+v %v", note, err)
+	}
+	if again, _ := s.Get(created.ID); again.Spot == nil || again.Spot.Map != "customs" || again.Spot.Rotation != 90 {
+		t.Fatalf("read back %+v", again)
+	}
+	plain, _ := s.Create(testPNG(t, 4, 4), Note{})
+	if _, err := s.SetSpotMap(plain.ID, "customs"); err == nil {
+		t.Fatal("set the map of a note without a position")
+	}
+}

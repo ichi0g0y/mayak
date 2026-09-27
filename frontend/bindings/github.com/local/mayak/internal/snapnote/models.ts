@@ -19,6 +19,12 @@ export class Note {
     "pageTitle"?: string;
     "linked": boolean;
     "favorite"?: boolean;
+
+    /**
+     * Spot is where a note from a game screenshot was taken, when its file
+     * name has the position.
+     */
+    "spot"?: Spot | null;
     "full"?: boolean;
     "width": number;
     "height": number;
@@ -57,7 +63,53 @@ export class Note {
      * Creates a new Note instance from a string or object.
      */
     static createFrom($$source: any = {}): Note {
+        const $$createField6_0 = $$createType1;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("spot" in $$parsedSource) {
+            $$parsedSource["spot"] = $$createField6_0($$parsedSource["spot"]);
+        }
         return new Note($$parsedSource as Partial<Note>);
     }
 }
+
+/**
+ * Spot is a place in a raid: the map (tarkov.dev's name for it, "" when not
+ * known), the position and the direction faced (degrees).
+ */
+export class Spot {
+    "map"?: string;
+    "x": number;
+    "y": number;
+    "z": number;
+    "rotation": number;
+
+    /** Creates a new Spot instance. */
+    constructor($$source: Partial<Spot> = {}) {
+        if (!("x" in $$source)) {
+            this["x"] = 0;
+        }
+        if (!("y" in $$source)) {
+            this["y"] = 0;
+        }
+        if (!("z" in $$source)) {
+            this["z"] = 0;
+        }
+        if (!("rotation" in $$source)) {
+            this["rotation"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Spot instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Spot {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new Spot($$parsedSource as Partial<Spot>);
+    }
+}
+
+// Private type creation functions
+const $$createType0 = Spot.createFrom;
+const $$createType1 = $Create.Nullable($$createType0);
