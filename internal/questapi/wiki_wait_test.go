@@ -76,3 +76,23 @@ func hasQuest(quests []Quest, name string) bool {
 	}
 	return false
 }
+
+// Only the first task list waits for the wiki: with the wiki not answering,
+// later lists (a mode's next build, another mode) do not wait again.
+func TestOnlyTheFirstTaskListWaitsForTheWiki(t *testing.T) {
+	c := NewWithSource(catalogSource{}).EnableWiki()
+	c.http = &http.Client{Transport: slowWiki{delay: time.Minute}}
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	if _, err := c.QuestsForMode(ctx, "pve"); err != nil {
+		t.Fatal(err)
+	}
+	c.Invalidate()
+	start := time.Now()
+	if _, err := c.QuestsForMode(context.Background(), "regular"); err != nil {
+		t.Fatal(err)
+	}
+	if took := time.Since(start); took > time.Second {
+		t.Fatalf("a later task list waited %v for the wiki", took)
+	}
+}

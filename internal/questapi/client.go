@@ -78,6 +78,8 @@ type Client struct {
 	wikiFetching bool
 	// wikiDone is closed when the fetch under way ends.
 	wikiDone chan struct{}
+	// wikiWaited: a task list has waited for the wiki's first list already.
+	wikiWaited bool
 }
 
 func NewWithSource(source interface {
@@ -104,6 +106,7 @@ func New() *Client {
 }
 
 func (c *Client) QuestsForMode(ctx context.Context, mode string) ([]Quest, error) {
+	c.awaitFirstWiki(ctx)
 	if mode == "" || mode == "auto" {
 		return c.Quests(ctx)
 	}
@@ -125,6 +128,7 @@ func (c *Client) QuestsForMode(ctx context.Context, mode string) ([]Quest, error
 }
 
 func (c *Client) Quests(ctx context.Context) ([]Quest, error) {
+	c.awaitFirstWiki(ctx)
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if len(c.quests) > 0 && time.Since(c.loaded) < 12*time.Hour {
@@ -174,7 +178,7 @@ func (c *Client) Quests(ctx context.Context) ([]Quest, error) {
 			out = append(out, quest)
 		}
 	}
-	out = appendWiki(out, c.wikiQuestTitles(ctx))
+	out = appendWiki(out, c.wikiQuestTitles())
 	c.quests = out
 	c.loaded = time.Now()
 	return append([]Quest(nil), out...), nil
@@ -198,7 +202,7 @@ func (c *Client) loadMode(ctx context.Context, mode string) ([]Quest, error) {
 	}
 	quests := buildQuests(tasks, taskText, maps, mapText, traders, traderText)
 	c.addLocaleNames(ctx, mode, tasks, quests)
-	return appendWiki(appendSupplemental(quests), c.wikiQuestTitles(ctx)), nil
+	return appendWiki(appendSupplemental(quests), c.wikiQuestTitles()), nil
 }
 
 // Aliases share the stable task ID. Display names and Wiki links stay canonical.

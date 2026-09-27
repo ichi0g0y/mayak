@@ -64,21 +64,38 @@ func (c *Client) startWikiLocked() {
 	}
 }
 
-// wikiQuestTitles returns the titles of the wiki's recent task pages. A
-// stale list is returned at once and fetched again in the background; when
-// it changes, the task lists are built again with it. Without any list yet,
-// it waits for the fetch under way, up to wikiWait (or until ctx ends), so
-// the first task list has the story chapters.
-func (c *Client) wikiQuestTitles(ctx context.Context) []string {
+// wikiQuestTitles returns the titles of the wiki's recent task pages at
+// hand, at once. A missing or stale list is fetched in the background; when
+// it changes, the task lists are built again with it.
+func (c *Client) wikiQuestTitles() []string {
 	if !c.wiki {
 		return nil
 	}
 	c.wikiMu.Lock()
+	defer c.wikiMu.Unlock()
 	c.startWikiLocked()
-	titles, fetching, done := c.wikiTitles, c.wikiFetching, c.wikiDone
+	return c.wikiTitles
+}
+
+// awaitFirstWiki waits for the wiki's first list after a start, up to
+// wikiWait (or until ctx ends), so the first task list has the story
+// chapters. It waits once: a wiki that does not answer makes no later list
+// wait. The caller holds no lock of the client while it waits.
+func (c *Client) awaitFirstWiki(ctx context.Context) {
+	if !c.wiki {
+		return
+	}
+	c.wikiMu.Lock()
+	if c.wikiWaited || len(c.wikiTitles) > 0 {
+		c.wikiMu.Unlock()
+		return
+	}
+	c.wikiWaited = true
+	c.startWikiLocked()
+	fetching, done := c.wikiFetching, c.wikiDone
 	c.wikiMu.Unlock()
-	if len(titles) > 0 || !fetching {
-		return titles
+	if !fetching {
+		return
 	}
 	timer := time.NewTimer(wikiWait)
 	defer timer.Stop()
@@ -87,14 +104,9 @@ func (c *Client) wikiQuestTitles(ctx context.Context) []string {
 	case <-timer.C:
 	case <-ctx.Done():
 	}
-	c.wikiMu.Lock()
-	defer c.wikiMu.Unlock()
-	return c.wikiTitles
 }
 
 // refreshWiki fetches the wiki's list and closes done when it is stored.
-// done is closed before the task lists are invalidated: a task list being
-// built waits on it while it holds the client's lock, which Invalidate takes.
 func (c *Client) refreshWiki(done chan struct{}) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
