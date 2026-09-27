@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -87,8 +86,13 @@ func (m *Manager) capture(id string, full bool, prepare, restore string) ([]byte
 				finish(nil, errors.New("the page's size is unknown"))
 				return
 			}
-			width, height := math.Ceil(size.Width), math.Min(math.Ceil(size.Height), MaxCaptureHeight)
-			params := fmt.Sprintf(`{"format":"png","fromSurface":true,"captureBeyondViewport":true,"clip":{"x":0,"y":0,"width":%g,"height":%g,"scale":1}}`, width, height)
+			// The device pixels per CSS pixel: contentSize is in device pixels.
+			dpr := 1.0
+			if metrics.CSSContentSize.Width > 0 && metrics.ContentSize.Width > 0 {
+				dpr = metrics.ContentSize.Width / metrics.CSSContentSize.Width
+			}
+			width, height, scale := captureClip(size.Width, size.Height, dpr)
+			params := fmt.Sprintf(`{"format":"png","fromSurface":true,"captureBeyondViewport":true,"clip":{"x":0,"y":0,"width":%g,"height":%g,"scale":%g}}`, width, height, scale)
 			if err := shoot(params); err != nil {
 				finish(nil, err)
 			}
