@@ -4,11 +4,9 @@
 package clipimage
 
 import (
-	"bytes"
 	"encoding/binary"
 	"image"
 	"image/draw"
-	"image/png"
 )
 
 // dib is img as a packed 32-bit device-independent bitmap: the
@@ -37,6 +35,3 @@ func dib(img image.Image) []byte {
 	}
 	return out
 }
-
-// decode reads a PNG for the clipboard.
-func decode(data []byte) (image.Image, error) { return png.Decode(bytes.NewReader(data)) }

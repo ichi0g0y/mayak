@@ -3,7 +3,9 @@
 package clipimage
 
 import (
+	"bytes"
 	"errors"
+	"image/png"
 	"runtime"
 	"syscall"
 	"time"
@@ -32,7 +34,7 @@ const (
 
 // CopyPNG puts the PNG data on the clipboard.
 func CopyPNG(data []byte) error {
-	img, err := decode(data)
+	img, err := png.Decode(bytes.NewReader(data))
 	if err != nil {
 		return err
 	}
