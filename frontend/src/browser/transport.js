@@ -1,7 +1,7 @@
 // Runs in the trusted Wails shell. External websites use separate native views.
 // Only navigation events and recognized item details travel over the encrypted, ordered data channel.
 class MayakPeer {
-  constructor({onState=()=>{},onMessage=()=>{}}={}) {this.onState=onState;this.onMessage=onMessage;this.pc=null;this.channel=null;this.role='';this.timer=null;this.verified=false;this.messages=[];}
+  constructor({onState=/** @type {(state:any)=>void} */(()=>{}),onMessage=/** @type {(message:any)=>void} */(()=>{})}={}) {this.onState=onState;this.onMessage=onMessage;this.pc=null;this.channel=null;this.role='';this.timer=null;this.verified=false;this.messages=[];}
   close(){clearTimeout(this.timer);this.timer=null;const pc=this.pc;this.pc=null;this.channel?.close();this.channel=null;pc?.close();}
   create(role,iceServers){
     this.close();this.role=role;this.verified=false;this.messages=[];
@@ -33,7 +33,7 @@ class MayakPeer {
   }
   async gathered(pc){
     if(pc.iceGatheringState==='complete')return;
-    await new Promise((resolve,reject)=>{
+    await new Promise(/** @param {(value?:any)=>void} resolve */(resolve,reject)=>{
       const finish=error=>{clearTimeout(timer);pc.removeEventListener('icegatheringstatechange',changed);pc.removeEventListener('connectionstatechange',closed);error?reject(error):resolve();};
       const changed=()=>{if(pc.iceGatheringState==='complete')finish();};
       const closed=()=>{if(pc.connectionState==='closed')finish(new Error('session-closed'));};
@@ -56,4 +56,4 @@ class MayakPeer {
     this.channel.send(data);return true;
   }
 }
-globalThis.MayakPeer=MayakPeer;
+/** @type {any} */(globalThis).MayakPeer=MayakPeer;

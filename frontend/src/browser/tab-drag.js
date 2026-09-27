@@ -8,7 +8,7 @@ let drag=null,suppressClick=false;
 
 export const tabDragActive=()=>!!drag?.active;
 
-export function installTabDrag({horizontal,drop,cancel,over=()=>false,dropElsewhere=()=>{}}){
+export function installTabDrag({horizontal,drop,cancel,over=/** @type {(id:string,x:number,y:number)=>any} */(()=>false),dropElsewhere=/** @type {(id:string)=>void} */(()=>{})}){
  // A release outside the shell (over a page view, which is a separate native
  // window, or outside the app) never reaches it. Without these checks the
  // drag would stay active and hold back every re-render of the sidebar.

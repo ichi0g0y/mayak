@@ -7,8 +7,8 @@ import {t} from './words.js';
 import './transport.js';
 
 // onMenu gets the choice of a menu opened in the menu window ("" for none).
-let onMenu=()=>{};
-let state,go,platform,returnTo='',remoteID='',host=null,hostQuestSite='tarkov-dev',hostUpdateChannel='stable',popup=null,item=null,restoredItem=null,itemOpen=false,itemSearch={query:'',results:[]},searchSeq=0,itemBusy=false,itemHistory=null,notify=()=>{},onKey=()=>{},section='appearance',error='',peerState={phase:'idle'},invite=null;
+let onMenu=/** @type {(choice:string)=>void} */(()=>{});
+let state,go,platform,returnTo='',remoteID='',host=null,hostQuestSite='tarkov-dev',hostUpdateChannel='stable',popup=null,item=null,restoredItem=null,itemOpen=false,itemSearch={query:'',results:[]},searchSeq=0,itemBusy=false,itemHistory=null,notify=/** @type {(state:any)=>void} */(()=>{}),onKey=/** @type {(key:any)=>void} */(()=>{}),section='appearance',error='',peerState={phase:'idle'},invite=null;
 // Tabs closed in this session, newest last, for Ctrl+Shift+T (not saved).
 const closedTabs=[];
 let queue=Promise.resolve(),nativeQueue=Promise.resolve(),expiry;
@@ -116,7 +116,7 @@ async function show(){
  const tab=state.tabs.find(t=>t.id===state.active);
  if(overlay||tab?.kind!=='web'){await native('hideAll',{id:'shell'});return;}
  const previous=views.get(tab.id);
- await native('show',{id:tab.id,url:viewURL(tab),...bounds(tab),background:pageBackground()});
+ await native('show',{id:tab.id,url:viewURL(tab),...bounds(),background:pageBackground()});
  if(previous&&previous!==tab.url)await native('navigate',{id:tab.id,url:viewURL(tab)});
  views.set(tab.id,tab.url);
 }
@@ -277,7 +277,7 @@ function startPairPoll(code){
   try{const got=await relay('GET','/'+code+'/answer');if(got?.answer){stopPairPoll();await pairing('peerAnswer',got.answer);}}catch{}
  },2000);
 }
-const peer=new globalThis.MayakPeer({onState:next=>{peerState={...peerState,...next,busy:false};if(next.phase==='connected'){peerState.code='';stopPairPoll();forgetPairCode();clearTimeout(expiry);}update();},onMessage:message=>void display(message,true)});
+const peer=new (/** @type {any} */(globalThis)).MayakPeer({onState:next=>{peerState={...peerState,...next,busy:false};if(next.phase==='connected'){peerState.code='';stopPairPoll();forgetPairCode();clearTimeout(expiry);}update();},onMessage:message=>void display(message,true)});
 function closePeer(){stopPairPoll();forgetPairCode();clearTimeout(expiry);invite=null;peer.close();peerState={phase:'idle'};update();}
 async function pairing(type,data){
  if(peerState.busy)return snapshot();
@@ -414,7 +414,7 @@ const ready=(async()=>{
 async function preloadMap(){
  const tab=state.tabs.find(t=>t.id===mapTabID);
  if(!tab||views.has(tab.id))return;
- await native('preload',{id:tab.id,url:viewURL(tab),...bounds(tab),background:pageBackground()});
+ await native('preload',{id:tab.id,url:viewURL(tab),...bounds(),background:pageBackground()});
  views.set(tab.id,tab.url);
 }
 async function perform(type,data){

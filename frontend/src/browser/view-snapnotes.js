@@ -86,8 +86,8 @@ function listHTML(notes){
 // [[x,y],…]}. The image and the ink canvas keep what they show across
 // renders (data-keep); afterRender paints them.
 const colors=['#ff3b30','#ffd60a','#34c759','#32ade6','#ffffff','#111111'];
-const sizes=[['s',3],['m',6],['l',12]];
-let tool='pen',color=colors[0],size='m',zoom='fit',armedDelete='',saving=false;
+const sizes=/** @type {[string,number][]} */([['s',3],['m',6],['l',12]]);
+let tool='pen',color=colors[0],size='m',zoom=/** @type {'fit'|number} */('fit'),armedDelete='',saving=false;
 let ed=null;
 const lineWidth=note=>sizes.find(([k])=>k===size)[1]*Math.max(1,note.width/1000);
 // The ink canvas is at most about 24 million pixels; a larger image is inked

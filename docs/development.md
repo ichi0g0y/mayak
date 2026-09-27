@@ -144,6 +144,7 @@ ocrtrain -catalog %AppData%\Mayak\catalog\pve.json -fonts <dir with Bender*.otf>
 | `src/browser/peer-code.js` / `transport.js` | WebRTC 手動ペアリングのコード化と、データチャネルでの送受信 |
 | `src/browser/tab-drag.js` | タブのドラッグ並べ替え |
 | `src/browser/popup.js` | ポップアップのヘッダー描画 |
+| `tsconfig.shell.json` / `src/browser/shell-env.d.ts` | シェルの JavaScript（`src/browser/*.js`）の型チェック。`bun run build` が設定画面の `tsc` に続けて実行する。strict は切り、`window.mayak`・`window.mayakDesktop` の宣言と、イベントの対象と要素のメンバーを緩くする宣言を置く。名前・import・呼び出しは確かめられる（import 漏れなどが見つかる）。`shell-env.d.ts` は設定画面の型チェック（`tsconfig.json`）からは外す |
 | `src/main.tsx` | React の設定画面の `App`: 状態の読み込みと保存、各セクションの描画（shadcn 風 UI、Radix） |
 | `src/settings-model.ts` | 設定画面のモデル: Go 側が送る型、既定値、`normalizeStatus`、セクション一覧、マーカーの一覧 |
 | `src/TrackerSection.tsx` / `LogsSection.tsx` / `Metric.tsx` | TarkovTracker セクション、ログセクション、ステータスの数値カード。状態は `App` が持ち props で渡す（Radix の Tabs は非表示のセクションをアンマウントするため） |
