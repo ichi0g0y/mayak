@@ -1156,13 +1156,15 @@ async function perform(type, data) {
       return snapshot()
     }
     // Sharing a note's picture (a PNG data URL, the drawing included): onto
-    // the clipboard (with post, a post on X opens in the browser too, where
-    // the picture is pasted: X takes none from a link), or into a file the
-    // user names (the path comes back as snapExported, "" when cancelled).
+    // the clipboard, or into a file the user names (the path comes back as
+    // snapExported, "" when cancelled).
     case 'snapCopyImage':
       await go.SnapNoteCopyImage(String(data?.image || ''))
-      if (typeof data?.post === 'string')
-        void Browser.OpenURL('https://x.com/intent/post?text=' + encodeURIComponent(data.post))
+      return snapshot()
+    // A new post on X in the browser, with the text given (the picture is
+    // pasted there: X takes none from a link).
+    case 'snapOpenPost':
+      void Browser.OpenURL('https://x.com/intent/post?text=' + encodeURIComponent(String(data || '')))
       return snapshot()
     case 'snapExport': {
       const path = await go.SnapNoteExport(String(data?.image || ''), String(data?.name || ''))

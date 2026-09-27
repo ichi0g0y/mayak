@@ -235,7 +235,7 @@ function editorHTML(open) {
   const note = open.note
   const scale = inkScale(note)
   const tools = `<div class="snap-tools" role="toolbar"><button class="snap-tool${tool === 'pen' ? ' on' : ''}" data-action="snapTool" data-id="pen" title="${esc(t('snapPen'))}" aria-pressed="${tool === 'pen'}">${icon('brush')}</button><button class="snap-tool${tool === 'text' ? ' on' : ''}" data-action="snapTool" data-id="text" title="${esc(t('snapText'))}" aria-pressed="${tool === 'text'}">${icon('type')}</button><button class="snap-tool${tool === 'eraser' ? ' on' : ''}" data-action="snapTool" data-id="eraser" title="${esc(t('snapEraser'))}" aria-pressed="${tool === 'eraser'}">${icon('eraser')}</button><span class="snap-sep"></span>${colors.map((c) => `<button class="snap-color${color === c && tool !== 'eraser' ? ' on' : ''}" data-action="snapColor" data-id="${c}" title="${esc(t('snapColor'))} ${c}" style="--swatch:${c}"></button>`).join('')}${customColorHTML()}<span class="snap-sep"></span>${tool === 'text' ? '' : sizes.map(([k, w]) => `<button class="snap-size${size === k ? ' on' : ''}" data-action="snapSize" data-id="${k}" title="${esc(t('snapSize' + k.toUpperCase()))}"><span style="--dot:${w + 2}px"></span></button>`).join('') + '<span class="snap-sep"></span>'}<button data-action="snapUndo" title="${esc(t('snapUndo'))}" ${ed?.undo.length ? '' : 'disabled'}>${icon('undo')}</button><button data-action="snapRedo" title="${esc(t('snapRedo'))}" ${ed?.redo.length ? '' : 'disabled'}>${icon('redo')}</button><button data-action="snapClear" title="${esc(t('snapClear'))}" ${ed?.layers[ed.active].strokes.length ? '' : 'disabled'}>${icon('trash')}</button><span class="snap-sep"></span><button data-action="snapZoomOut" title="${esc(t('snapZoomOut'))}">${icon('minus')}</button><button class="snap-zoom-level" data-action="snapZoomReset" title="${esc(t('snapActual'))}">${Math.round(currentScale(note) * 100)}%</button><button data-action="snapZoomIn" title="${esc(t('snapZoomIn'))}">${icon('plus')}</button><button class="${zoom === 'fit' ? 'on' : ''}" data-action="snapZoomFit" title="${esc(t('snapFit'))}" aria-pressed="${zoom === 'fit'}">${icon('fit')}</button>${tool === 'text' ? textPaletteHTML() : ''}</div>`
-  return `<div class="page snap-editor"><p class="snap-where">${note.url ? `${esc(t(note.linked ? 'snapLinked' : 'snapUnlinked'))}: <span title="${esc(note.url)}">${esc(note.pageTitle || note.url)}</span>` : esc(t('snapNoPage'))}${spotHTML(note)}</p>${tools}<div class="snap-body"><div class="snap-stage ${zoom}" data-tool="${tool}">${adjustFilterSVG()}<div class="snap-sheet${ed && !ed.baseVisible ? ' base-hidden' : ''}" style="--snap-filter:${ed ? filterOf(ed.adjust) : 'none'};width:${zoom === 'fit' ? '100%' : Math.round(note.width * zoom) + 'px'};aspect-ratio:${note.width}/${note.height}"><img class="snap-base" data-keep="${esc(note.id)}" alt="" draggable="false"><canvas class="snap-ink" data-keep="${esc(note.id)}" width="${Math.round(note.width * scale)}" height="${Math.round(note.height * scale)}"></canvas>${textBoxHTML(note)}</div></div>${layersHTML()}</div></div>`
+  return `<div class="page snap-editor">${noticeHTML()}<p class="snap-where">${note.url ? `${esc(t(note.linked ? 'snapLinked' : 'snapUnlinked'))}: <span title="${esc(note.url)}">${esc(note.pageTitle || note.url)}</span>` : esc(t('snapNoPage'))}${spotHTML(note)}</p>${tools}<div class="snap-body"><div class="snap-stage ${zoom}" data-tool="${tool}">${adjustFilterSVG()}<div class="snap-sheet${ed && !ed.baseVisible ? ' base-hidden' : ''}" style="--snap-filter:${ed ? filterOf(ed.adjust) : 'none'};width:${zoom === 'fit' ? '100%' : Math.round(note.width * zoom) + 'px'};aspect-ratio:${note.width}/${note.height}"><img class="snap-base" data-keep="${esc(note.id)}" alt="" draggable="false"><canvas class="snap-ink" data-keep="${esc(note.id)}" width="${Math.round(note.width * scale)}" height="${Math.round(note.height * scale)}"></canvas>${textBoxHTML(note)}</div></div>${layersHTML()}</div></div>`
 }
 
 // The layer panel: the three drawing layers over the original, top first.
@@ -756,6 +756,24 @@ function shareDone(message, ms = 3000) {
   }, ms)
   render()
 }
+// A notice over the page for a few seconds (what to do next), closed early
+// with its button.
+let notice = null,
+  noticeTimer = 0
+function showNotice(title, body, ms) {
+  notice = { title, body, at: Date.now(), ms }
+  clearTimeout(noticeTimer)
+  noticeTimer = setTimeout(() => {
+    notice = null
+    render()
+  }, ms)
+  render()
+}
+function noticeHTML() {
+  if (!notice) return ''
+  const opening = Date.now() - notice.at < 2000
+  return `<div class="snap-notice" role="status" style="--notice-ms:${notice.ms}ms">${icon('check', 'snap-notice-icon')}<div><strong>${esc(notice.title)}</strong><p>${esc(notice.body)}</p>${opening ? `<small>${esc(t('snapPostXOpening'))}</small>` : ''}</div><button data-action="snapNoticeClose" title="${esc(t('close'))}" aria-label="${esc(t('close'))}">${icon('x')}</button><span class="snap-notice-bar"></span></div>`
+}
 function openShareMenu(button) {
   const r = button.getBoundingClientRect()
   menu = { share: true }
@@ -784,9 +802,13 @@ async function share(kind) {
       if (next?.snapExported) shareDone(t('snapExported'))
       return
     }
-    await request('snapCopyImage', { image, post: kind === 'x' ? postText(target.note, target.title) : undefined })
-    if (kind === 'x') shareDone(t('snapPostXReady'), 10000)
-    else shareDone(t('snapCopied'))
+    await request('snapCopyImage', { image })
+    if (kind === 'x') {
+      // How to add the picture, shown before the browser comes to the front.
+      showNotice(t('snapPostXReady'), t('snapPostXPaste'), 9000)
+      const text = postText(target.note, target.title)
+      setTimeout(() => void action('snapOpenPost', text), 2000)
+    } else shareDone(t('snapCopied'))
   } catch {
     shareDone(t('snapShareFailed'))
   }
@@ -1266,6 +1288,12 @@ clickHandlers.push(async (type, id, button) => {
       await request('snapShowSpot', id)
       shareDone(t('snapSpotShown'))
     } catch {}
+    return true
+  }
+  if (type === 'snapNoticeClose') {
+    notice = null
+    clearTimeout(noticeTimer)
+    render()
     return true
   }
   if (type === 'snapShare') {

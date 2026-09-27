@@ -760,6 +760,16 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 .snap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
 .snap-card{display:grid;grid-template-rows:auto auto;justify-content:stretch;justify-items:stretch;gap:0;padding:0;overflow:hidden;text-align:left;border-color:var(--border)}
 .snap-card:hover{border-color:var(--border-strong)}
+.page.snap-editor{position:relative}
+.snap-notice{position:absolute;z-index:20;top:56px;left:50%;transform:translateX(-50%);display:flex;align-items:flex-start;gap:12px;width:min(520px,calc(100% - 32px));padding:16px 18px;border:1px solid var(--accent);border-radius:12px;background:var(--raised);box-shadow:0 12px 40px rgba(0,0,0,.45);overflow:hidden;animation:snap-notice-in .18s ease-out}
+.snap-notice strong{display:block;font-size:15px;margin-bottom:4px}
+.snap-notice p{margin:0;font-size:14px;line-height:1.5}
+.snap-notice small{display:block;margin-top:6px;color:var(--muted)}
+.snap-notice .snap-notice-icon{flex:none;width:22px;height:22px;color:var(--accent)}
+.snap-notice button{flex:none;width:28px;height:28px;padding:0;margin-left:auto}
+.snap-notice-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:var(--accent);transform-origin:left;animation:snap-notice-bar var(--notice-ms) linear forwards}
+@keyframes snap-notice-in{from{opacity:0;transform:translate(-50%,-8px)}}
+@keyframes snap-notice-bar{to{transform:scaleX(0)}}
 .snap-spot{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;margin-left:14px}
 .snap-spot>svg{width:14px;height:14px;color:var(--accent)}
 .snap-spot strong{color:var(--text)}
