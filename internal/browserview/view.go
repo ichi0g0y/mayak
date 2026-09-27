@@ -62,12 +62,6 @@ func (m *Manager) SetKeyHandler(handler func(Key) bool) {
 	m.keys = handler
 }
 
-func (m *Manager) keyHandler() func(Key) bool {
-	m.scriptMu.Lock()
-	defer m.scriptMu.Unlock()
-	return m.keys
-}
-
 // ContentBlocker decides which subresources of a page are blocked, and which
 // elements are hidden. kind is one of the adblock.Kind* strings.
 type ContentBlocker interface {
@@ -82,24 +76,12 @@ func (m *Manager) SetContentBlocker(b ContentBlocker) {
 	m.blocker = b
 }
 
-func (m *Manager) contentBlocker() ContentBlocker {
-	m.scriptMu.Lock()
-	defer m.scriptMu.Unlock()
-	return m.blocker
-}
-
 // SetDocumentScript sets a script that runs before page scripts in every tab
 // created afterwards. Existing tabs pick it up only when they are recreated.
 func (m *Manager) SetDocumentScript(script string) {
 	m.scriptMu.Lock()
 	defer m.scriptMu.Unlock()
 	m.documentScript = script
-}
-
-func (m *Manager) currentDocumentScript() string {
-	m.scriptMu.Lock()
-	defer m.scriptMu.Unlock()
-	return m.documentScript
 }
 
 func New(window *application.WebviewWindow, notify func(Event)) *Manager {

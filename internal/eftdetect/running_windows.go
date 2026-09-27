@@ -9,6 +9,9 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+// gameExe is the game's process, as the process list names it.
+const gameExe = "EscapeFromTarkov.exe"
+
 // GameRunning reports whether Escape from Tarkov is running (its process,
 // gameExe, is in the process list).
 func GameRunning() bool {
