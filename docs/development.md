@@ -235,6 +235,8 @@ Wails 本体はフォークせず公式モジュールを使います。
 
 ## リリース
 
+開発は `main` に直接コミットします。`main` は毎晩 nightly としてビルドされ（[nightly ビルド](#nightly-ビルド)）、安定版はタグを打ったときだけ出ます。`main` に未リリースの変更があっても、安定版を使う人には届きません。
+
 配布物は GitHub Releases です。アプリはそこから自分自身を更新します（[設定と連携](settings-and-integrations.md#自動アップデート)）。
 
 1. `build/config.yml` と `build/windows/info.json` の版を上げてコミットします。
@@ -246,7 +248,7 @@ Wails 本体はフォークせず公式モジュールを使います。
 
 ### nightly ビルド
 
-`.github/workflows/nightly.yml` が毎日 03:00（日本時間）に開発ブランチ（既定 `rename-mayak`。手動実行では `ref` で変えられる）をビルドし、プレリリース `nightly` として公開します。前回の nightly と同じコミットのとき、またはブランチの先頭がリリースタグそのもののときはビルドしません（手動実行の `force` で強制）。
+`.github/workflows/nightly.yml` が毎日 03:00（日本時間）に `main`（開発はここで行う。手動実行では `ref` で別のブランチも指定できる）をビルドし、プレリリース `nightly` として公開します。前回の nightly と同じコミットのとき、またはブランチの先頭がリリースタグそのもののときはビルドしません（手動実行の `force` で強制）。
 
 - 版は `git describe --tags --match 'v*'`（`0.1.17-16-ge057eae`）で、`task build`・`task installer`・`task release:archive` に `VERSION` として渡します。アセットの名前もこの版になります。
 - 公開は毎回作り直しです。古い `nightly` リリースとタグを消してから、そのコミットに `nightly` タグを付けて作ります（古い版のアーカイブが残らない）。リリース名は `MAYAK nightly <版>` で、アプリはこの名前（なければアーカイブ名）から版を読みます（`update.Release.Version`）。

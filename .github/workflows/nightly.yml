@@ -1,6 +1,6 @@
-# Builds MAYAK from the development branch every night and publishes it as
-# the rolling "nightly" pre-release (tag `nightly`, replaced each time). The
-# app's updater takes it on the nightly channel when it is newer than the
+# Builds MAYAK from main (where development happens) every night and
+# publishes it as the rolling "nightly" pre-release (tag `nightly`,
+# replaced each time). The app's updater takes it on the nightly channel when it is newer than the
 # latest release (internal/update: LatestFor). Its version is `git describe`
 # after the last release tag (0.1.17-16-ge057eae), which sorts after that
 # release and before the next one. The build steps follow release.yml; keep
@@ -17,7 +17,7 @@ on:
     inputs:
       ref:
         description: Branch to build
-        default: rename-mayak
+        default: main
       force:
         description: Build even when nothing changed since the last nightly
         type: boolean
@@ -31,7 +31,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NIGHTLY_REF: ${{ inputs.ref || 'rename-mayak' }}
+  NIGHTLY_REF: ${{ inputs.ref || 'main' }}
 
 jobs:
   check:
