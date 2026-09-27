@@ -35,12 +35,23 @@ type Settings struct {
 	SoundsEnabled         bool   `json:"soundsEnabled"`
 	QuestSoundEnabled     bool   `json:"questSoundEnabled"`
 	QuestSoundPath        string `json:"questSoundPath"`
-	ErrorSoundEnabled     bool   `json:"errorSoundEnabled"`
-	ErrorSoundPath        string `json:"errorSoundPath"`
-	SoundVolume           int    `json:"soundVolume"`
-	AutoStartMonitoring   bool   `json:"autoStartMonitoring"`
-	OpenMapOnRaidStart    bool   `json:"openMapOnRaidStart"`
-	NavigateMapOnShot     bool   `json:"navigateMapOnPositionScreenshot"`
+	// ErrorSound is a screenshot that could not be read; it once also
+	// covered a task matching nothing and a failed tarkov.dev connection,
+	// which have their own now (settings saved before take its choice).
+	ErrorSoundEnabled          bool   `json:"errorSoundEnabled"`
+	ErrorSoundPath             string `json:"errorSoundPath"`
+	TaskNotMatchedSoundEnabled bool   `json:"taskNotMatchedSoundEnabled"`
+	TaskNotMatchedSoundPath    string `json:"taskNotMatchedSoundPath"`
+	RemoteErrorSoundEnabled    bool   `json:"remoteErrorSoundEnabled"`
+	RemoteErrorSoundPath       string `json:"remoteErrorSoundPath"`
+	ItemSoundEnabled           bool   `json:"itemSoundEnabled"`
+	ItemSoundPath              string `json:"itemSoundPath"`
+	ItemNotMatchedSoundEnabled bool   `json:"itemNotMatchedSoundEnabled"`
+	ItemNotMatchedSoundPath    string `json:"itemNotMatchedSoundPath"`
+	SoundVolume                int    `json:"soundVolume"`
+	AutoStartMonitoring        bool   `json:"autoStartMonitoring"`
+	OpenMapOnRaidStart         bool   `json:"openMapOnRaidStart"`
+	NavigateMapOnShot          bool   `json:"navigateMapOnPositionScreenshot"`
 	// PlayerMarkerEffect is the effect the built-in browser gives the
 	// player's position marker on tarkov.dev's map, PlayerMarkerColor its
 	// colour (#rrggbb; empty for the effect's own); see app_marker.go.
@@ -104,7 +115,7 @@ type WindowState struct {
 }
 
 func defaults() Settings {
-	return Settings{Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: true, QuestSoundEnabled: true, ErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, AutoUpdate: true}
+	return Settings{Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: true, QuestSoundEnabled: true, ErrorSoundEnabled: true, TaskNotMatchedSoundEnabled: true, RemoteErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, AutoUpdate: true}
 }
 func path() (string, error) {
 	d, err := os.UserConfigDir()
@@ -152,6 +163,12 @@ func decodeSettings(b []byte) (Settings, error) {
 	if json.Unmarshal(b, &fields) == nil {
 		if _, ok := fields["closeToTray"]; !ok {
 			s.CloseToTray = s.MinimizeToTray
+		}
+		if _, ok := fields["taskNotMatchedSoundEnabled"]; !ok {
+			s.TaskNotMatchedSoundEnabled, s.TaskNotMatchedSoundPath = s.ErrorSoundEnabled, s.ErrorSoundPath
+		}
+		if _, ok := fields["remoteErrorSoundEnabled"]; !ok {
+			s.RemoteErrorSoundEnabled, s.RemoteErrorSoundPath = s.ErrorSoundEnabled, s.ErrorSoundPath
 		}
 	}
 	return s, nil

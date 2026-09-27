@@ -107,3 +107,19 @@ func TestCloseToTrayFollowsOlderMinimizeSetting(t *testing.T) {
 		t.Fatalf("split settings = %+v, %v", split, err)
 	}
 }
+
+func TestSplitErrorSoundsFollowOlderErrorSetting(t *testing.T) {
+	// Before they had their own, the error sound also covered a task
+	// matching nothing and a failed connection.
+	old, err := decodeSettings([]byte(`{"errorSoundEnabled":false,"errorSoundPath":"C:/a.wav"}`))
+	if err != nil || old.TaskNotMatchedSoundEnabled || old.RemoteErrorSoundEnabled || old.TaskNotMatchedSoundPath != "C:/a.wav" || old.RemoteErrorSoundPath != "C:/a.wav" {
+		t.Fatalf("old settings = %+v, %v", old, err)
+	}
+	split, err := decodeSettings([]byte(`{"errorSoundEnabled":false,"taskNotMatchedSoundEnabled":true,"remoteErrorSoundEnabled":true}`))
+	if err != nil || !split.TaskNotMatchedSoundEnabled || !split.RemoteErrorSoundEnabled {
+		t.Fatalf("split settings = %+v, %v", split, err)
+	}
+	if d := defaults(); !d.TaskNotMatchedSoundEnabled || !d.RemoteErrorSoundEnabled || d.ItemSoundEnabled || d.ItemNotMatchedSoundEnabled {
+		t.Fatalf("defaults = %+v", d)
+	}
+}

@@ -10,7 +10,7 @@ func TestWaveHeaderAndVolumeBounds(t *testing.T) {
 	for _, tc := range []struct {
 		kind   Kind
 		volume int
-	}{{Quest, -10}, {Quest, 30}, {Error, 150}, {MatchFound, 30}, {RaidStart, 30}, {RunThrough, 30}} {
+	}{{Quest, -10}, {Quest, 30}, {Error, 150}, {MatchFound, 30}, {RaidStart, 30}, {RunThrough, 30}, {RemoteError, 30}, {Item, 30}, {ItemNotMatched, 30}} {
 		wave := Wave(tc.kind, tc.volume)
 		if len(wave) <= 44 || string(wave[:4]) != "RIFF" || string(wave[8:12]) != "WAVE" {
 			t.Fatalf("invalid wave for %+v", tc)

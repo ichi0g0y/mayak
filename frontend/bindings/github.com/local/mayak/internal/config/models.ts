@@ -66,8 +66,22 @@ export class Settings {
     "soundsEnabled": boolean;
     "questSoundEnabled": boolean;
     "questSoundPath": string;
+
+    /**
+     * ErrorSound is a screenshot that could not be read; it once also
+     * covered a task matching nothing and a failed tarkov.dev connection,
+     * which have their own now (settings saved before take its choice).
+     */
     "errorSoundEnabled": boolean;
     "errorSoundPath": string;
+    "taskNotMatchedSoundEnabled": boolean;
+    "taskNotMatchedSoundPath": string;
+    "remoteErrorSoundEnabled": boolean;
+    "remoteErrorSoundPath": string;
+    "itemSoundEnabled": boolean;
+    "itemSoundPath": string;
+    "itemNotMatchedSoundEnabled": boolean;
+    "itemNotMatchedSoundPath": string;
     "soundVolume": number;
     "autoStartMonitoring": boolean;
     "openMapOnRaidStart": boolean;
@@ -204,6 +218,30 @@ export class Settings {
         }
         if (!("errorSoundPath" in $$source)) {
             this["errorSoundPath"] = "";
+        }
+        if (!("taskNotMatchedSoundEnabled" in $$source)) {
+            this["taskNotMatchedSoundEnabled"] = false;
+        }
+        if (!("taskNotMatchedSoundPath" in $$source)) {
+            this["taskNotMatchedSoundPath"] = "";
+        }
+        if (!("remoteErrorSoundEnabled" in $$source)) {
+            this["remoteErrorSoundEnabled"] = false;
+        }
+        if (!("remoteErrorSoundPath" in $$source)) {
+            this["remoteErrorSoundPath"] = "";
+        }
+        if (!("itemSoundEnabled" in $$source)) {
+            this["itemSoundEnabled"] = false;
+        }
+        if (!("itemSoundPath" in $$source)) {
+            this["itemSoundPath"] = "";
+        }
+        if (!("itemNotMatchedSoundEnabled" in $$source)) {
+            this["itemNotMatchedSoundEnabled"] = false;
+        }
+        if (!("itemNotMatchedSoundPath" in $$source)) {
+            this["itemNotMatchedSoundPath"] = "";
         }
         if (!("soundVolume" in $$source)) {
             this["soundVolume"] = 0;

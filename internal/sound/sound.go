@@ -12,15 +12,35 @@ import (
 
 type Kind string
 
+// The notifications. Error is a screenshot that could not be read (OCR, the
+// catalog); a task or item screenshot read but matching nothing has its own.
 const (
-	Quest        Kind = "quest"
-	Error        Kind = "error"
-	MatchFound   Kind = "matchFound"
-	RaidStart    Kind = "raidStart"
-	RunThrough   Kind = "runThrough"
-	QuestItems   Kind = "questItems"
-	RestartTasks Kind = "restartTasks"
+	Quest          Kind = "quest"
+	TaskNotMatched Kind = "taskNotMatched"
+	Item           Kind = "item"
+	ItemNotMatched Kind = "itemNotMatched"
+	Error          Kind = "error"
+	RemoteError    Kind = "remoteError"
+	HideoutError   Kind = "hideoutError"
+	MatchFound     Kind = "matchFound"
+	RaidStart      Kind = "raidStart"
+	RunThrough     Kind = "runThrough"
+	QuestItems     Kind = "questItems"
+	RestartTasks   Kind = "restartTasks"
 )
+
+// Kinds lists every notification.
+var Kinds = []Kind{Quest, TaskNotMatched, Item, ItemNotMatched, Error, RemoteError, HideoutError, MatchFound, RaidStart, RunThrough, QuestItems, RestartTasks}
+
+// ParseKind returns the notification named s.
+func ParseKind(s string) (Kind, bool) {
+	for _, kind := range Kinds {
+		if string(kind) == s {
+			return kind, true
+		}
+	}
+	return "", false
+}
 
 const sampleRate = 44100
 
@@ -54,8 +74,10 @@ func Wave(kind Kind, volume int) []byte {
 	}
 	duration := .24
 	switch kind {
-	case Error:
+	case Error, TaskNotMatched, ItemNotMatched, HideoutError:
 		duration = .3
+	case RemoteError:
+		duration = .36
 	case MatchFound:
 		duration = .38
 	case RaidStart:
@@ -75,8 +97,14 @@ func Wave(kind Kind, volume int) []byte {
 		n := (float64(int32(noise>>16)-32768) / 32768)
 		var sample float64
 		switch kind {
-		case Error:
+		case Error, TaskNotMatched, HideoutError:
 			sample = pulse(t, 0, .11, 185) + .78*pulse(t, .15, .11, 145)
+		case ItemNotMatched:
+			sample = pulse(t, 0, .11, 220) + .78*pulse(t, .15, .11, 170)
+		case RemoteError:
+			sample = pulse(t, 0, .1, 160) + .8*pulse(t, .12, .1, 160) + .7*pulse(t, .24, .11, 125)
+		case Item:
+			sample = .72*pulse(t, 0, .09, 660) + pulse(t, .085, .13, 880)
 		case MatchFound:
 			sample = .72*pulse(t, 0, .14, 610) + pulse(t, .16, .18, 840)
 		case RaidStart:

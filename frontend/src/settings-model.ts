@@ -29,6 +29,14 @@ export type Settings = {
   questSoundPath: string
   errorSoundEnabled: boolean
   errorSoundPath: string
+  taskNotMatchedSoundEnabled: boolean
+  taskNotMatchedSoundPath: string
+  remoteErrorSoundEnabled: boolean
+  remoteErrorSoundPath: string
+  itemSoundEnabled: boolean
+  itemSoundPath: string
+  itemNotMatchedSoundEnabled: boolean
+  itemNotMatchedSoundPath: string
   soundVolume: number
   autoStartMonitoring: boolean
   openMapOnRaidStart: boolean
@@ -198,6 +206,14 @@ export const defaults: Settings = {
   questSoundPath: '',
   errorSoundEnabled: true,
   errorSoundPath: '',
+  taskNotMatchedSoundEnabled: true,
+  taskNotMatchedSoundPath: '',
+  remoteErrorSoundEnabled: true,
+  remoteErrorSoundPath: '',
+  itemSoundEnabled: false,
+  itemSoundPath: '',
+  itemNotMatchedSoundEnabled: false,
+  itemNotMatchedSoundPath: '',
   soundVolume: 28,
   autoStartMonitoring: true,
   openMapOnRaidStart: true,

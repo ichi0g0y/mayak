@@ -99,9 +99,7 @@ func (a *App) handleHideoutEvent(parent context.Context, e hideoutlog.Event) {
 		if a.ctx != nil {
 			a.emitEvent("hideout:alert", e)
 		}
-		if settings.SoundsEnabled {
-			playNotification(sound.Error, settings.HideoutErrorSoundPath, settings.SoundVolume)
-		}
+		a.notify(settings, sound.HideoutError)
 	}
 }
 

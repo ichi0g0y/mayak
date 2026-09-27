@@ -14,6 +14,7 @@ import (
 	"github.com/local/mayak/internal/logdetect"
 	"github.com/local/mayak/internal/model"
 	"github.com/local/mayak/internal/position"
+	"github.com/local/mayak/internal/sound"
 	"github.com/local/mayak/internal/taskdetect"
 	"github.com/local/mayak/internal/watcher"
 )
@@ -265,5 +266,5 @@ func (a *App) updateAnalysisError(sequence uint64, path string, err error) {
 	a.mu.Unlock()
 	a.emitEvent("status:update", status)
 	a.addLog("Error", "Recognition", err.Error())
-	a.playErrorSound("analysis:" + err.Error())
+	a.notifyOnce(sound.Error, err.Error())
 }

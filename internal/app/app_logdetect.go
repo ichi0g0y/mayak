@@ -124,10 +124,7 @@ func (a *App) handleLogEvent(event logdetect.Event) {
 		a.mu.Unlock()
 		a.emitStatus(status)
 		a.addLog("Info", "Raid", fmt.Sprintf("Match found after %.1f seconds", event.QueueSeconds))
-		if settings.SoundsEnabled && settings.MatchFoundSound {
-			a.addLog("Info", "Sound", "Playing match-found alert")
-			playNotification(sound.MatchFound, settings.MatchFoundSoundPath, settings.SoundVolume)
-		}
+		a.notify(settings, sound.MatchFound)
 	case logdetect.RaidStarted:
 		started := event.OccurredAt
 		if started.IsZero() {
@@ -146,17 +143,11 @@ func (a *App) handleLogEvent(event logdetect.Event) {
 		a.emitStatus(status)
 		a.addLog("Info", "Raid", "Raid started")
 		a.retryMapAfterRaidStart()
-		if settings.SoundsEnabled && settings.RaidStartSound {
-			a.addLog("Info", "Sound", "Playing raid-start alert")
-			playNotification(sound.RaidStart, settings.RaidStartSoundPath, settings.SoundVolume)
-		}
-		if settings.SoundsEnabled && settings.QuestItemsSound {
-			a.addLog("Info", "Sound", "Playing quest-items reminder")
-			playNotification(sound.QuestItems, settings.QuestItemsSoundPath, settings.SoundVolume)
-		}
-		if settings.SoundsEnabled && settings.RestartTasksSound && failedTasks > 0 {
+		a.notify(settings, sound.RaidStart)
+		a.notify(settings, sound.QuestItems)
+		if failedTasks > 0 {
 			a.addLog("Warn", "TarkovTracker", fmt.Sprintf("%d failed task(s) may need to be restarted", failedTasks))
-			playNotification(sound.RestartTasks, settings.RestartTasksSoundPath, settings.SoundVolume)
+			a.notify(settings, sound.RestartTasks)
 		}
 		if runThrough {
 			a.scheduleRunThroughAlert(settings, started.Add(time.Duration(settings.RunThroughSeconds)*time.Second))
@@ -263,9 +254,8 @@ func (a *App) scheduleRunThroughAlert(settings config.Settings, at time.Time) {
 		current := a.settings
 		a.mu.RUnlock()
 		active, _ := logdetect.RaidState(current.LogsDirectory)
-		if active && current.SoundsEnabled && current.RunThroughSound && !a.quitting.Load() {
-			a.addLog("Info", "Sound", "Playing run-through alert")
-			playNotification(sound.RunThrough, current.RunThroughSoundPath, current.SoundVolume)
+		if active && !a.quitting.Load() {
+			a.notify(current, sound.RunThrough)
 		}
 	}()
 }

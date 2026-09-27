@@ -12,6 +12,7 @@ import (
 	"github.com/local/mayak/internal/ocr"
 	"github.com/local/mayak/internal/questapi"
 	"github.com/local/mayak/internal/questmatch"
+	"github.com/local/mayak/internal/sound"
 	"github.com/local/mayak/internal/taskdetect"
 )
 
@@ -167,9 +168,9 @@ func (a *App) handleTaskAnalysis(ctx context.Context, sequence uint64, path stri
 		return
 	}
 	if status.MatchConfidence >= .78 {
-		a.playQuestSound(status.QuestID)
+		a.notifyOnce(sound.Quest, status.QuestID)
 	} else {
-		a.playErrorSound("quest-match")
+		a.notifyOnce(sound.TaskNotMatched, raw)
 	}
 	if status.MatchConfidence >= .78 {
 		a.showBrowserTask(status, settings.QuestSite)

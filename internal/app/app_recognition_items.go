@@ -10,6 +10,7 @@ import (
 	"github.com/local/mayak/internal/logdetect"
 	"github.com/local/mayak/internal/model"
 	"github.com/local/mayak/internal/ocr"
+	"github.com/local/mayak/internal/sound"
 )
 
 func (a *App) handleItemAnalysis(ctx context.Context, sequence uint64, path string, settings config.Settings, detected itemdetect.Result) {
@@ -91,8 +92,10 @@ func (a *App) handleItemAnalysis(ctx context.Context, sequence uint64, path stri
 	if status.ItemConfidence >= .82 {
 		a.addLog("Info", "Item", fmt.Sprintf("Matched %s (%.0f%%) from OCR: %s", status.LastItem, status.ItemConfidence*100, raw))
 		go a.showBrowserItem(a.effectiveCatalogMode(settings.GameMode), status.ItemID)
+		a.notifyOnce(sound.Item, status.ItemID)
 	} else {
 		a.addLog("Warn", "Item", fmt.Sprintf("No confident match (%.0f%%) from OCR: %s", status.ItemConfidence*100, raw))
+		a.notifyOnce(sound.ItemNotMatched, raw)
 	}
 }
 

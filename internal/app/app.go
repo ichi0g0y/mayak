@@ -28,6 +28,7 @@ import (
 	"github.com/local/mayak/internal/questapi"
 	"github.com/local/mayak/internal/remote"
 	"github.com/local/mayak/internal/screenshotstore"
+	"github.com/local/mayak/internal/sound"
 	"github.com/local/mayak/internal/tracker"
 	"github.com/local/mayak/internal/trackerlog"
 	"github.com/local/mayak/internal/trackerstore"
@@ -89,24 +90,21 @@ type App struct {
 	screenshotIndex   *screenshotstore.Index
 	// lastRaid is the last raid that ended, and goonReports the raids reported
 	// (account|mode|start), for Goons reports.
-	lastRaid          *GoonRaid
-	goonReports       map[string]bool
-	faviconOnce       sync.Once
-	favicons          *faviconCache
-	trackerClient     *tracker.Client
-	trackerStore      trackerstore.Store
-	trackerStoreMu    sync.Mutex
-	trackerNamesMu    sync.Mutex
-	trackerData       trackerstore.Document
-	trackerTasks      map[string]string
-	trackerSyncMu     sync.Mutex
-	logs              *applog.Store
-	lastQuestSoundKey string
-	lastQuestSoundAt  time.Time
-	lastErrorSoundKey string
-	lastErrorSoundAt  time.Time
-	lastProcessed     config.ProcessedScreenshot
-	analysisCancel    context.CancelFunc
+	lastRaid       *GoonRaid
+	goonReports    map[string]bool
+	faviconOnce    sync.Once
+	favicons       *faviconCache
+	trackerClient  *tracker.Client
+	trackerStore   trackerstore.Store
+	trackerStoreMu sync.Mutex
+	trackerNamesMu sync.Mutex
+	trackerData    trackerstore.Document
+	trackerTasks   map[string]string
+	trackerSyncMu  sync.Mutex
+	logs           *applog.Store
+	lastSounds     map[sound.Kind]recentSound
+	lastProcessed  config.ProcessedScreenshot
+	analysisCancel context.CancelFunc
 	// statusSoon is the pending coalesced status emission (emitStatusSoon).
 	statusSoonMu sync.Mutex
 	statusSoon   *time.Timer
@@ -454,5 +452,5 @@ func (a *App) setErrorState(sequence uint64, requireCurrent bool, err error) {
 	a.mu.Unlock()
 	a.emitEvent("status:update", status)
 	a.addLog("Error", "Remote", err.Error())
-	a.playErrorSound("runtime:" + err.Error())
+	a.notifyOnce(sound.RemoteError, err.Error())
 }

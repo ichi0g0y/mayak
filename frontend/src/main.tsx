@@ -400,6 +400,10 @@ function App() {
     | 'hideoutErrorSoundPath'
     | 'questSoundPath'
     | 'errorSoundPath'
+    | 'taskNotMatchedSoundPath'
+    | 'remoteErrorSoundPath'
+    | 'itemSoundPath'
+    | 'itemNotMatchedSoundPath'
     | 'matchFoundSoundPath'
     | 'raidStartSoundPath'
     | 'runThroughSoundPath'
@@ -424,13 +428,6 @@ function App() {
   }
   const soundAlerts = [
     {
-      id: 'hideout-error',
-      label: t('hideoutErrorNotifications'),
-      kind: 'error',
-      enabledKey: 'hideoutErrorNotifications',
-      pathKey: 'hideoutErrorSoundPath',
-    },
-    {
       id: 'quest-sound',
       label: t('questSuccess'),
       kind: 'quest',
@@ -438,11 +435,46 @@ function App() {
       pathKey: 'questSoundPath',
     },
     {
+      id: 'task-not-matched-sound',
+      label: t('taskNotMatchedSound'),
+      kind: 'taskNotMatched',
+      enabledKey: 'taskNotMatchedSoundEnabled',
+      pathKey: 'taskNotMatchedSoundPath',
+    },
+    {
+      id: 'item-sound',
+      label: t('itemSound'),
+      kind: 'item',
+      enabledKey: 'itemSoundEnabled',
+      pathKey: 'itemSoundPath',
+    },
+    {
+      id: 'item-not-matched-sound',
+      label: t('itemNotMatchedSound'),
+      kind: 'itemNotMatched',
+      enabledKey: 'itemNotMatchedSoundEnabled',
+      pathKey: 'itemNotMatchedSoundPath',
+    },
+    {
       id: 'error-sound',
       label: t('recognitionError'),
       kind: 'error',
       enabledKey: 'errorSoundEnabled',
       pathKey: 'errorSoundPath',
+    },
+    {
+      id: 'remote-error-sound',
+      label: t('remoteErrorSound'),
+      kind: 'remoteError',
+      enabledKey: 'remoteErrorSoundEnabled',
+      pathKey: 'remoteErrorSoundPath',
+    },
+    {
+      id: 'hideout-error',
+      label: t('hideoutErrorNotifications'),
+      kind: 'hideoutError',
+      enabledKey: 'hideoutErrorNotifications',
+      pathKey: 'hideoutErrorSoundPath',
     },
     {
       id: 'match-found-sound',

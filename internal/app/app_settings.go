@@ -299,6 +299,10 @@ func normalizeSettings(s config.Settings) config.Settings {
 	}
 	s.QuestSoundPath = normalizeSoundPath(s.QuestSoundPath)
 	s.ErrorSoundPath = normalizeSoundPath(s.ErrorSoundPath)
+	s.TaskNotMatchedSoundPath = normalizeSoundPath(s.TaskNotMatchedSoundPath)
+	s.RemoteErrorSoundPath = normalizeSoundPath(s.RemoteErrorSoundPath)
+	s.ItemSoundPath = normalizeSoundPath(s.ItemSoundPath)
+	s.ItemNotMatchedSoundPath = normalizeSoundPath(s.ItemNotMatchedSoundPath)
 	s.MatchFoundSoundPath = normalizeSoundPath(s.MatchFoundSoundPath)
 	s.RaidStartSoundPath = normalizeSoundPath(s.RaidStartSoundPath)
 	s.RunThroughSoundPath = normalizeSoundPath(s.RunThroughSoundPath)
