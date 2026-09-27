@@ -31,6 +31,7 @@ import {
   icon,
   action,
   appVersion,
+  voicePacks,
   select,
   siteChoices,
   option,
@@ -49,6 +50,7 @@ setRender(render)
 
 // The changelog page, rendered from CHANGELOG.md in the repository.
 const CHANGELOG_URL = 'https://mayak.ich.sh/changelog'
+const LICENSE_URL = 'https://github.com/ichi0g0y/mayak/blob/main/LICENSE'
 let editingBookmark = null,
   bookmarkQuery = '',
   tabQuery = '',
@@ -414,6 +416,7 @@ const sectionIcons = {
   sounds: 'volume',
   startup: 'power',
   debug: 'bug',
+  licenses: 'file',
 }
 // Sections grouped by what they are about. Some are the browser's own and
 // some the Host's (its page in a frame); that split is not shown.
@@ -423,7 +426,7 @@ const settingsGroups = /** @type {[string,string[]][]} */ ([
   ['grpLinks', ['remote', 'tracker', 'connection']],
   ['grpBrowser', ['adblock']],
   ['grpDiagnostics', ['status', 'logs', 'debug']],
-  ['grpAbout', ['about']],
+  ['grpAbout', ['about', 'licenses']],
 ])
 const sectionAvailable = (key) => browserSections.includes(key) || (state.localHost && hostSections.includes(key))
 // While settings are open, the sidebar lists their sections instead of tabs.
@@ -487,6 +490,20 @@ function browserSettings(key) {
   switch (key) {
     case 'about':
       return `<section class="panel about"><div class="about-head"><img src="/favicon-256.png?v=${esc(appVersion || 'dev')}" alt="" width="56" height="56"><div><h2>MAYAK</h2><p class="about-version">${esc(t('aboutVersion'))} ${esc(appVersion || t('aboutDev'))}</p></div></div><p>${esc(t('aboutTagline'))}</p><div class="about-links"><button data-action="openOrFocus" data-id="https://mayak.ich.sh">${icon('globe')}${esc(t('aboutSite'))}</button><button data-action="openOrFocus" data-id="https://github.com/ichi0g0y/mayak">${icon('external')}${esc(t('aboutSource'))}</button><button data-action="openOrFocus" data-id="${CHANGELOG_URL}">${icon('list')}${esc(t('aboutReleases'))}</button></div><p class="hint">${esc(t('aboutLicense'))} ${esc(t('aboutCredits'))}</p></section>${aboutUpdate()}`
+    // MAYAK's license, the data it shows and the built-in voices' credits
+    // (their terms ask for them where users can find them).
+    case 'licenses': {
+      const lang = state.language === 'ja' ? 'ja' : 'en'
+      const open = (url, label) =>
+        `<button data-action="openOrFocus" data-id="${esc(url)}">${icon('external')}${esc(label)}</button>`
+      const voices = voicePacks
+        .map(
+          (p) =>
+            `<div><dt>${esc(p.name?.[lang] || p.name?.en || p.id)}</dt><dd>${esc(p.credit)}</dd><dd class="license-terms"><button type="button" class="link" data-action="openOrFocus" data-id="${esc(p.terms)}">${esc(t('licTerms'))}</button><span>${esc(t('licChecked'))} ${esc(p.termsChecked)}</span></dd></div>`,
+        )
+        .join('')
+      return `<section class="panel about"><h2>MAYAK</h2><p>${esc(t('aboutLicense'))}</p><div class="about-links">${open(LICENSE_URL, t('licLicense'))}<button data-action="openNotices">${icon('file')}${esc(t('licNotices'))}</button></div><p class="hint">${esc(t('licNoticesHelp'))}</p></section><section class="panel"><h2>${esc(t('licData'))}</h2><p>${esc(t('aboutCredits'))}</p></section><section class="panel"><h2>${esc(t('licVoices'))}</h2><p>${esc(t('licVoicesNote'))}</p><dl class="license-list">${voices}</dl><div class="about-links">${open('https://voicevox.hiroshiba.jp/term/', t('licVoicevoxTerms'))}</div></section>`
+    }
     case 'appearance':
       return `<section class="panel"><div class="fields">${select(
         'language',

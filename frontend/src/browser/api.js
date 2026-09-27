@@ -1595,6 +1595,9 @@ async function perform(type, data) {
     case 'updateDownload':
       void go.DownloadUpdate().catch(messageError)
       return snapshot()
+    case 'openNotices':
+      void go.OpenThirdPartyNotices().catch(messageError)
+      return snapshot()
     case 'updateCheck':
       void go.CheckForUpdates().catch(messageError)
       return snapshot()

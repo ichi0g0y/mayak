@@ -357,6 +357,14 @@ export function OpenScreenshotDirectory(): $CancellablePromise<void> {
 }
 
 /**
+ * OpenThirdPartyNotices opens THIRD_PARTY_NOTICES.txt, which the build puts
+ * beside Mayak.exe (tools/notices); a development build has none.
+ */
+export function OpenThirdPartyNotices(): $CancellablePromise<void> {
+    return $Call.ByID(606796694);
+}
+
+/**
  * PersistSettings stores s and applies it as an edit is made in the settings
  * page, without restarting the monitor for a changed folder (SaveSettings
  * does that).

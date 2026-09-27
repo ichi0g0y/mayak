@@ -41,11 +41,17 @@ export const api = {
 // The build's version, for the About section; empty in development. The
 // desktop bridge (api.js) exists once the first state arrives, so it loads then.
 export let appVersion = ''
+// The built-in voices, for their credits under Licenses.
+export let voicePacks = []
 export async function loadVersion() {
   try {
     appVersion = (await window.mayakDesktop?.backend?.GetVersion?.()) || ''
   } catch {}
-  if (appVersion) render()
+  try {
+    const packs = await window.mayakDesktop?.backend?.VoicePacks?.()
+    if (Array.isArray(packs)) voicePacks = packs
+  } catch {}
+  if (appVersion || voicePacks.length) render()
 }
 export const t = (key) => words[state?.language || 'ja'][key] || key
 export { esc, icon }

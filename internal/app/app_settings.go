@@ -132,6 +132,20 @@ func (a *App) OpenDebugDirectory() error {
 	return openDirectory(debugDir)
 }
 
+// OpenThirdPartyNotices opens THIRD_PARTY_NOTICES.txt, which the build puts
+// beside Mayak.exe (tools/notices); a development build has none.
+func (a *App) OpenThirdPartyNotices() error {
+	exe, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	path := filepath.Join(filepath.Dir(exe), "THIRD_PARTY_NOTICES.txt")
+	if _, err := os.Stat(path); err != nil {
+		return errors.New("THIRD_PARTY_NOTICES.txt is not beside MAYAK (a development build has none)")
+	}
+	return exec.Command("explorer.exe", path).Start()
+}
+
 func openDirectory(dir string) error {
 	dir = filepath.Clean(strings.TrimSpace(dir))
 	if dir == "." || !filepath.IsAbs(dir) {

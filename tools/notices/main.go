@@ -37,6 +37,10 @@ func main() {
 	})
 	entries = append(entries, npmPackages()...)
 	entries = append(entries, bundledData...)
+	entries = append(entries, entry{
+		name: "Built-in voices (VOICEVOX)", license: "VOICEVOX and voice library terms",
+		text: readFile("internal/sound/voices/LICENSE.md"),
+	})
 
 	var b strings.Builder
 	b.WriteString("Third-party notices for MAYAK\n\n")
