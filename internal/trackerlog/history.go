@@ -53,8 +53,23 @@ func TaskHistory(root, breakpointID, accountID, profileID, mode string) (map[str
 	if start < 0 {
 		return nil, errors.New("log breakpoint does not belong to this EFT profile")
 	}
+	return sessionTaskStates(sessions[start:]), nil
+}
+
+// ProfileTaskHistory returns the last observed state for every task of a
+// profile, from its first session on, and how many sessions it read. It
+// finds the profile's sessions once (HistoryBreakpoints then TaskHistory
+// would read every log twice).
+func ProfileTaskHistory(root, accountID, profileID, mode string) (map[string]string, int) {
+	sessions := matchingSessions(root, accountID, profileID, mode)
+	return sessionTaskStates(sessions), len(sessions)
+}
+
+// sessionTaskStates reads the task changes of sessions, in order: a later
+// state of a task replaces an earlier one.
+func sessionTaskStates(sessions []historySession) map[string]string {
 	states := make(map[string]string)
-	for _, session := range sessions[start:] {
+	for _, session := range sessions {
 		path := findLog(session.path, "push-notifications")
 		if path == "" {
 			path = findLog(session.path, "output")
@@ -70,7 +85,7 @@ func TaskHistory(root, breakpointID, accountID, profileID, mode string) (map[str
 			}
 		}
 	}
-	return states, nil
+	return states
 }
 
 type historySession struct {

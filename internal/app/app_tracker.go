@@ -252,13 +252,9 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 	if token == "" {
 		return 0, errors.New("no key is assigned to this EFT profile")
 	}
-	points := trackerlog.HistoryBreakpoints(root, accountID, profileID, mode)
-	if len(points) == 0 {
+	states, sessions := trackerlog.ProfileTaskHistory(root, accountID, profileID, mode)
+	if sessions == 0 {
 		return 0, errNoTrackerHistory
-	}
-	states, err := trackerlog.TaskHistory(root, points[0].ID, accountID, profileID, mode)
-	if err != nil {
-		return 0, err
 	}
 	updates := make([]tracker.TaskUpdate, 0, len(states))
 	for taskID, state := range states {
@@ -270,7 +266,7 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 	}
 	ctx, cancel := context.WithTimeout(a.ctx, 45*time.Second)
 	defer cancel()
-	if err = a.trackerClient.SetTasks(ctx, token, updates); err != nil {
+	if err := a.trackerClient.SetTasks(ctx, token, updates); err != nil {
 		a.addLog("Error", "TarkovTracker", "Historical sync failed: "+err.Error())
 		return 0, err
 	}
