@@ -26,6 +26,14 @@ func Config() string {
 	return filepath.Join(dir, Name)
 }
 
+// Path is a file or folder in the app's data folder (parts joined under it).
+// With the user's configuration directory unknown it returns the error, and
+// the parts under the app's folder name alone.
+func Path(parts ...string) (string, error) {
+	base, err := os.UserConfigDir()
+	return filepath.Join(append([]string{base, Name}, parts...)...), err
+}
+
 // Migrate moves the data folder of the earlier name to Name, once, when Name
 // does not exist yet. It reports what it did, for the log.
 func Migrate() (moved bool, err error) {

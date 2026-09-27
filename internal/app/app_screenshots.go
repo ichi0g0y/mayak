@@ -112,8 +112,8 @@ func screenshotMetadata(path string, status model.Status) screenshotstore.Metada
 
 // screenshotIndexPath is where the screenshots' analysis records are kept.
 func screenshotIndexPath() string {
-	dir, _ := os.UserConfigDir()
-	return filepath.Join(dir, appdir.Name, "screenshots.json")
+	path, _ := appdir.Path("screenshots.json")
+	return path
 }
 
 // screenshotRecord is the part of the analysis the screenshot list shows.

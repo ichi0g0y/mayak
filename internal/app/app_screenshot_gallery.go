@@ -3,7 +3,6 @@ package app
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"github.com/local/mayak/internal/appdir"
+	"github.com/local/mayak/internal/imaging"
 	"github.com/local/mayak/internal/screenshotstore"
 	"golang.org/x/image/draw"
 )
@@ -61,11 +61,7 @@ var thumbs = screenshotThumbs{cache: map[string]string{}}
 
 // thumbnailDir is the thumbnail cache on disk.
 func thumbnailDir() (string, error) {
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, appdir.Name, "thumbs"), nil
+	return appdir.Path("thumbs")
 }
 
 // thumbnailFile is where the thumbnail for key (name, time and size of the
@@ -264,7 +260,7 @@ func (a *App) BrowserScreenshotImage(name string, thumbnail bool) (string, error
 		return "", err
 	}
 	if !thumbnail {
-		return "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(buffer.Bytes()), nil
+		return imaging.DataURL("image/jpeg", buffer.Bytes()), nil
 	}
 	if err := writeThumbnail(key, buffer.Bytes()); err != nil {
 		a.addLog("Debug", "Screenshot", "Could not cache a thumbnail: "+err.Error())
@@ -275,7 +271,7 @@ func (a *App) BrowserScreenshotImage(name string, thumbnail bool) (string, error
 // rememberThumbnail puts a thumbnail's JPEG bytes into the memory cache as a
 // data URL and returns it.
 func rememberThumbnail(key string, jpg []byte) string {
-	data := "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(jpg)
+	data := imaging.DataURL("image/jpeg", jpg)
 	thumbs.mu.Lock()
 	if _, ok := thumbs.cache[key]; !ok {
 		thumbs.cache[key] = data

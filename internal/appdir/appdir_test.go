@@ -43,3 +43,14 @@ func TestMigrate(t *testing.T) {
 		t.Fatalf("moved = %v, err = %v", moved, err)
 	}
 }
+
+// Path joins its parts under the app's data folder, as Config does.
+func TestPathIsUnderTheDataFolder(t *testing.T) {
+	path, err := Path("snapnotes", "note.json")
+	if err != nil {
+		t.Skip("no user configuration directory here")
+	}
+	if want := filepath.Join(Config(), "snapnotes", "note.json"); path != want {
+		t.Fatalf("Path = %q, want %q", path, want)
+	}
+}

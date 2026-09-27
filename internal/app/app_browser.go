@@ -81,8 +81,7 @@ func (a *App) startBrowserHostBackground() {
 }
 
 func browserStatePath() (string, error) {
-	d, e := os.UserConfigDir()
-	return filepath.Join(d, appdir.Name, "browser.json"), e
+	return appdir.Path("browser.json")
 }
 func (a *App) BrowserPlatform() string { return goruntime.GOOS }
 func (a *App) BrowserLoad() (string, error) {

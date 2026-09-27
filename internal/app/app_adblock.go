@@ -2,8 +2,6 @@ package app
 
 import (
 	"github.com/local/mayak/internal/appdir"
-	"os"
-	"path/filepath"
 	goruntime "runtime"
 
 	"github.com/local/mayak/internal/adblock"
@@ -15,12 +13,12 @@ func (a *App) setupAdblock() {
 	if a.browserViews == nil || goruntime.GOOS != "windows" {
 		return
 	}
-	dir, err := os.UserConfigDir()
+	dir, err := appdir.Path("adblock")
 	if err != nil {
 		a.addLog("Warn", "Adblock", "Ad blocking is unavailable: "+err.Error())
 		return
 	}
-	a.adblock = adblock.New(filepath.Join(dir, appdir.Name, "adblock"), func(level, message string) { a.addLog(level, "Adblock", message) })
+	a.adblock = adblock.New(dir, func(level, message string) { a.addLog(level, "Adblock", message) })
 	a.browserViews.SetContentBlocker(a.adblock)
 	go a.adblock.Start(a.ctx)
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/local/mayak/internal/appdir"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/local/mayak/internal/catalog"
@@ -14,8 +13,8 @@ import (
 )
 
 func hideoutDirectory() string {
-	dir, _ := os.UserConfigDir()
-	return filepath.Join(dir, appdir.Name, "hideout")
+	dir, _ := appdir.Path("hideout")
+	return dir
 }
 func (a *App) OpenHideoutDiagnostics() error {
 	if err := os.MkdirAll(hideoutDirectory(), 0700); err != nil {

@@ -36,8 +36,8 @@ const (
 )
 
 func newFaviconCache() *faviconCache {
-	dir, _ := os.UserConfigDir()
-	return &faviconCache{dir: filepath.Join(dir, appdir.Name, "favicons"), client: &http.Client{Timeout: 10 * time.Second}, allow: faviconURLAllowed}
+	dir, _ := appdir.Path("favicons")
+	return &faviconCache{dir: dir, client: &http.Client{Timeout: 10 * time.Second}, allow: faviconURLAllowed}
 }
 
 // BrowserFavicon returns the icon at rawURL as a data URL, from the cache

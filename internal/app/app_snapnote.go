@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/local/mayak/internal/appdir"
+	"github.com/local/mayak/internal/imaging"
 	"github.com/local/mayak/internal/snapnote"
 )
 
@@ -26,12 +27,12 @@ var (
 
 func snapNotes() (*snapnote.Store, error) {
 	snapNotesOnce.Do(func() {
-		dir, err := os.UserConfigDir()
+		dir, err := appdir.Path("snapnotes")
 		if err != nil {
 			snapNotesErr = err
 			return
 		}
-		snapNotesStore = snapnote.New(filepath.Join(dir, appdir.Name, "snapnotes"))
+		snapNotesStore = snapnote.New(dir)
 	})
 	return snapNotesStore, snapNotesErr
 }
@@ -146,7 +147,7 @@ func (a *App) SnapNoteOpen(id string) (SnapNoteData, error) {
 	if err != nil {
 		return SnapNoteData{}, err
 	}
-	return SnapNoteData{Note: note, Image: "data:image/png;base64," + base64.StdEncoding.EncodeToString(img)}, nil
+	return SnapNoteData{Note: note, Image: imaging.DataURL("image/png", img)}, nil
 }
 
 // SnapNoteThumb returns a note's thumbnail as a data URL, empty before one
@@ -160,7 +161,7 @@ func (a *App) SnapNoteThumb(id string) (string, error) {
 	if err != nil || len(thumb) == 0 {
 		return "", err
 	}
-	return "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(thumb), nil
+	return imaging.DataURL("image/jpeg", thumb), nil
 }
 
 // SnapNoteSave stores a note's title, drawing (JSON) and thumbnail (a JPEG
