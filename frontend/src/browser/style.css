@@ -803,9 +803,10 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 .snap-text-input{display:block;box-sizing:content-box;margin:calc(var(--o) * -1);padding:var(--o);border:0;border-radius:2px;outline:1.5px dashed var(--accent);outline-offset:4px;background:rgba(127,127,127,.12);font:inherit;color:inherit;white-space:pre;overflow:hidden;resize:none;-webkit-text-stroke:calc(var(--o) * 2) var(--outline);paint-order:stroke fill}
 .snap-text-grip{position:absolute;left:-4px;bottom:calc(100% + 8px);display:grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--accent);color:#fff;cursor:move;touch-action:none;box-shadow:var(--shadow)}
 .snap-text-grip svg{width:16px;height:16px}
-.snap-text-style{display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.snap-text-style{flex:1 0 100%;display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:2px;padding-top:6px;border-top:1px solid var(--border)}
+.snap-group{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2)}
 .snap-label{font-size:12px;color:var(--muted);padding:0 2px 0 4px}
-.snap-range{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:0 6px}
+.snap-range{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:0 2px}
 .snap-range input{width:96px;accent-color:var(--accent)}
 .snap-range output{min-width:30px;color:var(--text);font-variant-numeric:tabular-nums}
 .snap-tools .snap-outline-auto{width:auto;padding:0 10px;font-size:12px}
