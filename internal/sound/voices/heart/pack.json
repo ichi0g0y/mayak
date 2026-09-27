@@ -1,0 +1,28 @@
+{
+  "name": {
+    "ja": "Heart（英語・女性）",
+    "en": "Heart (English, female)"
+  },
+  "language": "en",
+  "order": 1,
+  "credit": "Kokoro-82M (hexgrad, Apache-2.0)",
+  "terms": "https://huggingface.co/hexgrad/Kokoro-82M",
+  "termsChecked": "2026-09-28",
+  "kokoro": {
+    "voice": "af_heart"
+  },
+  "lines": {
+    "quest": "Task recognized.",
+    "taskNotMatched": "Couldn't identify the task.",
+    "item": "Item recognized.",
+    "itemNotMatched": "Couldn't identify the item.",
+    "error": "Couldn't read the screenshot.",
+    "remoteError": "The map link failed.",
+    "hideoutError": "Something went wrong in the hideout.",
+    "matchFound": "Match found.",
+    "raidStart": "Raid started. Good luck.",
+    "runThrough": "Run-through cleared. You can extract now.",
+    "questItems": "Welcome back. Check your quest items before the next raid.",
+    "restartTasks": "You have failed tasks to restart."
+  }
+}

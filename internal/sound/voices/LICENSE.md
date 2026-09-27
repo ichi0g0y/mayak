@@ -4,7 +4,8 @@
 
 このフォルダの音声ファイル（`*/*.wav`）は、MAYAK のライセンス（GPL-3.0）の対象外です。
 
-- 音声は [VOICEVOX](https://voicevox.hiroshiba.jp/) で生成しました。利用には [VOICEVOX 利用規約](https://voicevox.hiroshiba.jp/term/) と、下の表にある各音声ライブラリ（キャラクター）の規約が適用されます。
+- 日本語の音声は [VOICEVOX](https://voicevox.hiroshiba.jp/) で生成しました。利用には [VOICEVOX 利用規約](https://voicevox.hiroshiba.jp/term/) と、下の表にある各音声ライブラリ（キャラクター）の規約が適用されます。
+- 英語の音声（`heart`、`michael`）は [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M)（Apache-2.0）で生成しました。
 - MAYAK の通知音として使う以外に、音声ファイルを取り出して再配布したり、ほかの作品に転用したりしないでください。
 - MAYAK を改変・再配布する場合も、各規約（クレジットの表記を含む）を守ってください。
 
@@ -12,7 +13,8 @@
 
 The audio files in this folder (`*/*.wav`) are not covered by MAYAK's license (GPL-3.0).
 
-- They were made with [VOICEVOX](https://voicevox.hiroshiba.jp/). Their use is subject to the [VOICEVOX terms of use](https://voicevox.hiroshiba.jp/term/) and to the terms of each voice library (character) listed below.
+- The Japanese ones were made with [VOICEVOX](https://voicevox.hiroshiba.jp/). Their use is subject to the [VOICEVOX terms of use](https://voicevox.hiroshiba.jp/term/) and to the terms of each voice library (character) listed below.
+- The English ones (`heart`, `michael`) were made with [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0).
 - Do not extract them to redistribute them or to use them in other works; they are only for MAYAK's notifications.
 - Anyone who modifies or redistributes MAYAK must keep to those terms, including their credit notices.
 
@@ -25,6 +27,8 @@ The audio files in this folder (`*/*.wav`) are not covered by MAYAK's license (G
 | `whitecul` | VOICEVOX:WhiteCUL | https://www.whitecul.com/guideline |
 | `nana` | VOICEVOX:春歌ナナ | https://nanahira.jp/haruka_nana/guideline.html |
 | `kenzaki` | VOICEVOX:剣崎雌雄 | https://frontier.creatia.cc/fanclubs/413/posts/4507 |
+| `heart` | Kokoro-82M (hexgrad, Apache-2.0), voice af_heart | https://huggingface.co/hexgrad/Kokoro-82M |
+| `michael` | Kokoro-82M (hexgrad, Apache-2.0), voice am_michael | https://huggingface.co/hexgrad/Kokoro-82M |
 
 各パックの `pack.json` に、読み上げる文言と規約を確認した日付があります。
 Each pack's `pack.json` holds its lines and the date its terms were last checked.

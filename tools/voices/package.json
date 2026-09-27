@@ -1,0 +1,8 @@
+{
+  "name": "mayak-voices",
+  "private": true,
+  "description": "Makes the built-in voices' WAVs (task voices)",
+  "dependencies": {
+    "kokoro-js": "1.2.1"
+  }
+}

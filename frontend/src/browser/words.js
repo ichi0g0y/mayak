@@ -422,7 +422,7 @@ export const words = {
     licData: 'データ',
     licVoices: '組み込み音声',
     licVoicesNote:
-      'VOICEVOX で作った通知の声です。MAYAK の GPL-3.0 の対象外で、VOICEVOX と各キャラクターの利用規約に従います。音声ファイルを取り出して再配布しないでください。',
+      '通知の声は、日本語を VOICEVOX、英語を Kokoro-82M（Apache-2.0）で作りました。MAYAK の GPL-3.0 の対象外で、それぞれの利用規約に従います。音声ファイルを取り出して再配布しないでください。',
     licTerms: '利用規約',
     licChecked: '規約の確認日',
     licVoicevoxTerms: 'VOICEVOX 利用規約',
@@ -916,7 +916,7 @@ export const words = {
     licData: 'Data',
     licVoices: 'Built-in voices',
     licVoicesNote:
-      'The notification voices were made with VOICEVOX. They are not under the GPL-3.0 of MAYAK but the terms of VOICEVOX and of each character. Do not extract the audio files to redistribute them.',
+      'The notification voices were made with VOICEVOX (Japanese) and Kokoro-82M (English, Apache-2.0). They are not under the GPL-3.0 of MAYAK but their own terms. Do not extract the audio files to redistribute them.',
     licTerms: 'Terms of use',
     licChecked: 'Terms checked',
     licVoicevoxTerms: 'VOICEVOX terms of use',

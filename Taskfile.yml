@@ -46,10 +46,12 @@ tasks:
     cmds:
       - go run ./tools/notices -out build/bin/THIRD_PARTY_NOTICES.txt
 
-  # The built-in voices' WAVs from their pack.json lines, with the VOICEVOX
-  # app running (tools/voices); `task voices -- tsumugi` for one pack.
+  # The built-in voices' WAVs from their pack.json lines (tools/voices): the
+  # Japanese ones need the VOICEVOX app running, the English ones Kokoro
+  # (its model downloads on first use); `task voices -- tsumugi` for one pack.
   voices:
     cmds:
+      - bun install --frozen-lockfile --cwd tools/voices
       - bun tools/voices/generate.ts {{.CLI_ARGS}}
 
   build:
