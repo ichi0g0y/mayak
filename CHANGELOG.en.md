@@ -11,6 +11,12 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - A snap note made from a game screenshot with a position keeps where it was taken (map, position, direction). "Show on tarkov.dev" in the editor shows that position and direction on the map tab (and the maps connected by Remote Control); a screenshot whose map is not known lets you choose it. A post to X carries the place and a link to the tarkov.dev map (a tarkov.dev link cannot hold a position, so the position and direction go as text).
 - A task not yet in tarkov.dev (the To the Light series and others) or a story chapter opened on the Japanese wiki as a search, not its page. New tasks now take their trader from the official wiki, and story chapters open under ストーリータスク. The task site dropdown no longer shows tarkov.dev after the Japanese wiki is chosen.
 - After a search from the built-in browser's address bar, the address bar kept the words typed instead of showing the pages the tab went to (a link followed included).
+- A screenshot of the "To the Light - Getting Acquainted" task was not recognized.
+- Notifications can speak. Choose a voice under Settings → Sounds → Notification voice, one of five VOICEVOX characters (Kasukabe Tsumugi, Amehare Hau, WhiteCUL, Haruka Nana, Kenzaki Mesuo), and each notification is said in that character's own words (in Japanese); the credit and terms show below. A notification with a file chosen still plays that file.
+- The error sound is split: "Task not identified", "Screenshot could not be read", "Map link error" and "Hideout error" each turn on or off and take a file of their own. Item screenshots have "Item recognized" and "Item not identified" too (off at first).
+- Notifications that come at once play one after another instead of over each other.
+- The quest items and failed tasks reminders play back at the menu (at the game's start and back from a raid) instead of at the raid's start, when it was too late to fetch the items or restart the tasks.
+- Settings → About has Licenses & credits: MAYAK's license, the data it shows, the built-in voices' credits and terms, and the bundled libraries' licenses (THIRD_PARTY_NOTICES.txt).
 
 ## Nightly
 
