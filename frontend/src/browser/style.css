@@ -837,3 +837,14 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 
 /* The screenshot viewer's "Make a snap note" button: an icon with a label. */
 .shot-tool.shot-to-snap{width:auto;display:inline-flex;align-items:center;gap:6px;padding:0 10px}
+
+/* The original's viewing adjustments: a filter on the image, set on the sheet. */
+.snap-base{filter:var(--snap-filter,none)}
+.snap-filters{position:absolute;width:0;height:0;overflow:hidden}
+.snap-adjust{margin-top:8px;padding-top:10px;border-top:1px solid var(--border);display:grid;gap:8px}
+.snap-adjust-head{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600;color:var(--text-2)}
+.snap-adjust-head button{height:26px;padding:0 8px;font-size:11.5px}
+.snap-adjust-row{display:grid;grid-template-columns:1fr auto;gap:2px 6px;font-size:12px}
+.snap-adjust-row output{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.snap-adjust-row input{grid-column:1/-1;width:100%;accent-color:var(--accent)}
+.snap-adjust .hint{margin:0!important;font-size:11px;line-height:1.5}

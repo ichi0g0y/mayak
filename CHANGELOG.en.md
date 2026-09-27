@@ -6,6 +6,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Unreleased
 
+- The snap note editor has viewing adjustments: brightness, contrast and lift shadows sliders make dark screenshots easier to look into. The original image stays as it is.
+
 - The screenshot viewer has "Make a snap note": it turns a game screenshot into a standalone snap note, opened for drawing.
 
 - Snap notes draw on layers: three layers over the original image, which is never edited; the original and each layer can be hidden.

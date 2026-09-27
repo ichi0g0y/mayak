@@ -111,7 +111,7 @@ function editorHTML(open){
  const note=open.note;
  const scale=inkScale(note);
  const tools=`<div class="snap-tools" role="toolbar"><button class="snap-tool${tool==='pen'?' on':''}" data-action="snapTool" data-id="pen" title="${esc(t('snapPen'))}" aria-pressed="${tool==='pen'}">${icon('brush')}</button><button class="snap-tool${tool==='eraser'?' on':''}" data-action="snapTool" data-id="eraser" title="${esc(t('snapEraser'))}" aria-pressed="${tool==='eraser'}">${icon('eraser')}</button><span class="snap-sep"></span>${colors.map(c=>`<button class="snap-color${color===c&&tool==='pen'?' on':''}" data-action="snapColor" data-id="${c}" title="${esc(t('snapColor'))} ${c}" style="--swatch:${c}"></button>`).join('')}<span class="snap-sep"></span>${sizes.map(([k,w])=>`<button class="snap-size${size===k?' on':''}" data-action="snapSize" data-id="${k}" title="${esc(t('snapSize'+k.toUpperCase()))}"><span style="--dot:${w+2}px"></span></button>`).join('')}<span class="snap-sep"></span><button data-action="snapUndo" title="${esc(t('snapUndo'))}" ${ed?.undo.length?'':'disabled'}>${icon('undo')}</button><button data-action="snapRedo" title="${esc(t('snapRedo'))}" ${ed?.redo.length?'':'disabled'}>${icon('redo')}</button><button data-action="snapClear" title="${esc(t('snapClear'))}" ${ed?.layers[ed.active].strokes.length?'':'disabled'}>${icon('trash')}</button><span class="snap-sep"></span><button data-action="snapZoomOut" title="${esc(t('snapZoomOut'))}">${icon('minus')}</button><button class="snap-zoom-level" data-action="snapZoomReset" title="${esc(t('snapActual'))}">${Math.round(currentScale(note)*100)}%</button><button data-action="snapZoomIn" title="${esc(t('snapZoomIn'))}">${icon('plus')}</button><button class="${zoom==='fit'?'on':''}" data-action="snapZoomFit" title="${esc(t('snapFit'))}" aria-pressed="${zoom==='fit'}">${icon('fit')}</button></div>`;
- return `<div class="page snap-editor"><p class="snap-where">${note.url?`${esc(t(note.linked?'snapLinked':'snapUnlinked'))}: <span title="${esc(note.url)}">${esc(note.pageTitle||note.url)}</span>`:esc(t('snapNoPage'))}</p>${tools}<div class="snap-body"><div class="snap-stage ${zoom}" data-tool="${tool}"><div class="snap-sheet${ed&&!ed.baseVisible?' base-hidden':''}" style="width:${zoom==='fit'?'100%':Math.round(note.width*zoom)+'px'};aspect-ratio:${note.width}/${note.height}"><img class="snap-base" data-keep="${esc(note.id)}" alt="" draggable="false"><canvas class="snap-ink" data-keep="${esc(note.id)}" width="${Math.round(note.width*scale)}" height="${Math.round(note.height*scale)}"></canvas></div></div>${layersHTML()}</div></div>`;
+ return `<div class="page snap-editor"><p class="snap-where">${note.url?`${esc(t(note.linked?'snapLinked':'snapUnlinked'))}: <span title="${esc(note.url)}">${esc(note.pageTitle||note.url)}</span>`:esc(t('snapNoPage'))}</p>${tools}<div class="snap-body"><div class="snap-stage ${zoom}" data-tool="${tool}">${adjustFilterSVG()}<div class="snap-sheet${ed&&!ed.baseVisible?' base-hidden':''}" style="--snap-filter:${ed?filterOf(ed.adjust):'none'};width:${zoom==='fit'?'100%':Math.round(note.width*zoom)+'px'};aspect-ratio:${note.width}/${note.height}"><img class="snap-base" data-keep="${esc(note.id)}" alt="" draggable="false"><canvas class="snap-ink" data-keep="${esc(note.id)}" width="${Math.round(note.width*scale)}" height="${Math.round(note.height*scale)}"></canvas></div></div>${layersHTML()}</div></div>`;
 }
 
 // The layer panel: the three drawing layers over the original, top first.
@@ -120,24 +120,50 @@ function layersHTML(){
  if(!ed)return '';
  const eye=(action,id,visible)=>`<button class="snap-eye${visible?'':' off'}" data-action="${action}" data-id="${id}" title="${esc(t(visible?'snapHide':'snapShow'))}" aria-pressed="${visible}">${icon(visible?'eye':'eyeOff')}</button>`;
  const rows=[2,1,0].map(i=>{const layer=ed.layers[i];return `<div class="snap-layer${ed.active===i?' on':''}${layer.visible?'':' hidden'}">${eye('snapLayerEye',i,layer.visible)}<button class="snap-layer-name" data-action="snapLayer" data-id="${i}" aria-pressed="${ed.active===i}"><span>${esc(t('snapLayer').replace('{n}',String(i+1)))}</span><small>${esc(t('snapLines').replace('{n}',String(layer.strokes.length)))}</small></button><button class="snap-layer-clear" data-action="snapLayerClear" data-id="${i}" title="${esc(t('snapLayerClear'))}" ${layer.strokes.length?'':'disabled'}>${icon('trash')}</button></div>`;}).join('');
- return `<aside class="snap-layers" aria-label="${esc(t('snapLayers'))}"><h3>${esc(t('snapLayers'))}</h3>${rows}<div class="snap-layer base${ed.baseVisible?'':' hidden'}">${eye('snapBaseEye','base',ed.baseVisible)}<span class="snap-layer-name"><span>${esc(t('snapOriginal'))}</span><small>${esc(t('snapOriginalHint'))}</small></span>${icon('lock')}</div></aside>`;
+ return `<aside class="snap-layers" aria-label="${esc(t('snapLayers'))}"><h3>${esc(t('snapLayers'))}</h3>${rows}<div class="snap-layer base${ed.baseVisible?'':' hidden'}">${eye('snapBaseEye','base',ed.baseVisible)}<span class="snap-layer-name"><span>${esc(t('snapOriginal'))}</span><small>${esc(t('snapOriginalHint'))}</small></span>${icon('lock')}</div>${adjustHTML()}</aside>`;
+}
+function adjustHTML(){
+ const row=(key,label,format)=>{const [lo,hi,step]=adjustRanges[key];const v=ed.adjust[key];return `<label class="snap-adjust-row"><span>${esc(t(label))}</span><output data-adjust-out="${key}">${format(v)}</output><input type="range" data-adjust="${key}" min="${lo}" max="${hi}" step="${step}" value="${v}"></label>`;};
+ const changedAny=ed.adjust.brightness!==1||ed.adjust.contrast!==1||ed.adjust.shadows!==0;
+ return `<div class="snap-adjust"><div class="snap-adjust-head"><span>${esc(t('snapAdjust'))}</span><button data-action="snapAdjustReset" ${changedAny?'':'disabled'}>${esc(t('snapAdjustReset'))}</button></div>${row('brightness','snapBrightness',adjustPercent)}${row('contrast','snapContrast',adjustPercent)}${row('shadows','snapShadows',adjustPercent)}<p class="hint">${esc(t('snapAdjustHint'))}</p></div>`;
+}
+const adjustPercent=v=>Math.round(v*100)+'%';
+// The shadows filter: a gamma on each colour channel.
+function adjustFilterSVG(){
+ const e=ed?gammaOf(ed.adjust.shadows):1;
+ return `<svg class="snap-filters" width="0" height="0" aria-hidden="true"><filter id="snap-shadows" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR type="gamma" exponent="${e}"/><feFuncG type="gamma" exponent="${e}"/><feFuncB type="gamma" exponent="${e}"/></feComponentTransfer></filter></svg>`;
 }
 
-// A note's drawing: {v:2, base:{visible}, layers:[{visible, strokes}]×3}.
+// How the original shows: brightness (0.5–3), contrast (0.5–2) and shadows,
+// a gamma lifting the dark parts (1 none, down to 0.3). EFT's screenshots are
+// often dark; this is for looking into them. The image kept never changes.
+const adjustRanges={brightness:[0.5,3,0.05],contrast:[0.5,2,0.05],shadows:[0,1,0.05]};
+const defaultAdjust=()=>({brightness:1,contrast:1,shadows:0});
+function readAdjust(base){
+ const adjust=defaultAdjust();
+ for(const [key,[lo,hi]] of Object.entries(adjustRanges)){const v=Number(base?.[key]);if(Number.isFinite(v))adjust[key]=Math.min(hi,Math.max(lo,v));}
+ return adjust;
+}
+// The shadows slider (0 none, 1 most) is the gamma's exponent from 1 to 0.3.
+const gammaOf=shadows=>Math.round((1-shadows*0.7)*1000)/1000;
+const filterOf=adjust=>`${adjust.shadows>0?'url(#snap-shadows) ':''}brightness(${adjust.brightness}) contrast(${adjust.contrast})`;
+
+// A note's drawing: {v:2, base:{visible, brightness, contrast, shadows}, layers:[{visible, strokes}]×3}.
 // A note drawn before layers (a list of strokes) has them on layer 1.
 const layerCount=3;
 const validStrokes=list=>Array.isArray(list)?list.filter(s=>s&&typeof s.c==='string'&&Array.isArray(s.p)):[];
 function readDrawing(saved){
  const layers=Array.from({length:layerCount},()=>({visible:true,strokes:[]}));
- let baseVisible=true;
+ let baseVisible=true,adjust=defaultAdjust();
  if(Array.isArray(saved))layers[0].strokes=validStrokes(saved);
  else if(saved&&typeof saved==='object'){
   baseVisible=saved.base?.visible!==false;
+  adjust=readAdjust(saved.base);
   (Array.isArray(saved.layers)?saved.layers:[]).slice(0,layerCount).forEach((l,i)=>{layers[i]={visible:l?.visible!==false,strokes:validStrokes(l?.strokes)};});
  }
- return {layers,baseVisible};
+ return {layers,baseVisible,adjust};
 }
-const writeDrawing=target=>({v:2,base:{visible:target.baseVisible},layers:target.layers.map(l=>({visible:l.visible,strokes:l.strokes}))});
+const writeDrawing=target=>({v:2,base:{visible:target.baseVisible,...target.adjust},layers:target.layers.map(l=>({visible:l.visible,strokes:l.strokes}))});
 
 // The editor follows the note open: a new one starts with its strokes; a
 // note left with unsaved drawing is saved first.
@@ -146,7 +172,7 @@ function syncEditor(){
  if(ed&&(!open||open.note.id!==ed.id)){if(ed.dirty)void saveNow(ed);ed=null;armedDelete='';}
  if(open&&!ed){
   const drawing=readDrawing(open.strokes);
-  ed={id:open.note.id,note:open.note,layers:drawing.layers,baseVisible:drawing.baseVisible,active:0,undo:[],redo:[],dirty:false,title:open.note.title,img:null,version:1,thumbed:!!state.snapNotes.thumbs[open.note.id]};
+  ed={id:open.note.id,note:open.note,layers:drawing.layers,baseVisible:drawing.baseVisible,adjust:drawing.adjust,active:0,undo:[],redo:[],dirty:false,title:open.note.title,img:null,version:1,thumbed:!!state.snapNotes.thumbs[open.note.id]};
   const img=new Image();const mine=ed;
   img.onload=()=>{if(ed!==mine)return;mine.img=img;mine.version++;paint();if(!mine.thumbed){mine.thumbed=true;void saveNow(mine);}};
   img.src=open.image;
@@ -214,6 +240,8 @@ document.addEventListener('wheel',event=>{
 // Saving: a moment after the last change, with a small picture for the lists
 // (the top of the image, drawing included).
 let saveTimer=0;
+// changedQuietly saves like changed, without drawing the page again now.
+function changedQuietly(){if(!ed)return;ed.dirty=true;clearTimeout(saveTimer);const mine=ed;saveTimer=setTimeout(()=>void saveNow(mine),900);}
 function changed(){if(!ed)return;ed.dirty=true;clearTimeout(saveTimer);const mine=ed;saveTimer=setTimeout(()=>void saveNow(mine),900);render();}
 async function saveNow(target){
  if(!target)return;
@@ -223,7 +251,7 @@ async function saveNow(target){
  if(target.img){
   const w=360,h=Math.min(Math.round(w*target.note.height/target.note.width),Math.round(w*10/16)),s=w/target.note.width;
   const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);if(target.baseVisible)ctx.drawImage(target.img,0,0,w,target.note.height*s);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);if(target.baseVisible){ctx.filter=filterOf(target.adjust);ctx.drawImage(target.img,0,0,w,target.note.height*s);ctx.filter='none';}
   for(const layer of target.layers)if(layer.visible)for(const st of layer.strokes)drawStroke(ctx,st,s);
   thumb=c.toDataURL('image/jpeg',0.82);
  }
@@ -286,7 +314,20 @@ document.addEventListener('keydown',event=>{
  if(event.ctrlKey&&!event.altKey&&(key==='z'||key==='y')){event.preventDefault();if(key==='y'||event.shiftKey)redo();else undo();}
  if(event.ctrlKey&&!event.altKey&&['+',';','=','-','0'].includes(event.key)){event.preventDefault();if(event.key==='0'){zoom='fit';render();}else zoomBy(event.key==='-'?1/1.25:1.25);}
 });
-document.addEventListener('input',event=>{if(event.target.id==='snap-title'&&ed){ed.title=event.target.value;changed();}});
+document.addEventListener('input',event=>{
+ if(event.target.id==='snap-title'&&ed){ed.title=event.target.value;changed();return;}
+ const key=event.target.dataset?.adjust;
+ if(key&&ed&&adjustRanges[key]){
+  ed.adjust[key]=Number(event.target.value);
+  // Straight onto the page, so the slider moves smoothly; the render and
+  // the save follow.
+  document.querySelector('.snap-sheet')?.style.setProperty('--snap-filter',filterOf(ed.adjust));
+  const e=String(gammaOf(ed.adjust.shadows));
+  document.querySelectorAll('#snap-shadows feFuncR,#snap-shadows feFuncG,#snap-shadows feFuncB').forEach(fn=>fn.setAttribute('exponent',e));
+  const out=document.querySelector(`[data-adjust-out="${key}"]`);if(out)out.textContent=adjustPercent(ed.adjust[key]);
+  changedQuietly();
+ }
+});
 
 // New notes from a picture: pasted, or an image file. Any image the browser
 // reads is turned into PNG.
@@ -322,6 +363,7 @@ clickHandlers.push(async(type,id,button)=>{
  if(type==='snapLayer'){if(ed){ed.active=Math.max(0,Math.min(layerCount-1,Number(id)||0));render();}return true;}
  if(type==='snapLayerEye'){const layer=ed?.layers[Number(id)];if(layer){layer.visible=!layer.visible;repaint();changed();}return true;}
  if(type==='snapLayerClear'){const layer=ed?.layers[Number(id)];if(layer?.strokes.length){remember();layer.strokes=[];repaint();changed();}return true;}
+ if(type==='snapAdjustReset'){if(ed){ed.adjust=defaultAdjust();changed();}return true;}
  if(type==='snapBaseEye'){if(ed){ed.baseVisible=!ed.baseVisible;changed();}return true;}
  if(type==='snapZoomIn'){zoomBy(1.25);return true;}
  if(type==='snapZoomOut'){zoomBy(1/1.25);return true;}
