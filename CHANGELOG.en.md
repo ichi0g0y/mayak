@@ -3,7 +3,7 @@
 What changed in each version of MAYAK, from the user's side. The Japanese version is [CHANGELOG.md](CHANGELOG.md); the published page is https://mayak.ich.sh/changelog, which the app's update notice opens for "What changed".
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
-- Snap notes take text. With "T" in the editor, click where the text goes and type; click a text to rewrite it, drag it to move it. Colour and size come from the same buttons as the pen, and the text is outlined so it reads on any picture.
+- Snap notes take text. With "T" in the editor, click where the text goes and type; click a text to rewrite it, drag it to move it (while typing, with the handle above the box). The palette sets its colour (any colour too), size, and outline colour (auto, a swatch or any colour) and width.
 - Snap notes have Share: copy the picture with its drawing to the clipboard, save it as a PNG file under a name you choose, or post it to X (the picture is copied and a new post opens; paste it with Ctrl+V).
 - Snap notes can be starred. The star on a card and next to the name in the editor toggles it, the list has a Favorites filter, and a page's menu lists its starred notes first.
 - The snap note list's filter (All / Page notes / Standalone notes) did not show.

@@ -180,7 +180,7 @@ export function snapToolbar() {
 function editorHTML(open) {
   const note = open.note
   const scale = inkScale(note)
-  const tools = `<div class="snap-tools" role="toolbar"><button class="snap-tool${tool === 'pen' ? ' on' : ''}" data-action="snapTool" data-id="pen" title="${esc(t('snapPen'))}" aria-pressed="${tool === 'pen'}">${icon('brush')}</button><button class="snap-tool${tool === 'text' ? ' on' : ''}" data-action="snapTool" data-id="text" title="${esc(t('snapText'))}" aria-pressed="${tool === 'text'}">${icon('type')}</button><button class="snap-tool${tool === 'eraser' ? ' on' : ''}" data-action="snapTool" data-id="eraser" title="${esc(t('snapEraser'))}" aria-pressed="${tool === 'eraser'}">${icon('eraser')}</button><span class="snap-sep"></span>${colors.map((c) => `<button class="snap-color${color === c && tool !== 'eraser' ? ' on' : ''}" data-action="snapColor" data-id="${c}" title="${esc(t('snapColor'))} ${c}" style="--swatch:${c}"></button>`).join('')}<span class="snap-sep"></span>${sizes.map(([k, w]) => `<button class="snap-size${size === k ? ' on' : ''}" data-action="snapSize" data-id="${k}" title="${esc(t('snapSize' + k.toUpperCase()))}"><span style="--dot:${w + 2}px"></span></button>`).join('')}<span class="snap-sep"></span><button data-action="snapUndo" title="${esc(t('snapUndo'))}" ${ed?.undo.length ? '' : 'disabled'}>${icon('undo')}</button><button data-action="snapRedo" title="${esc(t('snapRedo'))}" ${ed?.redo.length ? '' : 'disabled'}>${icon('redo')}</button><button data-action="snapClear" title="${esc(t('snapClear'))}" ${ed?.layers[ed.active].strokes.length ? '' : 'disabled'}>${icon('trash')}</button><span class="snap-sep"></span><button data-action="snapZoomOut" title="${esc(t('snapZoomOut'))}">${icon('minus')}</button><button class="snap-zoom-level" data-action="snapZoomReset" title="${esc(t('snapActual'))}">${Math.round(currentScale(note) * 100)}%</button><button data-action="snapZoomIn" title="${esc(t('snapZoomIn'))}">${icon('plus')}</button><button class="${zoom === 'fit' ? 'on' : ''}" data-action="snapZoomFit" title="${esc(t('snapFit'))}" aria-pressed="${zoom === 'fit'}">${icon('fit')}</button></div>`
+  const tools = `<div class="snap-tools" role="toolbar"><button class="snap-tool${tool === 'pen' ? ' on' : ''}" data-action="snapTool" data-id="pen" title="${esc(t('snapPen'))}" aria-pressed="${tool === 'pen'}">${icon('brush')}</button><button class="snap-tool${tool === 'text' ? ' on' : ''}" data-action="snapTool" data-id="text" title="${esc(t('snapText'))}" aria-pressed="${tool === 'text'}">${icon('type')}</button><button class="snap-tool${tool === 'eraser' ? ' on' : ''}" data-action="snapTool" data-id="eraser" title="${esc(t('snapEraser'))}" aria-pressed="${tool === 'eraser'}">${icon('eraser')}</button><span class="snap-sep"></span>${colors.map((c) => `<button class="snap-color${color === c && tool !== 'eraser' ? ' on' : ''}" data-action="snapColor" data-id="${c}" title="${esc(t('snapColor'))} ${c}" style="--swatch:${c}"></button>`).join('')}${customColorHTML()}<span class="snap-sep"></span>${tool === 'text' ? textPaletteHTML() : sizes.map(([k, w]) => `<button class="snap-size${size === k ? ' on' : ''}" data-action="snapSize" data-id="${k}" title="${esc(t('snapSize' + k.toUpperCase()))}"><span style="--dot:${w + 2}px"></span></button>`).join('')}<span class="snap-sep"></span><button data-action="snapUndo" title="${esc(t('snapUndo'))}" ${ed?.undo.length ? '' : 'disabled'}>${icon('undo')}</button><button data-action="snapRedo" title="${esc(t('snapRedo'))}" ${ed?.redo.length ? '' : 'disabled'}>${icon('redo')}</button><button data-action="snapClear" title="${esc(t('snapClear'))}" ${ed?.layers[ed.active].strokes.length ? '' : 'disabled'}>${icon('trash')}</button><span class="snap-sep"></span><button data-action="snapZoomOut" title="${esc(t('snapZoomOut'))}">${icon('minus')}</button><button class="snap-zoom-level" data-action="snapZoomReset" title="${esc(t('snapActual'))}">${Math.round(currentScale(note) * 100)}%</button><button data-action="snapZoomIn" title="${esc(t('snapZoomIn'))}">${icon('plus')}</button><button class="${zoom === 'fit' ? 'on' : ''}" data-action="snapZoomFit" title="${esc(t('snapFit'))}" aria-pressed="${zoom === 'fit'}">${icon('fit')}</button></div>`
   return `<div class="page snap-editor"><p class="snap-where">${note.url ? `${esc(t(note.linked ? 'snapLinked' : 'snapUnlinked'))}: <span title="${esc(note.url)}">${esc(note.pageTitle || note.url)}</span>` : esc(t('snapNoPage'))}</p>${tools}<div class="snap-body"><div class="snap-stage ${zoom}" data-tool="${tool}">${adjustFilterSVG()}<div class="snap-sheet${ed && !ed.baseVisible ? ' base-hidden' : ''}" style="--snap-filter:${ed ? filterOf(ed.adjust) : 'none'};width:${zoom === 'fit' ? '100%' : Math.round(note.width * zoom) + 'px'};aspect-ratio:${note.width}/${note.height}"><img class="snap-base" data-keep="${esc(note.id)}" alt="" draggable="false"><canvas class="snap-ink" data-keep="${esc(note.id)}" width="${Math.round(note.width * scale)}" height="${Math.round(note.height * scale)}"></canvas>${textBoxHTML(note)}</div></div>${layersHTML()}</div></div>`
 }
 
@@ -347,7 +347,27 @@ function drawStroke(ctx, s, scale) {
 const textFont = (px) => `600 ${px}px "Segoe UI","Yu Gothic UI",Meiryo,sans-serif`
 const textLine = 1.25
 const isText = (s) => typeof s.text === 'string'
-const textSize = (note) => ({ s: 20, m: 32, l: 52 })[size] * Math.max(1, note.width / 1000)
+// The size is in points per 1000 pixels of the image's width (at least 1),
+// like the pen's width, so it reads the same on a small and a large capture.
+const textScale = (note) => Math.max(1, note.width / 1000)
+const textSize = (note) => textStyle.size * textScale(note)
+// The text palette: size, and the outline's colour ("auto": white or black
+// against the text's colour) and width (a percentage of the size, 0 none).
+const textStyle = { size: 32, outline: 'auto', width: 8 }
+const outlineColor = (s) => (s.o && s.o !== 'auto' ? s.o : outlineOf(s.c))
+const outlineWidth = (s) => ((s.ow ?? 8) / 100) * s.w
+const hexColor = (c) => (/^#[0-9a-f]{6}$/i.test(c) ? c : '#ffffff')
+function customColorHTML() {
+  if (tool === 'eraser') return ''
+  return `<label class="snap-custom-color${colors.includes(color) ? '' : ' on'}" title="${esc(t('snapMoreColors'))}" style="--swatch:${hexColor(color)}"><input type="color" data-color-input value="${hexColor(color)}" aria-label="${esc(t('snapMoreColors'))}"></label>`
+}
+function textPaletteHTML() {
+  const auto = textStyle.outline === 'auto'
+  const swatch = (c) =>
+    `<button class="snap-color snap-outline-color${textStyle.outline === c ? ' on' : ''}" data-action="snapOutline" data-id="${c}" title="${esc(t('snapOutlineColor'))} ${c}" style="--swatch:${c}"></button>`
+  const custom = !auto && !colors.includes(textStyle.outline)
+  return `<div class="snap-text-style"><label class="snap-range" title="${esc(t('snapTextSize'))}"><span>${esc(t('snapTextSize'))}</span><input type="range" data-text-style="size" min="8" max="200" step="1" value="${textStyle.size}"><output data-text-out="size">${textStyle.size}</output></label><span class="snap-sep"></span><span class="snap-label">${esc(t('snapOutline'))}</span><button class="snap-outline-auto${auto ? ' on' : ''}" data-action="snapOutline" data-id="auto" title="${esc(t('snapOutlineAutoHint'))}">${esc(t('snapOutlineAuto'))}</button>${colors.map(swatch).join('')}<label class="snap-custom-color${custom ? ' on' : ''}" title="${esc(t('snapMoreColors'))}" style="--swatch:${hexColor(textStyle.outline)}"><input type="color" data-outline-input value="${hexColor(textStyle.outline)}" aria-label="${esc(t('snapOutlineColor'))}"></label><label class="snap-range" title="${esc(t('snapOutlineWidth'))}"><span>${esc(t('snapOutlineWidth'))}</span><input type="range" data-text-style="width" min="0" max="30" step="1" value="${textStyle.width}"><output data-text-out="width">${textStyle.width}%</output></label></div>`
+}
 // A dark outline around a light colour, a light one around a dark colour.
 function outlineOf(c) {
   const n = parseInt(String(c).slice(1), 16) || 0
@@ -362,12 +382,14 @@ function drawText(ctx, s, scale) {
   ctx.font = textFont(s.w)
   ctx.textBaseline = 'top'
   ctx.lineJoin = 'round'
-  ctx.lineWidth = Math.max(2, s.w / 6)
-  ctx.strokeStyle = outlineOf(s.c)
+  // The stroke is centred on the letters' edge: twice the outline's width.
+  const outline = outlineWidth(s)
+  ctx.lineWidth = outline * 2
+  ctx.strokeStyle = outlineColor(s)
   ctx.fillStyle = s.c
   s.text.split('\n').forEach((line, i) => {
     const y = s.p[0][1] + i * s.w * textLine
-    ctx.strokeText(line, s.p[0][0], y)
+    if (outline > 0) ctx.strokeText(line, s.p[0][0], y)
     ctx.fillText(line, s.p[0][0], y)
   })
   ctx.restore()
@@ -404,13 +426,23 @@ let textEdit = null,
 function textBoxHTML(note) {
   const e = textEdit
   if (!e || !ed || ed.id !== note.id) return ''
-  return `<textarea class="snap-text-input" data-keep="text-${e.key}" spellcheck="false" rows="1" aria-label="${esc(t('snapText'))}" style="left:${(e.x / note.width) * 100}%;top:${(e.y / note.height) * 100}%;--size:${e.w / note.width};color:${esc(e.c)};--outline:${outlineOf(e.c)}">${esc(e.value)}</textarea>`
+  return `<div class="snap-text-box" data-keep="text-${e.key}" style="left:${(e.x / note.width) * 100}%;top:${(e.y / note.height) * 100}%;${boxStyle(e, note)}"><span class="snap-text-grip" title="${esc(t('snapTextMove'))}">${icon('move')}</span><textarea class="snap-text-input" spellcheck="false" rows="1" aria-label="${esc(t('snapText'))}">${esc(e.value)}</textarea></div>`
+}
+// The box's look, in the page's width units (cqw) so it follows the zoom.
+function boxStyle(e, note) {
+  return `--size:${e.w / note.width};--ow:${outlineWidth(e) / note.width};color:${esc(e.c)};--outline:${esc(outlineColor(e))}`
 }
 function editText(point, found) {
   if (!ed) return
   if (found) ed.active = found.layer
   const item = found?.item || null
-  if (item && colors.includes(item.c)) color = item.c
+  // A text taken for editing shows its style in the palette.
+  if (item) {
+    color = item.c
+    textStyle.size = Math.round(item.w / textScale(ed.note))
+    textStyle.outline = item.o || 'auto'
+    textStyle.width = item.ow ?? 8
+  }
   textEdit = {
     key: ++textKeys,
     layer: ed.active,
@@ -419,6 +451,8 @@ function editText(point, found) {
     y: item ? item.p[0][1] : point[1],
     c: item ? item.c : color,
     w: item ? item.w : textSize(ed.note),
+    o: textStyle.outline,
+    ow: textStyle.width,
     value: item ? item.text : '',
   }
   ed.version++
@@ -432,7 +466,15 @@ function finishText() {
   const value = (box ? box.value : e.value).replace(/\s+$/, '')
   const strokes = ed.layers[e.layer].strokes
   const at = e.item ? strokes.indexOf(e.item) : -1
-  const same = e.item && e.item.text === value && e.item.c === e.c && e.item.w === e.w
+  const moved = e.item && (e.item.p[0][0] !== e.x || e.item.p[0][1] !== e.y)
+  const same =
+    e.item &&
+    !moved &&
+    e.item.text === value &&
+    e.item.c === e.c &&
+    e.item.w === e.w &&
+    (e.item.o || 'auto') === e.o &&
+    (e.item.ow ?? 8) === e.ow
   ed.version++
   if (same || (!value.trim() && at < 0)) {
     render()
@@ -441,22 +483,34 @@ function finishText() {
   remember()
   ed.layers[e.layer].visible = true
   // A new item, not the old one changed: the undo keeps the old.
-  const next = { ...(e.item || { p: [[e.x, e.y]] }), c: e.c, w: e.w, text: value }
+  const next = {
+    ...e.item,
+    p: [[e.x, e.y]],
+    c: e.c,
+    w: e.w,
+    o: e.o === 'auto' ? undefined : e.o,
+    ow: e.ow,
+    text: value,
+  }
   if (at < 0) strokes.push(next)
   else if (value.trim()) strokes[at] = next
   else strokes.splice(at, 1)
   changed()
 }
 // The box after a colour or a size was chosen for its text.
-function restyleTextBox() {
-  const box = document.querySelector('.snap-text-input')
-  if (!box || !textEdit || !ed) return
-  box.style.color = textEdit.c
-  box.style.setProperty('--outline', outlineOf(textEdit.c))
-  box.style.setProperty('--size', String(textEdit.w / ed.note.width))
+function restyleTextBox(focus = true) {
+  const wrap = document.querySelector('.snap-text-box'),
+    box = document.querySelector('.snap-text-input')
+  if (!wrap || !box || !textEdit || !ed) return
+  wrap.style.color = textEdit.c
+  wrap.style.setProperty('--outline', outlineColor(textEdit))
+  wrap.style.setProperty('--size', String(textEdit.w / ed.note.width))
+  wrap.style.setProperty('--ow', String(outlineWidth(textEdit) / ed.note.width))
   sizeTextBox(box)
-  box.focus()
+  if (focus) box.focus()
 }
+// The palette's controls: choosing in them keeps the text being typed.
+const paletteControl = '.snap-color,.snap-size,.snap-text-style,.snap-custom-color'
 function sizeTextBox(box) {
   if (!textEdit || !ed) return
   const b = textBounds({ text: box.value || ' ', w: textEdit.w, p: [[0, 0]] })
@@ -681,6 +735,51 @@ function erase(point) {
   repaint()
   return true
 }
+let gripDrag = null
+document.addEventListener('pointerdown', (event) => {
+  const grip = event.target.closest?.('.snap-text-grip')
+  if (grip && textEdit && ed) {
+    // Kept from moving the focus: the text box stays in use.
+    event.preventDefault()
+    grip.setPointerCapture(event.pointerId)
+    const canvas = document.querySelector('.snap-ink')
+    const r = canvas.getBoundingClientRect()
+    gripDrag = {
+      pointer: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      origin: [textEdit.x, textEdit.y],
+      scale: ed.note.width / r.width,
+    }
+    return
+  }
+  if (textEdit && event.target.closest && !event.target.closest('.snap-text-box,.snap-ink,' + paletteControl))
+    finishText()
+})
+document.addEventListener('pointermove', (event) => {
+  if (gripDrag && event.pointerId === gripDrag.pointer && textEdit && ed) {
+    const x = gripDrag.origin[0] + (event.clientX - gripDrag.x) * gripDrag.scale,
+      y = gripDrag.origin[1] + (event.clientY - gripDrag.y) * gripDrag.scale
+    textEdit.x = Math.round(Math.min(ed.note.width - 1, Math.max(0, x)) * 10) / 10
+    textEdit.y = Math.round(Math.min(ed.note.height - 1, Math.max(0, y)) * 10) / 10
+    const wrap = document.querySelector('.snap-text-box')
+    if (wrap) {
+      wrap.style.left = (textEdit.x / ed.note.width) * 100 + '%'
+      wrap.style.top = (textEdit.y / ed.note.height) * 100 + '%'
+    }
+    return
+  }
+  if (drawing || tool !== 'text' || !ed || textEdit) return
+  const canvas = event.target.closest?.('.snap-ink')
+  if (canvas) canvas.style.cursor = textAt(imagePoint(event, canvas)) ? 'move' : ''
+})
+const endGrip = (event) => {
+  if (!gripDrag || event.pointerId !== gripDrag.pointer) return
+  gripDrag = null
+  document.querySelector('.snap-text-input')?.focus()
+}
+document.addEventListener('pointerup', endGrip)
+document.addEventListener('pointercancel', endGrip)
 document.addEventListener('pointerdown', (event) => {
   const canvas = event.target.closest?.('.snap-ink')
   if (!canvas || !ed || event.button !== 0) return
@@ -789,7 +888,7 @@ document.addEventListener('keydown', (event) => {
 // Leaving the box finishes the text, but for a colour or a size chosen for it.
 document.addEventListener('focusout', (event) => {
   if (!textEdit || !event.target.classList?.contains('snap-text-input')) return
-  if (event.relatedTarget?.closest?.('.snap-color,.snap-size')) return
+  if (event.relatedTarget?.closest?.(paletteControl + ',.snap-text-box')) return
   textEdit.value = event.target.value
   finishText()
 })
@@ -819,10 +918,45 @@ document.addEventListener('keydown', (event) => {
     } else zoomBy(event.key === '-' ? 1 / 1.25 : 1.25)
   }
 })
+document.addEventListener('change', (event) => {
+  const data = event.target.dataset
+  if (ed && data && ('textStyle' in data || 'colorInput' in data || 'outlineInput' in data)) {
+    if ('colorInput' in data && tool === 'eraser') tool = 'pen'
+    render()
+  }
+})
 document.addEventListener('input', (event) => {
   if (textEdit && event.target.classList?.contains('snap-text-input')) {
     textEdit.value = event.target.value
     sizeTextBox(event.target)
+    return
+  }
+  const style = event.target.dataset?.textStyle
+  if (style && ed) {
+    const v = Number(event.target.value)
+    const out = document.querySelector(`[data-text-out="${style}"]`)
+    if (style === 'size') {
+      textStyle.size = v
+      if (out) out.textContent = String(v)
+      if (textEdit) textEdit.w = textSize(ed.note)
+    } else {
+      textStyle.width = v
+      if (out) out.textContent = v + '%'
+      if (textEdit) textEdit.ow = v
+    }
+    restyleTextBox(false)
+    return
+  }
+  if (event.target.dataset && 'colorInput' in event.target.dataset && ed) {
+    color = event.target.value
+    if (textEdit) textEdit.c = color
+    restyleTextBox(false)
+    return
+  }
+  if (event.target.dataset && 'outlineInput' in event.target.dataset && ed) {
+    textStyle.outline = event.target.value
+    if (textEdit) textEdit.o = textStyle.outline
+    restyleTextBox(false)
     return
   }
   if (event.target.id === 'snap-title' && ed) {
@@ -925,8 +1059,13 @@ clickHandlers.push(async (type, id, button) => {
   if (type === 'snapSize') {
     size = sizes.some(([k]) => k === id) ? id : 'm'
     if (tool === 'eraser') tool = 'pen'
-    if (textEdit && ed) {
-      textEdit.w = textSize(ed.note)
+    render()
+    return true
+  }
+  if (type === 'snapOutline') {
+    textStyle.outline = id === 'auto' || colors.includes(id) ? id : 'auto'
+    if (textEdit) {
+      textEdit.o = textStyle.outline
       restyleTextBox()
     }
     render()
