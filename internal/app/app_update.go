@@ -316,6 +316,13 @@ func (a *App) downloadUpdate() {
 		a.setUpdateStatus(func(status *model.UpdateStatus) { status.State = "error"; status.LastError = err.Error() })
 		return
 	}
+	// The channel may have gone back to stable while the nightly downloaded.
+	if !stagedForChannel(staged, a.updateChannel()) {
+		_ = update.Discard(dir)
+		a.addLog("Info", "Update", "Dropped the nightly build "+staged.Version+" downloaded after the update channel went back to stable")
+		a.setUpdateStatus(func(status *model.UpdateStatus) { status.State = "idle"; status.Progress = 0 })
+		return
+	}
 	a.update.mu.Lock()
 	a.update.staged = &staged
 	a.update.mu.Unlock()
@@ -357,6 +364,19 @@ func (a *App) applyStagedUpdate() error {
 	if staged == nil || busy {
 		return fmt.Errorf("no update is ready to install")
 	}
+	// A nightly downloaded before the channel went back to stable is not
+	// installed (its download may have finished after the switch).
+	if !stagedForChannel(*staged, a.updateChannel()) {
+		a.update.mu.Lock()
+		a.update.staged = nil
+		a.update.mu.Unlock()
+		if staging := updateStagingDir(); staging != "" {
+			_ = update.Discard(staging)
+		}
+		a.addLog("Info", "Update", "Dropped the downloaded nightly build "+staged.Version+" (the update channel is stable)")
+		a.setUpdateStatus(func(status *model.UpdateStatus) { status.State = "idle"; status.Progress = 0 })
+		return fmt.Errorf("the downloaded nightly build is not installed on the stable channel")
+	}
 	dir, err := update.InstallDir()
 	if err != nil {
 		return err
@@ -392,4 +412,10 @@ func (a *App) applyStagedUpdateOnExit() {
 		return
 	}
 	_ = a.applyStagedUpdate()
+}
+
+// stagedForChannel reports whether a downloaded update may be installed on
+// channel: a nightly build only on the nightly channel.
+func stagedForChannel(staged update.Staged, channel string) bool {
+	return staged.Tag != update.NightlyTag || channel == update.ChannelNightly
 }
