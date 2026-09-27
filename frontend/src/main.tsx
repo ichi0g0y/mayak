@@ -72,7 +72,7 @@ function App(){
         unsubscribers.push(EventsOn('hideout:alert',(event:HideoutEvent)=>setHideoutAlert(event)))
         unsubscribers.push(EventsOn('log:clear',()=>setLogs([])))
         // A key assignment syncs the profile's past logs (syncAssignedHistory).
-        unsubscribers.push(EventsOn('tracker:history',(result:{mode:string;sent:number;error?:string})=>{const language=settingsRef.current.language;const mode=translate(language,result.mode==='pve'?'trackerPVE':result.mode==='seasonal'?'trackerSeasonal':'trackerPVP');if(result.error){setNotice(`${mode}: ${translate(language,'trackerHistoryFailed')} ${result.error}`);setNoticeError(true)}else{setNotice(translate(language,'trackerHistorySynced').replace('{mode}',mode).replace('{n}',String(result.sent)));setNoticeError(false)}}))
+        unsubscribers.push(EventsOn('tracker:history',(result:{mode:string;sent:number;error?:string;deferred?:boolean})=>{const language=settingsRef.current.language;const mode=translate(language,result.mode==='pve'?'trackerPVE':result.mode==='seasonal'?'trackerSeasonal':'trackerPVP');if(result.deferred){setNotice(`${mode}: ${translate(language,'trackerHistoryDeferred')}`);setNoticeError(false)}else if(result.error){setNotice(`${mode}: ${translate(language,'trackerHistoryFailed')} ${result.error}`);setNoticeError(true)}else{setNotice(translate(language,'trackerHistorySynced').replace('{mode}',mode).replace('{n}',String(result.sent)));setNoticeError(false)}}))
         unsubscribers.push(EventsOn('update:status',(next:UpdateStatus)=>setUpdateStatus({...emptyUpdate,...next})))
       }catch(error){if(active){setNotice(`${translate(defaults.language,'initError')}: ${String(error)}`);setNoticeError(true)}}
     }

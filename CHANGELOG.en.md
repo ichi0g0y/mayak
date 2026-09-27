@@ -8,6 +8,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 Changes in the nightly build, not released yet; they come with the next version.
 
+- TarkovTracker's "Recheck past logs" is not available while EFT is running: a sync then could overwrite a task state changed during play with an older one. The sync that follows a key assignment also waits until EFT closes. A profile whose past logs were never rechecked shows the button in red, with a note under its row.
+
 - The snap note editor has viewing adjustments: brightness, contrast and lift shadows sliders make dark screenshots easier to look into. The original image stays as it is.
 
 - The screenshot viewer has "Make a snap note": it turns a game screenshot into a standalone snap note, opened for drawing.

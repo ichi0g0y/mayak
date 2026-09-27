@@ -59,6 +59,10 @@ type App struct {
 	hideoutCatalogMode string
 	// catalogVersions: the version of each part of a mode's catalog last
 	// applied (catalogChanged), so a refresh rebuilds only what changed.
+	// pendingHistory: past-log syncs of profiles given a key while EFT ran,
+	// run when it closes (watchGame).
+	pendingHistoryMu  sync.Mutex
+	pendingHistory    map[[3]string]bool
 	catalogVersionsMu sync.Mutex
 	catalogVersions   map[string]string
 	hideoutProgress   map[string]bool

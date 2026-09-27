@@ -22,6 +22,9 @@ type Profile struct {
 	Mode      string `json:"mode"`
 	FirstSeen string `json:"firstSeen"`
 	LastSeen  string `json:"lastSeen"`
+	// HistorySyncedAt is when the profile's past logs were last synced to
+	// TarkovTracker (RFC 3339), empty when never.
+	HistorySyncedAt string `json:"historySyncedAt,omitempty"`
 }
 
 type Key struct {
@@ -139,6 +142,18 @@ func (d *Document) RemoveKey(id string) error {
 		}
 	}
 	return errors.New("the TarkovTracker key was not found")
+}
+
+// MarkHistorySynced records that a profile's past logs were synced at at.
+func (d *Document) MarkHistorySynced(accountID, profileID, mode, at string) bool {
+	for index := range d.Profiles {
+		p := &d.Profiles[index]
+		if p.AccountID == accountID && p.ProfileID == profileID && p.Mode == mode {
+			p.HistorySyncedAt = at
+			return true
+		}
+	}
+	return false
 }
 
 func (d *Document) RememberProfiles(profiles []Profile) bool {

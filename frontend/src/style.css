@@ -522,3 +522,10 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .tracker-older summary { padding: 8px 12px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted-foreground); cursor: pointer; }
 .tracker-older .tracker-profile { opacity: .85; }
 
+
+/* "Recheck past logs": red until done once; the line under the row says why
+   it waits (never done, or EFT running). */
+.tracker-profile-tools .history-needed { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
+.tracker-profile-tools .history-needed:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.tracker-history-note { grid-column: 1 / -1; margin: -4px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted-foreground); }
+.tracker-history-note.needed { color: color-mix(in srgb, var(--danger) 80%, var(--foreground)); }

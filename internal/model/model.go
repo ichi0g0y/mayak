@@ -90,22 +90,24 @@ type CatalogStatus struct {
 }
 
 type TrackerStatus struct {
-	Connection         string                  `json:"connection"`
-	Mode               string                  `json:"mode"`
-	ProfileID          string                  `json:"profileId"`
-	AccountID          string                  `json:"accountId"`
-	DisplayName        string                  `json:"displayName"`
-	PlayerLevel        int                     `json:"playerLevel"`
-	CompletedTasks     int                     `json:"completedTasks"`
-	FailedTasks        int                     `json:"failedTasks"`
-	PVPConfigured      bool                    `json:"pvpConfigured"`
-	PVEConfigured      bool                    `json:"pveConfigured"`
-	SeasonalConfigured bool                    `json:"seasonalConfigured"`
-	LastSync           string                  `json:"lastSync"`
-	LastEvent          string                  `json:"lastEvent"`
-	LastError          string                  `json:"lastError"`
-	Keys               []TrackerKeySummary     `json:"keys"`
-	Profiles           []TrackerProfileSummary `json:"profiles"`
+	Connection         string `json:"connection"`
+	Mode               string `json:"mode"`
+	ProfileID          string `json:"profileId"`
+	AccountID          string `json:"accountId"`
+	DisplayName        string `json:"displayName"`
+	PlayerLevel        int    `json:"playerLevel"`
+	CompletedTasks     int    `json:"completedTasks"`
+	FailedTasks        int    `json:"failedTasks"`
+	PVPConfigured      bool   `json:"pvpConfigured"`
+	PVEConfigured      bool   `json:"pveConfigured"`
+	SeasonalConfigured bool   `json:"seasonalConfigured"`
+	// GameRunning: Escape from Tarkov is running (past logs are not rechecked then).
+	GameRunning bool                    `json:"gameRunning"`
+	LastSync    string                  `json:"lastSync"`
+	LastEvent   string                  `json:"lastEvent"`
+	LastError   string                  `json:"lastError"`
+	Keys        []TrackerKeySummary     `json:"keys"`
+	Profiles    []TrackerProfileSummary `json:"profiles"`
 }
 
 type TrackerKeySummary struct {
@@ -126,6 +128,8 @@ type TrackerProfileSummary struct {
 	LastSeen   string `json:"lastSeen"`
 	BoundKeyID string `json:"boundKeyId"`
 	Current    bool   `json:"current"`
+	// HistorySyncedAt is when its past logs were last synced, empty when never.
+	HistorySyncedAt string `json:"historySyncedAt"`
 }
 
 type ItemCandidate struct {

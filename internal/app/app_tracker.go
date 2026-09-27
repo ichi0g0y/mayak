@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/local/mayak/internal/eftdetect"
 	"github.com/local/mayak/internal/model"
 	"github.com/local/mayak/internal/tracker"
 	"github.com/local/mayak/internal/trackerlog"
@@ -192,8 +193,20 @@ func (a *App) syncAssignedHistory(accountID, profileID, mode string) {
 	if !enabled {
 		return
 	}
+	// While EFT runs, the sync waits for it to close (watchGame).
+	if eftdetect.GameRunning() {
+		a.deferHistory(accountID, profileID, mode)
+		a.emitEvent("tracker:history", map[string]any{"mode": mode, "profileId": profileID, "deferred": true})
+		return
+	}
 	sent, err := a.SyncTrackerProfileHistory(accountID, profileID, mode)
 	if errors.Is(err, errNoTrackerHistory) {
+		a.markHistorySynced(accountID, profileID, mode)
+		return
+	}
+	if errors.Is(err, errGameRunning) {
+		a.deferHistory(accountID, profileID, mode)
+		a.emitEvent("tracker:history", map[string]any{"mode": mode, "profileId": profileID, "deferred": true})
 		return
 	}
 	result := map[string]any{"mode": mode, "profileId": profileID, "sent": sent}
@@ -238,7 +251,15 @@ func (a *App) DiscoverTrackerProfiles() error { return a.discoverTrackerProfiles
 // assignment that is no failure, just nothing to report.
 var errNoTrackerHistory = errors.New("the EFT logs of this profile have no task changes")
 
+// errGameRunning: past logs are not synced while EFT runs. Its logs are
+// still being written and the live sync sends changes meanwhile; a bulk of
+// older states arriving after them would set a task back (a restart undone).
+var errGameRunning = errors.New("Escape from Tarkov is running; close it to recheck past logs")
+
 func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int, error) {
+	if eftdetect.GameRunning() {
+		return 0, errGameRunning
+	}
 	a.trackerSyncMu.Lock()
 	defer a.trackerSyncMu.Unlock()
 	a.mu.RLock()
@@ -271,6 +292,7 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 		return 0, err
 	}
 	a.addLog("Info", "TarkovTracker", fmt.Sprintf("Synced %d task states from existing logs for %s (%s)", len(updates), maskProfileID(profileID), mode))
+	a.markHistorySynced(accountID, profileID, mode)
 	a.mu.RLock()
 	active := a.status.Tracker.AccountID == accountID && a.status.Tracker.ProfileID == profileID && a.status.Tracker.Mode == mode
 	a.mu.RUnlock()
@@ -377,7 +399,7 @@ func (a *App) applyTrackerTokenFlagsLocked() {
 				break
 			}
 		}
-		a.status.Tracker.Profiles = append(a.status.Tracker.Profiles, model.TrackerProfileSummary{AccountID: profile.AccountID, ProfileID: profile.ProfileID, Mode: profile.Mode, FirstSeen: profile.FirstSeen, LastSeen: profile.LastSeen, BoundKeyID: boundID, Current: a.status.Tracker.AccountID == profile.AccountID && a.status.Tracker.ProfileID == profile.ProfileID && a.status.Tracker.Mode == profile.Mode})
+		a.status.Tracker.Profiles = append(a.status.Tracker.Profiles, model.TrackerProfileSummary{AccountID: profile.AccountID, ProfileID: profile.ProfileID, Mode: profile.Mode, FirstSeen: profile.FirstSeen, LastSeen: profile.LastSeen, BoundKeyID: boundID, HistorySyncedAt: profile.HistorySyncedAt, Current: a.status.Tracker.AccountID == profile.AccountID && a.status.Tracker.ProfileID == profile.ProfileID && a.status.Tracker.Mode == profile.Mode})
 	}
 }
 
@@ -628,4 +650,70 @@ func maskToken(value string) string {
 		return "••••"
 	}
 	return value[:4] + "••••" + value[len(value)-4:]
+}
+
+// markHistorySynced records that a profile's past logs were synced now, so
+// its "Recheck past logs" no longer shows as never done.
+func (a *App) markHistorySynced(accountID, profileID, mode string) {
+	a.trackerStoreMu.Lock()
+	defer a.trackerStoreMu.Unlock()
+	a.mu.Lock()
+	document := a.trackerData.Clone()
+	a.mu.Unlock()
+	if !document.MarkHistorySynced(accountID, profileID, mode, time.Now().UTC().Format(time.RFC3339)) {
+		return
+	}
+	if err := a.trackerStore.Save(document); err != nil {
+		a.addLog("Warn", "TarkovTracker", "Could not remember the past-log sync: "+err.Error())
+		return
+	}
+	a.mu.Lock()
+	a.trackerData = document
+	a.applyTrackerTokenFlagsLocked()
+	status := a.status
+	a.mu.Unlock()
+	a.emitStatus(status)
+}
+
+// deferHistory keeps a profile's past-log sync for when EFT closes.
+func (a *App) deferHistory(accountID, profileID, mode string) {
+	a.pendingHistoryMu.Lock()
+	defer a.pendingHistoryMu.Unlock()
+	if a.pendingHistory == nil {
+		a.pendingHistory = map[[3]string]bool{}
+	}
+	a.pendingHistory[[3]string{accountID, profileID, mode}] = true
+}
+
+// watchGame follows whether EFT runs, for the settings page (a recheck of
+// past logs waits for it to close), and runs the syncs deferred meanwhile
+// once it has closed.
+func (a *App) watchGame() {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+	for {
+		running := eftdetect.GameRunning()
+		a.mu.Lock()
+		changed := a.status.Tracker.GameRunning != running
+		a.status.Tracker.GameRunning = running
+		status := a.status
+		a.mu.Unlock()
+		if changed {
+			a.emitStatus(status)
+		}
+		if !running {
+			a.pendingHistoryMu.Lock()
+			pending := a.pendingHistory
+			a.pendingHistory = nil
+			a.pendingHistoryMu.Unlock()
+			for profile := range pending {
+				a.syncAssignedHistory(profile[0], profile[1], profile[2])
+			}
+		}
+		select {
+		case <-a.done:
+			return
+		case <-ticker.C:
+		}
+	}
 }

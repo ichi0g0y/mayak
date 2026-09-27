@@ -145,3 +145,20 @@ func TestRenameBoundKeyPreservesIdentityAndPersists(t *testing.T) {
 		t.Fatal("clearing optional name failed")
 	}
 }
+
+// The time a profile's past logs were synced survives the logs being read
+// again (RememberProfiles only moves first and last seen).
+func TestHistorySyncedAtSurvivesRememberingTheProfile(t *testing.T) {
+	d := Empty()
+	d.RememberProfiles([]Profile{{AccountID: "1", ProfileID: "p", Mode: "pve", FirstSeen: "2026-01-01T00:00:00Z", LastSeen: "2026-01-02T00:00:00Z"}})
+	if !d.MarkHistorySynced("1", "p", "pve", "2026-09-27T00:00:00Z") {
+		t.Fatal("profile not found")
+	}
+	if d.MarkHistorySynced("1", "p", "pvp", "2026-09-27T00:00:00Z") {
+		t.Fatal("marked a profile of another mode")
+	}
+	d.RememberProfiles([]Profile{{AccountID: "1", ProfileID: "p", Mode: "pve", FirstSeen: "2026-01-01T00:00:00Z", LastSeen: "2026-09-26T00:00:00Z"}})
+	if got := d.Profiles[0].HistorySyncedAt; got != "2026-09-27T00:00:00Z" {
+		t.Fatalf("HistorySyncedAt = %q after the logs were read again", got)
+	}
+}
