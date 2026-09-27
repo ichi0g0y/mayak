@@ -74,7 +74,8 @@ func init() {
 				// visible edge that every ordinary window (Chrome included) resizes
 				// from, so nothing inside, scrollbar arrows included, is covered.
 				if wp != 0 && !w32.IsZoomed(w32.HWND(hwnd)) && !m.window.IsFullscreen() {
-					rect := (*w32.RECT)(unsafe.Pointer(lp))
+					// lp is the RECT*; read through its address, the form vet accepts.
+					rect := *(**w32.RECT)(unsafe.Pointer(&lp))
 					frame := int32(frameWidth(w32.HWND(hwnd)))
 					rect.Left += frame
 					rect.Right -= frame

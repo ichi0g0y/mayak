@@ -1,0 +1,63 @@
+# Checks every push to main and every pull request: the Go code is vetted
+# and tested, the shell's tests run, and the app is built on each platform a
+# release is built for (as release.yml and nightly.yml do), so a break shows
+# here before a nightly or a release.
+name: Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows-amd64
+          - os: macos-latest
+            target: darwin-arm64
+          - os: ubuntu-latest
+            target: linux-amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The version linked into the binary comes from `git describe`.
+          fetch-depth: 0
+
+      - name: Install Go, bun and Task (mise.toml)
+        uses: jdx/mise-action@v2
+        with:
+          install_args: go bun task
+
+      - name: Install GTK and WebKitGTK
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libgtk-4-dev libwebkitgtk-6.0-dev
+
+      # The build first: it installs the frontend's packages and writes
+      # frontend/dist, which the Go code embeds.
+      - name: Build
+        run: task build
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Go tests
+        run: go test -p 2 ./...
+
+      - name: Shell tests
+        run: bun test ./frontend/src/browser/
