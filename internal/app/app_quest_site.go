@@ -1,10 +1,13 @@
 package app
 
 import (
+	"context"
 	"errors"
-	"github.com/local/mayak/internal/model"
 	"net/url"
 	"strings"
+	"time"
+
+	"github.com/local/mayak/internal/model"
 )
 
 func normalizeQuestSite(site string) string {
@@ -58,5 +61,36 @@ func (a *App) OpenQuestPage() error {
 		return errors.New("no recognized task")
 	}
 	a.showBrowserTask(status, site)
+	return nil
+}
+
+// QuestSiteURLs is a task's page on each task site, from the task list at
+// hand: a task tab kept from before keeps the pages it opened with, which a
+// newer list may know better (a trader read since, for the Japanese wiki).
+// Empty when the task is not in the list.
+func (a *App) QuestSiteURLs(id, name string) map[string]string {
+	a.mu.RLock()
+	settings := a.settings
+	a.mu.RUnlock()
+	ctx, cancel := context.WithTimeout(a.ctx, 15*time.Second)
+	defer cancel()
+	quests, err := a.questClient.QuestsForMode(ctx, a.effectiveCatalogMode(settings.GameMode))
+	if err != nil {
+		return nil
+	}
+	for _, q := range quests {
+		if (id == "" || q.ID != id) && (name == "" || q.Name != name) {
+			continue
+		}
+		status := model.Status{LastQuest: q.Name, QuestTrader: q.Trader, QuestWikiURL: q.WikiLink}
+		if q.NormalizedName != "" {
+			status.QuestURL = "https://tarkov.dev/task/" + q.NormalizedName
+		}
+		urls := map[string]string{}
+		for _, s := range []string{"tarkov-dev", "official-wiki", "japanese-wiki"} {
+			urls[s] = questStatusURL(s, status)
+		}
+		return urls
+	}
 	return nil
 }

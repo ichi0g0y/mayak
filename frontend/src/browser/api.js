@@ -1411,8 +1411,16 @@ async function perform(type, data) {
     case 'deleteBookmark':
       state.bookmarks = state.bookmarks.filter((b) => b.id !== data)
       break
+    // A task tab kept from before has the pages it opened with; the task
+    // list at hand may know better ones (the Japanese wiki needs the trader,
+    // which a task new to the wiki gets later), so they are asked first.
     case 'site':
-      if (tab?.task && webURL(tab.task.urls[data])) tab.url = tab.task.urls[data]
+      if (!tab?.task) break
+      try {
+        const fresh = await go.QuestSiteURLs(String(tab.task.id || ''), String(tab.task.name || ''))
+        for (const [key, url] of Object.entries(fresh || {})) if (webURL(url)) tab.task.urls[key] = url
+      } catch {}
+      if (webURL(tab.task.urls[data])) tab.url = tab.task.urls[data]
       break
     case 'back':
     case 'forward':

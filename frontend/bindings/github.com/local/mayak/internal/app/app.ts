@@ -392,6 +392,18 @@ export function PreviewSound(kind: string, path: string, volume: number): $Cance
     return $Call.ByID(2022189061, kind, path, volume);
 }
 
+/**
+ * QuestSiteURLs is a task's page on each task site, from the task list at
+ * hand: a task tab kept from before keeps the pages it opened with, which a
+ * newer list may know better (a trader read since, for the Japanese wiki).
+ * Empty when the task is not in the list.
+ */
+export function QuestSiteURLs(id: string, name: string): $CancellablePromise<{ [_ in string]?: string }> {
+    return $Call.ByID(2662235009, id, name).then(($result: any) => {
+        return $$createType18($result);
+    });
+}
+
 export function RefreshCatalog(): $CancellablePromise<void> {
     return $Call.ByID(1073188156);
 }
@@ -434,7 +446,7 @@ export function SetTrackerProfileKey(accountID: string, profileID: string, mode:
  */
 export function SnapNoteCapture(viewID: string, pageURL: string, pageTitle: string, full: boolean, translated: boolean): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(2024184632, viewID, pageURL, pageTitle, full, translated).then(($result: any) => {
-        return $$createType18($result);
+        return $$createType19($result);
     });
 }
 
@@ -452,7 +464,7 @@ export function SnapNoteCopyImage(pngDataURL: string): $CancellablePromise<void>
  */
 export function SnapNoteCreate(imageDataURL: string, title: string): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(173459086, imageDataURL, title).then(($result: any) => {
-        return $$createType18($result);
+        return $$createType19($result);
     });
 }
 
@@ -477,7 +489,7 @@ export function SnapNoteExport(pngDataURL: string, name: string): $CancellablePr
  */
 export function SnapNoteFavorite(id: string, favorite: boolean): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(3862972790, id, favorite).then(($result: any) => {
-        return $$createType18($result);
+        return $$createType19($result);
     });
 }
 
@@ -488,7 +500,7 @@ export function SnapNoteFavorite(id: string, favorite: boolean): $CancellablePro
  */
 export function SnapNoteFromScreenshot(name: string, title: string): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(3622921050, name, title).then(($result: any) => {
-        return $$createType18($result);
+        return $$createType19($result);
     });
 }
 
@@ -497,7 +509,7 @@ export function SnapNoteFromScreenshot(name: string, title: string): $Cancellabl
  */
 export function SnapNoteLink(id: string, linked: boolean): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(2416529170, id, linked).then(($result: any) => {
-        return $$createType18($result);
+        return $$createType19($result);
     });
 }
 
@@ -506,7 +518,7 @@ export function SnapNoteLink(id: string, linked: boolean): $CancellablePromise<s
  */
 export function SnapNoteList(): $CancellablePromise<snapnote$0.Note[]> {
     return $Call.ByID(2495635670).then(($result: any) => {
-        return $$createType19($result);
+        return $$createType20($result);
     });
 }
 
@@ -515,7 +527,7 @@ export function SnapNoteList(): $CancellablePromise<snapnote$0.Note[]> {
  */
 export function SnapNoteOpen(id: string): $CancellablePromise<$models.SnapNoteData> {
     return $Call.ByID(625471842, id).then(($result: any) => {
-        return $$createType20($result);
+        return $$createType21($result);
     });
 }
 
@@ -525,7 +537,7 @@ export function SnapNoteOpen(id: string): $CancellablePromise<$models.SnapNoteDa
  */
 export function SnapNoteSave(id: string, title: string, strokes: string, thumbDataURL: string): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(4245433319, id, title, strokes, thumbDataURL).then(($result: any) => {
-        return $$createType18($result);
+        return $$createType19($result);
     });
 }
 
@@ -534,7 +546,7 @@ export function SnapNoteSave(id: string, title: string, strokes: string, thumbDa
  */
 export function SnapNoteSetMap(id: string, mapName: string): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(683081412, id, mapName).then(($result: any) => {
-        return $$createType18($result);
+        return $$createType19($result);
     });
 }
 
@@ -599,6 +611,7 @@ const $$createType14 = model$0.LogEntry.createFrom;
 const $$createType15 = $Create.Array($$createType14);
 const $$createType16 = config$0.Settings.createFrom;
 const $$createType17 = model$0.Status.createFrom;
-const $$createType18 = snapnote$0.Note.createFrom;
-const $$createType19 = $Create.Array($$createType18);
-const $$createType20 = $models.SnapNoteData.createFrom;
+const $$createType18 = $Create.Map($Create.Any, $Create.Any);
+const $$createType19 = snapnote$0.Note.createFrom;
+const $$createType20 = $Create.Array($$createType19);
+const $$createType21 = $models.SnapNoteData.createFrom;
