@@ -26,6 +26,7 @@ export const afterRenderHooks=[];
 const register=(name,fn,tries=0)=>{if(window.mayak)window.mayak[name](fn);else if(tries<500)setTimeout(()=>register(name,fn,tries+1),10);};
 export const api={
  action:(type,data)=>window.mayak.action(type,data),
+ request:(type,data)=>window.mayak.request(type,data),
  onState:fn=>register('onState',fn),
  onKey:fn=>register('onKey',fn),
  onMenu:fn=>register('onMenu',fn),
@@ -41,3 +42,6 @@ export function select(key,label,choices,value,scope='preferences'){return `<lab
 export const siteChoices=()=>[['tarkov-dev','tarkov.dev'],['official-wiki',t('official')],['japanese-wiki',t('japanese')]];
 
 export async function action(type,data){const next=await api.action(type,data);if(next){state=next;render();}return next;}
+// request is action that throws when the action fails (action turns a
+// failure into the current state, for callers that need not know).
+export async function request(type,data){const next=await api.request(type,data);if(next){state=next;render();}return next;}

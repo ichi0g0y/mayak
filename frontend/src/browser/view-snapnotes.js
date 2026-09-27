@@ -1,4 +1,4 @@
-import {state,api,t,esc,icon,action,render,clickHandlers,afterRenderHooks} from './shell-core.js';
+import {state,api,t,esc,icon,action,request,render,clickHandlers,afterRenderHooks} from './shell-core.js';
 import {hostname,originalURL} from './state.js';
 import {age} from './item.js';
 
@@ -45,7 +45,7 @@ function openMenu(button){
  ];
  menu={tab:tab?.id};render();
  const left=Math.round(Math.max(4,Math.min(r.right-menuWidth,innerWidth-menuWidth-4)));
- void action('menuShow',{id:'snap',x:left,y:Math.round(r.bottom+6),width:menuWidth,items}).catch(error=>{console.error('snap menu',error);menu=null;render();});
+ void request('menuShow',{id:'snap',x:left,y:Math.round(r.bottom+6),width:menuWidth,items}).catch(()=>{menu=null;render();});
 }
 api.onMenu(choice=>{
  if(!menu)return;
@@ -103,7 +103,7 @@ export function snapToolbar(){
  const note=open.note;
  const link=note.url?(note.linked?`<button data-action="snapLinkToggle" title="${esc(t('snapUnlink'))}">${icon('unlinked')}<span>${esc(t('snapUnlink'))}</span></button>`:`<button data-action="snapLinkToggle" title="${esc(t('snapRelink'))}">${icon('linked')}<span>${esc(t('snapRelink'))}</span></button>`):'';
  const page=note.url?`<button data-action="snapOpenPage" data-id="${esc(note.id)}" title="${esc(note.url)}">${icon('external')}<span>${esc(t('snapOpenPage'))}</span></button>`:'';
- const status=saving?t('snapSaving'):ed?.dirty?'':t('snapSaved');
+ const status=saving?t('snapSaving'):ed?.failed?t('snapSaveFailed'):ed?.dirty?'':t('snapSaved');
  return `<div class="snap-head"><button data-action="snapBack" title="${esc(t('snapBack'))}" aria-label="${esc(t('snapBack'))}">${icon('back')}</button><input id="snap-title" class="snap-title" value="${esc(ed?.id===note.id?ed.title:note.title)}" aria-label="${esc(t('snapTitle'))}" maxlength="160"><span class="snap-status">${esc(status)}</span><div class="snap-actions">${page}${link}<button class="snap-delete${armedDelete===note.id?' armed':''}" data-action="snapDeleteNote" data-id="${esc(note.id)}">${icon('trash')}<span>${esc(t(armedDelete===note.id?'snapDeleteConfirm':'snapDelete'))}</span></button></div></div>`;
 }
 
@@ -255,8 +255,10 @@ async function saveNow(target){
   for(const layer of target.layers)if(layer.visible)for(const st of layer.strokes)drawStroke(ctx,st,s);
   thumb=c.toDataURL('image/jpeg',0.82);
  }
- try{await action('snapSave',{id:target.id,title:target.title,strokes:writeDrawing(target),thumb});}
- catch{target.dirty=true;}
+ // A failed save keeps the note unsaved: it is saved again on the next
+ // change, on going back, or on opening another note.
+ try{await request('snapSave',{id:target.id,title:target.title,strokes:writeDrawing(target),thumb});target.failed=false;}
+ catch{target.dirty=true;target.failed=true;}
  finally{saving=false;if(target===ed)render();}
 }
 

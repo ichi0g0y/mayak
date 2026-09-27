@@ -638,5 +638,8 @@ async function perform(type,data){
 window.mayak={
  onState(fn){notify=fn;},onKey(fn){onKey=fn;},onMenu(fn){onMenu=fn;},
  async action(type,data){await ready;if(type.startsWith('peer'))return pairing(type,data);return enqueue(()=>perform(type,data));},
+ // request is action for a caller that must know of a failure (a save): the
+ // error shows in the error bar and is thrown to the caller too.
+ async request(type,data){await ready;const result=queue.then(()=>perform(type,data));queue=result.catch(messageError);return result;},
 };
 window.addEventListener('beforeunload',()=>peer.close());
