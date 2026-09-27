@@ -33,11 +33,6 @@ const wikiRetry = 30 * time.Minute
 // and match on the next try.
 const wikiWait = 10 * time.Second
 
-// wikiRecent limits the wiki's tasks to those added to its task list lately:
-// the list also has Arena tasks and past events, which are not in the game
-// and would only add wrong matches.
-const wikiRecent = 180 * 24 * time.Hour
-
 // EnableWiki makes the client add the wiki's tasks (off by default, so
 // tests and tools stay offline).
 func (c *Client) EnableWiki() *Client {
@@ -73,7 +68,7 @@ type wikiQuest struct {
 	Trader string
 }
 
-// wikiQuestTitles returns the wiki's recent tasks at hand, at once. A
+// wikiQuestTitles returns the wiki's tasks at hand, at once. A
 // missing or stale list is fetched in the background; when it changes, the
 // task lists are built again with it.
 func (c *Client) wikiQuestTitles() []wikiQuest {
@@ -155,17 +150,20 @@ func (c *Client) fetchWikiQuestTitles(ctx context.Context) ([]wikiQuest, error) 
 			past[member.title] = true
 		}
 	}
+	// Every task in the game counts, however old its page: a task can come
+	// to the game long after its page was made ("To the Light - Getting
+	// Acquainted", made in 2023). The ones tarkov.dev has are dropped by name.
 	var titles []wikiQuest
-	var recent []string
+	var current []string
 	for _, member := range quests {
-		if !past[member.title] && time.Since(member.added) < wikiRecent {
-			recent = append(recent, member.title)
+		if !past[member.title] {
+			current = append(current, member.title)
 		}
 	}
 	// Who gives each (the page's "given by"): the Japanese wiki files a task
 	// under its trader. Without it (the pages not read) the tasks still match.
-	givers := c.wikiGivers(ctx, recent)
-	for _, title := range recent {
+	givers := c.wikiGivers(ctx, current)
+	for _, title := range current {
 		titles = append(titles, wikiQuest{Title: title, Trader: givers[title]})
 	}
 	// The story chapters (the Story tab of the Tasks screen: "Tour", "The
@@ -236,16 +234,15 @@ func (c *Client) wikiGivers(ctx context.Context, titles []string) map[string]str
 
 type wikiMember struct {
 	title string
-	added time.Time
 }
 
-// wikiCategory lists a wiki category's pages, with when each was added.
+// wikiCategory lists a wiki category's pages.
 func (c *Client) wikiCategory(ctx context.Context, category string) ([]wikiMember, error) {
 	var members []wikiMember
 	next := ""
 	// The API returns 500 pages at a time; the categories have a few hundred.
 	for page := 0; page < 10; page++ {
-		query := url.Values{"action": {"query"}, "list": {"categorymembers"}, "cmtitle": {"Category:" + category}, "cmnamespace": {"0"}, "cmlimit": {"500"}, "cmprop": {"title|timestamp"}, "format": {"json"}}
+		query := url.Values{"action": {"query"}, "list": {"categorymembers"}, "cmtitle": {"Category:" + category}, "cmnamespace": {"0"}, "cmlimit": {"500"}, "cmprop": {"title"}, "format": {"json"}}
 		if next != "" {
 			query.Set("cmcontinue", next)
 		}
@@ -268,8 +265,7 @@ func (c *Client) wikiCategory(ctx context.Context, category string) ([]wikiMembe
 			} `json:"continue"`
 			Query struct {
 				Members []struct {
-					Title string    `json:"title"`
-					Added time.Time `json:"timestamp"`
+					Title string `json:"title"`
 				} `json:"categorymembers"`
 			} `json:"query"`
 		}
@@ -279,7 +275,7 @@ func (c *Client) wikiCategory(ctx context.Context, category string) ([]wikiMembe
 			return nil, err
 		}
 		for _, member := range body.Query.Members {
-			members = append(members, wikiMember{member.Title, member.Added})
+			members = append(members, wikiMember{member.Title})
 		}
 		if next = body.Continue.Next; next == "" {
 			break

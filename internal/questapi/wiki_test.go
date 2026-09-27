@@ -50,3 +50,34 @@ func (pagesWiki) RoundTrip(req *http.Request) (*http.Response, error) {
 	body := `{"query":{"pages":[{"title":"To the Light - False Call","revisions":[{"slots":{"main":{"content":"{{Infobox quest\n|given by     =[[Mechanic]]\n}}"}}}]},{"title":"Tour","revisions":[{"slots":{"main":{"content":"{{Infobox quest\n|given by =\n}}"}}}]}]}}`
 	return &http.Response{StatusCode: http.StatusOK, Status: "200 OK", Body: io.NopCloser(strings.NewReader(body)), Header: http.Header{}, Request: req}, nil
 }
+
+// categoryWiki serves the wiki's categories: an old task page in Quests, a
+// past event's in Historical content too, and no page content.
+type categoryWiki struct{}
+
+func (categoryWiki) RoundTrip(req *http.Request) (*http.Response, error) {
+	body := `{"query":{"pages":[]}}`
+	switch req.URL.Query().Get("cmtitle") {
+	case "Category:Quests":
+		body = `{"query":{"categorymembers":[{"title":"To the Light - Getting Acquainted","timestamp":"2023-01-08T12:17:58Z"},{"title":"Old Event"}]}}`
+	case "Category:Historical content":
+		body = `{"query":{"categorymembers":[{"title":"Old Event"}]}}`
+	case "Category:Event content", "Category:Story chapters":
+		body = `{"query":{"categorymembers":[]}}`
+	}
+	return &http.Response{StatusCode: http.StatusOK, Status: "200 OK", Body: io.NopCloser(strings.NewReader(body)), Header: http.Header{}, Request: req}, nil
+}
+
+// A task whose page is old still counts (it came to the game later); a past
+// event's does not.
+func TestWikiTasksKeepOldPages(t *testing.T) {
+	c := New()
+	c.http = &http.Client{Transport: categoryWiki{}}
+	got, err := c.fetchWikiQuestTitles(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].Title != "To the Light - Getting Acquainted" {
+		t.Fatalf("got %+v", got)
+	}
+}
