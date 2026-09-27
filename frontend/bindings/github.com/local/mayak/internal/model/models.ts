@@ -613,6 +613,11 @@ export class TrackerProfileSummary {
     "boundKeyId": string;
     "current": boolean;
 
+    /**
+     * HistorySyncedAt is when its past logs were last synced, empty when never.
+     */
+    "historySyncedAt": string;
+
     /** Creates a new TrackerProfileSummary instance. */
     constructor($$source: Partial<TrackerProfileSummary> = {}) {
         if (!("accountId" in $$source)) {
@@ -635,6 +640,9 @@ export class TrackerProfileSummary {
         }
         if (!("current" in $$source)) {
             this["current"] = false;
+        }
+        if (!("historySyncedAt" in $$source)) {
+            this["historySyncedAt"] = "";
         }
 
         Object.assign(this, $$source);
@@ -661,6 +669,11 @@ export class TrackerStatus {
     "pvpConfigured": boolean;
     "pveConfigured": boolean;
     "seasonalConfigured": boolean;
+
+    /**
+     * GameRunning: Escape from Tarkov is running (past logs are not rechecked then).
+     */
+    "gameRunning": boolean;
     "lastSync": string;
     "lastEvent": string;
     "lastError": string;
@@ -702,6 +715,9 @@ export class TrackerStatus {
         if (!("seasonalConfigured" in $$source)) {
             this["seasonalConfigured"] = false;
         }
+        if (!("gameRunning" in $$source)) {
+            this["gameRunning"] = false;
+        }
         if (!("lastSync" in $$source)) {
             this["lastSync"] = "";
         }
@@ -725,14 +741,14 @@ export class TrackerStatus {
      * Creates a new TrackerStatus instance from a string or object.
      */
     static createFrom($$source: any = {}): TrackerStatus {
-        const $$createField14_0 = $$createType21;
-        const $$createField15_0 = $$createType23;
+        const $$createField15_0 = $$createType21;
+        const $$createField16_0 = $$createType23;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("keys" in $$parsedSource) {
-            $$parsedSource["keys"] = $$createField14_0($$parsedSource["keys"]);
+            $$parsedSource["keys"] = $$createField15_0($$parsedSource["keys"]);
         }
         if ("profiles" in $$parsedSource) {
-            $$parsedSource["profiles"] = $$createField15_0($$parsedSource["profiles"]);
+            $$parsedSource["profiles"] = $$createField16_0($$parsedSource["profiles"]);
         }
         return new TrackerStatus($$parsedSource as Partial<TrackerStatus>);
     }

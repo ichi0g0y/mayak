@@ -18,6 +18,7 @@ export class Note {
     "url"?: string;
     "pageTitle"?: string;
     "linked": boolean;
+    "favorite"?: boolean;
     "full"?: boolean;
     "width": number;
     "height": number;

@@ -9,7 +9,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/wailsapp/wails/v3/pkg/application"
+
 	"github.com/local/mayak/internal/appdir"
+	"github.com/local/mayak/internal/clipimage"
 	"github.com/local/mayak/internal/imaging"
 	"github.com/local/mayak/internal/snapnote"
 )
@@ -199,6 +202,20 @@ func (a *App) SnapNoteLink(id string, linked bool) (snapnote.Note, error) {
 	return note, nil
 }
 
+// SnapNoteFavorite stars a note, or takes its star off.
+func (a *App) SnapNoteFavorite(id string, favorite bool) (snapnote.Note, error) {
+	store, err := snapNotes()
+	if err != nil {
+		return snapnote.Note{}, err
+	}
+	note, err := store.SetFavorite(id, favorite)
+	if err != nil {
+		return snapnote.Note{}, err
+	}
+	a.snapNoteChanged()
+	return note, nil
+}
+
 // SnapNoteDelete removes a note.
 func (a *App) SnapNoteDelete(id string) error {
 	store, err := snapNotes()
@@ -225,4 +242,78 @@ func imageFromDataURL(value string, limit int) ([]byte, error) {
 		return base64.StdEncoding.DecodeString(encoded)
 	}
 	return nil, errors.New("not a PNG or JPEG image")
+}
+
+// SnapNoteCopyImage puts a note's picture (a PNG data URL: the image with
+// its drawing, as the shell shows it) on the clipboard.
+func (a *App) SnapNoteCopyImage(pngDataURL string) error {
+	data, err := pngFromDataURL(pngDataURL)
+	if err != nil {
+		return err
+	}
+	return clipimage.CopyPNG(data)
+}
+
+// SnapNoteExport saves a note's picture (a PNG data URL) where the user
+// chooses, under name. It returns the path, or "" when the dialog was
+// cancelled.
+func (a *App) SnapNoteExport(pngDataURL, name string) (string, error) {
+	data, err := pngFromDataURL(pngDataURL)
+	if err != nil {
+		return "", err
+	}
+	options := &application.SaveFileDialogOptions{
+		Title:                "Save snap note",
+		Filename:             exportName(name) + ".png",
+		Filters:              []application.FileFilter{{DisplayName: "PNG image (*.png)", Pattern: "*.png"}},
+		CanCreateDirectories: true,
+		Window:               a.window,
+	}
+	if home, err := os.UserHomeDir(); err == nil {
+		if pictures := filepath.Join(home, "Pictures"); isDir(pictures) {
+			options.Directory = pictures
+		}
+	}
+	path, err := a.desktop.Dialog.SaveFileWithOptions(options).PromptForSingleSelection()
+	if err != nil || path == "" {
+		return "", err
+	}
+	if !strings.EqualFold(filepath.Ext(path), ".png") {
+		path += ".png"
+	}
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
+func pngFromDataURL(value string) ([]byte, error) {
+	if !strings.HasPrefix(value, "data:image/png;base64,") {
+		return nil, errors.New("not a PNG image")
+	}
+	return imageFromDataURL(value, snapnote.MaxImageBytes)
+}
+
+// exportName is a file name from a note's title: the characters Windows
+// does not take in a name replaced, "snapnote" when nothing is left.
+func exportName(title string) string {
+	name := strings.Map(func(r rune) rune {
+		if r < 32 || strings.ContainsRune(`<>:"/\|?*`, r) {
+			return '_'
+		}
+		return r
+	}, strings.TrimSpace(title))
+	name = strings.TrimRight(name, ". ")
+	if r := []rune(name); len(r) > 100 {
+		name = string(r[:100])
+	}
+	if name == "" {
+		return "snapnote"
+	}
+	return name
+}
+
+func isDir(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
 }

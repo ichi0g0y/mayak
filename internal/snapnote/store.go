@@ -33,6 +33,7 @@ type Note struct {
 	URL       string          `json:"url,omitempty"`
 	PageTitle string          `json:"pageTitle,omitempty"`
 	Linked    bool            `json:"linked"`
+	Favorite  bool            `json:"favorite,omitempty"`
 	Full      bool            `json:"full,omitempty"`
 	Width     int             `json:"width"`
 	Height    int             `json:"height"`
@@ -261,6 +262,22 @@ func (s *Store) SetLinked(id string, linked bool) (Note, error) {
 		return Note{}, errors.New("this note was not taken from a page")
 	}
 	note.Linked = linked
+	if err := s.writeNote(note); err != nil {
+		return Note{}, err
+	}
+	note.Strokes = nil
+	return note, nil
+}
+
+// SetFavorite stars the note, or takes its star off.
+func (s *Store) SetFavorite(id string, favorite bool) (Note, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	note, err := s.readNote(id)
+	if err != nil {
+		return Note{}, err
+	}
+	note.Favorite = favorite
 	if err := s.writeNote(note); err != nil {
 		return Note{}, err
 	}

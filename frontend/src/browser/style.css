@@ -760,6 +760,14 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 .snap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
 .snap-card{display:grid;grid-template-rows:auto auto;justify-content:stretch;justify-items:stretch;gap:0;padding:0;overflow:hidden;text-align:left;border-color:var(--border)}
 .snap-card:hover{border-color:var(--border-strong)}
+.snap-card-wrap{position:relative;display:grid}
+.snap-star svg{fill:none}
+.snap-star.on{color:#f5b301}
+.snap-star.on svg{fill:currentColor}
+.snap-card-star{position:absolute;z-index:2;top:6px;right:6px;width:30px;height:30px;padding:0;border-radius:8px;background:rgba(0,0,0,.45);border-color:transparent;color:#fff;opacity:0;transition:opacity .12s}
+.snap-card-wrap:hover .snap-card-star,.snap-card-star.on,.snap-card-star:focus-visible{opacity:1}
+.snap-card-star.on{color:#f5b301}
+.snap-head-star{flex:none;width:32px;height:32px;padding:0}
 .snap-card-thumb{display:block;aspect-ratio:16/10;background:var(--surface-2)}
 .snap-card-thumb img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
 .snap-card-text{display:grid;gap:3px;padding:9px 11px;min-width:0}
@@ -789,6 +797,9 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 .snap-base,.snap-ink{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none}
 .snap-ink{touch-action:none;cursor:crosshair}
 .snap-stage[data-tool=eraser] .snap-ink{cursor:cell}
+.snap-stage[data-tool=text] .snap-ink{cursor:text}
+.snap-sheet{container-type:inline-size}
+.snap-text-input{position:absolute;z-index:3;margin:0;padding:0;border:0;border-radius:2px;outline:1.5px dashed var(--accent);outline-offset:4px;background:rgba(127,127,127,.12);font:600 calc(var(--size) * 100cqw)/1.25 "Segoe UI","Yu Gothic UI",Meiryo,sans-serif;white-space:pre;overflow:hidden;resize:none;text-shadow:0 0 2px var(--outline),0 0 2px var(--outline),0 0 3px var(--outline)}
 
 /* The menu window (menu.html): the menu fills it, with the window's edge as its border. */
 .menu-body{margin:0;overflow:hidden;background:var(--raised)}
@@ -840,7 +851,7 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 
 /* The original's viewing adjustments: a filter on the image, set on the sheet. */
 .snap-base{filter:var(--snap-filter,none)}
-.snap-filters{position:absolute;width:0;height:0;overflow:hidden}
+.snap-filter-defs{position:absolute;width:0;height:0;overflow:hidden}
 .snap-adjust{margin-top:8px;padding-top:10px;border-top:1px solid var(--border);display:grid;gap:8px}
 .snap-adjust-head{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600;color:var(--text-2)}
 .snap-adjust-head button{height:26px;padding:0 8px;font-size:11.5px}

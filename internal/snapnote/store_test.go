@@ -115,3 +115,25 @@ func TestRejectsBadInput(t *testing.T) {
 		t.Fatal("deleted note still listed")
 	}
 }
+
+func TestFavorite(t *testing.T) {
+	s := New(t.TempDir())
+	created, _ := s.Create(testPNG(t, 4, 4), Note{})
+	note, err := s.SetFavorite(created.ID, true)
+	if err != nil || !note.Favorite {
+		t.Fatalf("starred %+v %v", note, err)
+	}
+	// Saving the drawing keeps the star.
+	if note, err = s.Save(created.ID, "renamed", json.RawMessage(`[]`), nil); err != nil || !note.Favorite || note.Title != "renamed" {
+		t.Fatalf("saved %+v %v", note, err)
+	}
+	if list, _ := s.List(); len(list) != 1 || !list[0].Favorite {
+		t.Fatalf("list %+v", list)
+	}
+	if note, err = s.SetFavorite(created.ID, false); err != nil || note.Favorite {
+		t.Fatalf("unstarred %+v %v", note, err)
+	}
+	if _, err := s.SetFavorite("20260101000000-zzzzzzzz", true); err == nil {
+		t.Fatal("starred a missing note")
+	}
+}

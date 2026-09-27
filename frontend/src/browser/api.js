@@ -1,5 +1,5 @@
 import * as AppService from '../../bindings/github.com/local/mayak/internal/app/app'
-import { Events, Clipboard } from '@wailsio/runtime'
+import { Events, Clipboard, Browser } from '@wailsio/runtime'
 import { itemInfo, clampItemPanel, clampItemPanelHeight, historyPoints, names } from './item.js'
 import {
   browserSections,
@@ -1133,7 +1133,7 @@ async function perform(type, data) {
       void loadSnaps()
       return snapshot()
     case 'snapFilter':
-      snaps.filter = ['all', 'linked', 'single'].includes(data) ? data : 'all'
+      snaps.filter = ['all', 'favorite', 'linked', 'single'].includes(data) ? data : 'all'
       return snapshot()
     case 'snapSave': {
       const note = await go.SnapNoteSave(
@@ -1148,6 +1148,19 @@ async function perform(type, data) {
       }
       return snapshot()
     }
+    // Sharing a note's picture (a PNG data URL, the drawing included): onto
+    // the clipboard (with post, a post on X opens in the browser too, where
+    // the picture is pasted: X takes none from a link), or into a file the
+    // user names (the path comes back as snapExported, "" when cancelled).
+    case 'snapCopyImage':
+      await go.SnapNoteCopyImage(String(data?.image || ''))
+      if (typeof data?.post === 'string')
+        void Browser.OpenURL('https://x.com/intent/post?text=' + encodeURIComponent(data.post))
+      return snapshot()
+    case 'snapExport': {
+      const path = await go.SnapNoteExport(String(data?.image || ''), String(data?.name || ''))
+      return { ...snapshot(), snapExported: path }
+    }
     case 'snapNew': {
       const note = await go.SnapNoteCreate(String(data?.image || ''), String(data?.title || ''))
       openLocal(state, 'snapnotes')
@@ -1158,6 +1171,13 @@ async function perform(type, data) {
     case 'snapLink': {
       const note = await go.SnapNoteLink(String(data?.id || ''), !!data?.linked)
       if (snaps.open?.note.id === note.id) snaps.open.note = { ...snaps.open.note, linked: note.linked }
+      void loadSnaps()
+      return snapshot()
+    }
+    case 'snapFavorite': {
+      const note = await go.SnapNoteFavorite(String(data?.id || ''), !!data?.favorite)
+      if (snaps.open?.note.id === note.id) snaps.open.note = { ...snaps.open.note, favorite: !!note.favorite }
+      snaps.list = snaps.list.map((n) => (n.id === note.id ? { ...n, favorite: !!note.favorite } : n))
       void loadSnaps()
       return snapshot()
     }

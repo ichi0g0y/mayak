@@ -21,7 +21,9 @@ export function snapPageKey(url) {
 }
 const pageNotes = (url) => {
   const key = snapPageKey(url)
-  return key ? (state.snapNotes?.list || []).filter((n) => n.linked && snapPageKey(n.url) === key) : []
+  if (!key) return []
+  const notes = (state.snapNotes?.list || []).filter((n) => n.linked && snapPageKey(n.url) === key)
+  return [...notes.filter((n) => n.favorite), ...notes.filter((n) => !n.favorite)]
 }
 const noteTime = (note) => age(note.updatedAt || note.createdAt, state.language)
 const thumbHTML = (note) => {
@@ -36,7 +38,7 @@ const siteLine = (note) =>
 export function snapButton(tab) {
   if (!state.snapNotes || tab?.kind !== 'web') return ''
   const count = pageNotes(tab.url).length
-  return `<button class="snap-page${count ? ' has-notes' : ''}${menu ? ' on' : ''}" data-action="snapMenu" title="${esc(t('snapTake'))}" aria-label="${esc(t('snapTake'))}" aria-haspopup="menu" ${state.snapNotes.busy ? 'disabled' : ''}>${icon('brush')}${count ? `<span class="snap-count">${count}</span>` : ''}</button>`
+  return `<button class="snap-page${count ? ' has-notes' : ''}${menu && !menu.share ? ' on' : ''}" data-action="snapMenu" title="${esc(t('snapTake'))}" aria-label="${esc(t('snapTake'))}" aria-haspopup="menu" ${state.snapNotes.busy ? 'disabled' : ''}>${icon('brush')}${count ? `<span class="snap-count">${count}</span>` : ''}</button>`
 }
 
 // The menu under the button: the two captures, the page's notes and the
@@ -76,8 +78,13 @@ function openMenu(button) {
 }
 api.onMenu((choice) => {
   if (!menu) return
+  const was = menu
   menu = null
   render()
+  if (was.share) {
+    if (choice.startsWith('share:')) void share(choice.slice(6))
+    return
+  }
   if (choice === 'capture:visible' || choice === 'capture:full')
     void action('snapCapture', { full: choice === 'capture:full' })
   else if (choice.startsWith('open:')) void action('snapOpen', choice.slice(5))
@@ -101,6 +108,10 @@ export function snapSection() {
   return `<div class="section-label screenshot-section-label snap-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSnapSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('snapNotes'))}${icon('chevron', 'section-chevron')}</button><button class="new-tab shots-open" data-action="snapnotes" title="${esc(t('snapNotesAll'))}" aria-label="${esc(t('snapNotesAll'))}" aria-pressed="${open}">${icon('brush')}</button></div>${folded ? '' : `<div class="shot-section">${preview}</div>`}`
 }
 
+// The star of a note: on its card and in the editor's head.
+const starButton = (note, cls) =>
+  `<button class="snap-star ${cls}${note.favorite ? ' on' : ''}" data-action="snapFavorite" data-id="${esc(note.id)}" title="${esc(t(note.favorite ? 'snapUnfavorite' : 'snapFavorite'))}" aria-label="${esc(t(note.favorite ? 'snapUnfavorite' : 'snapFavorite'))}" aria-pressed="${!!note.favorite}">${icon('star')}</button>`
+
 // The page: the list of notes, or the note open for drawing.
 export function snapNotesPage() {
   const notes = state.snapNotes
@@ -109,16 +120,18 @@ export function snapNotesPage() {
 }
 function listHTML(notes) {
   const filter = notes.filter || 'all'
-  const shown = notes.list.filter((n) => filter === 'all' || (filter === 'linked' ? n.linked : !n.linked))
+  const shown = notes.list.filter(
+    (n) => filter === 'all' || (filter === 'favorite' ? n.favorite : filter === 'linked' ? n.linked : !n.linked),
+  )
   const chip = (value, label) =>
     `<button class="segment${filter === value ? ' selected' : ''}" data-action="snapFilter" data-id="${value}" aria-pressed="${filter === value}">${esc(t(label))}</button>`
   const cards = shown
     .map(
       (n) =>
-        `<button class="snap-card" data-action="snapOpen" data-id="${esc(n.id)}" title="${esc(n.title)}"><span class="snap-card-thumb">${thumbHTML(n)}</span><span class="snap-card-text"><strong>${esc(n.title)}</strong><small>${siteLine(n)} · ${esc(noteTime(n))}</small></span></button>`,
+        `<div class="snap-card-wrap"><button class="snap-card" data-action="snapOpen" data-id="${esc(n.id)}" title="${esc(n.title)}"><span class="snap-card-thumb">${thumbHTML(n)}</span><span class="snap-card-text"><strong>${esc(n.title)}</strong><small>${siteLine(n)} · ${esc(noteTime(n))}</small></span></button>${starButton(n, 'snap-card-star')}</div>`,
     )
     .join('')
-  return `<div class="page snap-page-list"><div class="bookmarks-head"><h1>${esc(t('snapNotes'))}</h1><div class="bookmarks-tools"><button data-action="snapNewBlank">${icon('plus')}<span>${esc(t('snapNewBlank'))}</span></button><button data-action="snapNewFile">${icon('image')}<span>${esc(t('snapNewImage'))}</span></button><input type="file" id="snap-file" accept="image/*" hidden></div></div><div class="snap-filters"><div class="segmented" role="group">${chip('all', 'snapFilterAll')}${chip('linked', 'snapFilterLinked')}${chip('single', 'snapFilterSingle')}</div><p class="hint">${esc(t('snapPasteHint'))}</p></div>${notes.list.length ? (shown.length ? `<div class="snap-grid">${cards}</div>` : `<p class="shot-empty">${esc(t('snapNoMatch'))}</p>`) : `<p class="shot-empty">${esc(t('snapEmpty'))}</p>`}</div>`
+  return `<div class="page snap-page-list"><div class="bookmarks-head"><h1>${esc(t('snapNotes'))}</h1><div class="bookmarks-tools"><button data-action="snapNewBlank">${icon('plus')}<span>${esc(t('snapNewBlank'))}</span></button><button data-action="snapNewFile">${icon('image')}<span>${esc(t('snapNewImage'))}</span></button><input type="file" id="snap-file" accept="image/*" hidden></div></div><div class="snap-filters"><div class="segmented" role="group">${chip('all', 'snapFilterAll')}${chip('favorite', 'snapFilterFavorite')}${chip('linked', 'snapFilterLinked')}${chip('single', 'snapFilterSingle')}</div><p class="hint">${esc(t('snapPasteHint'))}</p></div>${notes.list.length ? (shown.length ? `<div class="snap-grid">${cards}</div>` : `<p class="shot-empty">${esc(t('snapNoMatch'))}</p>`) : `<p class="shot-empty">${esc(t('snapEmpty'))}</p>`}</div>`
 }
 
 // The editor. Strokes are in the image's pixels: {c: colour, w: width, p:
@@ -157,15 +170,18 @@ export function snapToolbar() {
   const page = note.url
     ? `<button data-action="snapOpenPage" data-id="${esc(note.id)}" title="${esc(note.url)}">${icon('external')}<span>${esc(t('snapOpenPage'))}</span></button>`
     : ''
-  const status = saving ? t('snapSaving') : ed?.failed ? t('snapSaveFailed') : ed?.dirty ? '' : t('snapSaved')
-  return `<div class="snap-head"><button data-action="snapBack" title="${esc(t('snapBack'))}" aria-label="${esc(t('snapBack'))}">${icon('back')}</button><input id="snap-title" class="snap-title" value="${esc(ed?.id === note.id ? ed.title : note.title)}" aria-label="${esc(t('snapTitle'))}" maxlength="160"><span class="snap-status">${esc(status)}</span><div class="snap-actions">${page}${link}<button class="snap-delete${armedDelete === note.id ? ' armed' : ''}" data-action="snapDeleteNote" data-id="${esc(note.id)}">${icon('trash')}<span>${esc(t(armedDelete === note.id ? 'snapDeleteConfirm' : 'snapDelete'))}</span></button></div></div>`
+  const status = textEdit
+    ? t('snapTextHint')
+    : shareMessage || (saving ? t('snapSaving') : ed?.failed ? t('snapSaveFailed') : ed?.dirty ? '' : t('snapSaved'))
+  const share = `<button class="${menu?.share ? 'on' : ''}" data-action="snapShare" title="${esc(t('snapShare'))}" aria-haspopup="menu">${icon('share')}<span>${esc(t('snapShare'))}</span></button>`
+  return `<div class="snap-head"><button data-action="snapBack" title="${esc(t('snapBack'))}" aria-label="${esc(t('snapBack'))}">${icon('back')}</button><input id="snap-title" class="snap-title" value="${esc(ed?.id === note.id ? ed.title : note.title)}" placeholder="${esc(t('snapTitlePlaceholder'))}" title="${esc(t('snapRename'))}" aria-label="${esc(t('snapTitle'))}" maxlength="160">${starButton(note, 'snap-head-star')}<span class="snap-status">${esc(status)}</span><div class="snap-actions">${share}${page}${link}<button class="snap-delete${armedDelete === note.id ? ' armed' : ''}" data-action="snapDeleteNote" data-id="${esc(note.id)}">${icon('trash')}<span>${esc(t(armedDelete === note.id ? 'snapDeleteConfirm' : 'snapDelete'))}</span></button></div></div>`
 }
 
 function editorHTML(open) {
   const note = open.note
   const scale = inkScale(note)
-  const tools = `<div class="snap-tools" role="toolbar"><button class="snap-tool${tool === 'pen' ? ' on' : ''}" data-action="snapTool" data-id="pen" title="${esc(t('snapPen'))}" aria-pressed="${tool === 'pen'}">${icon('brush')}</button><button class="snap-tool${tool === 'eraser' ? ' on' : ''}" data-action="snapTool" data-id="eraser" title="${esc(t('snapEraser'))}" aria-pressed="${tool === 'eraser'}">${icon('eraser')}</button><span class="snap-sep"></span>${colors.map((c) => `<button class="snap-color${color === c && tool === 'pen' ? ' on' : ''}" data-action="snapColor" data-id="${c}" title="${esc(t('snapColor'))} ${c}" style="--swatch:${c}"></button>`).join('')}<span class="snap-sep"></span>${sizes.map(([k, w]) => `<button class="snap-size${size === k ? ' on' : ''}" data-action="snapSize" data-id="${k}" title="${esc(t('snapSize' + k.toUpperCase()))}"><span style="--dot:${w + 2}px"></span></button>`).join('')}<span class="snap-sep"></span><button data-action="snapUndo" title="${esc(t('snapUndo'))}" ${ed?.undo.length ? '' : 'disabled'}>${icon('undo')}</button><button data-action="snapRedo" title="${esc(t('snapRedo'))}" ${ed?.redo.length ? '' : 'disabled'}>${icon('redo')}</button><button data-action="snapClear" title="${esc(t('snapClear'))}" ${ed?.layers[ed.active].strokes.length ? '' : 'disabled'}>${icon('trash')}</button><span class="snap-sep"></span><button data-action="snapZoomOut" title="${esc(t('snapZoomOut'))}">${icon('minus')}</button><button class="snap-zoom-level" data-action="snapZoomReset" title="${esc(t('snapActual'))}">${Math.round(currentScale(note) * 100)}%</button><button data-action="snapZoomIn" title="${esc(t('snapZoomIn'))}">${icon('plus')}</button><button class="${zoom === 'fit' ? 'on' : ''}" data-action="snapZoomFit" title="${esc(t('snapFit'))}" aria-pressed="${zoom === 'fit'}">${icon('fit')}</button></div>`
-  return `<div class="page snap-editor"><p class="snap-where">${note.url ? `${esc(t(note.linked ? 'snapLinked' : 'snapUnlinked'))}: <span title="${esc(note.url)}">${esc(note.pageTitle || note.url)}</span>` : esc(t('snapNoPage'))}</p>${tools}<div class="snap-body"><div class="snap-stage ${zoom}" data-tool="${tool}">${adjustFilterSVG()}<div class="snap-sheet${ed && !ed.baseVisible ? ' base-hidden' : ''}" style="--snap-filter:${ed ? filterOf(ed.adjust) : 'none'};width:${zoom === 'fit' ? '100%' : Math.round(note.width * zoom) + 'px'};aspect-ratio:${note.width}/${note.height}"><img class="snap-base" data-keep="${esc(note.id)}" alt="" draggable="false"><canvas class="snap-ink" data-keep="${esc(note.id)}" width="${Math.round(note.width * scale)}" height="${Math.round(note.height * scale)}"></canvas></div></div>${layersHTML()}</div></div>`
+  const tools = `<div class="snap-tools" role="toolbar"><button class="snap-tool${tool === 'pen' ? ' on' : ''}" data-action="snapTool" data-id="pen" title="${esc(t('snapPen'))}" aria-pressed="${tool === 'pen'}">${icon('brush')}</button><button class="snap-tool${tool === 'text' ? ' on' : ''}" data-action="snapTool" data-id="text" title="${esc(t('snapText'))}" aria-pressed="${tool === 'text'}">${icon('type')}</button><button class="snap-tool${tool === 'eraser' ? ' on' : ''}" data-action="snapTool" data-id="eraser" title="${esc(t('snapEraser'))}" aria-pressed="${tool === 'eraser'}">${icon('eraser')}</button><span class="snap-sep"></span>${colors.map((c) => `<button class="snap-color${color === c && tool !== 'eraser' ? ' on' : ''}" data-action="snapColor" data-id="${c}" title="${esc(t('snapColor'))} ${c}" style="--swatch:${c}"></button>`).join('')}<span class="snap-sep"></span>${sizes.map(([k, w]) => `<button class="snap-size${size === k ? ' on' : ''}" data-action="snapSize" data-id="${k}" title="${esc(t('snapSize' + k.toUpperCase()))}"><span style="--dot:${w + 2}px"></span></button>`).join('')}<span class="snap-sep"></span><button data-action="snapUndo" title="${esc(t('snapUndo'))}" ${ed?.undo.length ? '' : 'disabled'}>${icon('undo')}</button><button data-action="snapRedo" title="${esc(t('snapRedo'))}" ${ed?.redo.length ? '' : 'disabled'}>${icon('redo')}</button><button data-action="snapClear" title="${esc(t('snapClear'))}" ${ed?.layers[ed.active].strokes.length ? '' : 'disabled'}>${icon('trash')}</button><span class="snap-sep"></span><button data-action="snapZoomOut" title="${esc(t('snapZoomOut'))}">${icon('minus')}</button><button class="snap-zoom-level" data-action="snapZoomReset" title="${esc(t('snapActual'))}">${Math.round(currentScale(note) * 100)}%</button><button data-action="snapZoomIn" title="${esc(t('snapZoomIn'))}">${icon('plus')}</button><button class="${zoom === 'fit' ? 'on' : ''}" data-action="snapZoomFit" title="${esc(t('snapFit'))}" aria-pressed="${zoom === 'fit'}">${icon('fit')}</button></div>`
+  return `<div class="page snap-editor"><p class="snap-where">${note.url ? `${esc(t(note.linked ? 'snapLinked' : 'snapUnlinked'))}: <span title="${esc(note.url)}">${esc(note.pageTitle || note.url)}</span>` : esc(t('snapNoPage'))}</p>${tools}<div class="snap-body"><div class="snap-stage ${zoom}" data-tool="${tool}">${adjustFilterSVG()}<div class="snap-sheet${ed && !ed.baseVisible ? ' base-hidden' : ''}" style="--snap-filter:${ed ? filterOf(ed.adjust) : 'none'};width:${zoom === 'fit' ? '100%' : Math.round(note.width * zoom) + 'px'};aspect-ratio:${note.width}/${note.height}"><img class="snap-base" data-keep="${esc(note.id)}" alt="" draggable="false"><canvas class="snap-ink" data-keep="${esc(note.id)}" width="${Math.round(note.width * scale)}" height="${Math.round(note.height * scale)}"></canvas>${textBoxHTML(note)}</div></div>${layersHTML()}</div></div>`
 }
 
 // The layer panel: the three drawing layers over the original, top first.
@@ -177,7 +193,7 @@ function layersHTML() {
   const rows = [2, 1, 0]
     .map((i) => {
       const layer = ed.layers[i]
-      return `<div class="snap-layer${ed.active === i ? ' on' : ''}${layer.visible ? '' : ' hidden'}">${eye('snapLayerEye', i, layer.visible)}<button class="snap-layer-name" data-action="snapLayer" data-id="${i}" aria-pressed="${ed.active === i}"><span>${esc(t('snapLayer').replace('{n}', String(i + 1)))}</span><small>${esc(t('snapLines').replace('{n}', String(layer.strokes.length)))}</small></button><button class="snap-layer-clear" data-action="snapLayerClear" data-id="${i}" title="${esc(t('snapLayerClear'))}" ${layer.strokes.length ? '' : 'disabled'}>${icon('trash')}</button></div>`
+      return `<div class="snap-layer${ed.active === i ? ' on' : ''}${layer.visible ? '' : ' hidden'}">${eye('snapLayerEye', i, layer.visible)}<button class="snap-layer-name" data-action="snapLayer" data-id="${i}" aria-pressed="${ed.active === i}"><span>${esc(t('snapLayer').replace('{n}', String(i + 1)))}</span><small>${esc(countOf(layer.strokes))}</small></button><button class="snap-layer-clear" data-action="snapLayerClear" data-id="${i}" title="${esc(t('snapLayerClear'))}" ${layer.strokes.length ? '' : 'disabled'}>${icon('trash')}</button></div>`
     })
     .join('')
   return `<aside class="snap-layers" aria-label="${esc(t('snapLayers'))}"><h3>${esc(t('snapLayers'))}</h3>${rows}<div class="snap-layer base${ed.baseVisible ? '' : ' hidden'}">${eye('snapBaseEye', 'base', ed.baseVisible)}<span class="snap-layer-name"><span>${esc(t('snapOriginal'))}</span><small>${esc(t('snapOriginalHint'))}</small></span>${icon('lock')}</div>${adjustHTML()}</aside>`
@@ -191,11 +207,16 @@ function adjustHTML() {
   const changedAny = ed.adjust.brightness !== 1 || ed.adjust.contrast !== 1 || ed.adjust.shadows !== 0
   return `<div class="snap-adjust"><div class="snap-adjust-head"><span>${esc(t('snapAdjust'))}</span><button data-action="snapAdjustReset" ${changedAny ? '' : 'disabled'}>${esc(t('snapAdjustReset'))}</button></div>${row('brightness', 'snapBrightness', adjustPercent)}${row('contrast', 'snapContrast', adjustPercent)}${row('shadows', 'snapShadows', adjustPercent)}<p class="hint">${esc(t('snapAdjustHint'))}</p></div>`
 }
+const countOf = (strokes) => {
+  const texts = strokes.filter(isText).length
+  const lines = t('snapLines').replace('{n}', String(strokes.length - texts))
+  return texts ? `${lines} · ${t('snapTexts').replace('{n}', String(texts))}` : lines
+}
 const adjustPercent = (v) => Math.round(v * 100) + '%'
 // The shadows filter: a gamma on each colour channel.
 function adjustFilterSVG() {
   const e = ed ? gammaOf(ed.adjust.shadows) : 1
-  return `<svg class="snap-filters" width="0" height="0" aria-hidden="true"><filter id="snap-shadows" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR type="gamma" exponent="${e}"/><feFuncG type="gamma" exponent="${e}"/><feFuncB type="gamma" exponent="${e}"/></feComponentTransfer></filter></svg>`
+  return `<svg class="snap-filter-defs" width="0" height="0" aria-hidden="true"><filter id="snap-shadows" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR type="gamma" exponent="${e}"/><feFuncG type="gamma" exponent="${e}"/><feFuncB type="gamma" exponent="${e}"/></feComponentTransfer></filter></svg>`
 }
 
 // How the original shows: brightness (0.5–3), contrast (0.5–2) and shadows,
@@ -248,6 +269,7 @@ function syncEditor() {
   if (ed && (!open || open.note.id !== ed.id)) {
     if (ed.dirty) void saveNow(ed)
     ed = null
+    textEdit = null
     armedDelete = ''
   }
   if (open && !ed) {
@@ -300,9 +322,11 @@ function paint() {
   const ctx = canvas.getContext('2d'),
     scale = canvas.width / ed.note.width
   ctx.clearRect(0, 0, canvas.width, canvas.height)
-  for (const layer of ed.layers) if (layer.visible) for (const s of layer.strokes) drawStroke(ctx, s, scale)
+  for (const layer of ed.layers)
+    if (layer.visible) for (const s of layer.strokes) if (s !== textEdit?.item) drawStroke(ctx, s, scale)
 }
 function drawStroke(ctx, s, scale) {
+  if (isText(s)) return drawText(ctx, s, scale)
   if (!s.p.length) return
   ctx.save()
   ctx.scale(scale, scale)
@@ -317,9 +341,139 @@ function drawStroke(ctx, s, scale) {
   ctx.stroke()
   ctx.restore()
 }
+// Text: an item of a layer like a line, {c, w: the font size, p: [[x, y]]
+// (its top left), text}, in the image's pixels. It is typed in a box over
+// the page and drawn with an outline, so it reads on any picture.
+const textFont = (px) => `600 ${px}px "Segoe UI","Yu Gothic UI",Meiryo,sans-serif`
+const textLine = 1.25
+const isText = (s) => typeof s.text === 'string'
+const textSize = (note) => ({ s: 20, m: 32, l: 52 })[size] * Math.max(1, note.width / 1000)
+// A dark outline around a light colour, a light one around a dark colour.
+function outlineOf(c) {
+  const n = parseInt(String(c).slice(1), 16) || 0
+  return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) > 140
+    ? 'rgba(0,0,0,.85)'
+    : 'rgba(255,255,255,.9)'
+}
+function drawText(ctx, s, scale) {
+  if (!s.p.length) return
+  ctx.save()
+  ctx.scale(scale, scale)
+  ctx.font = textFont(s.w)
+  ctx.textBaseline = 'top'
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = Math.max(2, s.w / 6)
+  ctx.strokeStyle = outlineOf(s.c)
+  ctx.fillStyle = s.c
+  s.text.split('\n').forEach((line, i) => {
+    const y = s.p[0][1] + i * s.w * textLine
+    ctx.strokeText(line, s.p[0][0], y)
+    ctx.fillText(line, s.p[0][0], y)
+  })
+  ctx.restore()
+}
+let measurer = null
+function textBounds(s) {
+  measurer ||= document.createElement('canvas').getContext('2d')
+  measurer.font = textFont(s.w)
+  const lines = s.text.split('\n')
+  const width = Math.max(s.w / 2, ...lines.map((line) => measurer.measureText(line).width))
+  return { x: s.p[0][0], y: s.p[0][1], w: width, h: lines.length * s.w * textLine }
+}
+const inBounds = (point, b, pad) =>
+  point[0] >= b.x - pad && point[0] <= b.x + b.w + pad && point[1] >= b.y - pad && point[1] <= b.y + b.h + pad
+// The text under a point: the topmost, of the layers shown.
+function textAt(point) {
+  const pad = 4 * Math.max(1, ed.note.width / 1000)
+  for (let layer = layerCount - 1; layer >= 0; layer--) {
+    if (!ed.layers[layer].visible) continue
+    const strokes = ed.layers[layer].strokes
+    for (let i = strokes.length - 1; i >= 0; i--)
+      if (isText(strokes[i]) && inBounds(point, textBounds(strokes[i]), pad)) return { layer, item: strokes[i] }
+  }
+  return null
+}
+
+// The text being typed: a new one (item null) or one being changed. Its box
+// sits over the page at the text's place, sized with the page (cqw), and
+// stays across renders (data-keep); the canvas leaves the text out meanwhile.
+// Clicking outside the box, Esc or Ctrl+Enter finishes it; an emptied text
+// is removed.
+let textEdit = null,
+  textKeys = 0
+function textBoxHTML(note) {
+  const e = textEdit
+  if (!e || !ed || ed.id !== note.id) return ''
+  return `<textarea class="snap-text-input" data-keep="text-${e.key}" spellcheck="false" rows="1" aria-label="${esc(t('snapText'))}" style="left:${(e.x / note.width) * 100}%;top:${(e.y / note.height) * 100}%;--size:${e.w / note.width};color:${esc(e.c)};--outline:${outlineOf(e.c)}">${esc(e.value)}</textarea>`
+}
+function editText(point, found) {
+  if (!ed) return
+  if (found) ed.active = found.layer
+  const item = found?.item || null
+  if (item && colors.includes(item.c)) color = item.c
+  textEdit = {
+    key: ++textKeys,
+    layer: ed.active,
+    item,
+    x: item ? item.p[0][0] : point[0],
+    y: item ? item.p[0][1] : point[1],
+    c: item ? item.c : color,
+    w: item ? item.w : textSize(ed.note),
+    value: item ? item.text : '',
+  }
+  ed.version++
+  render()
+}
+function finishText() {
+  const e = textEdit
+  textEdit = null
+  if (!e || !ed) return
+  const box = document.querySelector('.snap-text-input')
+  const value = (box ? box.value : e.value).replace(/\s+$/, '')
+  const strokes = ed.layers[e.layer].strokes
+  const at = e.item ? strokes.indexOf(e.item) : -1
+  const same = e.item && e.item.text === value && e.item.c === e.c && e.item.w === e.w
+  ed.version++
+  if (same || (!value.trim() && at < 0)) {
+    render()
+    return
+  }
+  remember()
+  ed.layers[e.layer].visible = true
+  // A new item, not the old one changed: the undo keeps the old.
+  const next = { ...(e.item || { p: [[e.x, e.y]] }), c: e.c, w: e.w, text: value }
+  if (at < 0) strokes.push(next)
+  else if (value.trim()) strokes[at] = next
+  else strokes.splice(at, 1)
+  changed()
+}
+// The box after a colour or a size was chosen for its text.
+function restyleTextBox() {
+  const box = document.querySelector('.snap-text-input')
+  if (!box || !textEdit || !ed) return
+  box.style.color = textEdit.c
+  box.style.setProperty('--outline', outlineOf(textEdit.c))
+  box.style.setProperty('--size', String(textEdit.w / ed.note.width))
+  sizeTextBox(box)
+  box.focus()
+}
+function sizeTextBox(box) {
+  if (!textEdit || !ed) return
+  const b = textBounds({ text: box.value || ' ', w: textEdit.w, p: [[0, 0]] })
+  box.style.width = `calc(${(b.w / ed.note.width) * 100}cqw + 0.5em)`
+  box.style.height = `${box.value.split('\n').length * textLine}em`
+}
+
 afterRenderHooks.push(() => {
   syncEditor()
   paint()
+  const box = document.querySelector('.snap-text-input')
+  if (box && textEdit && !box.dataset.focused) {
+    box.dataset.focused = '1'
+    sizeTextBox(box)
+    box.focus()
+    box.setSelectionRange(box.value.length, box.value.length)
+  }
 })
 const repaint = () => {
   if (!ed) return
@@ -396,6 +550,23 @@ function changed() {
   saveTimer = setTimeout(() => void saveNow(mine), 900)
   render()
 }
+// The note as it shows, width wide (height cuts it; the thumbnail is its top).
+function composite(target, width, height) {
+  const s = width / target.note.width
+  const c = document.createElement('canvas')
+  c.width = width
+  c.height = height
+  const ctx = c.getContext('2d')
+  ctx.fillStyle = '#fff'
+  ctx.fillRect(0, 0, width, height)
+  if (target.baseVisible) {
+    ctx.filter = filterOf(target.adjust)
+    ctx.drawImage(target.img, 0, 0, width, target.note.height * s)
+    ctx.filter = 'none'
+  }
+  for (const layer of target.layers) if (layer.visible) for (const st of layer.strokes) drawStroke(ctx, st, s)
+  return c
+}
 async function saveNow(target) {
   if (!target) return
   clearTimeout(saveTimer)
@@ -405,21 +576,8 @@ async function saveNow(target) {
   let thumb = ''
   if (target.img) {
     const w = 360,
-      h = Math.min(Math.round((w * target.note.height) / target.note.width), Math.round((w * 10) / 16)),
-      s = w / target.note.width
-    const c = document.createElement('canvas')
-    c.width = w
-    c.height = h
-    const ctx = c.getContext('2d')
-    ctx.fillStyle = '#fff'
-    ctx.fillRect(0, 0, w, h)
-    if (target.baseVisible) {
-      ctx.filter = filterOf(target.adjust)
-      ctx.drawImage(target.img, 0, 0, w, target.note.height * s)
-      ctx.filter = 'none'
-    }
-    for (const layer of target.layers) if (layer.visible) for (const st of layer.strokes) drawStroke(ctx, st, s)
-    thumb = c.toDataURL('image/jpeg', 0.82)
+      h = Math.min(Math.round((w * target.note.height) / target.note.width), Math.round((w * 10) / 16))
+    thumb = composite(target, w, h).toDataURL('image/jpeg', 0.82)
   }
   // A failed save keeps the note unsaved: it is saved again on the next
   // change, on going back, or on opening another note.
@@ -432,6 +590,57 @@ async function saveNow(target) {
   } finally {
     saving = false
     if (target === ed) render()
+  }
+}
+
+// Sharing: the note as it shows, at full size, copied (for pasting in a
+// chat or a post), saved as a PNG file, or copied for a post on X. X's post
+// page takes no picture from a link, so the picture goes on the clipboard
+// and the page opens in the browser, where Ctrl+V adds it.
+let shareMessage = '',
+  shareTimer = 0
+function shareDone(message, ms = 3000) {
+  shareMessage = message
+  clearTimeout(shareTimer)
+  shareTimer = setTimeout(() => {
+    shareMessage = ''
+    render()
+  }, ms)
+  render()
+}
+function openShareMenu(button) {
+  const r = button.getBoundingClientRect()
+  menu = { share: true }
+  render()
+  const items = [
+    { id: 'share:copy', icon: 'copy', title: t('snapCopyImage'), hint: t('snapCopyImageHint') },
+    { id: 'share:save', icon: 'download', title: t('snapSaveAs'), hint: t('snapSaveAsHint') },
+    { id: 'share:x', icon: 'send', title: t('snapPostX'), hint: t('snapPostXHint') },
+  ]
+  const left = Math.round(Math.max(4, Math.min(r.left, innerWidth - menuWidth - 4)))
+  void request('menuShow', { id: 'snapShare', x: left, y: Math.round(r.bottom + 6), width: menuWidth, items }).catch(
+    () => {
+      menu = null
+      render()
+    },
+  )
+}
+async function share(kind) {
+  finishText()
+  const target = ed
+  if (!target?.img) return
+  try {
+    const image = composite(target, target.note.width, target.note.height).toDataURL('image/png')
+    if (kind === 'save') {
+      const next = await request('snapExport', { image, name: target.title })
+      if (next?.snapExported) shareDone(t('snapExported'))
+      return
+    }
+    await request('snapCopyImage', { image, post: kind === 'x' ? target.title : undefined })
+    if (kind === 'x') shareDone(t('snapPostXReady'), 10000)
+    else shareDone(t('snapCopied'))
+  } catch {
+    shareDone(t('snapShareFailed'))
   }
 }
 
@@ -458,8 +667,10 @@ function remember() {
 function erase(point) {
   const radius = 10 * Math.max(1, ed.note.width / 1000)
   const layer = ed.layers[ed.active]
-  const keep = layer.strokes.filter(
-    (s) => !s.p.some(([x, y]) => Math.hypot(x - point[0], y - point[1]) <= radius + s.w / 2),
+  const keep = layer.strokes.filter((s) =>
+    isText(s)
+      ? !inBounds(point, textBounds(s), radius)
+      : !s.p.some(([x, y]) => Math.hypot(x - point[0], y - point[1]) <= radius + s.w / 2),
   )
   if (keep.length === layer.strokes.length) return false
   if (!drawing.erased) {
@@ -474,8 +685,18 @@ document.addEventListener('pointerdown', (event) => {
   const canvas = event.target.closest?.('.snap-ink')
   if (!canvas || !ed || event.button !== 0) return
   event.preventDefault()
+  if (textEdit) {
+    finishText()
+    return
+  }
   canvas.setPointerCapture(event.pointerId)
   const point = imagePoint(event, canvas)
+  if (tool === 'text') {
+    const found = textAt(point)
+    if (found) drawing = { pointer: event.pointerId, canvas, text: found, start: point, moved: false }
+    else editText(point, null)
+    return
+  }
   if (!ed.layers[ed.active].visible) {
     ed.layers[ed.active].visible = true
     repaint()
@@ -492,6 +713,23 @@ document.addEventListener('pointerdown', (event) => {
 document.addEventListener('pointermove', (event) => {
   if (!drawing || event.pointerId !== drawing.pointer || !ed) return
   const point = imagePoint(event, drawing.canvas)
+  if (drawing.text) {
+    const d = drawing,
+      dx = point[0] - d.start[0],
+      dy = point[1] - d.start[1]
+    if (!d.moved) {
+      if (Math.hypot(dx, dy) < 4 * Math.max(1, ed.note.width / 1000)) return
+      d.moved = true
+      remember()
+      const strokes = ed.layers[d.text.layer].strokes
+      d.origin = d.text.item.p[0]
+      d.item = { ...d.text.item }
+      strokes[strokes.indexOf(d.text.item)] = d.item
+    }
+    d.item.p = [[Math.round((d.origin[0] + dx) * 10) / 10, Math.round((d.origin[1] + dy) * 10) / 10]]
+    repaint()
+    return
+  }
   if (drawing.erase) {
     erase(point)
     return
@@ -509,6 +747,11 @@ const endDraw = (event) => {
   const done = drawing
   drawing = null
   if (!ed) return
+  if (done.text) {
+    if (done.moved) changed()
+    else editText(null, done.text)
+    return
+  }
   if (done.erase) {
     if (done.erased) changed()
     return
@@ -537,6 +780,20 @@ function redo() {
   changed()
 }
 document.addEventListener('keydown', (event) => {
+  if (!event.target.classList?.contains('snap-text-input')) return
+  if (event.key === 'Escape' || (event.key === 'Enter' && event.ctrlKey)) {
+    event.preventDefault()
+    finishText()
+  }
+})
+// Leaving the box finishes the text, but for a colour or a size chosen for it.
+document.addEventListener('focusout', (event) => {
+  if (!textEdit || !event.target.classList?.contains('snap-text-input')) return
+  if (event.relatedTarget?.closest?.('.snap-color,.snap-size')) return
+  textEdit.value = event.target.value
+  finishText()
+})
+document.addEventListener('keydown', (event) => {
   if (
     !ed ||
     state.tabs.find((t) => t.id === state.active)?.kind !== 'snapnotes' ||
@@ -563,6 +820,11 @@ document.addEventListener('keydown', (event) => {
   }
 })
 document.addEventListener('input', (event) => {
+  if (textEdit && event.target.classList?.contains('snap-text-input')) {
+    textEdit.value = event.target.value
+    sizeTextBox(event.target)
+    return
+  }
   if (event.target.id === 'snap-title' && ed) {
     ed.title = event.target.value
     changed()
@@ -645,19 +907,28 @@ clickHandlers.push(async (type, id, button) => {
     return true
   }
   if (type === 'snapTool') {
-    tool = id === 'eraser' ? 'eraser' : 'pen'
+    finishText()
+    tool = id === 'eraser' || id === 'text' ? id : 'pen'
     render()
     return true
   }
   if (type === 'snapColor') {
     color = colors.includes(id) ? id : colors[0]
-    tool = 'pen'
+    if (tool === 'eraser') tool = 'pen'
+    if (textEdit) {
+      textEdit.c = color
+      restyleTextBox()
+    }
     render()
     return true
   }
   if (type === 'snapSize') {
     size = sizes.some(([k]) => k === id) ? id : 'm'
-    tool = 'pen'
+    if (tool === 'eraser') tool = 'pen'
+    if (textEdit && ed) {
+      textEdit.w = textSize(ed.note)
+      restyleTextBox()
+    }
     render()
     return true
   }
@@ -734,6 +1005,16 @@ clickHandlers.push(async (type, id, button) => {
   if (type === 'snapZoomFit') {
     zoom = 'fit'
     render()
+    return true
+  }
+  if (type === 'snapFavorite') {
+    const note =
+      state.snapNotes?.open?.note.id === id ? state.snapNotes.open.note : state.snapNotes?.list.find((n) => n.id === id)
+    if (note) void action('snapFavorite', { id, favorite: !note.favorite })
+    return true
+  }
+  if (type === 'snapShare') {
+    if (!menu) openShareMenu(button)
     return true
   }
   if (type === 'snapBack') {

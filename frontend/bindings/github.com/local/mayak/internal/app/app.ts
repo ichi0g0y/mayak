@@ -439,6 +439,14 @@ export function SnapNoteCapture(viewID: string, pageURL: string, pageTitle: stri
 }
 
 /**
+ * SnapNoteCopyImage puts a note's picture (a PNG data URL: the image with
+ * its drawing, as the shell shows it) on the clipboard.
+ */
+export function SnapNoteCopyImage(pngDataURL: string): $CancellablePromise<void> {
+    return $Call.ByID(2394800284, pngDataURL);
+}
+
+/**
  * SnapNoteCreate starts a note on its own (not linked to a page) from an
  * image data URL: a pasted picture, an image file or a blank sheet.
  */
@@ -453,6 +461,24 @@ export function SnapNoteCreate(imageDataURL: string, title: string): $Cancellabl
  */
 export function SnapNoteDelete(id: string): $CancellablePromise<void> {
     return $Call.ByID(2432754661, id);
+}
+
+/**
+ * SnapNoteExport saves a note's picture (a PNG data URL) where the user
+ * chooses, under name. It returns the path, or "" when the dialog was
+ * cancelled.
+ */
+export function SnapNoteExport(pngDataURL: string, name: string): $CancellablePromise<string> {
+    return $Call.ByID(527011928, pngDataURL, name);
+}
+
+/**
+ * SnapNoteFavorite stars a note, or takes its star off.
+ */
+export function SnapNoteFavorite(id: string, favorite: boolean): $CancellablePromise<snapnote$0.Note> {
+    return $Call.ByID(3862972790, id, favorite).then(($result: any) => {
+        return $$createType18($result);
+    });
 }
 
 /**
