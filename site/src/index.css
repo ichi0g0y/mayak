@@ -172,3 +172,6 @@
 .changelog-nightly[open] > summary { margin-bottom: 0.5rem; }
 .changelog-nightly > summary { flex-wrap: wrap; }
 .changelog-nightly > summary small { flex-basis: 100%; margin-left: 1.1rem; font-size: 0.85rem; opacity: 0.7; }
+/* The kinds of change within a version: New, Improved, Fixed. */
+.changelog h3 { margin-top: 1.25rem; font-size: 0.95rem; font-weight: 700; color: var(--primary); }
+.changelog h3 + ul { margin-top: 0.4rem; }

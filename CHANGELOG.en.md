@@ -2,44 +2,39 @@
 
 What changed in each version of MAYAK, from the user's side. The Japanese version is [CHANGELOG.md](CHANGELOG.md); the published page is https://mayak.ich.sh/changelog, which the app's update notice opens for "What changed".
 
-Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Changes not released yet collect under `## Nightly` and get a version heading at release time.
+Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
 ## Nightly
 
 Changes in the nightly build, not released yet; they come with the next version.
 
-- TarkovTracker's "Recheck past logs" is not available while EFT is running: a sync then could overwrite a task state changed during play with an older one. The sync that follows a key assignment also waits until EFT closes. A profile whose past logs were never rechecked shows the button in red, with a note under its row.
-
-- The snap note editor has viewing adjustments: brightness, contrast and lift shadows sliders make dark screenshots easier to look into. The original image stays as it is.
-
-- The screenshot viewer has "Make a snap note": it turns a game screenshot into a standalone snap note, opened for drawing.
-
-- Snap notes draw on layers: three layers over the original image, which is never edited; the original and each layer can be hidden.
-
-- Story chapters with a large picture (They Are Already Here, Accidental Witness and the like) are recognized as task screens again, and the picture beside a chapter's name is no longer read as letters.
-
-- Snap notes: the menu shows over the page (the page no longer disappears), the editor fills the page area and zooms with Ctrl+wheel or its toolbar, and captures of translated pages leave out Google Translate's bar.
-- The toolbar's icons on the right (translate, snap notes, wiki search, open in the default browser) can be reordered by dragging; the order is kept across restarts.
+### New
 
 - Snap notes: the brush button in the built-in browser's toolbar captures what is on screen or the whole page, to draw on with a pen. A note taken from a page stays linked to it: the page's button counts its notes and its menu opens them. Notes can be unlinked, or started from a blank sheet, an image file or an image on the clipboard. "Snap notes" in the sidebar opens the list.
-
-- Lighter: the catalog check every five minutes no longer rebuilds the task list and the hideout when they did not change (new flea prices update the items only).
-
+- Snap notes draw on layers: three layers over the original image, which is never edited; the original and each layer can be hidden.
+- The snap note editor has viewing adjustments: brightness, contrast and lift shadows sliders make dark screenshots easier to look into. The original image stays as it is.
+- The screenshot viewer has "Make a snap note": it turns a game screenshot into a standalone snap note, opened for drawing.
+- The built-in browser has a translate button (toolbar, web tabs). WebView2 has no page translation of its own, so the page is reopened through Google Translate (translate.goog); pressing again returns to the page itself. Settings → Tasks → "Open the official wiki (English) translated" opens task pages on the official wiki translated from the start.
+- The toolbar's icons on the right (translate, snap notes, wiki search, open in the default browser) can be reordered by dragging; the order is kept across restarts.
 - Nightly builds are now published. Set "Update channel" under Settings → About MAYAK to Nightly to update to the version in development, built every day. On nightly, a newer stable release is installed instead.
-
 - Assigning a TarkovTracker key to a profile now syncs that profile's past logs by itself, with the count shown in a toast. Before, only progress made after the assignment was sent, and earlier progress needed a manual sync.
 
+### Improved
+
+- Snap notes: the menu shows over the page (the page no longer disappears), the editor fills the page area and zooms with Ctrl+wheel or its toolbar, and captures of translated pages leave out Google Translate's bar.
 - TarkovTracker's past-log sync now lives on each profile's row. Every profile with a key has "Recheck past logs", which reads that profile's logs from its first session and sends them. The shared panel at the bottom and its wipe/version choice are gone (a profile is one wipe). By default it used to send only what followed the latest game version.
-
-- The first story task recognized after a start (Batya and the like) no longer fails once and matches only when the same screen is captured again. Story chapters come from the list read from the official wiki, and the first recognition matched without waiting for it. The list is now read at start, and the first match waits for it (up to 10 seconds).
-
-- The tutorial's "open the map" step now opens the map tab.
-
-- Internal: the pixel access and brightness code the detectors and the OCR preprocessing each had of their own lives in `internal/imaging`, reading pixels straight from the byte buffer. Results are unchanged; a screenshot is analysed faster.
+- TarkovTracker's "Recheck past logs" is not available while EFT is running: a sync then could overwrite a task state changed during play with an older one. The sync that follows a key assignment also waits until EFT closes. A profile whose past logs were never rechecked shows the button in red, with a note under its row.
+- Pressing the sidebar's monitoring dot with no Screenshots folder set opens Settings → Folders instead of starting the watch, so a failed folder detection leads straight to where the folder is chosen.
 - The CPU-heavy first seconds after a start are fixed. Replaying the hideout logs at start-up rewrote the whole history file and sent the whole status to the window once per event, hundreds of times. Writes are now coalesced half a second later, the window gets one status every 0.3 s during a replay, and duplicates are told by a set instead of a scan.
 - Screenshot thumbnails are kept on disk too (`Mayak\thumbs`). They were made again at every start, which kept the CPU busy for seconds right after it.
-- The built-in browser has a translate button (toolbar, web tabs). WebView2 has no page translation of its own, so the page is reopened through Google Translate (translate.goog); pressing again returns to the page itself. Settings → Tasks → "Open the official wiki (English) translated" opens task pages on the official wiki translated from the start.
-- Pressing the sidebar's monitoring dot with no Screenshots folder set opens Settings → Folders instead of starting the watch, so a failed folder detection leads straight to where the folder is chosen.
+- Lighter: the catalog check every five minutes no longer rebuilds the task list and the hideout when they did not change (new flea prices update the items only).
+- Internal: the pixel access and brightness code the detectors and the OCR preprocessing each had of their own lives in `internal/imaging`, reading pixels straight from the byte buffer. Results are unchanged; a screenshot is analysed faster.
+
+### Fixed
+
+- Story chapters with a large picture (They Are Already Here, Accidental Witness and the like) are recognized as task screens again, and the picture beside a chapter's name is no longer read as letters.
+- The first story task recognized after a start (Batya and the like) no longer fails once and matches only when the same screen is captured again. Story chapters come from the list read from the official wiki, and the first recognition matched without waiting for it. The list is now read at start, and the first match waits for it (up to 10 seconds).
+- The tutorial's "open the map" step now opens the map tab.
 
 ## v0.1.17 (2026-09-26)
 

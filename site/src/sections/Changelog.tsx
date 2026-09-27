@@ -16,6 +16,9 @@ marked.use({
     heading({ tokens, depth }) {
       const text = this.parser.parseInline(tokens)
       const first = tokens.map((token) => token.raw).join('').trim().split(/\s+/)[0] ?? ''
+      // Sections (## v0.1.17, ## nightly) get an id; the kinds of change
+      // under them (### New, ### Improved, ### Fixed) do not.
+      if (depth !== 2) return `<h${depth}>${text}</h${depth}>\n`
       const id = /^v\d/.test(first) ? first : first.toLowerCase() === 'nightly' ? 'nightly' : 'unreleased'
       return `<h${depth} id="${id}">${text}</h${depth}>\n`
     },
