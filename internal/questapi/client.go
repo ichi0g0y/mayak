@@ -73,7 +73,7 @@ type Client struct {
 
 	wiki       bool
 	wikiMu     sync.Mutex
-	wikiTitles []string
+	wikiTitles []wikiQuest
 	// wikiNext is when the wiki's list is due again; wikiFetching while it is fetched.
 	wikiNext     time.Time
 	wikiFetching bool

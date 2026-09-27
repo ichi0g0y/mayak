@@ -9,6 +9,7 @@ import {
   sidebarWidths,
   isTranslated,
   originalURL,
+  siteOfURL,
   webURL,
   resolveAddress,
   shortcut,
@@ -769,7 +770,9 @@ function translateButton(tab) {
 }
 function sitesForURL(tab) {
   const url = originalURL(tab.url) || tab.url
-  return Object.keys(tab.task?.urls || {}).find((key) => tab.task.urls[key] === url) || 'tarkov-dev'
+  return (
+    Object.keys(tab.task?.urls || {}).find((key) => tab.task.urls[key] === url) || siteOfURL(tab.url) || 'tarkov-dev'
+  )
 }
 document.addEventListener('click', async (event) => {
   const button = event.target.closest('[data-action]')

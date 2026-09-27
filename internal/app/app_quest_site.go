@@ -36,7 +36,12 @@ func questPageURL(site, name, trader, tarkovURL string) string {
 		if trader != "" {
 			return "https://wikiwiki.jp/eft/" + url.PathEscape(trader) + "/" + url.PathEscape(name)
 		}
-		return "https://wikiwiki.jp/eft/?cmd=search&word=" + url.QueryEscape(name)
+		// A task without a trader is a story chapter ("Batya", "Tour"): the
+		// wiki has them under ストーリータスク.
+		if name != "" {
+			return "https://wikiwiki.jp/eft/" + url.PathEscape("ストーリータスク") + "/" + url.PathEscape(name)
+		}
+		return "https://wikiwiki.jp/eft/" + url.PathEscape("タスク")
 	default:
 		if tarkovURL != "" {
 			return tarkovURL

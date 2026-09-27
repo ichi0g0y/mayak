@@ -160,6 +160,21 @@ function originalURL(value) {
   for (const key of [...u.searchParams.keys()]) if (key.startsWith('_x_tr_')) u.searchParams.delete(key)
   return u.href
 }
+// The task site a page is on, by its host (translated pages by the
+// original): the page a task opened may have moved on (a redirect, a link
+// followed) and still be on that site. null for another site.
+function siteOfURL(value) {
+  let host = ''
+  try {
+    host = new URL(originalURL(value) || '').hostname
+  } catch {
+    return null
+  }
+  if (host === 'tarkov.dev' || host.endsWith('.tarkov.dev')) return 'tarkov-dev'
+  if (host === 'escapefromtarkov.fandom.com') return 'official-wiki'
+  if (host === 'wikiwiki.jp') return 'japanese-wiki'
+  return null
+}
 const isTranslated = (value) => {
   try {
     return new URL(value).hostname.endsWith(translateSuffix)
@@ -618,6 +633,7 @@ export {
   sites,
   translatedURL,
   originalURL,
+  siteOfURL,
   isTranslated,
   resolveAddress,
   searchURL,

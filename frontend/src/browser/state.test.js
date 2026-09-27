@@ -25,6 +25,7 @@ import {
   receivePosition,
   translatedURL,
   originalURL,
+  siteOfURL,
   isTranslated,
 } from './state.js'
 import { encode, decode, iceServers } from './peer-code.js'
@@ -597,4 +598,16 @@ test('dragging the shown icons keeps the hidden ones in place', () => {
     'wikiSearch',
     'translate',
   ])
+})
+
+test('the task site of a page is its host, translated or moved on', () => {
+  assert.equal(siteOfURL('https://wikiwiki.jp/eft/::cmd/search?word=Batya'), 'japanese-wiki')
+  assert.equal(
+    siteOfURL('https://wikiwiki.jp/eft/Mechanic/To%20the%20Light%20-%20Clip%20Their%20Wings'),
+    'japanese-wiki',
+  )
+  assert.equal(siteOfURL(translatedURL('https://escapefromtarkov.fandom.com/wiki/Debut', 'ja')), 'official-wiki')
+  assert.equal(siteOfURL('https://tarkov.dev/task/debut'), 'tarkov-dev')
+  assert.equal(siteOfURL('https://example.com/'), null)
+  assert.equal(siteOfURL(''), null)
 })

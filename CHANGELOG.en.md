@@ -9,6 +9,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - The snap note list's filter (All / Page notes / Standalone notes) did not show.
 - Requests to web services always gave the app's version as 0.1.0.
 - A snap note made from a game screenshot with a position keeps where it was taken (map, position, direction). "Show on tarkov.dev" in the editor shows that position and direction on the map tab (and the maps connected by Remote Control); a screenshot whose map is not known lets you choose it. A post to X carries the place and a link to the tarkov.dev map (a tarkov.dev link cannot hold a position, so the position and direction go as text).
+- A task not yet in tarkov.dev (the To the Light series and others) or a story chapter opened on the Japanese wiki as a search, not its page. New tasks now take their trader from the official wiki, and story chapters open under ストーリータスク. The task site dropdown no longer shows tarkov.dev after the Japanese wiki is chosen.
 
 ## Nightly
 

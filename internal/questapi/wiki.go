@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -65,10 +66,17 @@ func (c *Client) startWikiLocked() {
 	}
 }
 
-// wikiQuestTitles returns the titles of the wiki's recent task pages at
-// hand, at once. A missing or stale list is fetched in the background; when
-// it changes, the task lists are built again with it.
-func (c *Client) wikiQuestTitles() []string {
+// wikiQuest is a task the wiki lists: its page's title and the trader who
+// gives it ("" for a story chapter, or when the page does not say).
+type wikiQuest struct {
+	Title  string
+	Trader string
+}
+
+// wikiQuestTitles returns the wiki's recent tasks at hand, at once. A
+// missing or stale list is fetched in the background; when it changes, the
+// task lists are built again with it.
+func (c *Client) wikiQuestTitles() []wikiQuest {
 	if !c.wiki {
 		return nil
 	}
@@ -131,7 +139,7 @@ func (c *Client) refreshWiki(done chan struct{}) {
 	}
 }
 
-func (c *Client) fetchWikiQuestTitles(ctx context.Context) ([]string, error) {
+func (c *Client) fetchWikiQuestTitles(ctx context.Context) ([]wikiQuest, error) {
 	quests, err := c.wikiCategory(ctx, "Quests")
 	if err != nil {
 		return nil, err
@@ -147,11 +155,18 @@ func (c *Client) fetchWikiQuestTitles(ctx context.Context) ([]string, error) {
 			past[member.title] = true
 		}
 	}
-	var titles []string
+	var titles []wikiQuest
+	var recent []string
 	for _, member := range quests {
 		if !past[member.title] && time.Since(member.added) < wikiRecent {
-			titles = append(titles, member.title)
+			recent = append(recent, member.title)
 		}
+	}
+	// Who gives each (the page's "given by"): the Japanese wiki files a task
+	// under its trader. Without it (the pages not read) the tasks still match.
+	givers := c.wikiGivers(ctx, recent)
+	for _, title := range recent {
+		titles = append(titles, wikiQuest{Title: title, Trader: givers[title]})
 	}
 	// The story chapters (the Story tab of the Tasks screen: "Tour", "The
 	// Ticket"…) are tasks tarkov.dev's catalog does not carry; the wiki
@@ -162,11 +177,61 @@ func (c *Client) fetchWikiQuestTitles(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 	for _, member := range chapters {
-		if !past[member.title] && !slices.Contains(titles, member.title) {
-			titles = append(titles, member.title)
+		if !past[member.title] && !slices.ContainsFunc(titles, func(q wikiQuest) bool { return q.Title == member.title }) {
+			titles = append(titles, wikiQuest{Title: member.title})
 		}
 	}
 	return titles, nil
+}
+
+// givenBy is the trader in a task page's infobox: "|given by =[[Mechanic]]".
+var givenBy = regexp.MustCompile(`(?i)\|\s*given by\s*=\s*\[\[([^\]|]+)`)
+
+// wikiGivers reads who gives each task from the pages, 50 pages a request.
+// A page that fails to come is left out.
+func (c *Client) wikiGivers(ctx context.Context, titles []string) map[string]string {
+	out := map[string]string{}
+	for start := 0; start < len(titles); start += 50 {
+		batch := titles[start:min(start+50, len(titles))]
+		query := url.Values{"action": {"query"}, "prop": {"revisions"}, "rvprop": {"content"}, "rvslots": {"main"}, "titles": {strings.Join(batch, "|")}, "format": {"json"}, "formatversion": {"2"}}
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, wikiAPI+"?"+query.Encode(), nil)
+		if err != nil {
+			return out
+		}
+		req.Header.Set("User-Agent", version.UserAgent())
+		response, err := c.http.Do(req)
+		if err != nil {
+			return out
+		}
+		var body struct {
+			Query struct {
+				Pages []struct {
+					Title     string `json:"title"`
+					Revisions []struct {
+						Slots struct {
+							Main struct {
+								Content string `json:"content"`
+							} `json:"main"`
+						} `json:"slots"`
+					} `json:"revisions"`
+				} `json:"pages"`
+			} `json:"query"`
+		}
+		ok := response.StatusCode == http.StatusOK && json.NewDecoder(response.Body).Decode(&body) == nil
+		response.Body.Close()
+		if !ok {
+			return out
+		}
+		for _, page := range body.Query.Pages {
+			if len(page.Revisions) == 0 {
+				continue
+			}
+			if m := givenBy.FindStringSubmatch(page.Revisions[0].Slots.Main.Content); m != nil {
+				out[page.Title] = strings.TrimSpace(m[1])
+			}
+		}
+	}
+	return out
 }
 
 type wikiMember struct {
@@ -224,13 +289,13 @@ func (c *Client) wikiCategory(ctx context.Context, category string) ([]wikiMembe
 }
 
 // appendWiki adds the wiki's tasks that quests does not have by name.
-func appendWiki(quests []Quest, titles []string) []Quest {
+func appendWiki(quests []Quest, titles []wikiQuest) []Quest {
 	known := make(map[string]bool, len(quests))
 	for _, quest := range quests {
 		known[questmatch.Normalize(quest.Name)] = true
 	}
-	for _, title := range titles {
-		title = strings.TrimSpace(title)
+	for _, wq := range titles {
+		title := strings.TrimSpace(wq.Title)
 		key := questmatch.Normalize(title)
 		// "Quests" is the category's own overview page.
 		if key == "" || known[key] || strings.EqualFold(title, "Quests") {
@@ -238,7 +303,7 @@ func appendWiki(quests []Quest, titles []string) []Quest {
 		}
 		known[key] = true
 		quests = append(quests, Quest{
-			Quest:    questmatch.Quest{ID: "wiki:" + title, Name: title},
+			Quest:    questmatch.Quest{ID: "wiki:" + title, Name: title, Trader: wq.Trader},
 			WikiLink: wikiPage + url.PathEscape(strings.ReplaceAll(title, " ", "_")),
 		})
 	}
