@@ -161,3 +161,14 @@
 .changelog li::marker { color: var(--primary); }
 .changelog code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.9em; padding: 0.05em 0.35em; border-radius: 0.3rem; background: var(--muted); }
 .changelog a { text-decoration: underline; text-underline-offset: 4px; }
+
+/* The nightly section, folded: its heading is the summary, with a chevron. */
+.changelog-nightly { margin-bottom: 2.5rem; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 0.75rem; }
+.changelog-nightly > summary { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; list-style: none; }
+.changelog-nightly > summary::-webkit-details-marker { display: none; }
+.changelog-nightly > summary::before { content: '▸'; color: var(--primary); transition: transform 0.15s; }
+.changelog-nightly[open] > summary::before { transform: rotate(90deg); }
+.changelog-nightly > summary h2 { margin: 0; }
+.changelog-nightly[open] > summary { margin-bottom: 0.5rem; }
+.changelog-nightly > summary { flex-wrap: wrap; }
+.changelog-nightly > summary small { flex-basis: 100%; margin-left: 1.1rem; font-size: 0.85rem; opacity: 0.7; }
