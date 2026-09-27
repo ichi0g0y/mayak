@@ -2,6 +2,10 @@ package browserview
 
 import "math"
 
+// MaxCaptureHeight caps a whole-page capture (CSS pixels): a very long page
+// is cut there rather than making an image too large to draw on.
+const MaxCaptureHeight = 15000
+
 // The largest image a whole-page capture makes, in device pixels: within
 // what a snap note stores (internal/snapnote) and a canvas draws.
 const (

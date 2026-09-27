@@ -12,10 +12,6 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-// MaxCaptureHeight caps a whole-page capture (CSS pixels): a very long page
-// is cut there rather than making an image too large to draw on.
-const MaxCaptureHeight = 15000
-
 const captureTimeout = 30 * time.Second
 
 // evaluate is the parameters of Runtime.evaluate for a script.
