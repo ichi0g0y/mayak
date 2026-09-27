@@ -16,19 +16,19 @@ marked.use({
     heading({ tokens, depth }) {
       const text = this.parser.parseInline(tokens)
       const first = tokens.map((token) => token.raw).join('').trim().split(/\s+/)[0] ?? ''
-      const id = /^v\d/.test(first) ? first : 'unreleased'
+      const id = /^v\d/.test(first) ? first : first.toLowerCase() === 'nightly' ? 'nightly' : 'unreleased'
       return `<h${depth} id="${id}">${text}</h${depth}>\n`
     },
   },
 })
 
 /**
- * The released versions only: everything from the first version heading on
- * (## v0.1.17 …). The nightly section above them is left out: the nightly
- * build is taken from the app's update channel, not from this page.
+ * The entries: everything from the first section heading on — the nightly
+ * section (changes not released yet, with the note under its heading) and
+ * then the released versions (## v0.1.17 …).
  */
 function entries(markdown: string): string {
-  const start = markdown.search(/\n## v\d/)
+  const start = markdown.indexOf('\n## ')
   return start < 0 ? markdown : markdown.slice(start + 1)
 }
 
