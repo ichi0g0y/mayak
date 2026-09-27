@@ -15,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/local/mayak/internal/version"
 )
 
 const baseURL = "https://json.tarkov.dev/"
@@ -225,7 +227,7 @@ func (c *Client) get(ctx context.Context, path, etag string) ([]byte, string, er
 	if err != nil {
 		return nil, "", err
 	}
-	req.Header.Set("User-Agent", "MAYAK/0.1.0")
+	req.Header.Set("User-Agent", version.UserAgent())
 	if etag != "" {
 		req.Header.Set("If-None-Match", etag)
 	}

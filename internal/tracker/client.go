@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/local/mayak/internal/version"
 )
 
 const defaultBaseURL = "https://api.tarkovtracker.org"
@@ -137,7 +139,7 @@ func (c *Client) do(ctx context.Context, method, path, token string, body any, t
 		}
 		request.Header.Set("Authorization", "Bearer "+token)
 		request.Header.Set("Accept", "application/json")
-		request.Header.Set("User-Agent", "MAYAK/0.1.0")
+		request.Header.Set("User-Agent", version.UserAgent())
 		if body != nil {
 			request.Header.Set("Content-Type", "application/json")
 		}

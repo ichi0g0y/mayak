@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/local/mayak/internal/version"
 )
 
 const graphqlURL = "https://api.tarkov.dev/graphql"
@@ -56,7 +58,7 @@ func (c *liveClient) prices(ctx context.Context, mode, id string) (livePrices, e
 		return livePrices{}, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "MAYAK/0.1.0")
+	req.Header.Set("User-Agent", version.UserAgent())
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return livePrices{}, err

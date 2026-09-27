@@ -1,17 +1,17 @@
 package itemapi
 
 import (
-	"strings"
-
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/local/mayak/internal/locale"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/local/mayak/internal/itemmatch"
+	"github.com/local/mayak/internal/locale"
+	"github.com/local/mayak/internal/version"
 )
 
 const baseURL = "https://json.tarkov.dev/"
@@ -144,7 +144,7 @@ func (c *Client) get(ctx context.Context, mode, path string, target any) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Set("User-Agent", "MAYAK/0.1.0")
+	req.Header.Set("User-Agent", version.UserAgent())
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return err

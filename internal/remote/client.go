@@ -11,11 +11,13 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/local/mayak/internal/model"
+	"github.com/local/mayak/internal/version"
 )
 
 const endpoint = "wss://socket.tarkov.dev"
 
-const userAgent = "MAYAK/0.1.0"
+// userAgent is the User-Agent the remote client sends.
+func userAgent() string { return version.UserAgent() }
 
 type Client struct {
 	remoteID string
@@ -58,7 +60,7 @@ func (c *Client) connectLocked(ctx context.Context) error {
 	q.Set("sessionid", c.remoteID+"-esc")
 	u.RawQuery = q.Encode()
 	d := websocket.Dialer{HandshakeTimeout: 10 * time.Second}
-	h := http.Header{"User-Agent": []string{userAgent}}
+	h := http.Header{"User-Agent": []string{userAgent()}}
 	conn, _, err := d.DialContext(ctx, u.String(), h)
 	if err != nil {
 		return err

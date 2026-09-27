@@ -10,6 +10,8 @@ import (
 	"regexp"
 	"sort"
 	"time"
+
+	"github.com/local/mayak/internal/version"
 )
 
 const historyURL = "https://json.tarkov.dev/"
@@ -50,7 +52,7 @@ func (s *Service) History(ctx context.Context, mode, id string) ([]PricePoint, e
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "MAYAK/0.1.0")
+	req.Header.Set("User-Agent", version.UserAgent())
 	resp, err := s.live.http.Do(req)
 	if err != nil {
 		if ok {

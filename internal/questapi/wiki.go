@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/local/mayak/internal/questmatch"
+	"github.com/local/mayak/internal/version"
 )
 
 // The official wiki lists new tasks before tarkov.dev's catalog has them.
@@ -187,7 +188,7 @@ func (c *Client) wikiCategory(ctx context.Context, category string) ([]wikiMembe
 		if err != nil {
 			return nil, err
 		}
-		req.Header.Set("User-Agent", "MAYAK/0.1.0")
+		req.Header.Set("User-Agent", version.UserAgent())
 		response, err := c.http.Do(req)
 		if err != nil {
 			return nil, err

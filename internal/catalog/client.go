@@ -8,8 +8,6 @@ import (
 	"hash/crc32"
 	"strings"
 
-	"github.com/local/mayak/internal/appdir"
-	"github.com/local/mayak/internal/locale"
 	"io"
 	"net/http"
 	"os"
@@ -17,6 +15,10 @@ import (
 	"slices"
 	"sync"
 	"time"
+
+	"github.com/local/mayak/internal/appdir"
+	"github.com/local/mayak/internal/locale"
+	"github.com/local/mayak/internal/version"
 )
 
 // RefreshInterval is how often the catalog is checked for changes. tarkov.dev
@@ -244,7 +246,7 @@ func (c *Client) fetch(ctx context.Context, mode, name, etag string) (data json.
 	if err != nil {
 		return nil, "", false, err
 	}
-	req.Header.Set("User-Agent", "MAYAK/0.1.0")
+	req.Header.Set("User-Agent", version.UserAgent())
 	if etag != "" {
 		req.Header.Set("If-None-Match", etag)
 	}

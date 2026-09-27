@@ -38,7 +38,7 @@ func Watch(done <-chan struct{}, id string, onCommand func(key string)) {
 	wait := 5 * time.Second
 	for {
 		d := websocket.Dialer{HandshakeTimeout: 10 * time.Second}
-		conn, _, err := d.Dial(u.String(), http.Header{"User-Agent": []string{userAgent}})
+		conn, _, err := d.Dial(u.String(), http.Header{"User-Agent": []string{userAgent()}})
 		if err == nil {
 			wait = 5 * time.Second
 			closed := make(chan struct{})
