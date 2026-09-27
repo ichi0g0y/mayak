@@ -375,7 +375,8 @@ clickHandlers.push(async(type,id,button)=>{
  if(type==='snapLinkToggle'){if(ed)void action('snapLink',{id:ed.id,linked:!ed.note.linked});return true;}
  if(type==='snapDeleteNote'){
   if(armedDelete!==id){armedDelete=id;render();setTimeout(()=>{if(armedDelete===id){armedDelete='';render();}},4000);return true;}
-  armedDelete='';if(ed?.id===id)ed.dirty=false;void action('snapDelete',id);return true;
+  // A save still waiting for this note would find it gone.
+  armedDelete='';if(ed?.id===id){ed.dirty=false;clearTimeout(saveTimer);}void action('snapDelete',id);return true;
  }
  return false;
 });
