@@ -22,9 +22,13 @@ marked.use({
   },
 })
 
-/** The entries only: everything from the first version heading on. */
+/**
+ * The released versions only: everything from the first version heading on
+ * (## v0.1.17 …). The nightly section above them is left out: the nightly
+ * build is taken from the app's update channel, not from this page.
+ */
 function entries(markdown: string): string {
-  const start = markdown.indexOf('\n## ')
+  const start = markdown.search(/\n## v\d/)
   return start < 0 ? markdown : markdown.slice(start + 1)
 }
 
