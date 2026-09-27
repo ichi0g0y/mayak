@@ -650,7 +650,14 @@ function render() {
   const focusId = focused?.id
   const focusKey = focused?.dataset?.key
   const focusName = focused?.name
-  const draft = ['INPUT', 'TEXTAREA'].includes(focused?.tagName) && !focused.readOnly ? focused.value : undefined
+  // What is typed in a field is kept across a render; the address bar only
+  // while the shell has the keyboard (in a page, the tab's address shows).
+  const draft =
+    ['INPUT', 'TEXTAREA'].includes(focused?.tagName) &&
+    !focused.readOnly &&
+    !(focusId === 'address' && !document.hasFocus())
+      ? focused.value
+      : undefined
   const start = focused?.selectionStart
   const hostFrame = document.querySelector('#host-settings')
   applyTheme()
@@ -929,8 +936,12 @@ document.addEventListener('submit', (event) => {
   // A URL opens; anything else is searched (resolveAddress). Enter then
   // hands the keyboard to the page, as in Chrome.
   if (event.target.id === 'address-form') {
-    const url = resolveAddress(document.querySelector('#address').value)
+    const input = /** @type {HTMLInputElement} */ (document.querySelector('#address'))
+    const url = resolveAddress(input.value)
     if (!url) return
+    // The keyboard goes to the page: the address bar lets go too, or a render
+    // would put the words typed back over the pages the tab goes to.
+    input.blur()
     void action('navigate', url).then(() => action('focus', 'page'))
   }
   if (event.target.id === 'bookmark-form') {
