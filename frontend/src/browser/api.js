@@ -86,7 +86,7 @@ const shots = { list: [], thumbs: {}, full: {}, viewing: '' }
 // Snap notes (internal/snapnote, app_snapnote.go): the list (latest changed
 // first), their thumbnails by ID, the note open for drawing (its image as a
 // data URL and its strokes), the list's filter and a capture under way.
-const snaps = { list: [], thumbs: {}, open: null, filter: 'all', busy: false }
+const snaps = { list: [], thumbs: {}, open: null, filter: 'all', busy: false, fonts: null }
 const snapThumbKeys = {}
 const snapsAvailable = () => platform === 'windows'
 const thumbQueue = []
@@ -118,7 +118,14 @@ function loadFavicon(url, refresh = false) {
 const snapshot = () => ({
   ...state,
   snapNotes: snapsAvailable()
-    ? { list: snaps.list, thumbs: snaps.thumbs, open: snaps.open, filter: snaps.filter, busy: snaps.busy }
+    ? {
+        list: snaps.list,
+        thumbs: snaps.thumbs,
+        open: snaps.open,
+        filter: snaps.filter,
+        busy: snaps.busy,
+        fonts: snaps.fonts,
+      }
     : null,
   update: updateStatus,
   updateChannel: hostUpdateChannel,
@@ -1161,6 +1168,10 @@ async function perform(type, data) {
       const path = await go.SnapNoteExport(String(data?.image || ''), String(data?.name || ''))
       return { ...snapshot(), snapExported: path }
     }
+    // The fonts installed, for the text of snap notes: asked once.
+    case 'snapFonts':
+      if (!snaps.fonts) snaps.fonts = (await go.SystemFonts()) || []
+      return snapshot()
     case 'snapNew': {
       const note = await go.SnapNoteCreate(String(data?.image || ''), String(data?.title || ''))
       openLocal(state, 'snapnotes')

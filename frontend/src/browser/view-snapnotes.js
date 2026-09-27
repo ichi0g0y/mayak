@@ -344,7 +344,9 @@ function drawStroke(ctx, s, scale) {
 // Text: an item of a layer like a line, {c, w: the font size, p: [[x, y]]
 // (its top left), text}, in the image's pixels. It is typed in a box over
 // the page and drawn with an outline, so it reads on any picture.
-const textFont = (px) => `600 ${px}px "Segoe UI","Yu Gothic UI",Meiryo,sans-serif`
+const defaultFamilies = '"Segoe UI","Yu Gothic UI",Meiryo,sans-serif'
+const families = (f) => (f ? `"${String(f).replace(/["\\]/g, '')}",${defaultFamilies}` : defaultFamilies)
+const textFont = (px, f) => `600 ${px}px ${families(f)}`
 const textLine = 1.25
 const isText = (s) => typeof s.text === 'string'
 // The size is in points per 1000 pixels of the image's width (at least 1),
@@ -353,7 +355,7 @@ const textScale = (note) => Math.max(1, note.width / 1000)
 const textSize = (note) => textStyle.size * textScale(note)
 // The text palette: size, and the outline's colour ("auto": white or black
 // against the text's colour) and width (a percentage of the size, 0 none).
-const textStyle = { size: 32, outline: 'auto', width: 8 }
+const textStyle = { size: 32, outline: 'auto', width: 8, font: '' }
 const outlineColor = (s) => (s.o && s.o !== 'auto' ? s.o : outlineOf(s.c))
 const outlineWidth = (s) => ((s.ow ?? 8) / 100) * s.w
 const hexColor = (c) => (/^#[0-9a-f]{6}$/i.test(c) ? c : '#ffffff')
@@ -366,7 +368,12 @@ function textPaletteHTML() {
   const swatch = (c) =>
     `<button class="snap-color snap-outline-color${textStyle.outline === c ? ' on' : ''}" data-action="snapOutline" data-id="${c}" title="${esc(t('snapOutlineColor'))} ${c}" style="--swatch:${c}"></button>`
   const custom = !auto && !colors.includes(textStyle.outline)
-  return `<div class="snap-text-style"><span class="snap-group"><span class="snap-label">${esc(t('snapTextSize'))}</span><label class="snap-range"><input type="range" data-text-style="size" min="8" max="200" step="1" value="${textStyle.size}" aria-label="${esc(t('snapTextSize'))}"><output data-text-out="size">${textStyle.size}</output></label></span><span class="snap-group"><span class="snap-label">${esc(t('snapOutlineColor'))}</span><button class="snap-outline-auto${auto ? ' on' : ''}" data-action="snapOutline" data-id="auto" title="${esc(t('snapOutlineAutoHint'))}">${esc(t('snapOutlineAuto'))}</button>${colors.map(swatch).join('')}<label class="snap-custom-color${custom ? ' on' : ''}" title="${esc(t('snapMoreColors'))}" style="--swatch:${hexColor(textStyle.outline)}"><input type="color" data-outline-input value="${hexColor(textStyle.outline)}" aria-label="${esc(t('snapOutlineColor'))}"></label></span><span class="snap-group"><span class="snap-label">${esc(t('snapOutlineWidth'))}</span><label class="snap-range"><input type="range" data-text-style="width" min="0" max="30" step="1" value="${textStyle.width}" aria-label="${esc(t('snapOutlineWidth'))}"><output data-text-out="width">${textStyle.width}%</output></label></span></div>`
+  const fonts = state.snapNotes?.fonts || []
+  const known = !textStyle.font || fonts.includes(textStyle.font)
+  const option = (f, label) =>
+    `<option value="${esc(f)}"${f === textStyle.font ? ' selected' : ''} style="font-family:${esc(families(f))}">${esc(label)}</option>`
+  const font = `<span class="snap-group"><span class="snap-label">${esc(t('snapFont'))}</span><select class="snap-font" data-text-font aria-label="${esc(t('snapFont'))}" style="font-family:${esc(families(textStyle.font))}">${option('', t('snapFontDefault'))}${known ? '' : option(textStyle.font, textStyle.font)}${fonts.map((f) => option(f, f)).join('')}</select></span>`
+  return `<div class="snap-text-style">${font}<span class="snap-group"><span class="snap-label">${esc(t('snapTextSize'))}</span><label class="snap-range"><input type="range" data-text-style="size" min="8" max="200" step="1" value="${textStyle.size}" aria-label="${esc(t('snapTextSize'))}"><output data-text-out="size">${textStyle.size}</output></label></span><span class="snap-group"><span class="snap-label">${esc(t('snapOutlineColor'))}</span><button class="snap-outline-auto${auto ? ' on' : ''}" data-action="snapOutline" data-id="auto" title="${esc(t('snapOutlineAutoHint'))}">${esc(t('snapOutlineAuto'))}</button>${colors.map(swatch).join('')}<label class="snap-custom-color${custom ? ' on' : ''}" title="${esc(t('snapMoreColors'))}" style="--swatch:${hexColor(textStyle.outline)}"><input type="color" data-outline-input value="${hexColor(textStyle.outline)}" aria-label="${esc(t('snapOutlineColor'))}"></label></span><span class="snap-group"><span class="snap-label">${esc(t('snapOutlineWidth'))}</span><label class="snap-range"><input type="range" data-text-style="width" min="0" max="30" step="1" value="${textStyle.width}" aria-label="${esc(t('snapOutlineWidth'))}"><output data-text-out="width">${textStyle.width}%</output></label></span></div>`
 }
 // A dark outline around a light colour, a light one around a dark colour.
 function outlineOf(c) {
@@ -379,7 +386,7 @@ function drawText(ctx, s, scale) {
   if (!s.p.length) return
   ctx.save()
   ctx.scale(scale, scale)
-  ctx.font = textFont(s.w)
+  ctx.font = textFont(s.w, s.f)
   ctx.textBaseline = 'top'
   ctx.lineJoin = 'round'
   // The stroke is centred on the letters' edge: twice the outline's width.
@@ -397,7 +404,7 @@ function drawText(ctx, s, scale) {
 let measurer = null
 function textBounds(s) {
   measurer ||= document.createElement('canvas').getContext('2d')
-  measurer.font = textFont(s.w)
+  measurer.font = textFont(s.w, s.f)
   const lines = s.text.split('\n')
   const width = Math.max(s.w / 2, ...lines.map((line) => measurer.measureText(line).width))
   return { x: s.p[0][0], y: s.p[0][1], w: width, h: lines.length * s.w * textLine }
@@ -430,7 +437,7 @@ function textBoxHTML(note) {
 }
 // The box's look, in the page's width units (cqw) so it follows the zoom.
 function boxStyle(e, note) {
-  return `--size:${e.w / note.width};--ow:${outlineWidth(e) / note.width};color:${esc(e.c)};--outline:${esc(outlineColor(e))}`
+  return `--size:${e.w / note.width};--ow:${outlineWidth(e) / note.width};--family:${esc(families(e.f))};color:${esc(e.c)};--outline:${esc(outlineColor(e))}`
 }
 function editText(point, found) {
   if (!ed) return
@@ -442,6 +449,7 @@ function editText(point, found) {
     textStyle.size = Math.round(item.w / textScale(ed.note))
     textStyle.outline = item.o || 'auto'
     textStyle.width = item.ow ?? 8
+    textStyle.font = item.f || ''
   }
   textEdit = {
     key: ++textKeys,
@@ -453,6 +461,7 @@ function editText(point, found) {
     w: item ? item.w : textSize(ed.note),
     o: textStyle.outline,
     ow: textStyle.width,
+    f: textStyle.font,
     value: item ? item.text : '',
   }
   ed.version++
@@ -474,7 +483,8 @@ function finishText() {
     e.item.c === e.c &&
     e.item.w === e.w &&
     (e.item.o || 'auto') === e.o &&
-    (e.item.ow ?? 8) === e.ow
+    (e.item.ow ?? 8) === e.ow &&
+    (e.item.f || '') === e.f
   ed.version++
   if (same || (!value.trim() && at < 0)) {
     render()
@@ -490,6 +500,7 @@ function finishText() {
     w: e.w,
     o: e.o === 'auto' ? undefined : e.o,
     ow: e.ow,
+    f: e.f || undefined,
     text: value,
   }
   if (at < 0) strokes.push(next)
@@ -506,14 +517,42 @@ function restyleTextBox(focus = true) {
   wrap.style.setProperty('--outline', outlineColor(textEdit))
   wrap.style.setProperty('--size', String(textEdit.w / ed.note.width))
   wrap.style.setProperty('--ow', String(outlineWidth(textEdit) / ed.note.width))
+  wrap.style.setProperty('--family', families(textEdit.f))
   sizeTextBox(box)
   if (focus) box.focus()
 }
 // The palette's controls: choosing in them keeps the text being typed.
-const paletteControl = '.snap-color,.snap-size,.snap-text-style,.snap-custom-color'
+const paletteControl = '.snap-color,.snap-size,.snap-text-style,.snap-custom-color,.snap-font'
+// The caret: white over a dark part of the picture, black over a light one
+// (its own colour, the text's, would vanish on a like background).
+let caretProbe = null
+function caretFor(e) {
+  if (!ed?.img) return ''
+  const w = Math.max(e.w * 4, 1),
+    h = Math.max(e.w * textLine * Math.max(1, e.value.split('\n').length), 1)
+  caretProbe ||= document.createElement('canvas')
+  caretProbe.width = 8
+  caretProbe.height = 8
+  const ctx = caretProbe.getContext('2d', { willReadFrequently: true })
+  ctx.clearRect(0, 0, 8, 8)
+  ctx.filter = ed.baseVisible ? filterOf(ed.adjust) : 'none'
+  if (ed.baseVisible) ctx.drawImage(ed.img, e.x, e.y, w, h, 0, 0, 8, 8)
+  else {
+    ctx.fillStyle = '#fff'
+    ctx.fillRect(0, 0, 8, 8)
+  }
+  const d = ctx.getImageData(0, 0, 8, 8).data
+  let sum = 0
+  for (let i = 0; i < d.length; i += 4) sum += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
+  return sum / 64 < 128 ? '#ffffff' : '#000000'
+}
+function setCaret() {
+  const wrap = document.querySelector('.snap-text-box')
+  if (wrap && textEdit) wrap.style.setProperty('--caret', caretFor(textEdit) || 'auto')
+}
 function sizeTextBox(box) {
   if (!textEdit || !ed) return
-  const b = textBounds({ text: box.value || ' ', w: textEdit.w, p: [[0, 0]] })
+  const b = textBounds({ text: box.value || ' ', w: textEdit.w, f: textEdit.f, p: [[0, 0]] })
   box.style.width = `calc(${(b.w / ed.note.width) * 100}cqw + 0.5em)`
   box.style.height = `${box.value.split('\n').length * textLine}em`
 }
@@ -525,6 +564,7 @@ afterRenderHooks.push(() => {
   if (box && textEdit && !box.dataset.focused) {
     box.dataset.focused = '1'
     sizeTextBox(box)
+    setCaret()
     box.focus()
     box.setSelectionRange(box.value.length, box.value.length)
   }
@@ -776,6 +816,7 @@ document.addEventListener('pointermove', (event) => {
 const endGrip = (event) => {
   if (!gripDrag || event.pointerId !== gripDrag.pointer) return
   gripDrag = null
+  setCaret()
   document.querySelector('.snap-text-input')?.focus()
 }
 document.addEventListener('pointerup', endGrip)
@@ -920,6 +961,15 @@ document.addEventListener('keydown', (event) => {
 })
 document.addEventListener('change', (event) => {
   const data = event.target.dataset
+  if (ed && data && 'textFont' in data) {
+    textStyle.font = event.target.value
+    if (textEdit) {
+      textEdit.f = textStyle.font
+      restyleTextBox()
+    }
+    render()
+    return
+  }
   if (ed && data && ('textStyle' in data || 'colorInput' in data || 'outlineInput' in data)) {
     if ('colorInput' in data && tool === 'eraser') tool = 'pen'
     render()
@@ -1044,6 +1094,7 @@ clickHandlers.push(async (type, id, button) => {
     finishText()
     tool = id === 'eraser' || id === 'text' ? id : 'pen'
     render()
+    if (tool === 'text' && !state.snapNotes?.fonts) void action('snapFonts')
     return true
   }
   if (type === 'snapColor') {

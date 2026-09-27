@@ -549,6 +549,15 @@ export function SyncTrackerProfileHistory(accountID: string, profileID: string, 
     return $Call.ByID(1759201672, accountID, profileID, mode);
 }
 
+/**
+ * SystemFonts lists the font families installed, for the snap notes' text.
+ */
+export function SystemFonts(): $CancellablePromise<string[]> {
+    return $Call.ByID(2671723451).then(($result: any) => {
+        return $$createType13($result);
+    });
+}
+
 export function TestRemote(): $CancellablePromise<void> {
     return $Call.ByID(528960240);
 }

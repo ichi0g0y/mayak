@@ -15,6 +15,7 @@ import (
 	"github.com/local/mayak/internal/clipimage"
 	"github.com/local/mayak/internal/imaging"
 	"github.com/local/mayak/internal/snapnote"
+	"github.com/local/mayak/internal/sysfonts"
 )
 
 // Snap notes: the shell captures a page (or starts from a pasted picture or a
@@ -317,3 +318,6 @@ func isDir(path string) bool {
 	info, err := os.Stat(path)
 	return err == nil && info.IsDir()
 }
+
+// SystemFonts lists the font families installed, for the snap notes' text.
+func (a *App) SystemFonts() []string { return sysfonts.List() }
