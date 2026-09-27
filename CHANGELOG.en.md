@@ -2,9 +2,11 @@
 
 What changed in each version of MAYAK, from the user's side. The Japanese version is [CHANGELOG.md](CHANGELOG.md); the published page is https://mayak.ich.sh/changelog, which the app's update notice opens for "What changed".
 
-Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Unreleased changes collect under `## Unreleased` and get a version heading at release time.
+Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points. Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
-## Unreleased
+## Nightly
+
+Changes in the nightly build, not released yet; they come with the next version.
 
 - The snap note editor has viewing adjustments: brightness, contrast and lift shadows sliders make dark screenshots easier to look into. The original image stays as it is.
 
