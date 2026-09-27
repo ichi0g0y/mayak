@@ -67,3 +67,10 @@ jobs:
 
       - name: Shell tests
         run: bun test ./frontend/src/browser/
+
+      # The frontend's code is formatted with Biome (frontend/biome.json;
+      # `bun run format` in frontend writes it).
+      - name: Frontend format
+        if: runner.os == 'Linux'
+        working-directory: frontend
+        run: bun run format:check

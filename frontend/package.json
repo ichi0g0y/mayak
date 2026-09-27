@@ -4,7 +4,9 @@
   "license": "GPL-3.0-only",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && tsc -p tsconfig.shell.json && vite build"
+    "build": "tsc && tsc -p tsconfig.shell.json && vite build",
+    "format": "biome format --write .",
+    "format:check": "biome format ."
   },
   "dependencies": {
     "@radix-ui/react-select": "2.3.7",
@@ -20,10 +22,11 @@
     "tailwind-merge": "3.6.0"
   },
   "devDependencies": {
-    "vite": "8.2.2",
+    "@biomejs/biome": "2.5.14",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
     "@vitejs/plugin-react": "6.1.1",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vite": "8.2.2"
   }
 }

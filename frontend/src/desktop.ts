@@ -8,15 +8,43 @@ export type DesktopBridge = {
   openURL: (url: string) => void
 }
 
-export const desktop = (window.parent as Window & {mayakDesktop: DesktopBridge}).mayakDesktop
+export const desktop = (window.parent as Window & { mayakDesktop: DesktopBridge }).mayakDesktop
 export const EventsOn = desktop.on
 export const BrowserOpenURL = desktop.openURL
 export const {
-  AnalyzeLatestScreenshot, AutoDetectEFTDirectories, AutoDetectRemoteID, CheckForUpdates,
-  ChooseLogsDirectory, ChooseScreenshotDirectory, ChooseSoundFile, ClearLogs,
-  DiscoverTrackerProfiles, DownloadUpdate, GameLanguages, GetLogs, GetSettings, GetStatus, GetUpdateStatus,
-  ImportTrackerToken, InstallUpdate, OpenDebugDirectory, OpenLogsDirectory, OpenScreenshotDirectory,
-  PersistSettings, PlayerMarkerPreviewCSS, PreviewSound, RefreshCatalog, OpenQuestPage, OpenHideoutDiagnostics,
-  RefreshTracker, RemoveTrackerKey, RefreshTrackerKeyNames, SaveSettings,
-  SetTrackerProfileKey, StartMonitoring, StopMonitoring, SyncTrackerProfileHistory, TestRemote,
+  AnalyzeLatestScreenshot,
+  AutoDetectEFTDirectories,
+  AutoDetectRemoteID,
+  CheckForUpdates,
+  ChooseLogsDirectory,
+  ChooseScreenshotDirectory,
+  ChooseSoundFile,
+  ClearLogs,
+  DiscoverTrackerProfiles,
+  DownloadUpdate,
+  GameLanguages,
+  GetLogs,
+  GetSettings,
+  GetStatus,
+  GetUpdateStatus,
+  ImportTrackerToken,
+  InstallUpdate,
+  OpenDebugDirectory,
+  OpenLogsDirectory,
+  OpenScreenshotDirectory,
+  PersistSettings,
+  PlayerMarkerPreviewCSS,
+  PreviewSound,
+  RefreshCatalog,
+  OpenQuestPage,
+  OpenHideoutDiagnostics,
+  RefreshTracker,
+  RemoveTrackerKey,
+  RefreshTrackerKeyNames,
+  SaveSettings,
+  SetTrackerProfileKey,
+  StartMonitoring,
+  StopMonitoring,
+  SyncTrackerProfileHistory,
+  TestRemote,
 } = desktop.backend

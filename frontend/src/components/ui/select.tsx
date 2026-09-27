@@ -12,7 +12,9 @@ export const SelectTrigger = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Trigger ref={ref} className={cn('select-trigger', className)} {...props}>
     {children}
-    <SelectPrimitive.Icon asChild><ChevronDown className="select-chevron" /></SelectPrimitive.Icon>
+    <SelectPrimitive.Icon asChild>
+      <ChevronDown className="select-chevron" />
+    </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ))
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
@@ -23,9 +25,13 @@ export const SelectContent = React.forwardRef<
 >(({ className, children, position = 'popper', ...props }, ref) => (
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content ref={ref} className={cn('select-content', className)} position={position} {...props}>
-      <SelectPrimitive.ScrollUpButton className="select-scroll"><ChevronUp /></SelectPrimitive.ScrollUpButton>
+      <SelectPrimitive.ScrollUpButton className="select-scroll">
+        <ChevronUp />
+      </SelectPrimitive.ScrollUpButton>
       <SelectPrimitive.Viewport className="select-viewport">{children}</SelectPrimitive.Viewport>
-      <SelectPrimitive.ScrollDownButton className="select-scroll"><ChevronDown /></SelectPrimitive.ScrollDownButton>
+      <SelectPrimitive.ScrollDownButton className="select-scroll">
+        <ChevronDown />
+      </SelectPrimitive.ScrollDownButton>
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
 ))
@@ -36,7 +42,11 @@ export const SelectItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Item ref={ref} className={cn('select-item', className)} {...props}>
-    <span className="select-item-indicator"><SelectPrimitive.ItemIndicator><Check /></SelectPrimitive.ItemIndicator></span>
+    <span className="select-item-indicator">
+      <SelectPrimitive.ItemIndicator>
+        <Check />
+      </SelectPrimitive.ItemIndicator>
+    </span>
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
   </SelectPrimitive.Item>
 ))
