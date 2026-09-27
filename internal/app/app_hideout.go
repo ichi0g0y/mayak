@@ -106,10 +106,19 @@ func (a *App) handleHideoutEvent(parent context.Context, e hideoutlog.Event) {
 	}
 }
 
-// hideoutStationsFor is the catalog's hideout stations of a mode, kept for
-// ten minutes: the logs replayed at a start ask for them once per event,
-// and each answer is a decode of the catalog otherwise.
+// hideoutStationsFor is the catalog's hideout stations of a mode: those
+// on show when it is their mode (the catalog refresh keeps them current),
+// else a copy kept for ten minutes and dropped when that mode's catalog is
+// read again. The logs replayed at a start ask once per event, and each
+// answer would be a decode of the catalog otherwise.
 func (a *App) hideoutStationsFor(ctx context.Context, mode string) []catalog.HideoutStation {
+	// The mode on show: the stations the catalog refresh keeps current.
+	a.mu.RLock()
+	current, currentMode := a.hideoutStations, a.hideoutCatalogMode
+	a.mu.RUnlock()
+	if currentMode == mode && current != nil {
+		return current
+	}
 	a.hideoutStationsMu.Lock()
 	cached, ok := a.hideoutStationsCache[mode]
 	a.hideoutStationsMu.Unlock()

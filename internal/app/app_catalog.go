@@ -149,6 +149,12 @@ func (a *App) refreshCatalog(force bool) error {
 	if !hideoutKept && hideoutErr == nil && hideoutVersion != "" {
 		a.catalogRemember(mode, "hideout", hideoutVersion)
 	}
+	// The per-mode copy (hideoutStationsFor) is read again from the new catalog.
+	if !hideoutKept && hideoutErr == nil {
+		a.hideoutStationsMu.Lock()
+		delete(a.hideoutStationsCache, mode)
+		a.hideoutStationsMu.Unlock()
+	}
 	if !hideoutKept && hideoutErr == nil {
 		a.hideoutStations = stations
 		a.hideoutCatalogMode = mode
