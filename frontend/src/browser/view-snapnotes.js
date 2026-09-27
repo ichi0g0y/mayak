@@ -108,6 +108,13 @@ export function snapSection() {
   return `<div class="section-label screenshot-section-label snap-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSnapSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('snapNotes'))}${icon('chevron', 'section-chevron')}</button><button class="new-tab shots-open" data-action="snapnotes" title="${esc(t('snapNotesAll'))}" aria-label="${esc(t('snapNotesAll'))}" aria-pressed="${open}">${icon('brush')}</button></div>${folded ? '' : `<div class="shot-section">${preview}</div>`}`
 }
 
+// A card's delete, at the other corner from the star: the first press arms
+// it (it turns red and says so), a second within a few seconds deletes.
+const cardDeleteButton = (note) => {
+  const armed = armedDelete === note.id
+  const label = t(armed ? 'snapDeleteConfirm' : 'snapDelete')
+  return `<button class="snap-card-delete${armed ? ' armed' : ''}" data-action="snapDeleteNote" data-id="${esc(note.id)}" title="${esc(label)}" aria-label="${esc(label)}">${icon('trash')}${armed ? `<span>${esc(label)}</span>` : ''}</button>`
+}
 // The star of a note: on its card and in the editor's head.
 const starButton = (note, cls) =>
   `<button class="snap-star ${cls}${note.favorite ? ' on' : ''}" data-action="snapFavorite" data-id="${esc(note.id)}" title="${esc(t(note.favorite ? 'snapUnfavorite' : 'snapFavorite'))}" aria-label="${esc(t(note.favorite ? 'snapUnfavorite' : 'snapFavorite'))}" aria-pressed="${!!note.favorite}">${icon('star')}</button>`
@@ -128,7 +135,7 @@ function listHTML(notes) {
   const cards = shown
     .map(
       (n) =>
-        `<div class="snap-card-wrap"><button class="snap-card" data-action="snapOpen" data-id="${esc(n.id)}" title="${esc(n.title)}"><span class="snap-card-thumb">${thumbHTML(n)}</span><span class="snap-card-text"><strong>${esc(n.title)}</strong><small>${siteLine(n)} · ${esc(noteTime(n))}</small></span></button>${starButton(n, 'snap-card-star')}</div>`,
+        `<div class="snap-card-wrap"><button class="snap-card" data-action="snapOpen" data-id="${esc(n.id)}" title="${esc(n.title)}"><span class="snap-card-thumb">${thumbHTML(n)}</span><span class="snap-card-text"><strong>${esc(n.title)}</strong><small>${siteLine(n)} · ${esc(noteTime(n))}</small></span></button>${starButton(n, 'snap-card-star')}${cardDeleteButton(n)}</div>`,
     )
     .join('')
   return `<div class="page snap-page-list"><div class="bookmarks-head"><h1>${esc(t('snapNotes'))}</h1><div class="bookmarks-tools"><button data-action="snapNewBlank">${icon('plus')}<span>${esc(t('snapNewBlank'))}</span></button><button data-action="snapNewFile">${icon('image')}<span>${esc(t('snapNewImage'))}</span></button><input type="file" id="snap-file" accept="image/*" hidden></div></div><div class="snap-filters"><div class="segmented" role="group">${chip('all', 'snapFilterAll')}${chip('favorite', 'snapFilterFavorite')}${chip('linked', 'snapFilterLinked')}${chip('single', 'snapFilterSingle')}</div><p class="hint">${esc(t('snapPasteHint'))}</p></div>${notes.list.length ? (shown.length ? `<div class="snap-grid">${cards}</div>` : `<p class="shot-empty">${esc(t('snapNoMatch'))}</p>`) : `<p class="shot-empty">${esc(t('snapEmpty'))}</p>`}</div>`

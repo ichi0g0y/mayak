@@ -765,6 +765,11 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 .snap-star.on{color:#f5b301}
 .snap-star.on svg{fill:currentColor}
 .snap-card-star{position:absolute;z-index:2;top:6px;right:6px;width:30px;height:30px;padding:0;border-radius:8px;background:rgba(0,0,0,.45);border-color:transparent;color:#fff;opacity:0;transition:opacity .12s}
+.snap-card-delete{position:absolute;z-index:2;top:6px;left:6px;display:inline-flex;align-items:center;gap:6px;height:30px;min-width:30px;padding:0 7px;border-radius:8px;background:rgba(0,0,0,.45);border-color:transparent;color:#fff;font-size:12px;opacity:0;transition:opacity .12s}
+.snap-card-delete svg{width:16px;height:16px}
+.snap-card-wrap:hover .snap-card-delete,.snap-card-delete:focus-visible,.snap-card-delete.armed{opacity:1}
+.snap-card-delete:hover{background:rgba(0,0,0,.65)}
+.snap-card-delete.armed{background:var(--danger);color:#fff}
 .snap-card-wrap:hover .snap-card-star,.snap-card-star.on,.snap-card-star:focus-visible{opacity:1}
 .snap-card-star.on{color:#f5b301}
 .snap-head-star{flex:none;width:32px;height:32px;padding:0}
