@@ -26,6 +26,9 @@ import * as model$0 from "../model/models.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as snapnote$0 from "../snapnote/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as sound$0 from "../sound/models.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
@@ -388,8 +391,12 @@ export function PlayerMarkerPreviewCSS(color: string): $CancellablePromise<strin
     return $Call.ByID(675497734, color);
 }
 
-export function PreviewSound(kind: string, path: string, volume: number): $CancellablePromise<void> {
-    return $Call.ByID(2022189061, kind, path, volume);
+/**
+ * PreviewSound plays a notification as it would sound with a file ("" for
+ * none) and a built-in voice ("" for the beeps).
+ */
+export function PreviewSound(kind: string, path: string, voice: string, volume: number): $CancellablePromise<void> {
+    return $Call.ByID(2022189061, kind, path, voice, volume);
 }
 
 /**
@@ -592,6 +599,15 @@ export function TestRemote(): $CancellablePromise<void> {
     return $Call.ByID(528960240);
 }
 
+/**
+ * VoicePacks lists the built-in voices the notifications can speak with.
+ */
+export function VoicePacks(): $CancellablePromise<sound$0.VoicePack[]> {
+    return $Call.ByID(2023705626).then(($result: any) => {
+        return $$createType23($result);
+    });
+}
+
 // Private type creation functions
 const $$createType0 = eftdetect$0.Result.createFrom;
 const $$createType1 = bossinfo$0.Info.createFrom;
@@ -615,3 +631,5 @@ const $$createType18 = $Create.Map($Create.Any, $Create.Any);
 const $$createType19 = snapnote$0.Note.createFrom;
 const $$createType20 = $Create.Array($$createType19);
 const $$createType21 = $models.SnapNoteData.createFrom;
+const $$createType22 = sound$0.VoicePack.createFrom;
+const $$createType23 = $Create.Array($$createType22);

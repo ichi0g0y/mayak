@@ -263,6 +263,9 @@ func normalizeSettings(s config.Settings) config.Settings {
 	s.PlayerMarkerEffect = normalizePlayerMarkerEffect(s.PlayerMarkerEffect)
 	s.PlayerMarkerColor = normalizePlayerMarkerColor(s.PlayerMarkerColor)
 	s.HideoutErrorSoundPath = normalizeSoundPath(s.HideoutErrorSoundPath)
+	if !sound.HasVoice(s.SoundVoice) {
+		s.SoundVoice = ""
+	}
 	if s.ScreenshotDirectory != "" {
 		s.ScreenshotDirectory = filepath.Clean(s.ScreenshotDirectory)
 	}

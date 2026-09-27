@@ -123,7 +123,11 @@ func Wave(kind Kind, volume int) []byte {
 		}
 		pcm[i] = int16(math.MaxInt16 * gain * clampSample(sample))
 	}
+	return pcmWave(sampleRate, pcm)
+}
 
+// pcmWave is a mono 16-bit PCM WAV of samples.
+func pcmWave(rate int, pcm []int16) []byte {
 	var out bytes.Buffer
 	dataSize := uint32(len(pcm) * 2)
 	out.WriteString("RIFF")
@@ -132,15 +136,13 @@ func Wave(kind Kind, volume int) []byte {
 	_ = binary.Write(&out, binary.LittleEndian, uint32(16))
 	_ = binary.Write(&out, binary.LittleEndian, uint16(1))
 	_ = binary.Write(&out, binary.LittleEndian, uint16(1))
-	_ = binary.Write(&out, binary.LittleEndian, uint32(sampleRate))
-	_ = binary.Write(&out, binary.LittleEndian, uint32(sampleRate*2))
+	_ = binary.Write(&out, binary.LittleEndian, uint32(rate))
+	_ = binary.Write(&out, binary.LittleEndian, uint32(rate*2))
 	_ = binary.Write(&out, binary.LittleEndian, uint16(2))
 	_ = binary.Write(&out, binary.LittleEndian, uint16(16))
 	out.WriteString("data")
 	_ = binary.Write(&out, binary.LittleEndian, dataSize)
-	for _, sample := range pcm {
-		_ = binary.Write(&out, binary.LittleEndian, sample)
-	}
+	_ = binary.Write(&out, binary.LittleEndian, pcm)
 	return out.Bytes()
 }
 

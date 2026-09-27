@@ -1,0 +1,28 @@
+{
+  "name": {
+    "ja": "春日部つむぎ",
+    "en": "Kasukabe Tsumugi"
+  },
+  "language": "ja",
+  "order": 1,
+  "credit": "VOICEVOX:春日部つむぎ",
+  "terms": "https://tsumugi-official.studio.site/rule",
+  "termsChecked": "2026-09-28",
+  "voicevox": {
+    "speaker": 8
+  },
+  "lines": {
+    "quest": "タスク見つけたよ！",
+    "taskNotMatched": "うーん、どのタスクかわかんなかった",
+    "item": "アイテム見つけたよ！",
+    "itemNotMatched": "このアイテム、わかんないや",
+    "error": "ごめん、スクショ読めなかった",
+    "remoteError": "マップに送れなかったよ",
+    "hideoutError": "ハイドアウトでエラー出てるよ",
+    "matchFound": "マッチングしたよ！いってらっしゃい",
+    "raidStart": "レイド始まったよ、気をつけてね",
+    "runThrough": "もう脱出しても大丈夫だよ",
+    "questItems": "おかえり！次の出撃、クエストアイテム忘れないでね",
+    "restartTasks": "失敗したタスクあるじゃん、受け直しとこ"
+  }
+}

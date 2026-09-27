@@ -4,6 +4,7 @@
 
 # Binaries: never converted or diffed as text.
 *.png binary
+*.wav binary
 *.ico binary
 *.dll binary
 *.exe binary

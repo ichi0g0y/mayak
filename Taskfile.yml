@@ -46,6 +46,12 @@ tasks:
     cmds:
       - go run ./tools/notices -out build/bin/THIRD_PARTY_NOTICES.txt
 
+  # The built-in voices' WAVs from their pack.json lines, with the VOICEVOX
+  # app running (tools/voices); `task voices -- tsumugi` for one pack.
+  voices:
+    cmds:
+      - bun tools/voices/generate.ts {{.CLI_ARGS}}
+
   build:
     summary: Build the Wails v3 application without launching it
     cmds:

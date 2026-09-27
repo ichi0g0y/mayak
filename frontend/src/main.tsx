@@ -43,6 +43,7 @@ import {
   RefreshTrackerKeyNames,
   SaveSettings,
   TestRemote,
+  VoicePacks,
 } from './desktop'
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
@@ -52,6 +53,7 @@ import { Badge } from './components/ui/badge'
 import { Switch } from './components/ui/switch'
 import { Tabs, TabsContent } from './components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
+import type { VoicePack } from '../bindings/github.com/local/mayak/internal/sound/models'
 import { translate, translateAnalysisStage } from './i18n'
 import { HideoutEvent, hideoutMessage } from './Hideout'
 import {
@@ -125,6 +127,7 @@ function App() {
   const settingsRef = useRef<Settings>(defaults)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [gameLanguages, setGameLanguages] = useState<string[]>(['ja', 'en'])
+  const [voicePacks, setVoicePacks] = useState<VoicePack[]>([])
   const saveRevision = useRef(0)
   const backendReady = useRef(false)
   const persistQueue = useRef<Promise<unknown>>(Promise.resolve())
@@ -144,6 +147,11 @@ function App() {
         void GameLanguages()
           .then((list) => {
             if (active && Array.isArray(list) && list.length) setGameLanguages(list)
+          })
+          .catch(() => {})
+        void VoicePacks()
+          .then((list) => {
+            if (active && Array.isArray(list)) setVoicePacks(list as VoicePack[])
           })
           .catch(() => {})
         const [s, v, l, u] = await Promise.all([
@@ -420,12 +428,14 @@ function App() {
   }
   const previewSound = async (kind: string, path: string) => {
     try {
-      await PreviewSound(kind, path, settings.soundVolume)
+      await PreviewSound(kind, path, settings.soundVoice, settings.soundVolume)
     } catch (error) {
       setNotice(String(error))
       setNoticeError(true)
     }
   }
+  const voice = voicePacks.find((pack) => pack.id === settings.soundVoice)
+  const voiceName = (pack: VoicePack) => pack.name[settings.language] || pack.name.en || pack.id
   const soundAlerts = [
     {
       id: 'quest-sound',
@@ -1034,6 +1044,37 @@ function App() {
                 </div>
                 {settings.soundsEnabled && (
                   <div className="sound-options">
+                    <div className="field">
+                      <Label>{t('soundVoice')}</Label>
+                      <Select
+                        value={voice ? voice.id : '__beep'}
+                        onValueChange={(id) => patch({ soundVoice: id === '__beep' ? '' : id })}
+                      >
+                        <SelectTrigger aria-label={t('soundVoice')}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__beep">{t('soundVoiceBeep')}</SelectItem>
+                          {voicePacks.map((pack) => (
+                            <SelectItem key={pack.id} value={pack.id}>
+                              {voiceName(pack)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="help-text">
+                        {voice && (
+                          <>
+                            {voice.credit} ·{' '}
+                            <button type="button" className="inline-link" onClick={() => BrowserOpenURL(voice.terms)}>
+                              {t('soundVoiceTerms')}
+                            </button>
+                            <br />
+                          </>
+                        )}
+                        {t('soundVoiceHelp')}
+                      </p>
+                    </div>
                     {soundAlerts.map((alert) => {
                       const path = settings[alert.pathKey]
                       return (
@@ -1056,8 +1097,11 @@ function App() {
                               <FolderOpen />
                               {t('chooseSound')}
                             </Button>
-                            <span className="sound-file-name" title={path || t('builtInSound')}>
-                              {path ? path.split(/[\\/]/).pop() : t('builtInSound')}
+                            <span
+                              className="sound-file-name"
+                              title={path || (voice ? voiceName(voice) : t('builtInSound'))}
+                            >
+                              {path ? path.split(/[\\/]/).pop() : voice ? voiceName(voice) : t('builtInSound')}
                             </span>
                             <Button
                               type="button"

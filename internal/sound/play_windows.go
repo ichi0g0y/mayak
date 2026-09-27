@@ -30,6 +30,16 @@ func Play(kind Kind, volume int) {
 	_, _, _ = playSound.Call(uintptr(unsafe.Pointer(&wave[0])), 0, sndMemory|sndNoDefault)
 }
 
+// PlayVoice plays a built-in voice's line for a notification.
+func PlayVoice(pack string, kind Kind, volume int) error {
+	wave, err := voiceWave(pack, kind, volume)
+	if err != nil {
+		return err
+	}
+	_, _, _ = playSound.Call(uintptr(unsafe.Pointer(&wave[0])), 0, sndMemory|sndNoDefault)
+	return nil
+}
+
 func PlayFile(path string, volume int) error {
 	if err := ValidateFile(path); err != nil {
 		return err

@@ -1,0 +1,28 @@
+{
+  "name": {
+    "ja": "雨晴はう",
+    "en": "Amehare Hau"
+  },
+  "language": "ja",
+  "order": 2,
+  "credit": "VOICEVOX:雨晴はう",
+  "terms": "https://amehau.com/?page_id=225",
+  "termsChecked": "2026-09-27",
+  "voicevox": {
+    "speaker": 10
+  },
+  "lines": {
+    "quest": "タスクを確認しました",
+    "taskNotMatched": "すみません、どのタスクか分かりませんでした",
+    "item": "アイテムを確認しました",
+    "itemNotMatched": "すみません、アイテムが分かりませんでした",
+    "error": "すみません、スクリーンショットを読み取れませんでした",
+    "remoteError": "マップに送れませんでした。接続を確認してください",
+    "hideoutError": "ハイドアウトでエラーが起きていますよ",
+    "matchFound": "マッチングしましたよ。準備はいいですか？",
+    "raidStart": "レイド開始です。無理はしないでくださいね",
+    "runThrough": "もう脱出しても大丈夫ですよ",
+    "questItems": "おかえりなさい。次はクエストアイテムをお忘れなく",
+    "restartTasks": "失敗したタスクがありますよ。受け直しておきましょう"
+  }
+}

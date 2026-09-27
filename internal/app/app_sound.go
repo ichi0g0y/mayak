@@ -9,7 +9,14 @@ import (
 	"github.com/local/mayak/internal/sound"
 )
 
-func (a *App) PreviewSound(kind, path string, volume int) error {
+// VoicePacks lists the built-in voices the notifications can speak with.
+func (a *App) VoicePacks() []sound.VoicePack {
+	return sound.VoicePacks()
+}
+
+// PreviewSound plays a notification as it would sound with a file ("" for
+// none) and a built-in voice ("" for the beeps).
+func (a *App) PreviewSound(kind, path, voice string, volume int) error {
 	if volume < 0 {
 		volume = 0
 	}
@@ -25,7 +32,10 @@ func (a *App) PreviewSound(kind, path string, volume int) error {
 			return err
 		}
 	}
-	playNotification(soundKind, path, volume)
+	if voice != "" && !sound.HasVoice(voice) {
+		return errors.New("unknown voice")
+	}
+	playNotification(soundKind, path, voice, volume)
 	return nil
 }
 
@@ -39,14 +49,20 @@ var (
 type queuedSound struct {
 	kind   sound.Kind
 	path   string
+	voice  string
 	volume int
 }
 
-func playNotification(kind sound.Kind, path string, volume int) {
+// playNotification plays the file chosen for a notification, else the
+// built-in voice's line, else the built-in beep.
+func playNotification(kind sound.Kind, path, voice string, volume int) {
 	startNotification.Do(func() {
 		go func() {
 			for n := range notifications {
 				if n.path != "" && sound.PlayFile(n.path, n.volume) == nil {
+					continue
+				}
+				if n.voice != "" && sound.PlayVoice(n.voice, n.kind, n.volume) == nil {
 					continue
 				}
 				sound.Play(n.kind, n.volume)
@@ -54,7 +70,7 @@ func playNotification(kind sound.Kind, path string, volume int) {
 		}()
 	})
 	select {
-	case notifications <- queuedSound{kind, path, volume}:
+	case notifications <- queuedSound{kind, path, voice, volume}:
 	default:
 	}
 }
@@ -98,7 +114,7 @@ func (a *App) notify(s config.Settings, kind sound.Kind) {
 		return
 	}
 	a.addLog("Info", "Sound", "Playing "+string(kind)+" alert")
-	playNotification(kind, path, s.SoundVolume)
+	playNotification(kind, path, s.SoundVoice, s.SoundVolume)
 }
 
 // notifyOnce plays a notification of a screenshot or error, but not again

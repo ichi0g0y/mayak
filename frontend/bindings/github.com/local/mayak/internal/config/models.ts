@@ -83,6 +83,12 @@ export class Settings {
     "itemNotMatchedSoundEnabled": boolean;
     "itemNotMatchedSoundPath": string;
     "soundVolume": number;
+
+    /**
+     * SoundVoice is the built-in voice the notifications speak with (a
+     * pack of internal/sound/voices); empty for the built-in beeps.
+     */
+    "soundVoice": string;
     "autoStartMonitoring": boolean;
     "openMapOnRaidStart": boolean;
     "navigateMapOnPositionScreenshot": boolean;
@@ -245,6 +251,9 @@ export class Settings {
         }
         if (!("soundVolume" in $$source)) {
             this["soundVolume"] = 0;
+        }
+        if (!("soundVoice" in $$source)) {
+            this["soundVoice"] = "";
         }
         if (!("autoStartMonitoring" in $$source)) {
             this["autoStartMonitoring"] = false;

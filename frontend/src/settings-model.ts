@@ -38,6 +38,7 @@ export type Settings = {
   itemNotMatchedSoundEnabled: boolean
   itemNotMatchedSoundPath: string
   soundVolume: number
+  soundVoice: string
   autoStartMonitoring: boolean
   openMapOnRaidStart: boolean
   navigateMapOnPositionScreenshot: boolean
@@ -215,6 +216,7 @@ export const defaults: Settings = {
   itemNotMatchedSoundEnabled: false,
   itemNotMatchedSoundPath: '',
   soundVolume: 28,
+  soundVoice: '',
   autoStartMonitoring: true,
   openMapOnRaidStart: true,
   navigateMapOnPositionScreenshot: true,

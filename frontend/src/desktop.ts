@@ -47,4 +47,5 @@ export const {
   StopMonitoring,
   SyncTrackerProfileHistory,
   TestRemote,
+  VoicePacks,
 } = desktop.backend

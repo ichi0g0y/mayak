@@ -1,0 +1,49 @@
+{
+  "name": {
+    "ja": "WhiteCUL",
+    "en": "WhiteCUL"
+  },
+  "language": "ja",
+  "order": 3,
+  "credit": "VOICEVOX:WhiteCUL",
+  "terms": "https://www.whitecul.com/guideline",
+  "termsChecked": "2026-09-27",
+  "voicevox": {
+    "speaker": 23
+  },
+  "lines": {
+    "quest": {
+      "text": "タスクを認識しました",
+      "style": 24
+    },
+    "taskNotMatched": {
+      "text": "タスクを特定できませんでした",
+      "style": 25
+    },
+    "item": {
+      "text": "アイテムを認識しました",
+      "style": 24
+    },
+    "itemNotMatched": {
+      "text": "アイテムを特定できませんでした",
+      "style": 25
+    },
+    "error": {
+      "text": "すみません、読み取れませんでした",
+      "style": 25
+    },
+    "remoteError": {
+      "text": "マップ連携に失敗しました",
+      "style": 25
+    },
+    "hideoutError": "ハイドアウトでエラーが発生しています",
+    "matchFound": "マッチングが完了しました",
+    "raidStart": "レイドを開始します。ご武運を",
+    "runThrough": {
+      "text": "脱出可能です。お疲れさまでした",
+      "style": 24
+    },
+    "questItems": "帰還を確認しました。次の出撃前に、クエストアイテムの準備を",
+    "restartTasks": "失敗したタスクがあります。再受注をお忘れなく"
+  }
+}
