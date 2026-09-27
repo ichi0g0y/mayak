@@ -35,7 +35,7 @@ Changes in the nightly build, not released yet; they come with the next version.
 
 - Internal: the pixel access and brightness code the detectors and the OCR preprocessing each had of their own lives in `internal/imaging`, reading pixels straight from the byte buffer. Results are unchanged; a screenshot is analysed faster.
 - The CPU-heavy first seconds after a start are fixed. Replaying the hideout logs at start-up rewrote the whole history file and sent the whole status to the window once per event, hundreds of times. Writes are now coalesced half a second later, the window gets one status every 0.3 s during a replay, and duplicates are told by a set instead of a scan.
-- Screenshot thumbnails are kept on disk too (`Mayak	humbs`). They were made again at every start, which kept the CPU busy for seconds right after it.
+- Screenshot thumbnails are kept on disk too (`Mayak\thumbs`). They were made again at every start, which kept the CPU busy for seconds right after it.
 - The built-in browser has a translate button (toolbar, web tabs). WebView2 has no page translation of its own, so the page is reopened through Google Translate (translate.goog); pressing again returns to the page itself. Settings → Tasks → "Open the official wiki (English) translated" opens task pages on the official wiki translated from the start.
 - Pressing the sidebar's monitoring dot with no Screenshots folder set opens Settings → Folders instead of starting the watch, so a failed folder detection leads straight to where the folder is chosen.
 
