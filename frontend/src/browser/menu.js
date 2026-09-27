@@ -4,7 +4,7 @@
 import './style.css';
 import {Events} from '@wailsio/runtime';
 import {BrowserMenuReady,BrowserMenuChoose,BrowserMenuCurrent} from '../../bindings/github.com/local/mayak/internal/app/app';
-import {icon,esc} from './shell-core.js';
+import {icon,esc} from './icons.js';
 
 let current=null;
 function draw(menu){

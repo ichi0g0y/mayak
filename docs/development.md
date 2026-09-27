@@ -282,7 +282,7 @@ Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker
 | `go test ./...` | Go の全ユニットテスト |
 | `go test -run '^$' ./...` | コンパイルのみ |
 | `go test -run '^TestBrowser' ./internal/app` | ブラウザ状態の一時ファイル保存、特権ナビゲーション・ID の拒否、内蔵ブラウザ用 Remote ID の生成と送信先 |
-| `bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js ./frontend/src/browser/words.test.js` | ブラウザシェルの純粋ロジック |
+| `bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js ./frontend/src/browser/words.test.js ./frontend/src/browser/shell-core.test.js` | ブラウザシェルの純粋ロジック |
 | `task check:offline` | 上記のコンパイル、`TestBrowser*`、bun のテストをまとめて実行 |
 
 主なテスト内容:
