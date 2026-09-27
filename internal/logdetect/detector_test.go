@@ -172,7 +172,7 @@ func TestEventParserReportsRaidExitOnlyOnce(t *testing.T) {
 	_ = parser.Parse("2026-09-10 15:43:38.370|x|Info|application|GameStarted:68.86\n")
 	got := parser.Parse("2026-09-10 16:11:24.788|x|Info|application|PrepareSelectedProfileLocally ProfileId:abc AccountId:123\n" +
 		"2026-09-10 16:11:25.106|x|Info|application|CompleteSelectedProfile ProfileId:abc AccountId:123\n")
-	if len(got) != 1 || got[0].Kind != RaidExited {
+	if len(got) != 2 || got[0].Kind != RaidExited || got[1].Kind != MenuReached {
 		t.Fatalf("unexpected events: %v", got)
 	}
 	if repeated := parser.Parse("2026-09-10 16:11:52.015|x|Info|application|PrepareSelectedProfileLocally ProfileId:abc AccountId:123\n"); len(repeated) != 0 {
@@ -246,4 +246,21 @@ func containsPath(paths []string, wanted string) bool {
 		}
 	}
 	return false
+}
+
+// The menu is reported once on the way back (EFT loads the profile twice),
+// and again after the next raid; also at the game's start, with no raid.
+func TestEventParserReportsMenuOncePerReturn(t *testing.T) {
+	parser := &EventParser{}
+	complete := "2026-09-10 16:11:25.106|x|Info|application|CompleteSelectedProfile ProfileId:abc AccountId:123\n"
+	if got := parser.Parse(complete); len(got) != 1 || got[0].Kind != MenuReached {
+		t.Fatalf("start: %v", got)
+	}
+	if got := parser.Parse(complete); len(got) != 0 {
+		t.Fatalf("second load: %v", got)
+	}
+	_ = parser.Parse("2026-09-10 16:20:00.000|x|Info|application|MatchingCompleted:0 real:1.2 diff:1\n2026-09-10 16:21:00.000|x|Info|application|GameStarted:68.86\n")
+	if got := parser.Parse(complete); len(got) != 2 || got[1].Kind != MenuReached {
+		t.Fatalf("after raid: %v", got)
+	}
 }

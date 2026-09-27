@@ -144,11 +144,6 @@ func (a *App) handleLogEvent(event logdetect.Event) {
 		a.addLog("Info", "Raid", "Raid started")
 		a.retryMapAfterRaidStart()
 		a.notify(settings, sound.RaidStart)
-		a.notify(settings, sound.QuestItems)
-		if failedTasks > 0 {
-			a.addLog("Warn", "TarkovTracker", fmt.Sprintf("%d failed task(s) may need to be restarted", failedTasks))
-			a.notify(settings, sound.RestartTasks)
-		}
 		if runThrough {
 			a.scheduleRunThroughAlert(settings, started.Add(time.Duration(settings.RunThroughSeconds)*time.Second))
 		} else {
@@ -165,6 +160,14 @@ func (a *App) handleLogEvent(event logdetect.Event) {
 		a.mu.Unlock()
 		a.emitEvent("status:update", status)
 		a.addLog("Info", "Raid", "Raid ended")
+	case logdetect.MenuReached:
+		// Back at the menu (or at the game's start), where the next raid is
+		// got ready for: a reminder at the raid's start came too late.
+		a.notify(settings, sound.QuestItems)
+		if failedTasks > 0 {
+			a.addLog("Warn", "TarkovTracker", fmt.Sprintf("%d failed task(s) may need to be restarted", failedTasks))
+			a.notify(settings, sound.RestartTasks)
+		}
 	}
 }
 

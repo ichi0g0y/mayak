@@ -167,11 +167,17 @@ const (
 	MatchFound  EventKind = "matchFound"
 	RaidStarted EventKind = "raidStarted"
 	RaidExited  EventKind = "raidExited"
+	// MenuReached is the profile loaded at the game's start or back from a
+	// raid: the player is at the menu, where the next raid is got ready for.
+	MenuReached EventKind = "menuReached"
 )
 
 type EventParser struct {
 	gameStarting time.Time
 	raidActive   bool
+	// atMenu is set once the menu was reported, until a raid is joined:
+	// EFT loads the profile twice on the way back.
+	atMenu bool
 }
 
 type Snapshot struct {
@@ -315,6 +321,7 @@ func (p *EventParser) Parse(text string) []Event {
 		lower := strings.ToLower(line)
 		switch {
 		case strings.Contains(lower, "|application|gamestarting:"):
+			p.atMenu = false
 			if stamp, ok := parseLogTime(line); ok {
 				p.gameStarting = stamp
 			}
@@ -325,17 +332,23 @@ func (p *EventParser) Parse(text string) []Event {
 			}
 			stamp, _ := parseLogTime(line)
 			events = append(events, Event{Kind: MatchFound, OccurredAt: stamp, QueueSeconds: seconds})
+			p.atMenu = false
 		case strings.Contains(lower, "|application|gamestarted:"):
 			started, ok := parseLogTime(line)
 			eligible := ok && !p.gameStarting.IsZero() && started.Sub(p.gameStarting) > 3*time.Second
 			events = append(events, Event{Kind: RaidStarted, RunThroughEligible: eligible, OccurredAt: started})
 			p.gameStarting = time.Time{}
 			p.raidActive = true
+			p.atMenu = false
 		case isRaidEndLine(lower):
+			stamp, _ := parseLogTime(line)
 			if p.raidActive {
-				stamp, _ := parseLogTime(line)
 				events = append(events, Event{Kind: RaidExited, OccurredAt: stamp})
 				p.raidActive = false
+			}
+			if !p.atMenu && strings.Contains(lower, "|application|completeselectedprofile profileid:") {
+				events = append(events, Event{Kind: MenuReached, OccurredAt: stamp})
+				p.atMenu = true
 			}
 		}
 	}
