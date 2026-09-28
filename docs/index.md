@@ -32,6 +32,7 @@ MAYAK は、Escape from Tarkov（EFT）を遊びながら使う Windows 向け�
 | [タスクとマップ](tasks-and-maps.md) | タスクのページ、マップの自動表示、レイド状態 |
 | [ゲームデータ（カタログ）](catalog.md) | tarkov.dev のデータの取得と更新、Wiki での補完 |
 | [設定と連携](settings-and-integrations.md) | すべての設定、通知、トレイ、TarkovTracker、Host モード |
+| [ユーザーデータの保存](user-data.md) | 保存するファイルとその形式、同期に備えた分け方 |
 | [多言語対応](languages.md) | 対応言語と、言語を足す手順 |
 | [開発ガイド](development.md) | リポジトリの構成、開発・ビルド・テスト |
 | [OCR モデルの学習](ocr-training.md) | Tesseract モデルの追加学習 |

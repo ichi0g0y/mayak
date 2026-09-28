@@ -5,6 +5,8 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 - **Host 設定**: Go 側の `internal/config.Settings`。`settings.json` に保存され、React の設定ページ（`frontend/src/main.tsx`）で編集します。このページはブラウザシェルの設定タブ内に `<iframe id="host-settings">`（`/settings.html#<section>`）として埋め込まれます。
 - **ブラウザ設定**: シェル側の状態（`frontend/src/browser/state.js`）。`browser.json` に保存されます。
 
+どちらも、別の PC でも同じであってほしい好みと、この PC に属するものを別のファイルに分けて保存します（[ユーザーデータの保存](user-data.md)）。
+
 画面上では両者を区別せず、1 つの設定タブのサイドバーにまとめて表示します（シェルの詳細は [browser-shell.md](browser-shell.md) を参照）。
 
 ## 設定画面の構成
