@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MAYAK Voices</title>
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --panel: #fff;
+        --text: #1d2330;
+        --muted: #667085;
+        --line: #e3e6eb;
+        --accent: #2f6fed;
+        --warn: #b54708;
+        --warn-bg: #fff4e5;
+        --ok: #067647;
+        --playing: #eaf1ff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #14171c;
+          --panel: #1c2027;
+          --text: #e6e8eb;
+          --muted: #98a2b3;
+          --line: #2c323c;
+          --accent: #6b9bff;
+          --warn: #fdb022;
+          --warn-bg: #2e2412;
+          --ok: #47cd89;
+          --playing: #1e2a44;
+        }
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, 'Segoe UI', 'Yu Gothic UI', sans-serif; }
+      header { position: sticky; top: 0; z-index: 2; background: var(--panel); border-bottom: 1px solid var(--line); padding: 12px 20px; }
+      .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+      h1 { font-size: 16px; margin: 0; }
+      .badge { font-size: 12px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+      .badge.ok { color: var(--ok); border-color: currentColor; }
+      .badge.ng { color: var(--warn); border-color: currentColor; }
+      .progress { flex: 1 1 320px; display: none; align-items: center; gap: 10px; }
+      .progress.on { display: flex; }
+      .track { flex: 1; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+      .fill { height: 100%; width: 0; background: var(--accent); transition: width 0.2s; }
+      .progress span { font-size: 12px; color: var(--muted); white-space: nowrap; }
+      .errors { color: var(--warn); font-size: 12px; margin: 6px 0 0; white-space: pre-wrap; }
+      nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+      nav button { border-radius: 8px; }
+      nav button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+      nav .count { margin-left: 6px; font-size: 11px; padding: 0 6px; border-radius: 99px; background: var(--warn-bg); color: var(--warn); }
+      main { max-width: 1100px; margin: 0 auto; padding: 16px 20px 60px; }
+      section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+      h2 { font-size: 15px; margin: 0 0 10px; }
+      .muted { color: var(--muted); font-size: 12px; }
+      button, select, input { font: inherit; color: inherit; }
+      a { color: var(--accent); }
+      button { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+      button:hover:not(:disabled) { border-color: var(--accent); }
+      button:disabled { opacity: 0.5; cursor: default; }
+      button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+      select, input[type='text'], input[type='number'] { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+      input[type='text'] { width: 100%; }
+      input[type='number'] { width: 80px; }
+      .settings { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; }
+      .settings label { display: flex; align-items: center; gap: 8px; }
+      .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+      th { font-size: 12px; color: var(--muted); font-weight: 600; }
+      td.kind { white-space: nowrap; width: 1%; }
+      td.kind small { display: block; color: var(--muted); font-size: 11px; }
+      td.state { white-space: nowrap; width: 1%; font-size: 12px; }
+      td.play { width: 1%; }
+      tr.playing td { background: var(--playing); }
+      .stale { color: var(--warn); }
+      .fresh { color: var(--ok); }
+      .samples { display: grid; gap: 8px; }
+      .samples div { display: flex; align-items: center; gap: 12px; }
+      .samples span { min-width: 280px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="bar">
+        <h1>MAYAK Voices</h1>
+        <span id="engine" class="badge">VOICEVOX …</span>
+        <span id="saved" class="muted"></span>
+        <div id="progress" class="progress">
+          <div class="track"><div id="fill" class="fill"></div></div>
+          <span id="progressText"></span>
+        </div>
+      </div>
+      <p id="errors" class="errors"></p>
+      <nav id="tabs"></nav>
+    </header>
+    <main>
+      <section id="pack"></section>
+      <section>
+        <h2>サンプル</h2>
+        <p class="muted">tools/voices/samples/ の WAV（ボイス選びの候補など）。</p>
+        <div id="samples" class="samples"></div>
+      </section>
+    </main>
+    <script>
+      const labels = {
+        quest: ['タスク認識', 'スクショからタスクを特定できた'],
+        taskNotMatched: ['タスクを特定できない', '文字は読めたが該当タスクが無い'],
+        item: ['アイテム認識', 'スクショからアイテムを特定できた'],
+        itemNotMatched: ['アイテムを特定できない', '文字は読めたが該当アイテムが無い'],
+        error: ['スクショの解析エラー', 'OCR・データ取得の失敗'],
+        remoteError: ['マップ連携のエラー', 'tarkov.dev への送信・接続の失敗'],
+        hideoutError: ['ハイドアウトのエラー', '失敗したハイドアウト操作'],
+        matchFound: ['マッチング成立', ''],
+        raidStart: ['レイド開始', ''],
+        runThrough: ['ランスルー回避', '設定の秒数が経過'],
+        questItems: ['クエストアイテム確認', 'メニューに戻ったとき'],
+        restartTasks: ['失敗タスクの再開', 'メニューに戻ったとき'],
+      }
+      let data = null
+      let current = localStorage.getItem('pack') || ''
+      let saveTimer = 0
+      let playing = null
+      let version = Date.now()
+      // The progress bar shows from a generation seen on this page on.
+      let seenJob = false
+      const $ = (id) => document.getElementById(id)
+      const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+      const lineObject = (line) => (typeof line === 'string' ? { text: line } : { ...(line || { text: '' }) })
+      const packEntry = () => data.packs.find((p) => p.id === current) || data.packs[0]
+
+      async function load() {
+        data = await (await fetch('/api/state')).json()
+        if (!data.packs.some((p) => p.id === current)) current = data.packs[0]?.id || ''
+        render()
+      }
+
+      function render() {
+        renderHeader()
+        renderPack()
+        renderJob(data.job)
+      }
+
+      function renderHeader() {
+        const engine = $('engine')
+        engine.textContent = data.voicevox ? 'VOICEVOX 接続中' : 'VOICEVOX 未起動（日本語は再生成できません）'
+        engine.className = 'badge ' + (data.voicevox ? 'ok' : 'ng')
+        $('tabs').innerHTML = data.packs
+          .map(
+            (p) =>
+              `<button class="${p.id === current ? 'on' : ''}" data-tab="${p.id}">${esc(p.pack.name.ja)}${p.stale.length ? `<span class="count">${p.stale.length}</span>` : ''}</button>`,
+          )
+          .join('')
+      }
+
+      // After a save: the marks of what needs making again, the inputs left as
+      // they are (the caret stays where it is).
+      function updateMarks() {
+        const { stale } = packEntry()
+        for (const row of document.querySelectorAll('[data-row]')) {
+          const cell = row.querySelector('.state')
+          const isStale = stale.includes(row.dataset.row)
+          cell.className = 'state ' + (isStale ? 'stale' : 'fresh')
+          cell.textContent = isStale ? '要再生成' : '最新'
+        }
+        const button = document.querySelector('[data-generate="stale"]')
+        if (button) {
+          button.textContent = `変更分を再生成（${stale.length}）`
+          button.disabled = data.job.running || (packEntry().pack.voicevox && !data.voicevox) || !stale.length
+        }
+      }
+
+      function renderPack() {
+        const entry = packEntry()
+        if (!entry) return
+        const { id, pack, stale, styles } = entry
+        const busy = data.job.running
+        const blocked = busy || (pack.voicevox && !data.voicevox)
+        let settings = ''
+        if (pack.voicevox) {
+          const q = pack.voicevox.query || {}
+          const num = (key, label, step) =>
+            `<label>${label}<input type="number" step="${step}" min="0" data-query="${key}" value="${q[key] ?? ''}" placeholder="1"></label>`
+          settings = `<div class="settings">${styles.length ? `<label>基本のスタイル<select data-speaker>${styles.map((s) => `<option value="${s.id}" ${s.id === pack.voicevox.speaker ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></label>` : `<span class="muted">speaker ${pack.voicevox.speaker}</span>`}${num('speedScale', '話速', 0.05)}${num('pitchScale', '音高', 0.01)}${num('intonationScale', '抑揚', 0.05)}</div>`
+        } else if (pack.kokoro) {
+          settings = `<div class="settings"><label>ボイス<select data-voice>${data.kokoroVoices.map((v) => `<option ${v === pack.kokoro.voice ? 'selected' : ''}>${v}</option>`).join('')}</select></label><label>速さ<input type="number" step="0.05" min="0.5" max="2" data-speed value="${pack.kokoro.speed ?? ''}" placeholder="1"></label></div>`
+        }
+        const rows = data.kinds
+          .map((kind) => {
+            const line = lineObject(pack.lines[kind])
+            const style =
+              pack.voicevox && styles.length
+                ? `<td><select data-style="${kind}"><option value="">（基本）</option>${styles.map((s) => `<option value="${s.id}" ${line.style === s.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></td>`
+                : ''
+            const isStale = stale.includes(kind)
+            return `<tr data-row="${kind}" class="${playing?.kind === kind ? 'playing' : ''}"><td class="kind">${esc(labels[kind]?.[0] || kind)}<small>${esc(labels[kind]?.[1] || kind)}</small></td><td><input type="text" data-text="${kind}" value="${esc(line.text)}"></td>${style}<td class="state ${isStale ? 'stale' : 'fresh'}">${isStale ? '要再生成' : '最新'}</td><td class="play"><button data-play="${kind}">▶</button></td></tr>`
+          })
+          .join('')
+        $('pack').innerHTML = `<h2>${esc(pack.name.ja)} <span class="muted">${esc(pack.credit)} · <a href="${esc(pack.terms)}" target="_blank" rel="noreferrer">利用規約</a>（確認日 ${esc(pack.termsChecked)}）</span></h2>${settings}<div class="actions"><button class="primary" data-generate="stale" ${blocked || !stale.length ? 'disabled' : ''}>変更分を再生成（${stale.length}）</button><button data-generate="all" ${blocked ? 'disabled' : ''}>このパックを全部作り直す</button><button data-generate="every" ${busy ? 'disabled' : ''}>全パックの変更分を再生成</button><button data-through>${playing ? '■ 停止' : '▶ 通して再生'}</button></div><table><thead><tr><th>通知</th><th>文言</th>${pack.voicevox && styles.length ? '<th>スタイル</th>' : ''}<th>状態</th><th></th></tr></thead><tbody>${rows}</tbody></table><p class="muted">再生は今ある WAV（要再生成の行は変更前の声）。文言や設定は入力したそばから pack.json に保存されます。</p>`
+      }
+
+      function renderJob(job) {
+        if (job.running) seenJob = true
+        const on = job.running || (seenJob && job.total > 0)
+        $('progress').classList.toggle('on', on)
+        const pct = job.total ? Math.round((job.done / job.total) * 100) : 0
+        $('fill').style.width = pct + '%'
+        $('progressText').textContent = job.running
+          ? `${job.done}/${job.total}（${pct}%） ${job.current}`
+          : job.total
+            ? `完了 ${job.done}/${job.total}${job.errors.length ? `、失敗 ${job.errors.length}` : ''}`
+            : ''
+        $('errors').textContent = job.errors.join('\n')
+      }
+
+      // Saving: the pack as edited, a moment after the last keystroke.
+      function edited(apply) {
+        const entry = packEntry()
+        apply(entry.pack)
+        $('saved').textContent = '保存待ち…'
+        clearTimeout(saveTimer)
+        saveTimer = setTimeout(save, 500)
+      }
+      async function save() {
+        const entry = packEntry()
+        const res = await fetch('/api/packs/' + entry.id, { method: 'PUT', body: JSON.stringify(entry.pack) })
+        const next = await res.json()
+        if (next.error) {
+          $('saved').textContent = '保存に失敗: ' + next.error
+          return
+        }
+        // The page's own copy of the pack stays: keys typed while this save
+        // was on its way are in it, and go with the next save.
+        data = next
+        const same = data.packs.find((p) => p.id === entry.id)
+        if (same) same.pack = entry.pack
+        renderHeader()
+        updateMarks()
+        $('saved').textContent = '保存しました'
+      }
+      function setLine(pack, kind, change) {
+        const line = { ...lineObject(pack.lines[kind]), ...change }
+        for (const key of Object.keys(line)) if (line[key] === undefined || line[key] === '') delete line[key]
+        if (!('text' in line)) line.text = ''
+        pack.lines[kind] = Object.keys(line).length === 1 ? line.text : line
+      }
+
+      document.addEventListener('input', (e) => {
+        const el = e.target
+        if (el.dataset.text) edited((pack) => setLine(pack, el.dataset.text, { text: el.value }))
+        else if (el.dataset.query !== undefined)
+          edited((pack) => {
+            const q = { ...(pack.voicevox.query || {}) }
+            if (el.value === '') delete q[el.dataset.query]
+            else q[el.dataset.query] = Number(el.value)
+            pack.voicevox.query = Object.keys(q).length ? q : undefined
+          })
+        else if (el.dataset.speed !== undefined)
+          edited((pack) => {
+            pack.kokoro.speed = el.value === '' ? undefined : Number(el.value)
+          })
+      })
+      document.addEventListener('change', (e) => {
+        const el = e.target
+        if (el.dataset.style) edited((pack) => setLine(pack, el.dataset.style, { style: el.value ? Number(el.value) : undefined }))
+        else if (el.dataset.speaker !== undefined) edited((pack) => (pack.voicevox.speaker = Number(el.value)))
+        else if (el.dataset.voice !== undefined) edited((pack) => (pack.kokoro.voice = el.value))
+      })
+      document.addEventListener('click', async (e) => {
+        const el = e.target.closest('button')
+        if (!el) return
+        if (el.dataset.tab) {
+          stop()
+          current = el.dataset.tab
+          localStorage.setItem('pack', current)
+          render()
+        } else if (el.dataset.play) {
+          stop()
+          play([el.dataset.play])
+        } else if (el.dataset.through !== undefined) {
+          if (playing) stop()
+          else play(data.kinds.slice())
+        } else if (el.dataset.generate) {
+          clearTimeout(saveTimer)
+          await save()
+          const which = el.dataset.generate
+          const items =
+            which === 'every'
+              ? data.packs.flatMap((p) => (p.pack.voicevox && !data.voicevox ? [] : p.stale.map((kind) => ({ id: p.id, kind }))))
+              : (which === 'all' ? data.kinds : packEntry().stale).map((kind) => ({ id: current, kind }))
+          if (!items.length) return
+          const res = await fetch('/api/generate', { method: 'POST', body: JSON.stringify(items) })
+          if (!res.ok) $('errors').textContent = (await res.json()).error
+        }
+      })
+
+      // Playing: the lines of the pack shown, one after another.
+      function play(queue) {
+        const id = current
+        const next = () => {
+          const kind = queue.shift()
+          if (!kind || current !== id) return stop()
+          const audio = new Audio(`/audio/${id}/${kind}.wav?v=${version}`)
+          playing = { kind, audio }
+          renderPack()
+          document.querySelector(`[data-row="${kind}"]`)?.scrollIntoView({ block: 'nearest' })
+          audio.onended = () => {
+            if (playing?.audio !== audio) return
+            playing.timer = setTimeout(next, 500)
+          }
+          audio.onerror = audio.onended
+          void audio.play()
+        }
+        next()
+      }
+      function stop() {
+        if (playing) {
+          playing.audio.pause()
+          clearTimeout(playing.timer)
+        }
+        playing = null
+        if (data) renderPack()
+      }
+
+      // The generation's progress, from the server as it goes.
+      const events = new EventSource('/api/events')
+      let wasRunning = false
+      events.onmessage = (e) => {
+        const job = JSON.parse(e.data)
+        if (data) {
+          data.job = job
+          renderJob(job)
+        }
+        if (wasRunning && !job.running) {
+          version = Date.now()
+          void load()
+        } else if (!wasRunning && job.running && data) renderPack()
+        wasRunning = job.running
+      }
+
+      async function loadSamples() {
+        const list = await (await fetch('/api/samples')).json()
+        $('samples').innerHTML = list.length
+          ? list.map((f) => `<div><span>${esc(f)}</span><audio controls preload="none" src="/samples/${encodeURI(f)}"></audio></div>`).join('')
+          : '<p class="muted">なし</p>'
+      }
+
+      void load()
+      void loadSamples()
+    </script>
+  </body>
+</html>

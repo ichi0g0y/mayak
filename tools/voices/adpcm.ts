@@ -97,3 +97,70 @@ export function adpcmWave(rate: number, samples: Int16Array): Uint8Array {
   wave.set(data, 60)
   return wave
 }
+
+// decodeWave reads a mono WAV, 16-bit PCM or IMA ADPCM, into samples (as
+// internal/sound/voice.go does): the editor plays them as PCM, which
+// browsers play and ADPCM they do not.
+export function decodeWave(wav: ArrayBuffer): { rate: number; samples: Int16Array } {
+  const view = new DataView(wav)
+  let format = 0
+  let rate = 0
+  let align = 0
+  let count = 0
+  for (let at = 12; at + 8 <= view.byteLength; ) {
+    const id = String.fromCharCode(...new Uint8Array(wav, at, 4))
+    const size = Math.min(view.getUint32(at + 4, true), view.byteLength - at - 8)
+    const body = at + 8
+    if (id === 'fmt ') {
+      format = view.getUint16(body, true)
+      rate = view.getUint32(body + 4, true)
+      align = view.getUint16(body + 12, true)
+    } else if (id === 'fact') {
+      count = view.getUint32(body, true)
+    } else if (id === 'data') {
+      if (format === 1) return { rate, samples: new Int16Array(wav.slice(body, body + size)) }
+      const out: number[] = []
+      for (let block = body; block + 4 <= body + size; block += align) {
+        let predictor = view.getInt16(block, true)
+        let index = Math.min(88, view.getUint8(block + 2))
+        out.push(predictor)
+        for (let i = block + 4; i < Math.min(block + align, body + size); i++) {
+          const b = view.getUint8(i)
+          for (const code of [b & 15, b >> 4]) {
+            const step = steps[index]
+            let delta = step >> 3
+            if (code & 4) delta += step
+            if (code & 2) delta += step >> 1
+            if (code & 1) delta += step >> 2
+            predictor = Math.max(-32768, Math.min(32767, code & 8 ? predictor - delta : predictor + delta))
+            index = Math.max(0, Math.min(88, index + indexShift[code & 7]))
+            out.push(predictor)
+          }
+        }
+      }
+      return { rate, samples: Int16Array.from(count ? out.slice(0, count) : out) }
+    }
+    at = body + size + (size % 2)
+  }
+  throw new Error('no data')
+}
+
+// pcmWave is a mono 16-bit PCM WAV of samples.
+export function pcmWave(rate: number, samples: Int16Array): Uint8Array {
+  const view = new DataView(new ArrayBuffer(44 + samples.length * 2))
+  const text = (at: number, s: string) => [...s].forEach((c, i) => view.setUint8(at + i, c.charCodeAt(0)))
+  text(0, 'RIFF')
+  view.setUint32(4, 36 + samples.length * 2, true)
+  text(8, 'WAVEfmt ')
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1, true)
+  view.setUint16(22, 1, true)
+  view.setUint32(24, rate, true)
+  view.setUint32(28, rate * 2, true)
+  view.setUint16(32, 2, true)
+  view.setUint16(34, 16, true)
+  text(36, 'data')
+  view.setUint32(40, samples.length * 2, true)
+  samples.forEach((v, i) => view.setInt16(44 + i * 2, v, true))
+  return new Uint8Array(view.buffer)
+}
