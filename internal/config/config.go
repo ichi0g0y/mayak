@@ -2,10 +2,14 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/local/mayak/internal/appdir"
+	"errors"
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
+
+	"github.com/local/mayak/internal/appdir"
+	"github.com/local/mayak/internal/userdata"
 )
 
 var saveMu sync.Mutex
@@ -142,24 +146,65 @@ func Load() (Settings, error) {
 	return loadFile(p)
 }
 
+// Settings are kept in two files: settings.json has what belongs to this PC
+// (deviceKeys: folders, window places, pairing ids, OCR, startup), and
+// preferences.json the rest, key by key with when each changed, to follow
+// the user to another PC (internal/userdata). Settings saved before the
+// split are all in settings.json; the next save moves the preferences out.
+var deviceKeys = map[string]bool{
+	"screenshotDirectory": true, "logsDirectory": true, "tesseractPath": true,
+	"ocrEngine": true, "ocrDefaultRevision": true,
+	"remoteId": true, "remoteTargets": true, "browserRemoteId": true, "map": true,
+	"debug": true, "saveRecognitionDebug": true, "keepPriority": true, "launchAtStartup": true,
+	"windowX": true, "windowY": true, "windowWidth": true, "windowHeight": true, "windowConfigured": true,
+	"playerMarker":          true,
+	"hideoutErrorSoundPath": true, "questSoundPath": true, "errorSoundPath": true,
+	"taskNotMatchedSoundPath": true, "remoteErrorSoundPath": true, "itemSoundPath": true,
+	"itemNotMatchedSoundPath": true, "matchFoundSoundPath": true, "raidStartSoundPath": true,
+	"runThroughSoundPath": true, "questItemsSoundPath": true, "restartTasksSoundPath": true,
+}
+
+// IsDeviceKey tells a setting (its JSON name) that belongs to this PC.
+func IsDeviceKey(key string) bool { return deviceKeys[key] }
+
+func preferencesPath(settingsPath string) string {
+	return filepath.Join(filepath.Dir(settingsPath), "preferences.json")
+}
+
 func loadFile(p string) (Settings, error) {
+	fields := map[string]json.RawMessage{}
 	b, err := os.ReadFile(p)
-	if os.IsNotExist(err) {
-		return defaults(), nil
+	var readErr error
+	switch {
+	case err == nil:
+		if json.Unmarshal(b, &fields) != nil {
+			readErr = errors.New("settings.json is damaged")
+			fields = map[string]json.RawMessage{}
+			if backup, backupErr := os.ReadFile(p + ".bak"); backupErr == nil && json.Unmarshal(backup, &fields) == nil {
+				readErr = nil
+			}
+		}
+	case !os.IsNotExist(err):
+		readErr = err
 	}
+	prefs, _, prefsErr := userdata.LoadKeyed(preferencesPath(p))
+	for key, value := range prefs.Values {
+		if !deviceKeys[key] {
+			fields[key] = value
+		}
+	}
+	merged, err := json.Marshal(fields)
 	if err != nil {
 		return defaults(), err
 	}
-	settings, decodeErr := decodeSettings(b)
-	if decodeErr == nil {
-		return settings, nil
+	settings, err := decodeSettings(merged)
+	if err != nil {
+		return defaults(), err
 	}
-	if backup, backupErr := os.ReadFile(p + ".bak"); backupErr == nil {
-		if recovered, recoveryErr := decodeSettings(backup); recoveryErr == nil {
-			return recovered, nil
-		}
+	if readErr == nil {
+		readErr = prefsErr
 	}
-	return defaults(), decodeErr
+	return settings, readErr
 }
 
 func decodeSettings(b []byte) (Settings, error) {
@@ -183,6 +228,7 @@ func decodeSettings(b []byte) (Settings, error) {
 	}
 	return s, nil
 }
+
 func Save(s Settings) error {
 	saveMu.Lock()
 	defer saveMu.Unlock()
@@ -190,17 +236,41 @@ func Save(s Settings) error {
 	if err != nil {
 		return err
 	}
-	if err = os.MkdirAll(filepath.Dir(p), 0700); err != nil {
-		return err
-	}
-	b, err := json.MarshalIndent(s, "", "  ")
+	return saveFile(p, s, time.Now())
+}
+
+// saveFile writes this PC's settings to settings.json and the preferences
+// that changed (stamped with now) to preferences.json.
+func saveFile(p string, s Settings, now time.Time) error {
+	b, err := json.Marshal(s)
 	if err != nil {
 		return err
 	}
-	if current, readErr := os.ReadFile(p); readErr == nil && json.Valid(current) {
-		_ = writeFileAtomic(p+".bak", current)
+	var fields map[string]json.RawMessage
+	if err = json.Unmarshal(b, &fields); err != nil {
+		return err
 	}
-	return writeFileAtomic(p, b)
+	device := map[string]json.RawMessage{}
+	preferences := map[string]json.RawMessage{}
+	for key, value := range fields {
+		if deviceKeys[key] {
+			device[key] = value
+		} else {
+			preferences[key] = value
+		}
+	}
+	prefsFile := preferencesPath(p)
+	prefs, existed, _ := userdata.LoadKeyed(prefsFile)
+	if prefs.Set(preferences, now) || !existed {
+		if err = userdata.SaveKeyed(prefsFile, prefs); err != nil {
+			return err
+		}
+	}
+	out, err := json.MarshalIndent(device, "", "  ")
+	if err != nil {
+		return err
+	}
+	return userdata.WriteWithBackup(p, out)
 }
 
 func LoadWindow() (WindowState, error)        { return loadWindowFile("window.json") }
