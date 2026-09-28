@@ -89,9 +89,9 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `itemNotMatchedSoundEnabled` / `itemNotMatchedSoundPath` | `false` / `""` | アイテムの文字は読めたが、該当するアイテムが無いとき |
 | `errorSoundEnabled` / `errorSoundPath` | `true` / `""` | スクリーンショットを解析できなかったとき（OCR・データ取得の失敗） |
 | `remoteErrorSoundEnabled` / `remoteErrorSoundPath` | `true` / `""` | tarkov.dev への送信・接続に失敗したとき |
-| `matchFoundSoundEnabled` / `matchFoundSoundPath` | `false` / `""` | マッチ成立時 |
-| `raidStartSoundEnabled` / `raidStartSoundPath` | `false` / `""` | レイド開始時 |
-| `runThroughSoundEnabled` / `runThroughSoundPath` | `false` / `""` | ランスルー時間が過ぎたとき |
+| `matchFoundSoundEnabled` / `matchFoundSoundPath` | `true` / `""` | マッチ成立時 |
+| `raidStartSoundEnabled` / `raidStartSoundPath` | `true` / `""` | レイド開始時 |
+| `runThroughSoundEnabled` / `runThroughSoundPath` | `true` / `""` | ランスルー時間が過ぎたとき |
 | `runThroughSeconds` | `430` | ランスルー時間（秒）。1–3599 の範囲外なら 430 |
 | `questItemsSoundEnabled` / `questItemsSoundPath` | `false` / `""` | メニューに戻ったとき（おかえり） |
 | `restartTasksSoundEnabled` / `restartTasksSoundPath` | `false` / `""` | メニューに戻ったとき、失敗したタスクがあれば |

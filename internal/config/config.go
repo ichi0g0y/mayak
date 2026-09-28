@@ -127,7 +127,7 @@ type WindowState struct {
 }
 
 func defaults() Settings {
-	return Settings{Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: true, QuestSoundEnabled: true, ErrorSoundEnabled: true, TaskNotMatchedSoundEnabled: true, RemoteErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, AutoUpdate: true}
+	return Settings{Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: true, QuestSoundEnabled: true, ErrorSoundEnabled: true, TaskNotMatchedSoundEnabled: true, RemoteErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, MatchFoundSound: true, RaidStartSound: true, RunThroughSound: true, AutoUpdate: true}
 }
 func path() (string, error) {
 	d, err := os.UserConfigDir()
