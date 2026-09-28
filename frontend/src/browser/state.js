@@ -385,16 +385,33 @@ function receiveTask(state, task) {
       ? translatedURL(task.urls[site], state.language)
       : webURL(task.urls[site])
   // Reconnect/repeated screenshots focus the same task, without a tab explosion.
-  let tab = state.tabs.find((t) => t.kind === 'web' && t.task?.id === task.id && t.url === url)
+  // The same page is the same whether it was translated since (the
+  // translate button, or Google adding its own _x_tr_ parameters) or has
+  // moved to a heading; the tab then stays as it is, translated included.
+  let tab = state.tabs.find((t) => t.kind === 'web' && t.task?.id === task.id && samePage(t.url, url))
+  const same = !!tab
   if (!tab && state.taskMode === 'reuse') tab = state.tabs.find((t) => t.role === 'task' && !t.pinned)
   if (!tab) {
     if (state.tabs.length >= 80) return null
     tab = { id: randomUUID(), kind: 'web', role: 'task' }
     state.tabs.push(tab)
   }
-  Object.assign(tab, { url, title: task.name, task: structuredClone(task) })
+  Object.assign(tab, { url: same ? tab.url : url, title: task.name, task: structuredClone(task) })
   state.active = tab.id
   return tab
+}
+// samePage tells two addresses of one page: translated or not, and with or
+// without a heading (#…).
+function samePage(a, b) {
+  const page = (value) => {
+    const url = originalURL(value)
+    if (!url) return null
+    const u = new URL(url)
+    u.hash = ''
+    return u.href
+  }
+  const x = page(a)
+  return x !== null && x === page(b)
 }
 function receiveMap(state, name) {
   if (typeof name !== 'string' || !name.match(/^[a-z0-9-]{1,60}$/)) return null

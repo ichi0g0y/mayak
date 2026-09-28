@@ -61,6 +61,24 @@ const task = (id) => ({
     'japanese-wiki': `https://wikiwiki.jp/eft/Prapor/${id}`,
   },
 })
+test('a task page translated since is the same task page', () => {
+  const s = defaults()
+  s.taskMode = 'new'
+  s.questSite = 'official-wiki'
+  const first = receiveTask(s, task('Debut'))
+  // Translated with the toolbar button (Google adds its own parameters).
+  first.url =
+    'https://escapefromtarkov-fandom-com.translate.goog/wiki/Debut?_x_tr_sl=auto&_x_tr_tl=ja&_x_tr_hl=ja&_x_tr_pto=wapp#Objectives'
+  const again = receiveTask(s, task('Debut'))
+  assert.equal(again.id, first.id)
+  assert.match(again.url, /translate\.goog/)
+  // Opened translated (the setting), found again untranslated or not.
+  s.translateWiki = true
+  const other = receiveTask(s, task('Checking'))
+  other.url += '&_x_tr_pto=wapp'
+  assert.equal(receiveTask(s, task('Checking')).id, other.id)
+  assert.notEqual(receiveTask(s, task('Search')).id, other.id)
+})
 test('reuse preserves pinned tasks and deduplicates repeated detections', () => {
   const s = defaults()
   s.taskMode = 'reuse'
@@ -568,8 +586,11 @@ test('a detected task opens the official wiki translated when asked', () => {
     tab.url,
     'https://escapefromtarkov-fandom-com.translate.goog/wiki/Debut?_x_tr_sl=auto&_x_tr_tl=ja&_x_tr_hl=ja',
   )
+  // The setting is for pages opened from now on: the tab already open for
+  // the task stays as it is, translated.
   s.translateWiki = false
-  assert.equal(receiveTask(s, task('Debut')).url, 'https://escapefromtarkov.fandom.com/wiki/Debut')
+  assert.equal(receiveTask(s, task('Debut')).url, tab.url)
+  assert.equal(receiveTask(s, task('Checking')).url, 'https://escapefromtarkov.fandom.com/wiki/Checking')
   s.translateWiki = true
   s.questSite = 'japanese-wiki'
   assert.equal(receiveTask(s, task('Debut')).url, 'https://wikiwiki.jp/eft/Prapor/Debut')

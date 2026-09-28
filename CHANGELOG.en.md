@@ -10,6 +10,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - Requests to web services always gave the app's version as 0.1.0.
 - A snap note made from a game screenshot with a position keeps where it was taken (map, position, direction). "Show on tarkov.dev" in the editor shows that position and direction on the map tab (and the maps connected by Remote Control); a screenshot whose map is not known lets you choose it. A post to X carries the place and a link to the tarkov.dev map (a tarkov.dev link cannot hold a position, so the position and direction go as text).
 - A task not yet in tarkov.dev (the To the Light series and others) or a story chapter opened on the Japanese wiki as a search, not its page. New tasks now take their trader from the official wiki, and story chapters open under ストーリータスク. The task site dropdown no longer shows tarkov.dev after the Japanese wiki is chosen.
+- A task page that had been translated was not taken for the task's page again: a screenshot of the same task opened a new tab. It now goes to that tab, translated as it is.
 - The official wiki opened translated had a narrow article: Fandom filled its right rail with a sign-up card (a translated page is always signed out). The rail is hidden there.
 - After a search from the built-in browser's address bar, the address bar kept the words typed instead of showing the pages the tab went to (a link followed included).
 - A screenshot of the "To the Light - Getting Acquainted" task was not recognized.
