@@ -691,6 +691,11 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .about-head img{width:56px;height:56px;border-radius:14px}
 .about-head h2{margin:0;font-size:20px;letter-spacing:.04em}
 .about-version{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
+.support-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+.support-head h2{margin:2px 0 6px;font-size:16px}
+.support-head p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+.support-icon{display:grid;place-items:center;flex:0 0 auto;width:44px;height:44px;border-radius:12px;background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.support-icon .icon{width:24px;height:24px}
 .about>p{margin:0 0 12px;font-size:13px;line-height:1.65}
 .about-links{display:flex;flex-wrap:wrap;gap:8px}
 .license-list{display:grid;gap:10px;margin:8px 0 12px}

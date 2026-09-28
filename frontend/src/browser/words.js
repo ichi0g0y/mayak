@@ -435,7 +435,9 @@ export const words = {
     aboutSource: 'GitHub',
     aboutReleases: '変更履歴',
     aboutSupport: 'Buy Me a Coffee で応援',
-    aboutSupportHint: 'MAYAK は無料です。気に入ったら、開発の応援をしてもらえるとうれしいです。',
+    aboutSupportTitle: 'MAYAK の開発を応援する',
+    aboutSupportHint:
+      'MAYAK は無料で、個人で開発しています。役に立ったら、コーヒー 1 杯分の応援をもらえると開発の励みになります。',
     aboutLicense: 'GPL-3.0 で公開しています。',
     aboutCredits:
       'マップは tarkov.dev、タスクの進捗は TarkovTracker のデータと API を使っています。Escape from Tarkov は Battlestate Games の商標で、MAYAK は非公式のツールです。',
@@ -933,7 +935,9 @@ export const words = {
     aboutSource: 'GitHub',
     aboutReleases: 'Changelog',
     aboutSupport: 'Support on Buy Me a Coffee',
-    aboutSupportHint: 'MAYAK is free. If you like it, you can support its development.',
+    aboutSupportTitle: 'Support MAYAK',
+    aboutSupportHint:
+      'MAYAK is free and made by one person. If it helps you, the price of a coffee keeps its development going.',
     aboutLicense: 'Released under the GPL-3.0.',
     aboutCredits:
       'Maps come from tarkov.dev and task progress from TarkovTracker, through their data and APIs. Escape from Tarkov is a trademark of Battlestate Games; MAYAK is an unofficial tool.',
