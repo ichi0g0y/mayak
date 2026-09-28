@@ -201,6 +201,8 @@ export const words = {
     tutOpenTracker: 'TarkovTracker の設定を開く',
     tutDoneTitle: '準備完了',
     tutDone: 'この案内は 設定 → 表示 からいつでも見直せます。良いレイドを。',
+    tutSupport:
+      'MAYAK は無料です。気に入ったら、Buy Me a Coffee で開発を応援してもらえるとうれしいです（設定 → MAYAK について からも開けます）。',
     // Tab list and updates
     allTabs: 'すべてのタブ',
     searchTabs: 'タブを検索',
@@ -696,6 +698,8 @@ export const words = {
     tutOpenTracker: 'Open the TarkovTracker settings',
     tutDoneTitle: 'All set',
     tutDone: 'You can see this guide again under Settings → Appearance. Good raids.',
+    tutSupport:
+      'MAYAK is free. If you like it, you can support its development on Buy Me a Coffee (also under Settings → About MAYAK).',
     // Tab list and updates
     allTabs: 'All tabs',
     searchTabs: 'Search tabs',

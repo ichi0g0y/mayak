@@ -53,6 +53,8 @@ export async function loadVersion() {
   } catch {}
   if (appVersion || voicePacks.length) render()
 }
+// Where development can be supported (About, the tutorial's last step).
+export const SUPPORT_URL = 'https://buymeacoffee.com/ichi0g0y'
 export const t = (key) => words[state?.language || 'ja'][key] || key
 export { esc, icon }
 export const option = (value, label, current) =>

@@ -17,7 +17,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - The error sound is split: "Task not identified", "Screenshot could not be read", and "Map link error" each turn on or off and take a file of their own. Item screenshots have "Item recognized" and "Item not identified" too (off at first). Failed Hideout actions are no longer notified (EFT only logs them and nothing can be done about them; the Logs page still shows them under Hideout).
 - Notifications that come at once play one after another instead of over each other. On a new install sounds are off; turned on, "Match found", "Raid started" and the run-through alert play from the start too.
 - The quest items reminder at the raid's start is now a notification back from a raid (kind words that fit a survival and a death alike: the logs do not tell them apart), and a game start has its own. The failed tasks reminder plays back at the menu too instead of at the raid's start, when it was too late to restart them.
-- About MAYAK has a link to support development on Buy Me a Coffee.
+- About MAYAK and the last step of the tutorial have a link to support development on Buy Me a Coffee.
 - Settings → About has Licenses & credits: MAYAK's license, the data it shows, the built-in voices' credits and terms, and the bundled libraries' licenses (THIRD_PARTY_NOTICES.txt).
 
 ## Nightly

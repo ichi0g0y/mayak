@@ -31,6 +31,7 @@ import {
   icon,
   action,
   appVersion,
+  SUPPORT_URL,
   voicePacks,
   select,
   siteChoices,
@@ -50,7 +51,6 @@ setRender(render)
 
 // The changelog page, rendered from CHANGELOG.md in the repository.
 const CHANGELOG_URL = 'https://mayak.ich.sh/changelog'
-const SUPPORT_URL = 'https://buymeacoffee.com/ichi0g0y'
 const LICENSE_URL = 'https://github.com/ichi0g0y/mayak/blob/main/LICENSE'
 let editingBookmark = null,
   bookmarkQuery = '',

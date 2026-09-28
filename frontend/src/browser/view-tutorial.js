@@ -1,5 +1,5 @@
 import { mapTabID } from './state.js'
-import { esc, t, appVersion, icon, render, api, state, action } from './shell-core.js'
+import { esc, t, appVersion, icon, render, api, state, action, SUPPORT_URL } from './shell-core.js'
 
 // The first-run tutorial: an overlay that walks through the setup after
 // installing. It shows on the Host until it is finished or skipped
@@ -21,7 +21,8 @@ export function tutorialHTML() {
     map: `<p>${esc(t('tutMap'))}</p><button data-action="tutorialMap">${icon('map')}${esc(t('tutOpenMap'))}</button>`,
     remote: `<p>${esc(t('tutRemote'))}</p><button data-action="tutorialRemote">${icon('linked')}${esc(t('tutOpenRemote'))}</button>`,
     tracker: `<p>${esc(t('tutTracker'))}</p><button data-action="tutorialTracker">${icon('tracker')}${esc(t('tutOpenTracker'))}</button>`,
-    done: `<p>${esc(t('tutDone'))}</p>`,
+    // Asked once, on the way out, and easy to pass by.
+    done: `<p>${esc(t('tutDone'))}</p><p class="hint">${esc(t('tutSupport'))}</p><button data-action="tutorialSupport">${icon('coffee')}${esc(t('aboutSupport'))}</button>`,
   }[key]
   const title = t(
     {
@@ -78,6 +79,9 @@ export async function handleTutorial(type) {
     case 'tutorialSkip':
     case 'tutorialFinish':
       return closeTutorial()
+    case 'tutorialSupport':
+      await closeTutorial()
+      return action('openOrFocus', SUPPORT_URL)
     case 'tutorialMap':
       await closeTutorial()
       return action('activate', mapTabID)
