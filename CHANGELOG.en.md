@@ -3,41 +3,33 @@
 What changed in each version of MAYAK, from the user's side. The Japanese version is [CHANGELOG.md](CHANGELOG.md); the published page is https://mayak.ich.sh/changelog, which the app's update notice opens for "What changed".
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
-- Snap notes take text. With "T" in the editor, click where the text goes and type; click a text to rewrite it, drag it to move it (while typing, with the handle above the box). The palette sets its font (any installed), colour (any colour too), size, and outline colour (auto, a swatch or any colour) and width. The caret is white or black against the picture under it.
-- Snap notes have Share: copy the picture with its drawing to the clipboard, save it as a PNG file under a name you choose, or post it to X (the picture is copied and a new post opens; paste it with Ctrl+V).
-- Snap notes can be starred. The star on a card and next to the name in the editor toggles it, the list has a Favorites filter (and a card can be deleted from its other corner, with a second press), and a page's menu lists its starred notes first.
-- The snap note list's filter (All / Page notes / Standalone notes) did not show.
-- Requests to web services always gave the app's version as 0.1.0.
-- A snap note made from a game screenshot with a position keeps where it was taken (map, position, direction). "Show on tarkov.dev" in the editor shows that position and direction on the map tab (and the maps connected by Remote Control); a screenshot whose map is not known lets you choose it. A post to X carries the place and a link to the tarkov.dev map (a tarkov.dev link cannot hold a position, so the position and direction go as text).
-- A task not yet in tarkov.dev (the To the Light series and others) or a story chapter opened on the Japanese wiki as a search, not its page. New tasks now take their trader from the official wiki, and story chapters open under ストーリータスク. The task site dropdown no longer shows tarkov.dev after the Japanese wiki is chosen.
-- A task page that had been translated was not taken for the task's page again: a screenshot of the same task opened a new tab. It now goes to that tab, translated as it is.
-- The official wiki opened translated had a narrow article: Fandom filled its right rail with a sign-up card (a translated page is always signed out). The rail is hidden there.
-- After a search from the built-in browser's address bar, the address bar kept the words typed instead of showing the pages the tab went to (a link followed included).
-- A screenshot of the "To the Light - Getting Acquainted" task was not recognized.
-- Notifications can speak. Choose a voice under Settings → Sounds → Voice for all, one of five VOICEVOX characters (Kasukabe Tsumugi, Amehare Hau, WhiteCUL, Haruka Nana, Kenzaki Mesuo), and each notification is said in that character's own words (in Japanese), or an English voice (female or male); it starts as Kasukabe Tsumugi in Japanese and the English female voice in English, and the beeps are still there. Each notification can also have its own voice (one button puts them all back on the voice for all), with what it says shown under it and its own volume adjustment (a slider, up or down from the volume for all), and the credits and terms are under Licenses & credits. A file of your own is chosen with Custom.
-- The error sound is split: "Task not identified", "Screenshot could not be read", and "Map link error" each turn on or off and take a file of their own. Item screenshots have "Item recognized" and "Item not identified" too (off at first). Failed Hideout actions are no longer notified (EFT only logs them and nothing can be done about them; the Logs page still shows them under Hideout).
-- Notifications that come at once play one after another instead of over each other. On a new install sounds are off; turned on, "Match found", "Raid started" and the run-through alert play from the start too.
-- The quest items reminder at the raid's start is now a notification back from a raid (kind words that fit a survival and a death alike: the logs do not tell them apart), and a game start and the game closing have their own. The failed tasks reminder plays back at the menu too instead of at the raid's start, when it was too late to restart them.
-- Settings → About has Licenses & credits: MAYAK's license, the data it shows, the built-in voices' credits and terms, and the bundled libraries' licenses (THIRD_PARTY_NOTICES.txt).
 
-## Nightly
-
-These changes are planned for the next version.
+## v0.1.18 (2026-09-29)
 
 ### New
 
 - Snap notes: the brush button in the built-in browser's toolbar captures what is on screen or the whole page, to draw on with a pen. A note taken from a page stays linked to it: the page's button counts its notes and its menu opens them. Notes can be unlinked, or started from a blank sheet, an image file or an image on the clipboard. "Snap notes" in the sidebar opens the list.
 - Snap notes draw on layers: three layers over the original image, which is never edited; the original and each layer can be hidden.
+- Snap notes take text. With "T" in the editor, click where the text goes and type; click a text to rewrite it, drag it to move it (while typing, with the handle above the box). The palette sets its font (any installed), colour (any colour too), size, and outline colour (auto, a swatch or any colour) and width. The caret is white or black against the picture under it.
 - The snap note editor has viewing adjustments: brightness, contrast and lift shadows sliders make dark screenshots easier to look into. The original image stays as it is.
+- Snap notes have Share: copy the picture with its drawing to the clipboard, save it as a PNG file under a name you choose, or post it to X (the picture is copied and a new post opens; paste it with Ctrl+V).
+- Snap notes can be starred. The star on a card and next to the name in the editor toggles it, the list has a Favorites filter (and a card can be deleted from its other corner, with a second press), and a page's menu lists its starred notes first.
 - The screenshot viewer has "Make a snap note": it turns a game screenshot into a standalone snap note, opened for drawing.
-- The built-in browser has a translate button (toolbar, web tabs). WebView2 has no page translation of its own, so the page is reopened through Google Translate (translate.goog); pressing again returns to the page itself. Settings → Tasks → "Open the official wiki (English) translated" opens task pages on the official wiki translated from the start.
+- A snap note made from a game screenshot with a position keeps where it was taken (map, position, direction). "Show on tarkov.dev" in the editor shows that position and direction on the map tab (and the maps connected by Remote Control); a screenshot whose map is not known lets you choose it. A post to X carries the place and a link to the tarkov.dev map (a tarkov.dev link cannot hold a position, so the position and direction go as text).
+- The built-in browser has a translate button (toolbar, web tabs). WebView2 has no page translation of its own, so the page is reopened through Google Translate (translate.goog); pressing again returns to the page itself. Settings → Tasks → "Open the official wiki (English) translated" opens task pages on the official wiki translated from the start. A screenshot of a task whose page is open translated goes to that tab, translated as it is. On the translated official wiki, Fandom's right rail (a sign-up card, since a translated page is always signed out) is hidden so the article has the width.
 - The toolbar's icons on the right (translate, snap notes, wiki search, open in the default browser) can be reordered by dragging; the order is kept across restarts.
+- Notifications can speak. Choose a voice under Settings → Sounds → Voice for all, one of five VOICEVOX characters (Kasukabe Tsumugi, Amehare Hau, WhiteCUL, Haruka Nana, Kenzaki Mesuo), and each notification is said in that character's own words (in Japanese), or an English voice (female or male); it starts as Kasukabe Tsumugi in Japanese and the English female voice in English, and the beeps are still there. Each notification can also have its own voice (one button puts them all back on the voice for all), with what it says shown under it and its own volume adjustment (a slider, up or down from the volume for all), and the credits and terms are under Licenses & credits. A file of your own is chosen with Custom.
+- Settings → About has Licenses & credits: MAYAK's license, the data it shows, the built-in voices' credits and terms, and the bundled libraries' licenses (THIRD_PARTY_NOTICES.txt).
 - Nightly builds are now published. Set "Update channel" under Settings → About MAYAK to Nightly to update to the version in development, built every day. On nightly, a newer stable release is installed instead.
 - Assigning a TarkovTracker key to a profile now syncs that profile's past logs by itself, with the count shown in a toast. Before, only progress made after the assignment was sent, and earlier progress needed a manual sync.
 
 ### Improved
 
-- Snap notes: the menu shows over the page (the page no longer disappears), the editor fills the page area and zooms with Ctrl+wheel or its toolbar, and captures of translated pages leave out Google Translate's bar.
+- Snap notes: the menu shows over the page, the editor fills the page area and zooms with Ctrl+wheel or its toolbar, and captures of translated pages leave out Google Translate's bar.
+- The error sound is split: "Task not identified", "Screenshot could not be read", and "Map link error" each turn on or off and take a file of their own. Item screenshots have "Item recognized" and "Item not identified" too (off at first). Failed Hideout actions are no longer notified (EFT only logs them and nothing can be done about them; the Logs page still shows them under Hideout).
+- Notifications that come at once play one after another instead of over each other. On a new install sounds are off; turned on, "Match found", "Raid started" and the run-through alert play from the start too.
+- The quest items reminder at the raid's start is now a notification back from a raid (kind words that fit a survival and a death alike: the logs do not tell them apart), and a game start and the game closing have their own. The failed tasks reminder plays back at the menu too instead of at the raid's start, when it was too late to restart them.
+- A sound file of your own chosen for a notification is copied into MAYAK's data folder, so it still plays after the original is moved or deleted.
 - TarkovTracker's past-log sync now lives on each profile's row. Every profile with a key has "Recheck past logs", which reads that profile's logs from its first session and sends them. The shared panel at the bottom and its wipe/version choice are gone (a profile is one wipe). By default it used to send only what followed the latest game version.
 - TarkovTracker's "Recheck past logs" is not available while EFT is running: a sync then could overwrite a task state changed during play with an older one. The sync that follows a key assignment also waits until EFT closes. A profile whose past logs were never rechecked shows the button in red, with a note under its row.
 - Pressing the sidebar's monitoring dot with no Screenshots folder set opens Settings → Folders instead of starting the watch, so a failed folder detection leads straight to where the folder is chosen.
@@ -48,8 +40,12 @@ These changes are planned for the next version.
 
 ### Fixed
 
+- A task not yet in tarkov.dev (the To the Light series and others) or a story chapter opened on the Japanese wiki as a search, not its page. New tasks now take their trader from the official wiki, and story chapters open under ストーリータスク. The task site dropdown no longer shows tarkov.dev after the Japanese wiki is chosen.
+- A screenshot of the "To the Light - Getting Acquainted" task was not recognized.
 - Story chapters with a large picture (They Are Already Here, Accidental Witness and the like) are recognized as task screens again, and the picture beside a chapter's name is no longer read as letters.
 - The first story task recognized after a start (Batya and the like) no longer fails once and matches only when the same screen is captured again. Story chapters come from the list read from the official wiki, and the first recognition matched without waiting for it. The list is now read at start, and the first match waits for it (up to 10 seconds).
+- After a search from the built-in browser's address bar, the address bar kept the words typed instead of showing the pages the tab went to (a link followed included).
+- Requests to web services always gave the app's version as 0.1.0.
 - The tutorial's "open the map" step now opens the map tab.
 
 ## v0.1.17 (2026-09-26)
