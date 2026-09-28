@@ -89,6 +89,12 @@ export class Settings {
      * pack of internal/sound/voices); empty for the built-in beeps.
      */
     "soundVoice": string;
+
+    /**
+     * SoundVoices is the voice a notification speaks with instead (its kind,
+     * sound.Kind, to a pack or "beep"); one not in it takes SoundVoice.
+     */
+    "soundVoices": { [_ in string]?: string };
     "autoStartMonitoring": boolean;
     "openMapOnRaidStart": boolean;
     "navigateMapOnPositionScreenshot": boolean;
@@ -255,6 +261,9 @@ export class Settings {
         if (!("soundVoice" in $$source)) {
             this["soundVoice"] = "";
         }
+        if (!("soundVoices" in $$source)) {
+            this["soundVoices"] = {};
+        }
         if (!("autoStartMonitoring" in $$source)) {
             this["autoStartMonitoring"] = false;
         }
@@ -351,9 +360,13 @@ export class Settings {
      */
     static createFrom($$source: any = {}): Settings {
         const $$createField8_0 = $$createType1;
+        const $$createField35_0 = $$createType2;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("remoteTargets" in $$parsedSource) {
             $$parsedSource["remoteTargets"] = $$createField8_0($$parsedSource["remoteTargets"]);
+        }
+        if ("soundVoices" in $$parsedSource) {
+            $$parsedSource["soundVoices"] = $$createField35_0($$parsedSource["soundVoices"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }
@@ -362,3 +375,4 @@ export class Settings {
 // Private type creation functions
 const $$createType0 = RemoteTarget.createFrom;
 const $$createType1 = $Create.Array($$createType0);
+const $$createType2 = $Create.Map($Create.Any, $Create.Any);

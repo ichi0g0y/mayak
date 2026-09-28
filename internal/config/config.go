@@ -51,10 +51,13 @@ type Settings struct {
 	SoundVolume                int    `json:"soundVolume"`
 	// SoundVoice is the built-in voice the notifications speak with (a
 	// pack of internal/sound/voices); empty for the built-in beeps.
-	SoundVoice          string `json:"soundVoice"`
-	AutoStartMonitoring bool   `json:"autoStartMonitoring"`
-	OpenMapOnRaidStart  bool   `json:"openMapOnRaidStart"`
-	NavigateMapOnShot   bool   `json:"navigateMapOnPositionScreenshot"`
+	SoundVoice string `json:"soundVoice"`
+	// SoundVoices is the voice a notification speaks with instead (its kind,
+	// sound.Kind, to a pack or "beep"); one not in it takes SoundVoice.
+	SoundVoices         map[string]string `json:"soundVoices"`
+	AutoStartMonitoring bool              `json:"autoStartMonitoring"`
+	OpenMapOnRaidStart  bool              `json:"openMapOnRaidStart"`
+	NavigateMapOnShot   bool              `json:"navigateMapOnPositionScreenshot"`
 	// PlayerMarkerEffect is the effect the built-in browser gives the
 	// player's position marker on tarkov.dev's map, PlayerMarkerColor its
 	// colour (#rrggbb; empty for the effect's own); see app_marker.go.

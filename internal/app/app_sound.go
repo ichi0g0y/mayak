@@ -114,7 +114,19 @@ func (a *App) notify(s config.Settings, kind sound.Kind) {
 		return
 	}
 	a.addLog("Info", "Sound", "Playing "+string(kind)+" alert")
-	playNotification(kind, path, s.SoundVoice, s.SoundVolume)
+	playNotification(kind, path, voiceFor(s, kind), s.SoundVolume)
+}
+
+// voiceFor is the built-in voice a notification speaks with: its own choice,
+// else the one for all ("" for the beeps).
+func voiceFor(s config.Settings, kind sound.Kind) string {
+	if voice, ok := s.SoundVoices[string(kind)]; ok {
+		if voice == "beep" {
+			return ""
+		}
+		return voice
+	}
+	return s.SoundVoice
 }
 
 // notifyOnce plays a notification of a screenshot or error, but not again

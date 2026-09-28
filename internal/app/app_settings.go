@@ -280,6 +280,11 @@ func normalizeSettings(s config.Settings) config.Settings {
 	if !sound.HasVoice(s.SoundVoice) {
 		s.SoundVoice = ""
 	}
+	for kind, voice := range s.SoundVoices {
+		if _, ok := sound.ParseKind(kind); !ok || (voice != "beep" && !sound.HasVoice(voice)) {
+			delete(s.SoundVoices, kind)
+		}
+	}
 	if s.ScreenshotDirectory != "" {
 		s.ScreenshotDirectory = filepath.Clean(s.ScreenshotDirectory)
 	}
