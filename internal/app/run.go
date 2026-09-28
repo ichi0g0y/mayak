@@ -3,7 +3,6 @@ package app
 import (
 	"io/fs"
 	"os"
-	"runtime"
 	"runtime/pprof"
 	"sync"
 	"time"
@@ -76,11 +75,11 @@ func Run(assets fs.FS, icon []byte) error {
 	windowOptions := application.WebviewWindowOptions{
 		Name: "main", Title: "MAYAK", Width: 1120, Height: 760, MinWidth: 760, MinHeight: 560,
 		StartState: application.WindowStateNormal, URL: "/", ZoomControlEnabled: false,
-		// On Windows the shell draws its own title bar, so the sidebar reaches
-		// the top edge; Windows keeps the shadow, rounded corners and snapping.
-		// macOS and Linux keep the system's title bar and window buttons (the
-		// shell's are Windows-style and left out there).
-		Frameless: runtime.GOOS == "windows",
+		// The shell draws its own title bar, so the sidebar reaches the top
+		// edge: Windows-style buttons at the top right, or on macOS the red,
+		// yellow and green ones at the top left. Windows keeps the shadow,
+		// rounded corners and snapping.
+		Frameless: true,
 	}
 	// Set the initial geometry before native window creation. ServiceStartup
 	// may run while Wails is still constructing the HWND/WebView controllers.

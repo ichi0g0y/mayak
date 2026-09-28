@@ -11,7 +11,7 @@ These changes are planned for the next version.
 ### Improved
 
 - The update channel under Settings → About MAYAK can be chosen on a Mac and on Linux too (it was on the Windows Host only).
-- On a Mac and on Linux the window has the system's title bar and its close, minimize and zoom buttons, instead of Windows-style ones.
+- On a Mac the window's close, minimize and zoom buttons are the red, yellow and green ones at the top left, as on any Mac window, instead of Windows-style ones at the top right; the sidebar and the toolbar move right for them.
 
 ### Fixed
 
