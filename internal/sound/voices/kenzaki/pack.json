@@ -24,9 +24,9 @@
     "matchFound": "マッチング完了",
     "raidStart": "レイドを開始します",
     "runThrough": "脱出可能な時間になりました",
-    "gameStart": "おかえりなさい",
+    "gameStart": "おかえりなさい。システムは正常です",
     "questItems": "お疲れさまでした。一息つきましょう",
     "restartTasks": "失敗したタスクがあります",
-    "gameExit": "セッション終了。お疲れさまでした"
+    "gameExit": "ゲームの終了を確認しました"
   }
 }
