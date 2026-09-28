@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -66,5 +67,23 @@ func TestPreferenceTimesMoveOnlyOnChange(t *testing.T) {
 	_ = json.Unmarshal(b, &prefs)
 	if !prefs.UpdatedAt["soundVolume"].Equal(first.Add(time.Hour)) || !prefs.UpdatedAt["language"].Equal(first) {
 		t.Fatalf("times %v", prefs.UpdatedAt)
+	}
+}
+
+// A preference MAYAK no longer has is dropped on the next save.
+func TestRemovedPreferencesAreDropped(t *testing.T) {
+	dir := t.TempDir()
+	p := filepath.Join(dir, "settings.json")
+	prefs := `{"version":1,"values":{"hideoutErrorNotifications":true,"soundVolume":40},"updatedAt":{}}`
+	if err := os.WriteFile(filepath.Join(dir, "preferences.json"), []byte(prefs), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s, _ := loadFile(p)
+	if err := saveFile(p, s, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := os.ReadFile(filepath.Join(dir, "preferences.json"))
+	if strings.Contains(string(b), "hideoutErrorNotifications") || !strings.Contains(string(b), `"soundVolume": 40`) {
+		t.Fatalf("preferences.json %s", b)
 	}
 }

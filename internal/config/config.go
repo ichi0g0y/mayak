@@ -15,20 +15,18 @@ import (
 var saveMu sync.Mutex
 
 type Settings struct {
-	GameLanguage              string         `json:"gameLanguage"`
-	QuestSite                 string         `json:"questSite"`
-	HideoutErrorNotifications bool           `json:"hideoutErrorNotifications"`
-	HideoutErrorSoundPath     string         `json:"hideoutErrorSoundPath"`
-	Language                  string         `json:"language"`
-	ScreenshotDirectory       string         `json:"screenshotDirectory"`
-	LogsDirectory             string         `json:"logsDirectory"`
-	RemoteID                  string         `json:"remoteId"`
-	RemoteTargets             []RemoteTarget `json:"remoteTargets"`
-	BrowserRemoteID           string         `json:"browserRemoteId"`
-	Map                       string         `json:"map"`
-	GameMode                  string         `json:"gameMode"`
-	OCREngine                 string         `json:"ocrEngine"`
-	TesseractPath             string         `json:"tesseractPath"`
+	GameLanguage        string         `json:"gameLanguage"`
+	QuestSite           string         `json:"questSite"`
+	Language            string         `json:"language"`
+	ScreenshotDirectory string         `json:"screenshotDirectory"`
+	LogsDirectory       string         `json:"logsDirectory"`
+	RemoteID            string         `json:"remoteId"`
+	RemoteTargets       []RemoteTarget `json:"remoteTargets"`
+	BrowserRemoteID     string         `json:"browserRemoteId"`
+	Map                 string         `json:"map"`
+	GameMode            string         `json:"gameMode"`
+	OCREngine           string         `json:"ocrEngine"`
+	TesseractPath       string         `json:"tesseractPath"`
 	// OCRDefaultRevision records one-time moves to a new default OCR engine.
 	OCRDefaultRevision    int    `json:"ocrDefaultRevision"`
 	Debug                 bool   `json:"debug"`
@@ -259,7 +257,16 @@ func saveFile(p string, s Settings, now time.Time) error {
 	}
 	prefsFile := preferencesPath(p)
 	prefs, existed, _ := userdata.LoadKeyed(prefsFile)
-	if prefs.Set(preferences, now) || !existed {
+	changed := prefs.Set(preferences, now)
+	// A setting MAYAK no longer has goes (the hideout error alert did).
+	for key := range prefs.Values {
+		if _, ok := preferences[key]; !ok {
+			delete(prefs.Values, key)
+			delete(prefs.UpdatedAt, key)
+			changed = true
+		}
+	}
+	if changed || !existed {
 		if err = userdata.SaveKeyed(prefsFile, prefs); err != nil {
 			return err
 		}

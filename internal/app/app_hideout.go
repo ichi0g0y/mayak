@@ -9,7 +9,6 @@ import (
 	"github.com/local/mayak/internal/catalog"
 	"github.com/local/mayak/internal/hideoutlog"
 	"github.com/local/mayak/internal/model"
-	"github.com/local/mayak/internal/sound"
 )
 
 func hideoutDirectory() string {
@@ -83,7 +82,6 @@ func (a *App) handleHideoutEvent(parent context.Context, e hideoutlog.Event) {
 	}
 	a.mu.Lock()
 	a.status.Hideout.Events = a.hideoutStore.Events()
-	settings := a.settings
 	status := a.status
 	a.mu.Unlock()
 	// The logs replayed at a start bring hundreds of events in a row: the
@@ -93,13 +91,6 @@ func (a *App) handleHideoutEvent(parent context.Context, e hideoutlog.Event) {
 		a.emitStatusSoon()
 	} else {
 		a.emitStatus(status)
-	}
-	notify := shouldNotifyHideout(e, settings.HideoutErrorNotifications)
-	if notify {
-		if a.ctx != nil {
-			a.emitEvent("hideout:alert", e)
-		}
-		a.notify(settings, sound.HideoutError)
 	}
 }
 
@@ -155,13 +146,6 @@ func (a *App) hideoutSaved(err error) {
 		a.addLog("Warn", "Hideout", "Could not save the hideout history: "+err.Error())
 	}
 	a.emitStatusSoon()
-}
-
-// shouldNotifyHideout alerts on new failed hideout actions. Actions whose
-// outcome could not be confirmed are not alerted: nothing can be done
-// about them.
-func shouldNotifyHideout(e hideoutlog.Event, errors bool) bool {
-	return !e.Historical && e.Actionable() && errors
 }
 
 // Called under a.mu: publish a single identity's read-only progress with its catalog.

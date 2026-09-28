@@ -7,8 +7,6 @@ export type RemoteTarget = { id: string; name: string; map: boolean; tasks: bool
 export type Settings = {
   gameLanguage: string
   questSite: string
-  hideoutErrorNotifications: boolean
-  hideoutErrorSoundPath: string
   language: Language
   screenshotDirectory: string
   logsDirectory: string
@@ -188,8 +186,6 @@ export type UpdateStatus = {
 export const defaults: Settings = {
   gameLanguage: 'auto',
   questSite: 'tarkov-dev',
-  hideoutErrorNotifications: false,
-  hideoutErrorSoundPath: '',
   language: 'ja',
   screenshotDirectory: '',
   logsDirectory: '',

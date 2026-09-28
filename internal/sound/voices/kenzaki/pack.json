@@ -21,7 +21,6 @@
     "itemNotMatched": "アイテムを特定できません",
     "error": "画像を解析できません",
     "remoteError": "マップとの接続に失敗しました",
-    "hideoutError": "ハイドアウトでエラーを検知しました",
     "matchFound": "マッチング完了",
     "raidStart": "レイドを開始します",
     "runThrough": "脱出可能な時間になりました",

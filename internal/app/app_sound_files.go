@@ -29,7 +29,7 @@ var soundRef = regexp.MustCompile(`^sounds/[0-9a-f]{16}-[^/\\]{1,100}$`)
 // soundFields are the settings holding a notification's sound file.
 func soundFields(s *config.Settings) []*string {
 	return []*string{
-		&s.HideoutErrorSoundPath, &s.QuestSoundPath, &s.ErrorSoundPath, &s.TaskNotMatchedSoundPath,
+		&s.QuestSoundPath, &s.ErrorSoundPath, &s.TaskNotMatchedSoundPath,
 		&s.RemoteErrorSoundPath, &s.ItemSoundPath, &s.ItemNotMatchedSoundPath, &s.MatchFoundSoundPath,
 		&s.RaidStartSoundPath, &s.RunThroughSoundPath, &s.QuestItemsSoundPath, &s.RestartTasksSoundPath,
 	}

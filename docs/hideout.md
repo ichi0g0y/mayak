@@ -4,7 +4,7 @@ The Logs page includes a Hideout category and a compact progress card. Expand th
 
 Progress is read from TarkovTracker for the exact detected account/profile/mode and assigned key. Station catalogs remain isolated between regular PvP, Seasonal PvP, and PvE. Changing the profile, key, or catalog mode cannot reuse another identity's displayed progress. Hideout log events never write progress to TarkovTracker or imply construction completion.
 
-Dedicated backend logs are preferred; output/errors are fallback sources. Historical files, newly discovered files, truncated files, and monitoring restarts initialize silently. Only newly appended actionable failures can produce an in-app alert and the configured sound. Notifications default to off. Enable Hideout error notifications in Sounds; actions whose outcome could not be confirmed are not notified. Sound volume and the master sound switch are shared with existing alerts.
+Dedicated backend logs are preferred; output/errors are fallback sources. Historical files, newly discovered files, truncated files, and monitoring restarts initialize silently. Failures are recorded for diagnosis only: they are not notified (EFT shows nothing in game and there is nothing to do about them). The Logs page shows them in the Hideout category.
 
 The Diagnostics button opens `%APPDATA%/Mayak/hideout`. Its structured JSON retains at most 500 events for 90 days, newest first. Only event classification, action, area, timestamp, source basename, station name, and detected identity are stored. Raw log payloads, headers, cookies, gateway addresses, and URL queries are excluded. Clearing the log hides these entries while retaining bounded deduplication fingerprints across restart.
 

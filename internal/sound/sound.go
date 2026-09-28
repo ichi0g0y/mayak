@@ -21,7 +21,6 @@ const (
 	ItemNotMatched Kind = "itemNotMatched"
 	Error          Kind = "error"
 	RemoteError    Kind = "remoteError"
-	HideoutError   Kind = "hideoutError"
 	MatchFound     Kind = "matchFound"
 	RaidStart      Kind = "raidStart"
 	RunThrough     Kind = "runThrough"
@@ -30,7 +29,7 @@ const (
 )
 
 // Kinds lists every notification.
-var Kinds = []Kind{Quest, TaskNotMatched, Item, ItemNotMatched, Error, RemoteError, HideoutError, MatchFound, RaidStart, RunThrough, QuestItems, RestartTasks}
+var Kinds = []Kind{Quest, TaskNotMatched, Item, ItemNotMatched, Error, RemoteError, MatchFound, RaidStart, RunThrough, QuestItems, RestartTasks}
 
 // ParseKind returns the notification named s.
 func ParseKind(s string) (Kind, bool) {
@@ -74,7 +73,7 @@ func Wave(kind Kind, volume int) []byte {
 	}
 	duration := .24
 	switch kind {
-	case Error, TaskNotMatched, ItemNotMatched, HideoutError:
+	case Error, TaskNotMatched, ItemNotMatched:
 		duration = .3
 	case RemoteError:
 		duration = .36
@@ -97,7 +96,7 @@ func Wave(kind Kind, volume int) []byte {
 		n := (float64(int32(noise>>16)-32768) / 32768)
 		var sample float64
 		switch kind {
-		case Error, TaskNotMatched, HideoutError:
+		case Error, TaskNotMatched:
 			sample = pulse(t, 0, .11, 185) + .78*pulse(t, .15, .11, 145)
 		case ItemNotMatched:
 			sample = pulse(t, 0, .11, 220) + .78*pulse(t, .15, .11, 170)

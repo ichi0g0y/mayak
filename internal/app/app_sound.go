@@ -94,8 +94,6 @@ func soundChoice(s config.Settings, kind sound.Kind) (bool, string) {
 		return s.ErrorSoundEnabled, s.ErrorSoundPath
 	case sound.RemoteError:
 		return s.RemoteErrorSoundEnabled, s.RemoteErrorSoundPath
-	case sound.HideoutError:
-		return s.HideoutErrorNotifications, s.HideoutErrorSoundPath
 	case sound.MatchFound:
 		return s.MatchFoundSound, s.MatchFoundSoundPath
 	case sound.RaidStart:

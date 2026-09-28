@@ -26,7 +26,6 @@ export const kinds = [
   'itemNotMatched',
   'error',
   'remoteError',
-  'hideoutError',
   'matchFound',
   'raidStart',
   'runThrough',

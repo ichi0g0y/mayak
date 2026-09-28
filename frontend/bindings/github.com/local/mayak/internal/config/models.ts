@@ -41,8 +41,6 @@ export class RemoteTarget {
 export class Settings {
     "gameLanguage": string;
     "questSite": string;
-    "hideoutErrorNotifications": boolean;
-    "hideoutErrorSoundPath": string;
     "language": string;
     "screenshotDirectory": string;
     "logsDirectory": string;
@@ -168,12 +166,6 @@ export class Settings {
         }
         if (!("questSite" in $$source)) {
             this["questSite"] = "";
-        }
-        if (!("hideoutErrorNotifications" in $$source)) {
-            this["hideoutErrorNotifications"] = false;
-        }
-        if (!("hideoutErrorSoundPath" in $$source)) {
-            this["hideoutErrorSoundPath"] = "";
         }
         if (!("language" in $$source)) {
             this["language"] = "";
@@ -369,18 +361,18 @@ export class Settings {
      * Creates a new Settings instance from a string or object.
      */
     static createFrom($$source: any = {}): Settings {
-        const $$createField8_0 = $$createType1;
-        const $$createField35_0 = $$createType2;
-        const $$createField36_0 = $$createType3;
+        const $$createField6_0 = $$createType1;
+        const $$createField33_0 = $$createType2;
+        const $$createField34_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("remoteTargets" in $$parsedSource) {
-            $$parsedSource["remoteTargets"] = $$createField8_0($$parsedSource["remoteTargets"]);
+            $$parsedSource["remoteTargets"] = $$createField6_0($$parsedSource["remoteTargets"]);
         }
         if ("soundVoices" in $$parsedSource) {
-            $$parsedSource["soundVoices"] = $$createField35_0($$parsedSource["soundVoices"]);
+            $$parsedSource["soundVoices"] = $$createField33_0($$parsedSource["soundVoices"]);
         }
         if ("soundVolumeOffsets" in $$parsedSource) {
-            $$parsedSource["soundVolumeOffsets"] = $$createField36_0($$parsedSource["soundVolumeOffsets"]);
+            $$parsedSource["soundVolumeOffsets"] = $$createField34_0($$parsedSource["soundVolumeOffsets"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }

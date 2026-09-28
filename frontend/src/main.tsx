@@ -55,7 +55,6 @@ import { Tabs, TabsContent } from './components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
 import type { VoicePack } from '../bindings/github.com/local/mayak/internal/sound/models'
 import { translate, translateAnalysisStage } from './i18n'
-import { HideoutEvent, hideoutMessage } from './Hideout'
 import {
   RemoteTarget,
   Settings,
@@ -120,7 +119,6 @@ function App() {
     window.clearTimeout(markerColorTimer.current)
     markerColorTimer.current = window.setTimeout(() => patch({ playerMarkerColor: color }), 400)
   }
-  const [hideoutAlert, setHideoutAlert] = useState<HideoutEvent | null>(null)
   const [logQuery, setLogQuery] = useState('')
   const [trackerToken, setTrackerToken] = useState('')
   const [now, setNow] = useState(Date.now())
@@ -177,7 +175,6 @@ function App() {
         unsubscribers.push(
           EventsOn('log:entry', (entry: LogEntry) => setLogs((current) => [...current.slice(-499), entry])),
         )
-        unsubscribers.push(EventsOn('hideout:alert', (event: HideoutEvent) => setHideoutAlert(event)))
         unsubscribers.push(EventsOn('log:clear', () => setLogs([])))
         // A key assignment syncs the profile's past logs (syncAssignedHistory).
         unsubscribers.push(
@@ -405,7 +402,6 @@ function App() {
     }, t('foldersDetected'))
   const analyzeLatest = () => run(() => AnalyzeLatestScreenshot(), t('latestAnalyzed'))
   type SoundPathKey =
-    | 'hideoutErrorSoundPath'
     | 'questSoundPath'
     | 'errorSoundPath'
     | 'taskNotMatchedSoundPath'
@@ -522,13 +518,6 @@ function App() {
       pathKey: 'remoteErrorSoundPath',
     },
     {
-      id: 'hideout-error',
-      label: t('hideoutErrorNotifications'),
-      kind: 'hideoutError',
-      enabledKey: 'hideoutErrorNotifications',
-      pathKey: 'hideoutErrorSoundPath',
-    },
-    {
       id: 'match-found-sound',
       label: t('matchFoundSound'),
       kind: 'matchFound',
@@ -613,7 +602,7 @@ function App() {
         ? formatDuration(runThroughRemaining)
         : t('runThroughReady')
       : '—'
-  // Saves, notices and hideout alerts show as toasts at the bottom right:
+  // Saves and notices show as toasts at the bottom right:
   // successes fade out, failures stay until dismissed or retried.
   const toasts = (
     <div className="toast-stack" aria-live="polite">
@@ -640,19 +629,6 @@ function App() {
           {!noticeError && <Check />}
           <span>{notice}</span>
           <button type="button" className="toast-close" onClick={() => setNotice('')} aria-label="×">
-            <X />
-          </button>
-        </div>
-      )}
-      {hideoutAlert && (
-        <div className="toast warn" role="alert">
-          <span>{hideoutMessage(hideoutAlert, settings.language)}</span>
-          <button
-            type="button"
-            className="toast-close"
-            onClick={() => setHideoutAlert(null)}
-            aria-label={t('hideoutDismiss')}
-          >
             <X />
           </button>
         </div>

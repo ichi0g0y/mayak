@@ -45,20 +45,6 @@ func TestHideoutProgressRequiresExactCurrentBindingAndMode(t *testing.T) {
 	}
 }
 
-func TestHideoutNotificationsRequireNewActionableEvents(t *testing.T) {
-	for _, status := range []string{"info", "failed", "unknown"} {
-		for _, historical := range []bool{true, false} {
-			event := hideoutlog.Event{Status: status, Historical: historical}
-			if got := shouldNotifyHideout(event, true); got != (!historical && status == "failed") {
-				t.Fatalf("incorrect error notification: %s %v", status, historical)
-			}
-			if shouldNotifyHideout(event, false) {
-				t.Fatalf("notification while disabled: %s %v", status, historical)
-			}
-		}
-	}
-}
-
 func TestHideoutSaveErrorClearsAfterRecovery(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "events.json")
 	store := hideoutlog.NewStore(path)

@@ -83,16 +83,22 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `screenshotRetainCount` | `500` | 残す最大枚数。範囲は 0–100000 で、0 はこの条件を使わない |
 | `screenshotRetainHours` | `168` | 保持時間（時間）。範囲は 0–87600 で、0 はこの条件を使わない |
 | `soundsEnabled` | `true` | 通知音のマスタースイッチ |
-| `questSoundEnabled` / `questSoundPath` | `true` / `""` | クエスト認識に成功したときの音 |
-| `errorSoundEnabled` / `errorSoundPath` | `true` / `""` | 認識エラーや接続エラーのときの音 |
-| `matchFoundSoundEnabled` / `matchFoundSoundPath` | `false` / `""` | マッチ成立時の音 |
-| `raidStartSoundEnabled` / `raidStartSoundPath` | `false` / `""` | レイド開始時の音 |
-| `runThroughSoundEnabled` / `runThroughSoundPath` | `false` / `""` | ランスルー時間が過ぎたときの音 |
+| `questSoundEnabled` / `questSoundPath` | `true` / `""` | タスクを認識したとき |
+| `taskNotMatchedSoundEnabled` / `taskNotMatchedSoundPath` | `true` / `""` | タスク画面の文字は読めたが、該当するタスクが無いとき |
+| `itemSoundEnabled` / `itemSoundPath` | `false` / `""` | アイテムを認識したとき |
+| `itemNotMatchedSoundEnabled` / `itemNotMatchedSoundPath` | `false` / `""` | アイテムの文字は読めたが、該当するアイテムが無いとき |
+| `errorSoundEnabled` / `errorSoundPath` | `true` / `""` | スクリーンショットを解析できなかったとき（OCR・データ取得の失敗） |
+| `remoteErrorSoundEnabled` / `remoteErrorSoundPath` | `true` / `""` | tarkov.dev への送信・接続に失敗したとき |
+| `matchFoundSoundEnabled` / `matchFoundSoundPath` | `false` / `""` | マッチ成立時 |
+| `raidStartSoundEnabled` / `raidStartSoundPath` | `false` / `""` | レイド開始時 |
+| `runThroughSoundEnabled` / `runThroughSoundPath` | `false` / `""` | ランスルー時間が過ぎたとき |
 | `runThroughSeconds` | `430` | ランスルー時間（秒）。1–3599 の範囲外なら 430 |
-| `questItemsSoundEnabled` / `questItemsSoundPath` | `false` / `""` | レイド開始時にタスクアイテムの確認を促す音 |
-| `restartTasksSoundEnabled` / `restartTasksSoundPath` | `false` / `""` | 失敗したタスクがあるとき、レイド開始時に鳴らす音 |
-| `hideoutErrorNotifications` / `hideoutErrorSoundPath` | `false` / `""` | Hideout 操作の失敗を通知する |
-| `soundVolume` | `28` | 音量（0–100 に丸める） |
+| `questItemsSoundEnabled` / `questItemsSoundPath` | `false` / `""` | メニューに戻ったとき（おかえり） |
+| `restartTasksSoundEnabled` / `restartTasksSoundPath` | `false` / `""` | メニューに戻ったとき、失敗したタスクがあれば |
+| `soundVolume` | `28` | 全体の音量（0–100 に丸める） |
+| `soundVoice` | `""` | 基本の声。組み込みの声のパック名、`beep`（ビープ音）、空なら言語ごとの標準（日本語は `tsumugi`、ほかは `heart`） |
+| `soundVoices` | `{}` | 通知ごとの声（通知の種類 → パック名 / `beep` / `custom`）。無い通知は基本の声 |
+| `soundVolumeOffsets` | `{}` | 通知ごとの、全体の音量からの調整（−50〜＋50、0 は持たない） |
 | `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | `openMapOnRaidStart` | `true` | レイド開始時に tarkov.dev を現在のマップに切り替える |
 | `navigateMapOnPositionScreenshot` | `true` | 位置スクリーンショットの送信後、そのマップに切り替える |
@@ -195,29 +201,30 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | 保存失敗 | `PersistSettings` / `SaveSettings` のエラー | 次の保存が成功するまで残る（× は無い）。「再試行」ボタン付き |
 | 通知（成功） | 各操作の成功メッセージ | 3 秒で消える |
 | 通知（エラー） | 各操作の失敗 | × で閉じるまで残る |
-| Hideout 警告 | `hideout:alert` イベント | × で閉じるまで残る |
 
 ### 通知音
 
-- すべての音は `soundsEnabled` と各項目のスイッチの両方が真のときだけ鳴ります。音量は共通の `soundVolume` です。
-- クエスト認識成功と認識エラーは、同じキーで 3 秒以内なら繰り返し鳴らしません（`recognitionSoundCooldown`）。
+- すべての音は `soundsEnabled` と各項目のスイッチの両方が真のときだけ鳴ります。
+- 鳴らすものは、通知ごとに「カスタム（ファイル）→ その通知の声 → 基本の声 → ビープ音」の順に決まります（`internal/app/app_sound.go`）。ファイルはデータフォルダの `sounds/` に取り込んだものです（[ユーザーデータの保存](user-data.md)）。
+- 音量は `soundVolume` に通知ごとの `soundVolumeOffsets` を足して 0–100 に収めたものです。
+- 同時に起きた通知は重ねずに順番に鳴らします。
+- 認識の通知とエラーは、同じ内容で 3 秒以内なら繰り返し鳴らしません（`recognitionSoundCooldown`）。
 
 | 通知 | 鳴るタイミング |
 |---|---|
-| クエスト認識成功 | タスクを認識したとき |
-| 認識・接続エラー | 認識できなかったとき、または実行時エラー |
+| タスク認識 | タスクを認識したとき |
+| タスクを特定できない | タスク画面の文字は読めたが、該当するタスクが無いとき |
+| アイテム認識 | アイテムを認識したとき |
+| アイテムを特定できない | アイテムの文字は読めたが、該当するアイテムが無いとき |
+| スクリーンショットの解析エラー | OCR やデータ取得に失敗したとき |
+| マップ連携のエラー | tarkov.dev への送信・接続に失敗したとき |
 | マッチ成立 | ログでマッチ成立を検出したとき |
 | レイド開始 | ログでレイド開始を検出したとき |
-| タスクアイテム確認 | レイド開始時 |
-| 失敗タスクの再開確認 | レイド開始時に、TarkovTracker 上で失敗しているタスクがあるとき |
 | ランスルー終了 | PvE（設定または自動判定）、またはランスルー判定の対象となるレイドで、開始から `runThroughSeconds` が経過し、まだレイド中のとき |
-| Hideout エラー | 下記 |
+| おかえり | メニューに戻ったとき（ゲームの起動時とレイドからの帰還時。ログのプロフィール読み込みの 1 回目） |
+| 失敗タスクの再開確認 | メニューに戻ったときに、TarkovTracker 上で失敗しているタスクがあるとき |
 
-### Hideout エラー通知
-
-- `hideoutErrorNotifications` が真の場合、新しく追記された失敗イベント（`status == "failed"` かつ過去ログではないもの）に対して、`hideout:alert` トーストを出し、`soundsEnabled` なら `hideoutErrorSoundPath` の音（既定はエラー音）を鳴らします。
-- 結果を確認できなかった操作（unknown）の通知と、その設定は削除されました（`shouldNotifyHideout`）。unknown のイベントも Hideout の履歴には残り、ログページでは `Warn` として表示します。
-- 詳細は [hideout.md](hideout.md) を参照してください。
+Hideout の操作が EFT のログでエラーになったことは通知しません（ゲームの画面には出ず、プレイヤーにできることも無いため）。記録はログページの Hideout で見られます（[hideout.md](hideout.md)）。
 
 ## トレイとウィンドウ
 

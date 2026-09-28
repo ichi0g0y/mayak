@@ -18,7 +18,6 @@
     "itemNotMatched": "Couldn't identify the item.",
     "error": "Couldn't read the screenshot.",
     "remoteError": "The map link failed.",
-    "hideoutError": "Something went wrong in the hideout.",
     "matchFound": "Match found.",
     "raidStart": "Raid started. Good luck.",
     "runThrough": "Run-through cleared. You can extract now.",
