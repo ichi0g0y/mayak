@@ -3,6 +3,7 @@ package app
 import (
 	"io/fs"
 	"os"
+	"runtime"
 	"runtime/pprof"
 	"sync"
 	"time"
@@ -76,10 +77,13 @@ func Run(assets fs.FS, icon []byte) error {
 		Name: "main", Title: "MAYAK", Width: 1120, Height: 760, MinWidth: 760, MinHeight: 560,
 		StartState: application.WindowStateNormal, URL: "/", ZoomControlEnabled: false,
 		// The shell draws its own title bar, so the sidebar reaches the top
-		// edge: Windows-style buttons at the top right, or on macOS the red,
-		// yellow and green ones at the top left. Windows keeps the shadow,
-		// rounded corners and snapping.
-		Frameless: true,
+		// edge. On Windows and Linux the window is frameless and the shell
+		// draws Windows-style buttons at the top right; Windows keeps the
+		// shadow, rounded corners and snapping. On macOS the title bar is
+		// hidden instead, and the system's red, yellow and green buttons stay
+		// at the top left (window_buttons_darwin.go).
+		Frameless: runtime.GOOS != "darwin",
+		Mac:       macWindow,
 	}
 	// Set the initial geometry before native window creation. ServiceStartup
 	// may run while Wails is still constructing the HWND/WebView controllers.
@@ -95,6 +99,10 @@ func Run(assets fs.FS, icon []byte) error {
 		}
 	}
 	service.window = desktop.Window.NewWithOptions(windowOptions)
+	var buttonsOnce sync.Once
+	service.window.OnWindowEvent(events.Common.WindowRuntimeReady, func(*application.WindowEvent) {
+		buttonsOnce.Do(func() { keepWindowButtonsPlaced(service.window) })
+	})
 	var placementOnce sync.Once
 	service.window.OnWindowEvent(events.Common.WindowRuntimeReady, func(*application.WindowEvent) {
 		placementOnce.Do(func() {

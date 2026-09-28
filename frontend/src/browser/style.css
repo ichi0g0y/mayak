@@ -99,20 +99,15 @@ body[data-nav=left][data-item=right] .titlebar-grip{display:none}
 .window-controls .window-close:hover{background:#c42b1c;color:#fff}
 .window-controls .icon{width:15px;height:15px;stroke-width:1.5}
 [data-layout=horizontal] .window-controls{position:fixed;top:0;right:0;height:48px;margin:0;background:var(--sidebar);border-bottom:1px solid var(--border);z-index:12}
-/* macOS: the red, yellow and green buttons at the window's top left, as on
-   every Mac window, instead of the ones at the top right. Whatever starts at
-   the top left moves right by --lights: the sidebar's top row, the toolbar
-   (sidebar on the right), the item panel's title row (item panel on the left
-   with the sidebar on the right) or the tab strip (horizontal layout). The
-   collapsed sidebar is as wide as the buttons, with its toggle under them. */
-.traffic-lights{position:fixed;top:0;left:0;z-index:14;height:48px;display:flex;align-items:center;gap:8px;padding-left:16px;--wails-draggable:no-drag}
-.traffic-lights .light{width:12px;height:12px;min-width:0;padding:0;border:0;border-radius:50%;display:grid;place-items:center;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.2)}
-.traffic-lights .close{background:#ff5f57}
-.traffic-lights .minimise{background:#febc2e}
-.traffic-lights .zoom{background:#28c840}
-.traffic-lights svg{width:8px;height:8px;fill:none;stroke:rgba(0,0,0,.55);stroke-width:1.4;stroke-linecap:round;opacity:0}
-.traffic-lights:hover svg{opacity:1}
+/* macOS: the system's red, yellow and green buttons at the window's top left
+   (internal/app/window_buttons_darwin.go puts them at the middle of the 48px
+   row). Whatever starts at the top left moves right by --lights: the
+   sidebar's top row, the toolbar (sidebar on the right), the item panel's
+   title row (item panel on the left with the sidebar on the right) or the tab
+   strip (horizontal layout). The collapsed sidebar is as wide as the buttons,
+   with its toggle under them. In full screen the buttons are hidden. */
 body[data-frame=mac]{--lights:80px}
+body[data-frame=mac][data-fullscreen=true]{--lights:0px}
 body[data-frame=mac] .toolbar{padding-right:12px}
 body[data-frame=mac] .titlebar-grip{display:none}
 [data-frame=mac][data-layout=horizontal] .tab-strip{width:calc(100% - var(--dock-width));padding-left:var(--lights)}
@@ -120,9 +115,9 @@ body[data-frame=mac] .titlebar-grip{display:none}
 [data-frame=mac][data-layout=vertical][data-nav=left] .app-menu-anchor{padding-left:var(--lights)}
 [data-frame=mac][data-layout=vertical][data-nav=right]:not([data-item=left]) .toolbar{padding-left:var(--lights)}
 [data-frame=mac][data-layout=vertical][data-nav=right][data-item=left] .item-titlebar{padding-left:var(--lights)}
-body[data-frame=mac][data-nav=left][data-sidebar=collapsed]{--sidebar-width:var(--lights)}
-body[data-frame=mac][data-nav=left][data-sidebar=collapsed] .app-menu-anchor{height:88px;padding:48px 0 0}
-body[data-frame=mac][data-nav=left][data-sidebar=collapsed] .tab-strip{top:88px}
+body[data-frame=mac][data-nav=left][data-sidebar=collapsed]:not([data-fullscreen=true]){--sidebar-width:var(--lights)}
+body[data-frame=mac][data-nav=left][data-sidebar=collapsed]:not([data-fullscreen=true]) .app-menu-anchor{height:88px;padding:48px 0 0}
+body[data-frame=mac][data-nav=left][data-sidebar=collapsed]:not([data-fullscreen=true]) .tab-strip{top:88px}
 
 /* Toolbar */
 /* Read-only address of a fixed view. */

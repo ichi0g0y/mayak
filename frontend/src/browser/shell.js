@@ -197,25 +197,24 @@ function sidebarToggle() {
   const label = t(state.sidebarCollapsed ? 'expandSidebar' : 'collapseSidebar')
   return `<button class="dock-button sidebar-toggle" data-action="toggleSidebar" title="${esc(label)}" aria-label="${esc(label)}" aria-expanded="${!state.sidebarCollapsed}">${icon(state.sidebarSide === 'right' ? 'panelRight' : 'panelLeft')}</button>`
 }
-// The window is frameless: the shell draws the caption buttons. They sit at
-// the right of the toolbar, or of the tab strip in the horizontal layout. On
-// macOS they are the red, yellow and green ones at the window's top left, as
-// every Mac window has them, and what sits there moves right (style.css,
+// On Windows and Linux the window is frameless: the shell draws the caption
+// buttons. They sit at the right of the toolbar, or of the tab strip in the
+// horizontal layout. macOS keeps its own red, yellow and green buttons at the
+// window's top left, and what sits there moves right (style.css,
 // body[data-frame=mac]).
 let maximised = false
+let fullscreen = false
 function windowControls() {
-  if (state.platform === 'darwin') return trafficLights()
+  if (state.platform === 'darwin') return ''
   return `<div class="window-controls"><button data-action="windowMinimise" title="${esc(t('minimise'))}" aria-label="${esc(t('minimise'))}">${icon('minimise')}</button><button data-action="windowMaximise" title="${esc(t(maximised ? 'restore' : 'maximise'))}" aria-label="${esc(t(maximised ? 'restore' : 'maximise'))}">${icon(maximised ? 'restore' : 'maximise')}</button><button class="window-close" data-action="windowClose" title="${esc(t('close'))}" aria-label="${esc(t('close'))}">${icon('x')}</button></div>`
 }
-function trafficLights() {
-  const light = (action, kind, label, glyph) =>
-    `<button class="light ${kind}" data-action="${action}" title="${esc(label)}" aria-label="${esc(label)}"><svg viewBox="0 0 12 12" aria-hidden="true">${glyph}</svg></button>`
-  return `<div class="traffic-lights">${light('windowClose', 'close', t('close'), '<path d="M3.5 3.5l5 5M8.5 3.5l-5 5"/>')}${light('windowMinimise', 'minimise', t('minimise'), '<path d="M3 6h6"/>')}${light('windowMaximise', 'zoom', t(maximised ? 'restore' : 'maximise'), '<path d="M6 3v6M3 6h6"/>')}</div>`
-}
+// In full screen macOS hides its buttons, so the space kept for them goes.
 async function syncMaximised() {
   const next = await Window.IsMaximised().catch(() => maximised)
-  if (next !== maximised) {
+  const full = state?.platform === 'darwin' ? await Window.IsFullscreen().catch(() => fullscreen) : false
+  if (next !== maximised || full !== fullscreen) {
     maximised = next
+    fullscreen = full
     render()
   }
 }
@@ -708,6 +707,7 @@ function render() {
   document.documentElement.lang = state.language
   document.body.dataset.layout = state.layout
   document.body.dataset.frame = state.platform === 'darwin' ? 'mac' : 'shell'
+  document.body.dataset.fullscreen = String(fullscreen)
   document.body.dataset.item = state.itemOpen ? state.itemDock : 'closed'
   document.body.dataset.nav = state.layout === 'horizontal' ? 'top' : state.sidebarSide
   document.body.dataset.settings = settingsHost() ? 'host' : ''
