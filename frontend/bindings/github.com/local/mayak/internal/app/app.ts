@@ -187,8 +187,8 @@ export function BrowserReportGoons(r: $models.GoonReport): $CancellablePromise<v
 }
 
 /**
- * Browser state contains only UI preferences, bookmarks and tabs. Tokens and
- * temporary WebRTC descriptions are never stored in this file.
+ * BrowserSave keeps the shell's state: UI preferences, bookmarks and tabs.
+ * Tokens and temporary WebRTC descriptions are never stored in it.
  */
 export function BrowserSave(raw: string): $CancellablePromise<void> {
     return $Call.ByID(1115281819, raw);

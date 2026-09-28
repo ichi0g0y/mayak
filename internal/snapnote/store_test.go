@@ -7,6 +7,8 @@ import (
 	"image/color"
 	"image/jpeg"
 	"image/png"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -154,5 +156,36 @@ func TestSpot(t *testing.T) {
 	plain, _ := s.Create(testPNG(t, 4, 4), Note{})
 	if _, err := s.SetSpotMap(plain.ID, "customs"); err == nil {
 		t.Fatal("set the map of a note without a position")
+	}
+}
+
+// A removed note leaves a tombstone (its images gone) that is not listed or
+// read; a star moves when the note changed but not its place in the list.
+func TestDeleteLeavesTombstoneAndStarKeepsOrder(t *testing.T) {
+	s := New(t.TempDir())
+	note, _ := s.Create(testPNG(t, 4, 4), Note{})
+	starred, err := s.SetFavorite(note.ID, true)
+	if err != nil || !starred.UpdatedAt.Equal(note.UpdatedAt) {
+		t.Fatalf("star moved the note: %+v %v", starred, err)
+	}
+	raw, _ := s.readRecord(note.ID)
+	if raw.ChangedAt.Before(note.UpdatedAt) {
+		t.Fatalf("star not stamped: %+v", raw)
+	}
+	if err := s.Delete(note.ID); err != nil {
+		t.Fatal(err)
+	}
+	tomb, err := s.readRecord(note.ID)
+	if err != nil || !tomb.Deleted || tomb.ChangedAt.IsZero() {
+		t.Fatalf("tombstone %+v %v", tomb, err)
+	}
+	if _, err := os.Stat(filepath.Join(s.Dir, note.ID, "base.png")); !os.IsNotExist(err) {
+		t.Fatalf("image kept: %v", err)
+	}
+	if _, err := s.Get(note.ID); err == nil {
+		t.Fatal("a removed note was read")
+	}
+	if list, _ := s.List(); len(list) != 0 {
+		t.Fatal("a removed note was listed")
 	}
 }

@@ -29,8 +29,22 @@ export class Note {
     "width": number;
     "height": number;
     "createdAt": string;
+
+    /**
+     * UpdatedAt is when the drawing or title last changed (the list is in
+     * that order); ChangedAt when anything did, the star or a removal too, to
+     * merge copies of a note if notes are ever synced (internal/userdata).
+     */
     "updatedAt": string;
+    "changedAt"?: string;
     "strokes"?: json$0.RawMessage;
+
+    /**
+     * Deleted is a removed note: its images are gone and its note.json
+     * stays as a tombstone for tombstoneAge, so that a copy still having it
+     * does not bring it back.
+     */
+    "deleted"?: boolean;
 
     /** Creates a new Note instance. */
     constructor($$source: Partial<Note> = {}) {

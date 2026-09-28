@@ -36,14 +36,27 @@ type Note struct {
 	Favorite  bool   `json:"favorite,omitempty"`
 	// Spot is where a note from a game screenshot was taken, when its file
 	// name has the position.
-	Spot      *Spot           `json:"spot,omitempty"`
-	Full      bool            `json:"full,omitempty"`
-	Width     int             `json:"width"`
-	Height    int             `json:"height"`
-	CreatedAt time.Time       `json:"createdAt"`
+	Spot      *Spot     `json:"spot,omitempty"`
+	Full      bool      `json:"full,omitempty"`
+	Width     int       `json:"width"`
+	Height    int       `json:"height"`
+	CreatedAt time.Time `json:"createdAt"`
+	// UpdatedAt is when the drawing or title last changed (the list is in
+	// that order); ChangedAt when anything did, the star or a removal too, to
+	// merge copies of a note if notes are ever synced (internal/userdata).
 	UpdatedAt time.Time       `json:"updatedAt"`
+	ChangedAt time.Time       `json:"changedAt,omitempty"`
 	Strokes   json.RawMessage `json:"strokes,omitempty"`
+	// Deleted is a removed note: its images are gone and its note.json
+	// stays as a tombstone for tombstoneAge, so that a copy still having it
+	// does not bring it back.
+	Deleted bool `json:"deleted,omitempty"`
 }
+
+// tombstoneAge is how long a removed note's tombstone is kept.
+const tombstoneAge = 180 * 24 * time.Hour
+
+var errDeleted = errors.New("the note was deleted")
 
 // Limits: images come from the page capture (up to 15000 CSS px high) or a
 // paste; strokes and thumbnails from the shell.
@@ -171,8 +184,14 @@ func (s *Store) List() ([]Note, error) {
 		if !entry.IsDir() || !ValidID(entry.Name()) {
 			continue
 		}
-		note, err := s.readNote(entry.Name())
+		note, err := s.readRecord(entry.Name())
 		if err != nil {
+			continue
+		}
+		if note.Deleted {
+			if time.Since(note.ChangedAt) > tombstoneAge {
+				_ = os.RemoveAll(filepath.Join(s.Dir, note.ID))
+			}
 			continue
 		}
 		note.Strokes = nil
@@ -318,7 +337,8 @@ func (s *Store) SetFavorite(id string, favorite bool) (Note, error) {
 	return note, nil
 }
 
-// Delete removes the note.
+// Delete removes the note: its images go, its note.json stays as a
+// tombstone.
 func (s *Store) Delete(id string) error {
 	dir, err := s.folder(id)
 	if err != nil {
@@ -326,10 +346,37 @@ func (s *Store) Delete(id string) error {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return os.RemoveAll(dir)
+	note, err := s.readRecord(id)
+	if err != nil {
+		// Nothing readable to keep a tombstone of.
+		return os.RemoveAll(dir)
+	}
+	if note.Deleted {
+		return nil
+	}
+	tombstone := Note{ID: note.ID, CreatedAt: note.CreatedAt, UpdatedAt: note.UpdatedAt, Deleted: true}
+	if err := s.writeNote(tombstone); err != nil {
+		return err
+	}
+	for _, name := range []string{"base.png", "thumb.jpg"} {
+		if err := os.Remove(filepath.Join(dir, name)); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+	}
+	return nil
 }
 
+// readNote reads a note that was not removed.
 func (s *Store) readNote(id string) (Note, error) {
+	note, err := s.readRecord(id)
+	if err == nil && note.Deleted {
+		return Note{}, errDeleted
+	}
+	return note, err
+}
+
+// readRecord reads a note's note.json, a tombstone too.
+func (s *Store) readRecord(id string) (Note, error) {
 	dir, err := s.folder(id)
 	if err != nil {
 		return Note{}, err
@@ -345,7 +392,9 @@ func (s *Store) readNote(id string) (Note, error) {
 	return note, nil
 }
 
+// writeNote writes note.json, stamping when the note changed.
 func (s *Store) writeNote(note Note) error {
+	note.ChangedAt = time.Now().UTC()
 	data, err := json.Marshal(note)
 	if err != nil {
 		return err
