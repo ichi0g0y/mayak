@@ -4,6 +4,19 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+These changes are planned for the next version.
+
+### Improved
+
+- The update channel under Settings → About MAYAK can be chosen on a Mac and on Linux too (it was on the Windows Host only).
+- On a Mac and on Linux the window has the system's title bar and its close, minimize and zoom buttons, instead of Windows-style ones.
+
+### Fixed
+
+- On a Mac, the first direct connection to the Host failed and the second one worked: macOS held the connection back while it asked for Local Network access. MAYAK now brings that question up at start and says what it is for, and a failed connection on a Mac explains how to allow it and to make a fresh code.
+
 ## v0.1.18 (2026-09-29)
 
 ### New

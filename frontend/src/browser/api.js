@@ -42,7 +42,7 @@ let state,
   remoteID = '',
   host = null,
   hostQuestSite = 'tarkov-dev',
-  hostUpdateChannel = 'stable',
+  updateChannel = 'stable',
   popup = null,
   item = null,
   restoredItem = null,
@@ -128,7 +128,7 @@ const snapshot = () => ({
       }
     : null,
   update: updateStatus,
-  updateChannel: hostUpdateChannel,
+  updateChannel,
   updateBar: updateBarVisible(),
   statusRows: statusRows(),
   goonReport,
@@ -148,6 +148,7 @@ const snapshot = () => ({
   itemHistory,
   settingsSection: section,
   localHost: platform === 'windows',
+  platform,
   connectionStatus:
     state.connection.mode === 'local'
       ? 'connected'
@@ -831,13 +832,16 @@ const ready = (async () => {
         if (tab && views.has(tab.id)) await native('navigate', { id: tab.id, url: viewURL(tab) })
       }),
   )
+  // The update channel is this PC's, whichever mode it runs in.
+  try {
+    updateChannel = (await go.GetSettings()).updateChannel === 'nightly' ? 'nightly' : 'stable'
+  } catch {}
   // The Host's monitoring state for the sidebar's monitoring button.
   if (platform === 'windows') {
     try {
       host = hostStatus(await go.GetStatus())
       const s = await go.GetSettings()
       hostQuestSite = s.questSite || 'tarkov-dev'
-      hostUpdateChannel = s.updateChannel === 'nightly' ? 'nightly' : 'stable'
     } catch {}
     // On the Host the task site is one setting, the Host's; a site chosen in
     // the browser before becomes that setting once.
@@ -1601,15 +1605,15 @@ async function perform(type, data) {
     case 'updateCheck':
       void go.CheckForUpdates().catch(messageError)
       return snapshot()
-    // The update channel is a Host setting (updateChannel), shown under About.
+    // The update channel (updateChannel), shown under About: this PC's
+    // updater, on every platform and in every mode.
     case 'updateChannel': {
       const channel = typeof data === 'string' ? data : data?.channel
-      if (platform !== 'windows' || state.connection.mode !== 'local' || !['stable', 'nightly'].includes(channel))
-        return snapshot()
+      if (!['stable', 'nightly'].includes(channel)) return snapshot()
       const s = await go.GetSettings()
       s.updateChannel = channel
       await go.PersistSettings(s)
-      hostUpdateChannel = channel
+      updateChannel = channel
       return snapshot()
     }
     case 'updateDismiss':

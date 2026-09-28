@@ -236,7 +236,7 @@ Hideout の操作が EFT のログでエラーになったことは通知しま�
 - **最小化**: `minimizeToTray` が真なら、最小化したときにウィンドウを `Hide()` し、タスクバーから消します。ウィンドウのフックは起動処理（`ServiceStartup`）より先に走ることがあるため、`main.go` がウィンドウを作る前に保存済みの設定を入れておきます。起動処理は設定をロックを取って置き換えます。
 - **閉じる**: `closeToTray` が真なら、閉じる操作をキャンセルしてウィンドウを隠します。終了はトレイメニューからのみ行えます（`quitting` フラグで区別）。
 - **二重起動の防止**: `SingleInstance`（`UniqueID: com.ichi0g0y.mayak`）で制御します。2 つ目のプロセスを起動すると、既存のウィンドウを表示します。
-- **ウィンドウ**: フレームレスです。既定サイズは 1120×760、最小サイズは 760×560 です。
+- **ウィンドウ**: Windows ではフレームレスです（macOS と Linux はシステムのタイトルバー）。既定サイズは 1120×760、最小サイズは 760×560 です。
 - **位置の復元**（`window.json`）:
   - 移動、リサイズ、最大化、最大化解除、閉じる、終了のたびに保存します。最小化中の座標や、最小サイズ未満のサイズは保存しません。
   - ディスプレイ名・ID と作業領域の原点を記録し、ディスプレイ基準の相対座標で復元します。該当するディスプレイが無い場合は、重なりが最大のディスプレイ、なければプライマリディスプレイを使い、作業領域内に収めます。最大化状態も復元します。
@@ -248,7 +248,7 @@ Hideout の操作が EFT のログでエラーになったことは通知しま�
 MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から自分自身を更新します（`internal/update`、`internal/app/app_update.go`）。Windows／macOS／Linux のどれでも同じ仕組みです。
 
 - **版の比較**: ビルドに埋め込まれた版（`internal/version`、`task build` が `git describe` かリリースタグから `-ldflags -X` で入れる）と、GitHub の「latest」リリース（ドラフトとプレリリースは除く）のタグを semver で比べます。タグ直後のコミットを含む開発ビルド（`0.1.0-3-g1a2b3c4`）は `0.1.0` より新しい扱いなので、同じ版の通知は出ません。版が入っていない `dev` ビルドはどのリリースよりも古い扱いです。
-- **更新チャンネル**（`updateChannel`、設定 → MAYAK について の「アップデート」。シェルの `aboutUpdate` が Host 設定を読み書きする。Host の Windows だけ）: `stable`（既定）は上の「latest」リリースだけ。`nightly` は加えて nightly ビルド（プレリリース `nightly` タグ。[開発](development.md#nightly-ビルド)）も取り、両方のうち新しい方を選びます（`update.LatestFor`）。nightly の版は `git describe`（`0.1.17-16-ge057eae`）で、直前のリリースより新しく次のリリースより古いので、nightly のあとに安定版が出ればそちらに更新します。nightly が読めない、またはこの OS 向けのアーカイブが無いときは安定版だけで判断します。`stable` に戻すと、ダウンロード済みの nightly は破棄し（`dropStagedNightly`、起動時も同じ）、すぐ確認し直します。インストール済みの nightly より新しい安定版が出るまでは、そのまま使います（版を戻すことはしない）。
+- **更新チャンネル**（`updateChannel`、設定 → MAYAK について の「アップデート」。シェルの `aboutUpdate` がこの PC の設定を読み書きする。OS と接続モードによらず選べる）: `stable`（既定）は上の「latest」リリースだけ。`nightly` は加えて nightly ビルド（プレリリース `nightly` タグ。[開発](development.md#nightly-ビルド)）も取り、両方のうち新しい方を選びます（`update.LatestFor`）。nightly の版は `git describe`（`0.1.17-16-ge057eae`）で、直前のリリースより新しく次のリリースより古いので、nightly のあとに安定版が出ればそちらに更新します。nightly が読めない、またはこの OS 向けのアーカイブが無いときは安定版だけで判断します。`stable` に戻すと、ダウンロード済みの nightly は破棄し（`dropStagedNightly`、起動時も同じ）、すぐ確認し直します。インストール済みの nightly より新しい安定版が出るまでは、そのまま使います（版を戻すことはしない）。
 - **確認のタイミング**: `autoUpdate` がオンなら起動直後（1 秒後、goroutine なので起動は待たせない）と、その後 6 時間ごと。失敗したときは 5 分後から 1 時間まで間隔を倍にしながら再試行する。リリース情報はまず `https://mayak.ich.sh/api/release`（Worker が 5 分キャッシュ、GitHub の IP ごとの制限を受けない）から取り、届かなければ GitHub API に当たる。オフのときはステータスの「更新を確認」だけです。GitHub API は認証なしで呼びます（IP ごとに 60 回/時）。
 - **ダウンロード**: リリースのアセットから、この OS と CPU 向けのアーカイブ（`Mayak-<version>-windows-amd64.zip`、`Mayak-<version>-darwin-arm64.tar.gz` など。名前は `update.ArchiveName`）と `SHA256SUMS.txt` を取り、チェックサムが一致したものだけを設定フォルダの `updates/` に展開します。アーカイブに無い OS なら「このOS向けのビルドはありません」になります。`autoUpdate` がオンなら見つけ次第、オフなら「ダウンロード」を押したときに始まります。展開先に `staged.json` が残っていれば次回起動時に引き継ぎ、現在の版より新しくなければ捨てます。
 - **適用**: 展開したファイルを実行ファイルと同じフォルダへ入れ替えます。置き換える前のファイルは `*.mayak-old` に改名してから新しいものを置くので、実行中の exe（Windows では上書きも削除もできない）でも差し替えられます。失敗したときは改名したファイルを元に戻します。`autoUpdate` がオンなら終了時（`shutdown` の最後）に自動で適用し、次回起動から新しい版になります。ステータスの「再起動して更新」を押すと、その場で適用してから新しい版を起動し、自分は終了します。
@@ -321,6 +321,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - **検証**: SDP は `m=application` のみを許可し、sha-256 fingerprint を必須とします。音声・映像の m 行と relay 候補を含むものは拒否します。コードの長さは 100000 文字までです。
 - **STUN**: 既定は `stun:stun.cloudflare.com:3478` です。`stun:` / `stuns:` 形式だけを受け付け、空欄にすると STUN を使いません。TURN（中継）は使わず、接続後に選ばれた経路が relay であれば切断します（`relay-rejected`）。そのため、回線によっては接続できません。
 - **LAN**: 双方の候補が `host` 型であれば、経路を `local`（LAN 内の直接接続）と判定します。それ以外は `direct` です。
+- **macOS のローカルネットワーク**: macOS 15 以降は、アプリが初めて LAN に送るときに「ローカルネットワーク上のデバイスの検出」を尋ね、答えるまで LAN への通信を止めます。答える前に始めた接続は、同じネットワークの Host に届かずに失敗します。そのため受信側として起動した時点で mDNS の問い合わせを 1 つ送り（`internal/app/localnet_darwin.go` の `requestLocalNetwork`）、コードを入力する前に尋ねさせます。質問の文言は Info.plist の `NSLocalNetworkUsageDescription`（`tools/release/macos.go`。日本語は `ja.lproj/InfoPlist.strings`）です。Mac で接続に失敗したときは、許可とコードの作り直しを案内します（`p2pMacLocalNetwork`）。
 - **共有する内容**: ordered DataChannel `mayak-display-v1` で、`browser:task`（タスク）、`browser:map`（マップ）、`browser:item`（アイテム情報）の 3 種類だけを Host から受信側へ一方向に送ります。1 メッセージは 64 KiB までで、送信バッファが 256 KiB を超えると `slow-peer` として切断します。設定、API キー、トークンは送りません。受信側は接続を確認するまで、最大 32 件のメッセージを保留します。
 - アプリを再起動した場合や接続が切れた場合は、コードを再交換する必要があります。コードは保存しません。
 

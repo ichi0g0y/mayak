@@ -99,6 +99,11 @@ body[data-nav=left][data-item=right] .titlebar-grip{display:none}
 .window-controls .window-close:hover{background:#c42b1c;color:#fff}
 .window-controls .icon{width:15px;height:15px;stroke-width:1.5}
 [data-layout=horizontal] .window-controls{position:fixed;top:0;right:0;height:48px;margin:0;background:var(--sidebar);border-bottom:1px solid var(--border);z-index:12}
+/* macOS and Linux keep the system title bar: no caption buttons to make room for. */
+body[data-frame=system] .toolbar{padding-right:12px}
+body[data-frame=system] .titlebar-grip{display:none}
+[data-frame=system][data-layout=horizontal] .tab-strip{width:calc(100% - var(--dock-width))}
+[data-frame=system][data-layout=horizontal] .layout-dock{right:0}
 
 /* Toolbar */
 /* Read-only address of a fixed view. */

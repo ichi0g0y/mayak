@@ -163,6 +163,8 @@ export const words = {
     p2pFailed: '直接接続できませんでした。コードを作り直すか、別の回線をお試しください。',
     p2pDisconnected: '接続が切れました。コードを再交換してください。',
     p2pExpired: '招待コードの有効期限が切れました。',
+    p2pMacLocalNetwork:
+      'Mac では、同じネットワークの Host につなぐのに「ローカルネットワーク」の許可が要ります。許可を聞かれている間の接続は失敗するので、許可してから Host でコードを作り直してください。許可していない場合は システム設定 → プライバシーとセキュリティ → ローカルネットワーク で MAYAK をオンにします。',
     // Tutorial
     tutorialShow: 'チュートリアルを表示',
     tutorialShowHelp: '初回起動時の案内（フォルダ、スクリーンショットキー、マップ、TarkovTracker）をもう一度見ます。',
@@ -661,6 +663,8 @@ export const words = {
     p2pFailed: 'A direct connection could not be established. Try fresh codes or another network.',
     p2pDisconnected: 'Connection lost. Exchange fresh codes to reconnect.',
     p2pExpired: 'The invitation has expired.',
+    p2pMacLocalNetwork:
+      'On a Mac, reaching the Host on the same network needs Local Network access. A connection made while macOS is still asking fails: allow it, then create a fresh code on the Host. If it was not allowed, turn MAYAK on under System Settings → Privacy & Security → Local Network.',
     // Tutorial
     tutorialShow: 'Show the tutorial',
     tutorialShowHelp: 'See the first-run guide again: folders, the screenshot key, the map and TarkovTracker.',

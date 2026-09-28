@@ -191,10 +191,12 @@ function sidebarToggle() {
   const label = t(state.sidebarCollapsed ? 'expandSidebar' : 'collapseSidebar')
   return `<button class="dock-button sidebar-toggle" data-action="toggleSidebar" title="${esc(label)}" aria-label="${esc(label)}" aria-expanded="${!state.sidebarCollapsed}">${icon(state.sidebarSide === 'right' ? 'panelRight' : 'panelLeft')}</button>`
 }
-// The window is frameless: the shell draws the caption buttons. They sit at
-// the right of the toolbar, or of the tab strip in the horizontal layout.
+// On Windows the window is frameless: the shell draws the caption buttons.
+// They sit at the right of the toolbar, or of the tab strip in the
+// horizontal layout. macOS and Linux keep the system's title bar and buttons.
 let maximised = false
 function windowControls() {
+  if (state.platform && state.platform !== 'windows') return ''
   return `<div class="window-controls"><button data-action="windowMinimise" title="${esc(t('minimise'))}" aria-label="${esc(t('minimise'))}">${icon('minimise')}</button><button data-action="windowMaximise" title="${esc(t(maximised ? 'restore' : 'maximise'))}" aria-label="${esc(t(maximised ? 'restore' : 'maximise'))}">${icon(maximised ? 'restore' : 'maximise')}</button><button class="window-close" data-action="windowClose" title="${esc(t('close'))}" aria-label="${esc(t('close'))}">${icon('x')}</button></div>`
 }
 async function syncMaximised() {
@@ -477,9 +479,9 @@ function aboutUpdate() {
                   : t('updateNever')
   const checked = u.checkedAt ? new Date(u.checkedAt).toLocaleString(state.language === 'ja' ? 'ja-JP' : 'en-US') : '—'
   const busy = u.state === 'checking' || u.state === 'downloading'
-  return `<section class="panel about-update"><h2>${esc(t('updateSection'))}</h2><dl class="about-facts"><div><dt>${esc(t('updateCurrent'))}</dt><dd>${esc(u.current || appVersion || t('aboutDev'))}</dd></div><div><dt>${esc(t('updateLatest'))}</dt><dd>${esc(u.latest || '—')}</dd></div><div><dt>${esc(t('updateCheckedAt'))}</dt><dd>${esc(checked)}</dd></div></dl><p class="update-state ${u.state === 'error' ? 'peer-error' : ''}">${esc(text)}</p><div class="about-links"><button data-action="updateCheck" ${busy ? 'disabled' : ''}>${icon('reload')}${esc(t('updateCheck'))}</button>${u.state === 'available' ? `<button class="primary" data-action="updateDownload">${esc(t('updateDownload'))}</button>` : ''}${u.state === 'ready' ? `<button class="primary" data-action="updateInstall">${esc(t('updateRestart'))}</button>` : ''}</div><p class="hint">${esc(t('updateAutoNote'))}</p>${state.localHost ? updateChannelHTML() : ''}</section>`
+  return `<section class="panel about-update"><h2>${esc(t('updateSection'))}</h2><dl class="about-facts"><div><dt>${esc(t('updateCurrent'))}</dt><dd>${esc(u.current || appVersion || t('aboutDev'))}</dd></div><div><dt>${esc(t('updateLatest'))}</dt><dd>${esc(u.latest || '—')}</dd></div><div><dt>${esc(t('updateCheckedAt'))}</dt><dd>${esc(checked)}</dd></div></dl><p class="update-state ${u.state === 'error' ? 'peer-error' : ''}">${esc(text)}</p><div class="about-links"><button data-action="updateCheck" ${busy ? 'disabled' : ''}>${icon('reload')}${esc(t('updateCheck'))}</button>${u.state === 'available' ? `<button class="primary" data-action="updateDownload">${esc(t('updateDownload'))}</button>` : ''}${u.state === 'ready' ? `<button class="primary" data-action="updateInstall">${esc(t('updateRestart'))}</button>` : ''}</div><p class="hint">${esc(t('updateAutoNote'))}</p>${updateChannelHTML()}</section>`
 }
-// The update channel, a Host setting: two choices, each saying what it
+// The update channel, this PC's updater's: two choices, each saying what it
 // brings, set apart from the update status and its buttons.
 function updateChannelHTML() {
   const current = state.updateChannel === 'nightly' ? 'nightly' : 'stable'
@@ -590,7 +592,7 @@ function peerPanel() {
   const idle = !p.code || ['failed', 'disconnected', 'closed'].includes(p.phase)
   const waiting = p.role === 'sender' && p.phase === 'waiting-answer'
   const pairCode = p.pairCode ? `${p.pairCode.slice(0, 4)} ${p.pairCode.slice(4)}` : ''
-  return `<section class="panel peer-panel"><h2>${t(receive ? 'p2pReceive' : 'p2pTitle')}</h2><p class="hint">${t('p2pHelp')}</p><p class="peer-status" role="status">${t(p.reason === 'invite-expired' ? 'p2pExpired' : statusKey)}</p>
+  return `<section class="panel peer-panel"><h2>${t(receive ? 'p2pReceive' : 'p2pTitle')}</h2><p class="hint">${t('p2pHelp')}</p><p class="peer-status" role="status">${t(p.reason === 'invite-expired' ? 'p2pExpired' : statusKey)}</p>${p.phase === 'failed' && state.platform === 'darwin' ? `<p class="hint">${t('p2pMacLocalNetwork')}</p>` : ''}
   ${!receive && p.phase !== 'connected' && !waiting ? `<button class="primary" data-action="peerInvite" ${disabled}>${t('createInvite')}</button>` : ''}
   ${waiting && p.pairCode ? `<div class="pair-code"><output>${esc(pairCode)}</output><button data-action="peerCopyPair">${t(copied ? 'copied' : 'copyCode')}</button></div><p class="hint">${t('pairCodeHelp')}</p>` : ''}
   ${waiting && p.relayError ? `<p class="hint peer-error">${t('relayFailed')}</p>` : ''}
@@ -692,6 +694,7 @@ function render() {
   hostFrame.hidden = !settingsHost()
   document.documentElement.lang = state.language
   document.body.dataset.layout = state.layout
+  document.body.dataset.frame = state.platform && state.platform !== 'windows' ? 'system' : 'shell'
   document.body.dataset.item = state.itemOpen ? state.itemDock : 'closed'
   document.body.dataset.nav = state.layout === 'horizontal' ? 'top' : state.sidebarSide
   document.body.dataset.settings = settingsHost() ? 'host' : ''
