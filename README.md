@@ -31,10 +31,11 @@ Get the latest release from [mayak.ich.sh](https://mayak.ich.sh) or the [release
 - **Position on the map.** Press EFT's screenshot key in a raid: the coordinates and heading in the file name move your marker on the tarkov.dev map. Map and floor are detected from the logs and the coordinates.
 - **Task screen.** Open a task in the Tasks screen and screenshot it: local OCR reads the task and opens it on tarkov.dev or the wiki (the list alone does not show which task is selected). English and Japanese game text.
 - **Item inspection.** Screenshot an item window and the item panel shows flea and trader prices, price history, and the tasks and hideout stations that need it.
-- **TarkovTracker sync.** Task started, failed and completed events from the notification logs go to TarkovTracker, per PvP, Season and PvE profile. Past logs can be synced in one go.
-- **Raid alerts.** Sounds for match found, raid start and the run-through timer, with custom WAV / MP3 files.
-- **Built-in browser.** tarkov.dev, TarkovTracker and the wiki in tabs, with ad blocking.
-- Japanese and English UI, tray, autostart, automatic updates.
+- **TarkovTracker sync.** Task started, failed and completed events from the notification logs go to TarkovTracker, per PvP, Season and PvE profile. A profile’s past logs are synced when its token is assigned, and can be rechecked from its row.
+- **Snap notes.** Capture a page in the built-in browser or a game screenshot and draw or write on it. Notes stay linked to their page, dark screenshots can be brightened, the place a screenshot was taken shows on the tarkov.dev map, and a note can be copied, saved as PNG or posted to X.
+- **Spoken alerts.** Match found, raid start, the run-through timer, back from a raid, the game starting and closing: spoken by five VOICEVOX characters (Japanese) or an English voice, with beeps or your own WAV / MP3 files too. Each alert has its own voice, volume and switch.
+- **Built-in browser.** tarkov.dev, TarkovTracker and the wiki in tabs, with ad blocking and a translate button (through Google Translate, into Japanese or English).
+- Japanese and English UI, tray, autostart, automatic updates (stable, or the nightly built every day).
 
 ## Safety boundary
 
@@ -85,6 +86,7 @@ MAYAK is free and stays free. If it helps your raids, [buy me a coffee](https://
 - The task list is completed from the [Escape from Tarkov Wiki](https://escapefromtarkov.fandom.com/) (CC BY-NC-SA).
 - Ad blocking in the built-in browser uses [EasyList and EasyPrivacy](https://easylist.to/) (GPLv3 / CC BY-SA 3.0) and the [AdGuard Japanese filter](https://github.com/AdguardTeam/AdguardFilters) (GPLv3).
 - OCR uses [Tesseract](https://github.com/tesseract-ocr/tesseract) (Apache-2.0) from the [UB Mannheim](https://github.com/UB-Mannheim/tesseract) build with models derived from `tessdata_best`, or Windows OCR.
+- The Japanese notification voices were made with [VOICEVOX](https://voicevox.hiroshiba.jp/) (VOICEVOX:春日部つむぎ, VOICEVOX:雨晴はう, VOICEVOX:WhiteCUL, VOICEVOX:春歌ナナ, VOICEVOX:剣崎雌雄) and the English ones with [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0). They are not under MAYAK’s GPL-3.0 but their own terms; see [internal/sound/voices/LICENSE.md](internal/sound/voices/LICENSE.md).
 - Color themes are based on the [Catppuccin](https://catppuccin.com/), [Nord](https://www.nordtheme.com/), [Dracula](https://draculatheme.com/), Gruvbox, Tokyo Night and [Solarized](https://ethanschoonover.com/solarized/) palettes.
 
 Escape from Tarkov and related names are trademarks of Battlestate Games.
