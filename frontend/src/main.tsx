@@ -1164,27 +1164,6 @@ function App() {
                                 <SelectItem value="custom">{t('soundVoiceCustom')}</SelectItem>
                               </SelectContent>
                             </Select>
-                            <div className="volume-offset" title={`${t('soundVolumeActual')} ${volumeOf(alert.kind)}%`}>
-                              <input
-                                className="range"
-                                type="range"
-                                min="-50"
-                                max="50"
-                                step="1"
-                                aria-label={t('soundVolumeOffset')}
-                                value={offsetOf(alert.kind)}
-                                onChange={(e) => setOffsetOf(alert.kind, Number(e.target.value))}
-                              />
-                              <button
-                                type="button"
-                                className="volume-offset-value"
-                                title={t('soundVolumeReset')}
-                                disabled={offsetOf(alert.kind) === 0}
-                                onClick={() => setOffsetOf(alert.kind, 0)}
-                              >
-                                {offsetLabel(offsetOf(alert.kind))}
-                              </button>
-                            </div>
                             <Button
                               type="button"
                               size="sm"
@@ -1194,6 +1173,31 @@ function App() {
                               <Play />
                               {t('previewSound')}
                             </Button>
+                          </div>
+                          <div className="volume-offset">
+                            <span className="volume-offset-label">{t('soundVolumeOffset')}</span>
+                            <input
+                              className="range"
+                              type="range"
+                              min="-50"
+                              max="50"
+                              step="1"
+                              aria-label={`${alert.label}: ${t('soundVolumeOffset')}`}
+                              value={offsetOf(alert.kind)}
+                              onChange={(e) => setOffsetOf(alert.kind, Number(e.target.value))}
+                            />
+                            <button
+                              type="button"
+                              className="volume-offset-value"
+                              title={t('soundVolumeReset')}
+                              disabled={offsetOf(alert.kind) === 0}
+                              onClick={() => setOffsetOf(alert.kind, 0)}
+                            >
+                              {offsetLabel(offsetOf(alert.kind))}
+                            </button>
+                            <span className="volume-offset-actual" title={t('soundVolumeActual')}>
+                              → {volumeOf(alert.kind)}%
+                            </span>
                           </div>
                           {choiceOf(alert.kind, path) === 'custom' && (
                             <div className="sound-file-row">
