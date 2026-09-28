@@ -1,7 +1,7 @@
 {
   "name": {
-    "ja": "Heart（英語・女性）",
-    "en": "Heart (English, female)"
+    "ja": "英語（女性）",
+    "en": "English (female)"
   },
   "language": "en",
   "order": 1,
@@ -12,9 +12,9 @@
     "voice": "af_heart"
   },
   "lines": {
-    "quest": "Task recognized.",
+    "quest": "Here you go.",
     "taskNotMatched": "Couldn't identify the task.",
-    "item": "Item recognized.",
+    "item": "Here it is.",
     "itemNotMatched": "Couldn't identify the item.",
     "error": "Couldn't read the screenshot.",
     "remoteError": "The map link failed.",
@@ -22,7 +22,7 @@
     "matchFound": "Match found.",
     "raidStart": "Raid started. Good luck.",
     "runThrough": "Run-through cleared. You can extract now.",
-    "questItems": "Welcome back. Check your quest items before the next raid.",
+    "questItems": "Welcome back.",
     "restartTasks": "You have failed tasks to restart."
   }
 }

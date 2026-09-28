@@ -12,17 +12,17 @@
     "speaker": 8
   },
   "lines": {
-    "quest": "タスク見つけたよ！",
+    "quest": "はい、これ！",
     "taskNotMatched": "うーん、どのタスクかわかんなかった",
-    "item": "アイテム見つけたよ！",
+    "item": "はい、どうぞ！",
     "itemNotMatched": "このアイテム、わかんないや",
     "error": "ごめん、スクショ読めなかった",
     "remoteError": "マップに送れなかったよ",
-    "hideoutError": "ハイドアウトでエラー出てるよ",
-    "matchFound": "マッチングしたよ！いってらっしゃい",
+    "hideoutError": "ハイドアウトでエラーかも",
+    "matchFound": "マッチングしたよ！",
     "raidStart": "レイド始まったよ、気をつけてね",
     "runThrough": "もう脱出しても大丈夫だよ",
-    "questItems": "おかえり！次の出撃、クエストアイテム忘れないでね",
+    "questItems": "おかえり！",
     "restartTasks": "失敗したタスクあるじゃん、受け直しとこ"
   }
 }

@@ -9,20 +9,23 @@
   "terms": "https://frontier.creatia.cc/fanclubs/413/posts/4507",
   "termsChecked": "2026-09-27",
   "voicevox": {
-    "speaker": 21
+    "speaker": 21,
+    "query": {
+      "intonationScale": 0.8
+    }
   },
   "lines": {
-    "quest": "タスクの特定、完了です",
-    "taskNotMatched": "申し訳ありません、タスクを特定できませんでした",
-    "item": "アイテムの特定、完了です",
-    "itemNotMatched": "申し訳ありません、アイテムを特定できませんでした",
-    "error": "申し訳ありません、うまく読み取れませんでした",
-    "remoteError": "マップとの連携に失敗しました",
-    "hideoutError": "ハイドアウトで問題が起きているようです",
-    "matchFound": "マッチングしました。では、参りましょうか",
-    "raidStart": "レイド開始です。怪我のないように",
-    "runThrough": "もう脱出して問題ありませんよ",
-    "questItems": "おかえりなさい。次の出撃前に、クエストアイテムの確認を",
-    "restartTasks": "失敗したタスクがあります。受け直しておきましょう"
+    "quest": "どうぞ",
+    "taskNotMatched": "タスクを特定できません",
+    "item": "こちらです",
+    "itemNotMatched": "アイテムを特定できません",
+    "error": "画像を解析できません",
+    "remoteError": "マップとの接続に失敗しました",
+    "hideoutError": "ハイドアウトでエラーを検知しました",
+    "matchFound": "マッチング完了",
+    "raidStart": "レイドを開始します",
+    "runThrough": "脱出可能な時間になりました",
+    "questItems": "おかえりなさい",
+    "restartTasks": "失敗したタスクがあります"
   }
 }

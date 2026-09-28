@@ -12,9 +12,9 @@
     "speaker": 54
   },
   "lines": {
-    "quest": "タスク見つけたよっ！",
+    "quest": "はいっ、どうぞ！",
     "taskNotMatched": "あれれ、どのタスクかわからなかったよー",
-    "item": "アイテム見つけたよっ！",
+    "item": "はいっ！",
     "itemNotMatched": "うーん、このアイテムわからないよー",
     "error": "あれれ、読めなかったよー",
     "remoteError": "マップに送れなかったよー",
@@ -22,7 +22,7 @@
     "matchFound": "マッチングしたよっ！",
     "raidStart": "レイドスタート！がんばってね！",
     "runThrough": "脱出オッケーだよっ！",
-    "questItems": "おかえり！次はクエストアイテム、忘れないでね！",
+    "questItems": "おかえりー！",
     "restartTasks": "失敗しちゃったタスクがあるよー"
   }
 }

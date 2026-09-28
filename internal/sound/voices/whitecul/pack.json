@@ -13,7 +13,7 @@
   },
   "lines": {
     "quest": {
-      "text": "タスクを認識しました",
+      "text": "どうぞ",
       "style": 24
     },
     "taskNotMatched": {
@@ -21,7 +21,7 @@
       "style": 25
     },
     "item": {
-      "text": "アイテムを認識しました",
+      "text": "こちらです",
       "style": 24
     },
     "itemNotMatched": {
@@ -40,10 +40,10 @@
     "matchFound": "マッチングが完了しました",
     "raidStart": "レイドを開始します。ご武運を",
     "runThrough": {
-      "text": "脱出可能です。お疲れさまでした",
+      "text": "脱出可能です",
       "style": 24
     },
-    "questItems": "帰還を確認しました。次の出撃前に、クエストアイテムの準備を",
+    "questItems": "おかえりなさい。お疲れさまでした",
     "restartTasks": "失敗したタスクがあります。再受注をお忘れなく"
   }
 }
