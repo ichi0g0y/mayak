@@ -1085,6 +1085,21 @@ function App() {
                 {settings.soundsEnabled && (
                   <div className="sound-options">
                     <div className="field">
+                      <Label htmlFor="sound-volume">
+                        {t('volume')} {settings.soundVolume}%
+                      </Label>
+                      <input
+                        className="range"
+                        id="sound-volume"
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={settings.soundVolume}
+                        onChange={(e) => patch({ soundVolume: Number(e.target.value) })}
+                      />
+                    </div>
+                    <div className="field">
                       <Label>{t('soundVoice')}</Label>
                       <Select
                         value={voice ? voice.id : '__beep'}
@@ -1271,21 +1286,6 @@ function App() {
                         </div>
                       )
                     })}
-                    <div className="field">
-                      <Label htmlFor="sound-volume">
-                        {t('volume')} {settings.soundVolume}%
-                      </Label>
-                      <input
-                        className="range"
-                        id="sound-volume"
-                        type="range"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={settings.soundVolume}
-                        onChange={(e) => patch({ soundVolume: Number(e.target.value) })}
-                      />
-                    </div>
                   </div>
                 )}
               </CardContent>
