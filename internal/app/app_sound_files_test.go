@@ -13,7 +13,13 @@ import (
 // there; the name resolves to the copy, a path to itself, anything else to
 // nothing.
 func TestSoundFilesAreTakenIntoTheDataFolder(t *testing.T) {
-	data := t.TempDir()
+	// Not t.TempDir: other tests' background saves (they write to the data
+	// folder, which this one moves) can land in it while it is removed.
+	data, err := os.MkdirTemp("", "mayak-sounds-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(data) })
 	t.Setenv("APPDATA", data)
 	t.Setenv("XDG_CONFIG_HOME", data)
 	t.Setenv("HOME", data)
