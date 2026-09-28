@@ -151,17 +151,15 @@ func Load() (Settings, error) {
 // preferences.json the rest, key by key with when each changed, to follow
 // the user to another PC (internal/userdata). Settings saved before the
 // split are all in settings.json; the next save moves the preferences out.
+// The sound files are preferences: they are taken into the data folder
+// (internal/app/app_sound_files.go) and named from there.
 var deviceKeys = map[string]bool{
 	"screenshotDirectory": true, "logsDirectory": true, "tesseractPath": true,
 	"ocrEngine": true, "ocrDefaultRevision": true,
 	"remoteId": true, "remoteTargets": true, "browserRemoteId": true, "map": true,
 	"debug": true, "saveRecognitionDebug": true, "keepPriority": true, "launchAtStartup": true,
 	"windowX": true, "windowY": true, "windowWidth": true, "windowHeight": true, "windowConfigured": true,
-	"playerMarker":          true,
-	"hideoutErrorSoundPath": true, "questSoundPath": true, "errorSoundPath": true,
-	"taskNotMatchedSoundPath": true, "remoteErrorSoundPath": true, "itemSoundPath": true,
-	"itemNotMatchedSoundPath": true, "matchFoundSoundPath": true, "raidStartSoundPath": true,
-	"runThroughSoundPath": true, "questItemsSoundPath": true, "restartTasksSoundPath": true,
+	"playerMarker": true,
 }
 
 // IsDeviceKey tells a setting (its JSON name) that belongs to this PC.

@@ -139,6 +139,7 @@ func (a *App) startup(ctx context.Context) {
 	}
 	loadedSettings, loadErr := config.Load()
 	settings := normalizeSettings(loadedSettings)
+	importSoundFiles(&settings)
 	ensureBrowserRemoteID(&settings)
 	// The window's hooks read the settings concurrently (see main.go).
 	a.mu.Lock()

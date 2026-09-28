@@ -169,10 +169,8 @@ func (a *App) ChooseSoundFile() (string, error) {
 	if err != nil || path == "" {
 		return path, err
 	}
-	if err := sound.ValidateFile(path); err != nil {
-		return "", err
-	}
-	return filepath.Clean(path), nil
+	// The file is taken into the data folder; the setting holds its name.
+	return importSoundFile(filepath.Clean(path))
 }
 
 // SaveSettings stores s and applies it, folders included: a running monitor
@@ -276,7 +274,6 @@ func normalizeSettings(s config.Settings) config.Settings {
 	s.PlayerMarker = ""
 	s.PlayerMarkerEffect = normalizePlayerMarkerEffect(s.PlayerMarkerEffect)
 	s.PlayerMarkerColor = normalizePlayerMarkerColor(s.PlayerMarkerColor)
-	s.HideoutErrorSoundPath = normalizeSoundPath(s.HideoutErrorSoundPath)
 	// The voice for all: a built-in voice, "beep", or "" for the language's
 	// default. A notification's own: a voice, "beep", or "custom" (its file).
 	if s.SoundVoice != "beep" && !sound.HasVoice(s.SoundVoice) {
@@ -328,17 +325,9 @@ func normalizeSettings(s config.Settings) config.Settings {
 	if s.ScreenshotRetainHours > 87600 {
 		s.ScreenshotRetainHours = 87600
 	}
-	s.QuestSoundPath = normalizeSoundPath(s.QuestSoundPath)
-	s.ErrorSoundPath = normalizeSoundPath(s.ErrorSoundPath)
-	s.TaskNotMatchedSoundPath = normalizeSoundPath(s.TaskNotMatchedSoundPath)
-	s.RemoteErrorSoundPath = normalizeSoundPath(s.RemoteErrorSoundPath)
-	s.ItemSoundPath = normalizeSoundPath(s.ItemSoundPath)
-	s.ItemNotMatchedSoundPath = normalizeSoundPath(s.ItemNotMatchedSoundPath)
-	s.MatchFoundSoundPath = normalizeSoundPath(s.MatchFoundSoundPath)
-	s.RaidStartSoundPath = normalizeSoundPath(s.RaidStartSoundPath)
-	s.RunThroughSoundPath = normalizeSoundPath(s.RunThroughSoundPath)
-	s.QuestItemsSoundPath = normalizeSoundPath(s.QuestItemsSoundPath)
-	s.RestartTasksSoundPath = normalizeSoundPath(s.RestartTasksSoundPath)
+	for _, field := range soundFields(&s) {
+		*field = normalizeSoundPath(*field)
+	}
 	s.Map = normalizeMapSetting(s.Map)
 	if s.Language != "ja" && s.Language != "en" {
 		s.Language = "ja"
@@ -354,12 +343,19 @@ func normalizeSettings(s config.Settings) config.Settings {
 	return s
 }
 
+// normalizeSoundPath keeps a sound file taken in (sounds/…) or a path chosen
+// before (taken in at the start); anything else is none.
 func normalizeSoundPath(path string) string {
 	path = strings.TrimSpace(path)
-	if path == "" {
+	switch {
+	case path == "":
 		return ""
+	case soundRef.MatchString(path):
+		return path
+	case filepath.IsAbs(path):
+		return filepath.Clean(path)
 	}
-	return filepath.Clean(path)
+	return ""
 }
 
 func normalizeRemoteTargets(targets []config.RemoteTarget, legacyID string) []config.RemoteTarget {

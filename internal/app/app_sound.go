@@ -28,6 +28,9 @@ func (a *App) PreviewSound(kind, path, voice string, volume int) error {
 		return errors.New("unknown sound kind")
 	}
 	if path != "" {
+		if path = soundFilePath(path); path == "" {
+			return errors.New("unknown sound file")
+		}
 		if err := sound.ValidateFile(path); err != nil {
 			return err
 		}
@@ -114,7 +117,7 @@ func (a *App) notify(s config.Settings, kind sound.Kind) {
 		return
 	}
 	a.addLog("Info", "Sound", "Playing "+string(kind)+" alert")
-	playNotification(kind, path, voiceFor(s, kind), volumeFor(s, kind))
+	playNotification(kind, soundFilePath(path), voiceFor(s, kind), volumeFor(s, kind))
 }
 
 // volumeFor is a notification's volume: the one for all with its own

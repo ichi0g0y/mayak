@@ -469,10 +469,12 @@ function App() {
     patch({ soundVolumeOffsets: next })
   }
   const offsetLabel = (offset: number) => (offset > 0 ? `+${offset}` : offset === 0 ? '±0' : `${offset}`)
+  // A sound file's name as chosen: taken in, it is sounds/<hash>-<name>.
+  const soundFileName = (path: string) => (path.split(/[\\/]/).pop() || '').replace(/^[0-9a-f]{16}-/, '')
   const quote = (text: string) => (settings.language === 'ja' ? `「${text}」` : `“${text}”`)
   // What a notification plays: its file, the line of its voice, or the beeps.
   const saidBy = (kind: string, path: string) => {
-    if (choiceOf(kind, path) === 'custom') return path ? path.split(/[\\/]/).pop() : t('noSoundFile')
+    if (choiceOf(kind, path) === 'custom') return path ? soundFileName(path) : t('noSoundFile')
     const pack = voiceOf(kind)
     return pack ? `${voiceName(pack)}：${quote(pack.lines?.[kind] || '')}` : t('soundVoiceBeep')
   }
@@ -1229,7 +1231,7 @@ function App() {
                                 {t('chooseSound')}
                               </Button>
                               <span className="sound-file-name" title={path || t('noSoundFile')}>
-                                {path ? path.split(/[\\/]/).pop() : t('noSoundFile')}
+                                {path ? soundFileName(path) : t('noSoundFile')}
                               </span>
                             </div>
                           )}
