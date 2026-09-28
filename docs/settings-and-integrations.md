@@ -82,7 +82,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `screenshotCleanup` | `false` | 古いスクリーンショットを自動で削除する |
 | `screenshotRetainCount` | `500` | 残す最大枚数。範囲は 0–100000 で、0 はこの条件を使わない |
 | `screenshotRetainHours` | `168` | 保持時間（時間）。範囲は 0–87600 で、0 はこの条件を使わない |
-| `soundsEnabled` | `true` | 通知音のマスタースイッチ |
+| `soundsEnabled` | `false` | 通知音のマスタースイッチ（新しく入れたときはオフ） |
 | `questSoundEnabled` / `questSoundPath` | `true` / `""` | タスクを認識したとき |
 | `taskNotMatchedSoundEnabled` / `taskNotMatchedSoundPath` | `true` / `""` | タスク画面の文字は読めたが、該当するタスクが無いとき |
 | `itemSoundEnabled` / `itemSoundPath` | `false` / `""` | アイテムを認識したとき |

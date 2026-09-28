@@ -200,7 +200,7 @@ export const defaults: Settings = {
   screenshotCleanup: false,
   screenshotRetainCount: 500,
   screenshotRetainHours: 168,
-  soundsEnabled: true,
+  soundsEnabled: false,
   questSoundEnabled: true,
   questSoundPath: '',
   errorSoundEnabled: true,
