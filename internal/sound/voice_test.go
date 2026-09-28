@@ -61,3 +61,17 @@ func TestDecodeADPCMBlock(t *testing.T) {
 		t.Fatalf("got %v", got)
 	}
 }
+
+// Every voice has what it says for every notification, for the settings.
+func TestVoicePacksHaveLineTexts(t *testing.T) {
+	for _, pack := range VoicePacks() {
+		for _, kind := range Kinds {
+			if pack.Lines[string(kind)] == "" {
+				t.Fatalf("%s: no text for %s", pack.ID, kind)
+			}
+		}
+	}
+	if DefaultVoice("ja") != "tsumugi" || DefaultVoice("en") != "heart" {
+		t.Fatalf("defaults %q %q", DefaultVoice("ja"), DefaultVoice("en"))
+	}
+}

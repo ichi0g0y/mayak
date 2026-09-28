@@ -26,6 +26,12 @@ export class VoicePack {
     "terms": string;
     "termsChecked": string;
 
+    /**
+     * Lines is what it says for each notification (sound.Kind), shown
+     * under the notification in the settings.
+     */
+    "lines": { [_ in string]?: string };
+
     /** Creates a new VoicePack instance. */
     constructor($$source: Partial<VoicePack> = {}) {
         if (!("id" in $$source)) {
@@ -49,6 +55,9 @@ export class VoicePack {
         if (!("termsChecked" in $$source)) {
             this["termsChecked"] = "";
         }
+        if (!("lines" in $$source)) {
+            this["lines"] = {};
+        }
 
         Object.assign(this, $$source);
     }
@@ -58,9 +67,13 @@ export class VoicePack {
      */
     static createFrom($$source: any = {}): VoicePack {
         const $$createField1_0 = $$createType0;
+        const $$createField7_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("name" in $$parsedSource) {
             $$parsedSource["name"] = $$createField1_0($$parsedSource["name"]);
+        }
+        if ("lines" in $$parsedSource) {
+            $$parsedSource["lines"] = $$createField7_0($$parsedSource["lines"]);
         }
         return new VoicePack($$parsedSource as Partial<VoicePack>);
     }

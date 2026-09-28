@@ -277,11 +277,13 @@ func normalizeSettings(s config.Settings) config.Settings {
 	s.PlayerMarkerEffect = normalizePlayerMarkerEffect(s.PlayerMarkerEffect)
 	s.PlayerMarkerColor = normalizePlayerMarkerColor(s.PlayerMarkerColor)
 	s.HideoutErrorSoundPath = normalizeSoundPath(s.HideoutErrorSoundPath)
-	if !sound.HasVoice(s.SoundVoice) {
+	// The voice for all: a built-in voice, "beep", or "" for the language's
+	// default. A notification's own: a voice, "beep", or "custom" (its file).
+	if s.SoundVoice != "beep" && !sound.HasVoice(s.SoundVoice) {
 		s.SoundVoice = ""
 	}
 	for kind, voice := range s.SoundVoices {
-		if _, ok := sound.ParseKind(kind); !ok || (voice != "beep" && !sound.HasVoice(voice)) {
+		if _, ok := sound.ParseKind(kind); !ok || (voice != "beep" && voice != "custom" && !sound.HasVoice(voice)) {
 			delete(s.SoundVoices, kind)
 		}
 	}

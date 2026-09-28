@@ -86,7 +86,8 @@ export class Settings {
 
     /**
      * SoundVoice is the built-in voice the notifications speak with (a
-     * pack of internal/sound/voices); empty for the built-in beeps.
+     * pack of internal/sound/voices), "beep" for the built-in beeps, or
+     * empty for the language's default (app_sound.go baseVoice).
      */
     "soundVoice": string;
 

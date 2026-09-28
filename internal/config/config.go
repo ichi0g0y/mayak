@@ -50,7 +50,8 @@ type Settings struct {
 	ItemNotMatchedSoundPath    string `json:"itemNotMatchedSoundPath"`
 	SoundVolume                int    `json:"soundVolume"`
 	// SoundVoice is the built-in voice the notifications speak with (a
-	// pack of internal/sound/voices); empty for the built-in beeps.
+	// pack of internal/sound/voices), "beep" for the built-in beeps, or
+	// empty for the language's default (app_sound.go baseVoice).
 	SoundVoice string `json:"soundVoice"`
 	// SoundVoices is the voice a notification speaks with instead (its kind,
 	// sound.Kind, to a pack or "beep"); one not in it takes SoundVoice.

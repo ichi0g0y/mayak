@@ -120,11 +120,23 @@ func (a *App) notify(s config.Settings, kind sound.Kind) {
 // voiceFor is the built-in voice a notification speaks with: its own choice,
 // else the one for all ("" for the beeps).
 func voiceFor(s config.Settings, kind sound.Kind) string {
-	if voice, ok := s.SoundVoices[string(kind)]; ok {
+	if voice, ok := s.SoundVoices[string(kind)]; ok && voice != "custom" {
 		if voice == "beep" {
 			return ""
 		}
 		return voice
+	}
+	return baseVoice(s)
+}
+
+// baseVoice is the voice for all: the one chosen, "beep" for the beeps, and
+// none chosen the default for the language.
+func baseVoice(s config.Settings) string {
+	switch s.SoundVoice {
+	case "beep":
+		return ""
+	case "":
+		return sound.DefaultVoice(s.Language)
 	}
 	return s.SoundVoice
 }

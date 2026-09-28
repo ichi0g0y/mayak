@@ -428,26 +428,45 @@ function App() {
   }
   const previewSound = async (kind: string, path: string) => {
     try {
-      await PreviewSound(kind, path, voiceOf(kind)?.id ?? '', settings.soundVolume)
+      await PreviewSound(
+        kind,
+        choiceOf(kind, path) === 'custom' ? path : '',
+        voiceOf(kind)?.id ?? '',
+        settings.soundVolume,
+      )
     } catch (error) {
       setNotice(String(error))
       setNoticeError(true)
     }
   }
-  const voice = voicePacks.find((pack) => pack.id === settings.soundVoice)
   const voiceName = (pack: VoicePack) => pack.name[settings.language] || pack.name.en || pack.id
-  // A notification's own voice ("beep" for the beeps), else the one for all.
+  // The voice for all: the one chosen, "beep" for the beeps, and none chosen
+  // the language's default (as internal/app/app_sound.go baseVoice).
+  const defaultVoiceId = settings.language === 'ja' ? 'tsumugi' : 'heart'
+  const baseVoiceId = settings.soundVoice || defaultVoiceId
+  const voice = voicePacks.find((pack) => pack.id === baseVoiceId)
+  // A notification's own choice: a voice, "beep", or "custom" (its file);
+  // none, the voice for all. A file chosen is always "custom".
   const soundVoices = settings.soundVoices ?? {}
+  const choiceOf = (kind: string, path: string) => (path ? 'custom' : (soundVoices[kind] ?? '__default'))
   const voiceOf = (kind: string) => {
     const own = soundVoices[kind]
-    if (own === undefined) return voice
+    if (own === undefined || own === 'custom') return voice
     return voicePacks.find((pack) => pack.id === own)
   }
-  const setVoiceOf = (kind: string, value: string) => {
+  const setChoiceOf = (kind: string, pathKey: SoundPathKey, value: string) => {
     const next = { ...soundVoices }
     if (value === '__default') delete next[kind]
     else next[kind] = value === '__beep' ? 'beep' : value
-    patch({ soundVoices: next })
+    // Another choice than a file lets go of the file.
+    patch({ soundVoices: next, ...(value !== 'custom' ? { [pathKey]: '' } : {}) } as Partial<Settings>)
+  }
+  const quote = (text: string) => (settings.language === 'ja' ? `「${text}」` : `“${text}”`)
+  // What a notification plays: its file, the line of its voice, or the beeps.
+  const saidBy = (kind: string, path: string) => {
+    if (choiceOf(kind, path) === 'custom') return path ? path.split(/[\\/]/).pop() : t('noSoundFile')
+    const pack = voiceOf(kind)
+    return pack ? `${voiceName(pack)}：${quote(pack.lines?.[kind] || '')}` : t('soundVoiceBeep')
   }
   const soundAlerts = [
     {
@@ -1061,18 +1080,19 @@ function App() {
                       <Label>{t('soundVoice')}</Label>
                       <Select
                         value={voice ? voice.id : '__beep'}
-                        onValueChange={(id) => patch({ soundVoice: id === '__beep' ? '' : id })}
+                        onValueChange={(id) => patch({ soundVoice: id === '__beep' ? 'beep' : id })}
                       >
-                        <SelectTrigger aria-label={t('soundVoice')}>
+                        <SelectTrigger aria-label={t('soundVoice')} className="sound-voice">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="__beep">{t('soundVoiceBeep')}</SelectItem>
                           {voicePacks.map((pack) => (
                             <SelectItem key={pack.id} value={pack.id}>
                               {voiceName(pack)}
+                              {pack.id === defaultVoiceId ? t('soundVoiceStandard') : ''}
                             </SelectItem>
                           ))}
+                          <SelectItem value="__beep">{t('soundVoiceBeep')}</SelectItem>
                         </SelectContent>
                       </Select>
                       <p className="help-text">
@@ -1112,16 +1132,10 @@ function App() {
                               onCheckedChange={(checked) => patch({ [alert.enabledKey]: checked } as Partial<Settings>)}
                             />
                           </div>
-                          <div className="sound-file-row">
+                          <div className="sound-voice-row">
                             <Select
-                              value={
-                                soundVoices[alert.kind] === undefined
-                                  ? '__default'
-                                  : soundVoices[alert.kind] === 'beep'
-                                    ? '__beep'
-                                    : soundVoices[alert.kind]
-                              }
-                              onValueChange={(value) => setVoiceOf(alert.kind, value)}
+                              value={choiceOf(alert.kind, path) === 'beep' ? '__beep' : choiceOf(alert.kind, path)}
+                              onValueChange={(value) => setChoiceOf(alert.kind, alert.pathKey, value)}
                             >
                               <SelectTrigger
                                 aria-label={`${alert.label}: ${t('soundVoiceOf')}`}
@@ -1133,36 +1147,15 @@ function App() {
                                 <SelectItem value="__default">
                                   {t('soundVoiceDefault')}（{voice ? voiceName(voice) : t('soundVoiceBeep')}）
                                 </SelectItem>
-                                <SelectItem value="__beep">{t('soundVoiceBeep')}</SelectItem>
                                 {voicePacks.map((pack) => (
                                   <SelectItem key={pack.id} value={pack.id}>
                                     {voiceName(pack)}
                                   </SelectItem>
                                 ))}
+                                <SelectItem value="__beep">{t('soundVoiceBeep')}</SelectItem>
+                                <SelectItem value="custom">{t('soundVoiceCustom')}</SelectItem>
                               </SelectContent>
                             </Select>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => void chooseSound(alert.pathKey)}
-                            >
-                              <FolderOpen />
-                              {t('chooseSound')}
-                            </Button>
-                            <span className="sound-file-name" title={path || t('noSoundFile')}>
-                              {path ? path.split(/[\\/]/).pop() : t('noSoundFile')}
-                            </span>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              disabled={!path}
-                              onClick={() => patch({ [alert.pathKey]: '' } as Partial<Settings>)}
-                            >
-                              <RotateCcw />
-                              {t('resetSound')}
-                            </Button>
                             <Button
                               type="button"
                               size="sm"
@@ -1173,6 +1166,25 @@ function App() {
                               {t('previewSound')}
                             </Button>
                           </div>
+                          {choiceOf(alert.kind, path) === 'custom' && (
+                            <div className="sound-file-row">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => void chooseSound(alert.pathKey)}
+                              >
+                                <FolderOpen />
+                                {t('chooseSound')}
+                              </Button>
+                              <span className="sound-file-name" title={path || t('noSoundFile')}>
+                                {path ? path.split(/[\\/]/).pop() : t('noSoundFile')}
+                              </span>
+                            </div>
+                          )}
+                          <p className="sound-said" title={saidBy(alert.kind, path)}>
+                            {saidBy(alert.kind, path)}
+                          </p>
                           {alert.kind === 'runThrough' && settings.runThroughSoundEnabled && (
                             <div className="field">
                               <Label>{t('runThroughTime')}</Label>

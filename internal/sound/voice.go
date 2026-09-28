@@ -31,6 +31,33 @@ type VoicePack struct {
 	Credit       string `json:"credit"`
 	Terms        string `json:"terms"`
 	TermsChecked string `json:"termsChecked"`
+	// Lines is what it says for each notification (sound.Kind), shown
+	// under the notification in the settings.
+	Lines map[string]string `json:"lines"`
+}
+
+// packLines reads pack.json's lines: a line is its text, or an object with
+// its text and how to say it (tools/voices).
+func packLines(data []byte) map[string]string {
+	var raw struct {
+		Lines map[string]json.RawMessage `json:"lines"`
+	}
+	lines := map[string]string{}
+	if json.Unmarshal(data, &raw) != nil {
+		return lines
+	}
+	for kind, value := range raw.Lines {
+		var text string
+		if json.Unmarshal(value, &text) != nil {
+			var line struct {
+				Text string `json:"text"`
+			}
+			_ = json.Unmarshal(value, &line)
+			text = line.Text
+		}
+		lines[kind] = text
+	}
+	return lines
 }
 
 // VoicePacks lists the built-in voices, Japanese first.
@@ -49,10 +76,14 @@ func VoicePacks() []VoicePack {
 			continue
 		}
 		var pack VoicePack
-		if json.Unmarshal(data, &pack) != nil {
+		if json.Unmarshal(data, &struct {
+			*VoicePack
+			Lines json.RawMessage `json:"lines"`
+		}{VoicePack: &pack}) != nil {
 			continue
 		}
 		pack.ID = entry.Name()
+		pack.Lines = packLines(data)
 		packs = append(packs, pack)
 	}
 	sort.SliceStable(packs, func(i, j int) bool {
@@ -62,6 +93,19 @@ func VoicePacks() []VoicePack {
 		return packs[i].Order < packs[j].Order
 	})
 	return packs
+}
+
+// DefaultVoice is the voice for all when none was chosen: 春日部つむぎ for
+// Japanese, the English female voice otherwise.
+func DefaultVoice(language string) string {
+	id := "heart"
+	if language == "ja" {
+		id = "tsumugi"
+	}
+	if HasVoice(id) {
+		return id
+	}
+	return ""
 }
 
 // HasVoice tells a built-in voice by its ID.
