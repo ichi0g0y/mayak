@@ -252,6 +252,7 @@ func (m *Manager) command(command string, o Options) error {
 					if script := m.currentDocumentScript(); script != "" {
 						_ = c.AddDocumentScript(script)
 					}
+					_ = c.AddDocumentScript(siteScript)
 					if blocker := m.contentBlocker(); blocker != nil {
 						filter, err := attachFilter(c, blocker)
 						if err != nil {
