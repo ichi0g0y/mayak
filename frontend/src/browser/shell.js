@@ -50,6 +50,7 @@ setRender(render)
 
 // The changelog page, rendered from CHANGELOG.md in the repository.
 const CHANGELOG_URL = 'https://mayak.ich.sh/changelog'
+const SUPPORT_URL = 'https://buymeacoffee.com/ichi0g0y'
 const LICENSE_URL = 'https://github.com/ichi0g0y/mayak/blob/main/LICENSE'
 let editingBookmark = null,
   bookmarkQuery = '',
@@ -489,7 +490,7 @@ function updateChannelHTML() {
 function browserSettings(key) {
   switch (key) {
     case 'about':
-      return `<section class="panel about"><div class="about-head"><img src="/favicon-256.png?v=${esc(appVersion || 'dev')}" alt="" width="56" height="56"><div><h2>MAYAK</h2><p class="about-version">${esc(t('aboutVersion'))} ${esc(appVersion || t('aboutDev'))}</p></div></div><p>${esc(t('aboutTagline'))}</p><div class="about-links"><button data-action="openOrFocus" data-id="https://mayak.ich.sh">${icon('globe')}${esc(t('aboutSite'))}</button><button data-action="openOrFocus" data-id="https://github.com/ichi0g0y/mayak">${icon('external')}${esc(t('aboutSource'))}</button><button data-action="openOrFocus" data-id="${CHANGELOG_URL}">${icon('list')}${esc(t('aboutReleases'))}</button></div><p class="hint">${esc(t('aboutLicense'))} ${esc(t('aboutCredits'))}</p></section>${aboutUpdate()}`
+      return `<section class="panel about"><div class="about-head"><img src="/favicon-256.png?v=${esc(appVersion || 'dev')}" alt="" width="56" height="56"><div><h2>MAYAK</h2><p class="about-version">${esc(t('aboutVersion'))} ${esc(appVersion || t('aboutDev'))}</p></div></div><p>${esc(t('aboutTagline'))}</p><div class="about-links"><button data-action="openOrFocus" data-id="https://mayak.ich.sh">${icon('globe')}${esc(t('aboutSite'))}</button><button data-action="openOrFocus" data-id="https://github.com/ichi0g0y/mayak">${icon('external')}${esc(t('aboutSource'))}</button><button data-action="openOrFocus" data-id="${CHANGELOG_URL}">${icon('list')}${esc(t('aboutReleases'))}</button><button data-action="openOrFocus" data-id="${SUPPORT_URL}">${icon('coffee')}${esc(t('aboutSupport'))}</button></div><p class="hint">${esc(t('aboutSupportHint'))}</p><p class="hint">${esc(t('aboutLicense'))} ${esc(t('aboutCredits'))}</p></section>${aboutUpdate()}`
     // MAYAK's license, the data it shows and the built-in voices' credits
     // (their terms ask for them where users can find them).
     case 'licenses': {
