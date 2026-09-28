@@ -490,7 +490,7 @@ function updateChannelHTML() {
 function browserSettings(key) {
   switch (key) {
     case 'about':
-      return `<section class="panel about"><div class="about-head"><img src="/favicon-256.png?v=${esc(appVersion || 'dev')}" alt="" width="56" height="56"><div><h2>MAYAK</h2><p class="about-version">${esc(t('aboutVersion'))} ${esc(appVersion || t('aboutDev'))}</p></div></div><p>${esc(t('aboutTagline'))}</p><div class="about-links"><button data-action="openOrFocus" data-id="https://mayak.ich.sh">${icon('globe')}${esc(t('aboutSite'))}</button><button data-action="openOrFocus" data-id="https://github.com/ichi0g0y/mayak">${icon('external')}${esc(t('aboutSource'))}</button><button data-action="openOrFocus" data-id="${CHANGELOG_URL}">${icon('list')}${esc(t('aboutReleases'))}</button></div><p class="hint">${esc(t('aboutLicense'))} ${esc(t('aboutCredits'))}</p></section><section class="panel support"><div class="support-head"><span class="support-icon">${icon('coffee')}</span><div><h2>${esc(t('aboutSupportTitle'))}</h2><p>${esc(t('aboutSupportHint'))}</p></div></div><div class="about-links"><button class="primary" data-action="openOrFocus" data-id="${SUPPORT_URL}">${icon('coffee')}${esc(t('aboutSupport'))}</button></div></section>${aboutUpdate()}`
+      return `<section class="panel about"><div class="about-head"><img src="/favicon-256.png?v=${esc(appVersion || 'dev')}" alt="" width="56" height="56"><div><h2>MAYAK</h2><p class="about-version">${esc(t('aboutVersion'))} ${esc(appVersion || t('aboutDev'))}</p></div></div><p>${esc(t('aboutTagline'))}</p><div class="about-links"><button data-action="openOrFocus" data-id="https://mayak.ich.sh">${icon('globe')}${esc(t('aboutSite'))}</button><button data-action="openOrFocus" data-id="https://github.com/ichi0g0y/mayak">${icon('external')}${esc(t('aboutSource'))}</button><button data-action="openOrFocus" data-id="${CHANGELOG_URL}">${icon('list')}${esc(t('aboutReleases'))}</button></div><p class="hint">${esc(t('aboutLicense'))} ${esc(t('aboutCredits'))}</p></section><section class="panel support"><div class="support-head"><span class="support-icon">${icon('coffee')}</span><div><h2>${esc(t('aboutSupportTitle'))}</h2><p>${esc(t('aboutSupportHint'))}</p></div></div><div class="about-links"><button class="primary" data-action="openSupport" title="${esc(t('openExternal'))}">${icon('coffee')}${esc(t('aboutSupport'))}${icon('external')}</button></div></section>${aboutUpdate()}`
     // MAYAK's license, the data it shows and the built-in voices' credits
     // (their terms ask for them where users can find them).
     case 'licenses': {
@@ -830,6 +830,12 @@ document.addEventListener('click', async (event) => {
   }
   if (type === 'placeItem') {
     void action('preferences', { itemDock: id })
+    return
+  }
+  // Supporting goes through a payment page, which works (PayPal, card
+  // checks, saved logins) in the user's own browser, not in a tab here.
+  if (type === 'openSupport') {
+    void Browser.OpenURL(SUPPORT_URL)
     return
   }
   if (type === 'openExternal') {

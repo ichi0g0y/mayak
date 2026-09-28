@@ -1,3 +1,4 @@
+import { Browser } from '@wailsio/runtime'
 import { mapTabID } from './state.js'
 import { esc, t, appVersion, icon, render, api, state, action, SUPPORT_URL } from './shell-core.js'
 
@@ -22,7 +23,7 @@ export function tutorialHTML() {
     remote: `<p>${esc(t('tutRemote'))}</p><button data-action="tutorialRemote">${icon('linked')}${esc(t('tutOpenRemote'))}</button>`,
     tracker: `<p>${esc(t('tutTracker'))}</p><button data-action="tutorialTracker">${icon('tracker')}${esc(t('tutOpenTracker'))}</button>`,
     // Asked once, on the way out, and easy to pass by.
-    done: `<p>${esc(t('tutDone'))}</p><p class="hint">${esc(t('tutSupport'))}</p><button data-action="tutorialSupport">${icon('coffee')}${esc(t('aboutSupport'))}</button>`,
+    done: `<p>${esc(t('tutDone'))}</p><p class="hint">${esc(t('tutSupport'))}</p><button data-action="tutorialSupport" title="${esc(t('openExternal'))}">${icon('coffee')}${esc(t('aboutSupport'))}${icon('external')}</button>`,
   }[key]
   const title = t(
     {
@@ -80,8 +81,9 @@ export async function handleTutorial(type) {
     case 'tutorialFinish':
       return closeTutorial()
     case 'tutorialSupport':
-      await closeTutorial()
-      return action('openOrFocus', SUPPORT_URL)
+      // In the user's own browser, as from About (shell.js openSupport).
+      void Browser.OpenURL(SUPPORT_URL)
+      return
     case 'tutorialMap':
       await closeTutorial()
       return action('activate', mapTabID)
