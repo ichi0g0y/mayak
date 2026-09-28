@@ -266,6 +266,7 @@ const messages = {
     minutes: '分',
     seconds: '秒',
     volume: '全体の音量',
+    soundVoicesSection: '通知の声',
     soundVoice: '基本の声',
     soundVoiceBeep: 'ビープ音',
     soundVoiceHelp:
@@ -646,6 +647,7 @@ const messages = {
     minutes: 'min',
     seconds: 'sec',
     volume: 'Overall volume',
+    soundVoicesSection: 'Notification voices',
     soundVoice: 'Voice for all',
     soundVoiceBeep: 'Beeps',
     soundVoiceHelp:

@@ -1081,9 +1081,7 @@ function App() {
                       onCheckedChange={(soundsEnabled) => patch({ soundsEnabled })}
                     />
                   </div>
-                </div>
-                {settings.soundsEnabled && (
-                  <div className="sound-options">
+                  {settings.soundsEnabled && (
                     <div className="field">
                       <Label htmlFor="sound-volume">
                         {t('volume')} {settings.soundVolume}%
@@ -1099,6 +1097,11 @@ function App() {
                         onChange={(e) => patch({ soundVolume: Number(e.target.value) })}
                       />
                     </div>
+                  )}
+                </div>
+                {settings.soundsEnabled && (
+                  <div className="sound-options">
+                    <h3 className="sound-section">{t('soundVoicesSection')}</h3>
                     <div className="field">
                       <Label>{t('soundVoice')}</Label>
                       <Select
