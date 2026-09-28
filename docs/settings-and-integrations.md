@@ -93,6 +93,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `raidStartSoundEnabled` / `raidStartSoundPath` | `true` / `""` | レイド開始時 |
 | `runThroughSoundEnabled` / `runThroughSoundPath` | `true` / `""` | ランスルー時間が過ぎたとき |
 | `runThroughSeconds` | `430` | ランスルー時間（秒）。1–3599 の範囲外なら 430 |
+| `gameExitSoundEnabled` / `gameExitSoundPath` | `false` / `""` | タルコフを閉じたとき（プロセスの終了。クラッシュも同じ） |
 | `gameStartSoundEnabled` / `gameStartSoundPath` | `false` / `""` | ゲーム起動時（メニューに着いたとき） |
 | `questItemsSoundEnabled` / `questItemsSoundPath` | `false` / `""` | レイドから戻ったとき（名前は以前のタスクアイテム確認の名残） |
 | `restartTasksSoundEnabled` / `restartTasksSoundPath` | `false` / `""` | メニューに戻ったとき、失敗したタスクがあれば |
@@ -225,6 +226,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | ゲーム起動時 | ゲームを起動してメニューに着いたとき（ログのプロフィール読み込みの 1 回目で、レイドを挟んでいないもの） |
 | レイドから戻ったとき | レイドの後にメニューに着いたとき。生還か死亡かはログからは分からないので、どちらでも同じ通知 |
 | 失敗タスクの再開確認 | メニューに戻ったときに、TarkovTracker 上で失敗しているタスクがあるとき |
+| ゲーム終了時 | 5 秒ごとの確認で `EscapeFromTarkov.exe` が起動中から無くなったとき（MAYAK の起動時にすでに閉じていたら鳴らない） |
 
 Hideout の操作が EFT のログでエラーになったことは通知しません（ゲームの画面には出ず、プレイヤーにできることも無いため）。記録はログページの Hideout で見られます（[hideout.md](hideout.md)）。
 

@@ -32,6 +32,7 @@ export const kinds = [
   'gameStart',
   'questItems',
   'restartTasks',
+  'gameExit',
 ] as const
 
 export type LineObject = { text: string; style?: number; kana?: string; query?: Record<string, number>; speed?: number }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/local/mayak/internal/eftdetect"
+	"github.com/local/mayak/internal/sound"
 	"github.com/local/mayak/internal/tracker"
 	"github.com/local/mayak/internal/trackerlog"
 )
@@ -141,21 +142,29 @@ func (a *App) deferHistory(accountID, profileID, mode string) {
 }
 
 // watchGame follows whether EFT runs, for the settings page (a recheck of
-// past logs waits for it to close), and runs the syncs deferred meanwhile
-// once it has closed.
+// past logs waits for it to close) and the notification of its closing, and
+// runs the syncs deferred meanwhile once it has closed.
 func (a *App) watchGame() {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
+	first := true
 	for {
 		running := eftdetect.GameRunning()
 		a.mu.Lock()
 		changed := a.status.Tracker.GameRunning != running
 		a.status.Tracker.GameRunning = running
 		status := a.status
+		settings := a.settings
 		a.mu.Unlock()
 		if changed {
 			a.emitStatus(status)
+			// Closed while MAYAK watched (not already closed at its start).
+			if !running && !first && !a.quitting.Load() {
+				a.addLog("Info", "Raid", "Escape from Tarkov closed")
+				a.notify(settings, sound.GameExit)
+			}
 		}
+		first = false
 		if !running {
 			a.pendingHistoryMu.Lock()
 			pending := a.pendingHistory

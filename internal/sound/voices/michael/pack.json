@@ -23,6 +23,7 @@
     "runThrough": "Run-through cleared. You can extract now.",
     "gameStart": "Welcome back.",
     "questItems": "Take a moment to rest.",
-    "restartTasks": "You have failed tasks to restart."
+    "restartTasks": "You have failed tasks to restart.",
+    "gameExit": "Good session. See you next time."
   }
 }

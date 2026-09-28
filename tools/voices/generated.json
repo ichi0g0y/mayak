@@ -11,7 +11,8 @@
     "runThrough": "9a8f912f2918",
     "questItems": "736c22862fab",
     "restartTasks": "5f919397fad9",
-    "gameStart": "2ca6324d1438"
+    "gameStart": "2ca6324d1438",
+    "gameExit": "db9af5938f35"
   },
   "heart": {
     "quest": "523b7556d9ab",
@@ -25,7 +26,8 @@
     "runThrough": "f7bdae9c3e75",
     "questItems": "321dc3598b41",
     "restartTasks": "ff6215470fde",
-    "gameStart": "29e11bae63f6"
+    "gameStart": "29e11bae63f6",
+    "gameExit": "2a0ff95383c3"
   },
   "kenzaki": {
     "quest": "286b7b68563c",
@@ -39,7 +41,8 @@
     "runThrough": "d1fe0c8a3b61",
     "questItems": "bb06a97c3f2a",
     "restartTasks": "808183453306",
-    "gameStart": "e41ac4df1f76"
+    "gameStart": "e41ac4df1f76",
+    "gameExit": "4fb75c56c954"
   },
   "michael": {
     "quest": "5ce4988bdf9c",
@@ -53,7 +56,8 @@
     "runThrough": "3b339415de05",
     "questItems": "f5afe6ebd1a6",
     "restartTasks": "067892fd7d1b",
-    "gameStart": "dd6ad51cbcbe"
+    "gameStart": "dd6ad51cbcbe",
+    "gameExit": "59d519fada1c"
   },
   "nana": {
     "quest": "629bf1b153e8",
@@ -67,7 +71,8 @@
     "runThrough": "01969f2bae1a",
     "questItems": "e9664c4f872d",
     "restartTasks": "5a8110195c23",
-    "gameStart": "bec3f340b573"
+    "gameStart": "bec3f340b573",
+    "gameExit": "9755c53c4382"
   },
   "tsumugi": {
     "quest": "fa3e37fe2049",
@@ -81,7 +86,8 @@
     "runThrough": "9a1845cb6fd7",
     "questItems": "0d7055bf8061",
     "restartTasks": "26f6a9ae41f0",
-    "gameStart": "f23ddbb19dc8"
+    "gameStart": "f23ddbb19dc8",
+    "gameExit": "b25a6aab286d"
   },
   "whitecul": {
     "quest": "d5d87b97cdf6",
@@ -95,6 +101,7 @@
     "runThrough": "3df2fbaea0ef",
     "questItems": "b196319aae33",
     "restartTasks": "9dbd305a111a",
-    "gameStart": "5757e27d6f0c"
+    "gameStart": "5757e27d6f0c",
+    "gameExit": "72db1a715c1c"
   }
 }

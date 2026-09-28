@@ -414,6 +414,7 @@ function App() {
     | 'gameStartSoundPath'
     | 'questItemsSoundPath'
     | 'restartTasksSoundPath'
+    | 'gameExitSoundPath'
   const chooseSound = async (key: SoundPathKey) => {
     try {
       const path = await ChooseSoundFile()
@@ -559,6 +560,13 @@ function App() {
       kind: 'restartTasks',
       enabledKey: 'restartTasksSoundEnabled',
       pathKey: 'restartTasksSoundPath',
+    },
+    {
+      id: 'game-exit-sound',
+      label: t('gameExitSound'),
+      kind: 'gameExit',
+      enabledKey: 'gameExitSoundEnabled',
+      pathKey: 'gameExitSoundPath',
     },
   ] as const
   const updateStateLabel = (update: UpdateStatus) => {
