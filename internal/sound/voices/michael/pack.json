@@ -21,7 +21,8 @@
     "matchFound": "Match found.",
     "raidStart": "Raid started. Good luck.",
     "runThrough": "Run-through cleared. You can extract now.",
-    "questItems": "Welcome back.",
+    "gameStart": "Welcome back.",
+    "questItems": "Take a moment to rest.",
     "restartTasks": "You have failed tasks to restart."
   }
 }

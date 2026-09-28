@@ -52,6 +52,8 @@ export type Settings = {
   runThroughSoundEnabled: boolean
   runThroughSoundPath: string
   runThroughSeconds: number
+  gameStartSoundEnabled: boolean
+  gameStartSoundPath: string
   questItemsSoundEnabled: boolean
   questItemsSoundPath: string
   restartTasksSoundEnabled: boolean
@@ -230,6 +232,8 @@ export const defaults: Settings = {
   runThroughSoundEnabled: true,
   runThroughSoundPath: '',
   runThroughSeconds: 430,
+  gameStartSoundEnabled: false,
+  gameStartSoundPath: '',
   questItemsSoundEnabled: false,
   questItemsSoundPath: '',
   restartTasksSoundEnabled: false,

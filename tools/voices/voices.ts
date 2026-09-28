@@ -29,6 +29,7 @@ export const kinds = [
   'matchFound',
   'raidStart',
   'runThrough',
+  'gameStart',
   'questItems',
   'restartTasks',
 ] as const

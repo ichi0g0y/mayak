@@ -79,6 +79,8 @@ type Settings struct {
 	RunThroughSound       bool   `json:"runThroughSoundEnabled"`
 	RunThroughSoundPath   string `json:"runThroughSoundPath"`
 	RunThroughSeconds     int    `json:"runThroughSeconds"`
+	GameStartSound        bool   `json:"gameStartSoundEnabled"`
+	GameStartSoundPath    string `json:"gameStartSoundPath"`
 	QuestItemsSound       bool   `json:"questItemsSoundEnabled"`
 	QuestItemsSoundPath   string `json:"questItemsSoundPath"`
 	RestartTasksSound     bool   `json:"restartTasksSoundEnabled"`

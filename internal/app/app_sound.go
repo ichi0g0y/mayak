@@ -100,6 +100,8 @@ func soundChoice(s config.Settings, kind sound.Kind) (bool, string) {
 		return s.RaidStartSound, s.RaidStartSoundPath
 	case sound.RunThrough:
 		return s.RunThroughSound, s.RunThroughSoundPath
+	case sound.GameStart:
+		return s.GameStartSound, s.GameStartSoundPath
 	case sound.QuestItems:
 		return s.QuestItemsSound, s.QuestItemsSoundPath
 	case sound.RestartTasks:

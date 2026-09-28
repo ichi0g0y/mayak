@@ -21,7 +21,8 @@
     "matchFound": "マッチングしたよっ！",
     "raidStart": "レイドスタート！がんばってね！",
     "runThrough": "脱出オッケーだよっ！",
-    "questItems": "おかえりー！",
+    "gameStart": "おかえりー！",
+    "questItems": "おつかれさま。がんばったね",
     "restartTasks": "失敗しちゃったタスクがあるよー"
   }
 }

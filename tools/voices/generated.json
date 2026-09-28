@@ -9,8 +9,9 @@
     "matchFound": "3c4a85aeee62",
     "raidStart": "ba8b8c2bbfea",
     "runThrough": "9a8f912f2918",
-    "questItems": "2ca6324d1438",
-    "restartTasks": "5f919397fad9"
+    "questItems": "736c22862fab",
+    "restartTasks": "5f919397fad9",
+    "gameStart": "2ca6324d1438"
   },
   "heart": {
     "quest": "523b7556d9ab",
@@ -22,8 +23,9 @@
     "matchFound": "e1e22b31ee20",
     "raidStart": "bf4e0753288e",
     "runThrough": "f7bdae9c3e75",
-    "questItems": "29e11bae63f6",
-    "restartTasks": "ff6215470fde"
+    "questItems": "321dc3598b41",
+    "restartTasks": "ff6215470fde",
+    "gameStart": "29e11bae63f6"
   },
   "kenzaki": {
     "quest": "286b7b68563c",
@@ -35,8 +37,9 @@
     "matchFound": "3f167d4dc167",
     "raidStart": "1ae1e674d60d",
     "runThrough": "d1fe0c8a3b61",
-    "questItems": "e41ac4df1f76",
-    "restartTasks": "808183453306"
+    "questItems": "bb06a97c3f2a",
+    "restartTasks": "808183453306",
+    "gameStart": "e41ac4df1f76"
   },
   "michael": {
     "quest": "5ce4988bdf9c",
@@ -48,8 +51,9 @@
     "matchFound": "4182b89a7c14",
     "raidStart": "dc842711eb2b",
     "runThrough": "3b339415de05",
-    "questItems": "dd6ad51cbcbe",
-    "restartTasks": "067892fd7d1b"
+    "questItems": "f5afe6ebd1a6",
+    "restartTasks": "067892fd7d1b",
+    "gameStart": "dd6ad51cbcbe"
   },
   "nana": {
     "quest": "629bf1b153e8",
@@ -61,8 +65,9 @@
     "matchFound": "aefd1efb2158",
     "raidStart": "49130e8185ad",
     "runThrough": "01969f2bae1a",
-    "questItems": "bec3f340b573",
-    "restartTasks": "5a8110195c23"
+    "questItems": "e9664c4f872d",
+    "restartTasks": "5a8110195c23",
+    "gameStart": "bec3f340b573"
   },
   "tsumugi": {
     "quest": "fa3e37fe2049",
@@ -74,8 +79,9 @@
     "matchFound": "69439025472d",
     "raidStart": "cd8d78c72366",
     "runThrough": "9a1845cb6fd7",
-    "questItems": "f23ddbb19dc8",
-    "restartTasks": "26f6a9ae41f0"
+    "questItems": "0d7055bf8061",
+    "restartTasks": "26f6a9ae41f0",
+    "gameStart": "f23ddbb19dc8"
   },
   "whitecul": {
     "quest": "d5d87b97cdf6",
@@ -87,7 +93,8 @@
     "matchFound": "3f425cce0881",
     "raidStart": "8a0e108ac68b",
     "runThrough": "3df2fbaea0ef",
-    "questItems": "b37fc647c6a3",
-    "restartTasks": "9dbd305a111a"
+    "questItems": "b196319aae33",
+    "restartTasks": "9dbd305a111a",
+    "gameStart": "5757e27d6f0c"
   }
 }

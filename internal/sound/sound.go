@@ -24,12 +24,15 @@ const (
 	MatchFound     Kind = "matchFound"
 	RaidStart      Kind = "raidStart"
 	RunThrough     Kind = "runThrough"
-	QuestItems     Kind = "questItems"
-	RestartTasks   Kind = "restartTasks"
+	// QuestItems is back at the menu from a raid (it once reminded of the
+	// quest items at the raid's start); GameStart the menu at the game's start.
+	QuestItems   Kind = "questItems"
+	GameStart    Kind = "gameStart"
+	RestartTasks Kind = "restartTasks"
 )
 
 // Kinds lists every notification.
-var Kinds = []Kind{Quest, TaskNotMatched, Item, ItemNotMatched, Error, RemoteError, MatchFound, RaidStart, RunThrough, QuestItems, RestartTasks}
+var Kinds = []Kind{Quest, TaskNotMatched, Item, ItemNotMatched, Error, RemoteError, MatchFound, RaidStart, RunThrough, GameStart, QuestItems, RestartTasks}
 
 // ParseKind returns the notification named s.
 func ParseKind(s string) (Kind, bool) {
@@ -83,7 +86,7 @@ func Wave(kind Kind, volume int) []byte {
 		duration = .42
 	case RunThrough:
 		duration = .46
-	case QuestItems, RestartTasks:
+	case QuestItems, GameStart, RestartTasks:
 		duration = .4
 	}
 	count := int(sampleRate * duration)
@@ -110,7 +113,7 @@ func Wave(kind Kind, volume int) []byte {
 			sample = .82*pulse(t, 0, .16, 245) + pulse(t, .17, .21, 365)
 		case RunThrough:
 			sample = .55*pulse(t, 0, .16, 440) + .72*pulse(t, .13, .18, 610) + pulse(t, .27, .15, 790)
-		case QuestItems:
+		case QuestItems, GameStart:
 			sample = .72*pulse(t, 0, .14, 330) + pulse(t, .18, .17, 520)
 		case RestartTasks:
 			sample = pulse(t, 0, .14, 260) + .75*pulse(t, .17, .18, 210)

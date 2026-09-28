@@ -121,6 +121,8 @@ export class Settings {
     "runThroughSoundEnabled": boolean;
     "runThroughSoundPath": string;
     "runThroughSeconds": number;
+    "gameStartSoundEnabled": boolean;
+    "gameStartSoundPath": string;
     "questItemsSoundEnabled": boolean;
     "questItemsSoundPath": string;
     "restartTasksSoundEnabled": boolean;
@@ -304,6 +306,12 @@ export class Settings {
         }
         if (!("runThroughSeconds" in $$source)) {
             this["runThroughSeconds"] = 0;
+        }
+        if (!("gameStartSoundEnabled" in $$source)) {
+            this["gameStartSoundEnabled"] = false;
+        }
+        if (!("gameStartSoundPath" in $$source)) {
+            this["gameStartSoundPath"] = "";
         }
         if (!("questItemsSoundEnabled" in $$source)) {
             this["questItemsSoundEnabled"] = false;

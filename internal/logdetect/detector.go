@@ -161,6 +161,8 @@ type Event struct {
 	RunThroughEligible bool
 	OccurredAt         time.Time
 	QueueSeconds       float64
+	// FromRaid is a MenuReached back from a raid (not the game's start).
+	FromRaid bool
 }
 
 const (
@@ -178,6 +180,8 @@ type EventParser struct {
 	// atMenu is set once the menu was reported, until a raid is joined:
 	// EFT loads the profile twice on the way back.
 	atMenu bool
+	// fromRaid is set when a raid ended, until the menu is reported.
+	fromRaid bool
 }
 
 type Snapshot struct {
@@ -345,10 +349,12 @@ func (p *EventParser) Parse(text string) []Event {
 			if p.raidActive {
 				events = append(events, Event{Kind: RaidExited, OccurredAt: stamp})
 				p.raidActive = false
+				p.fromRaid = true
 			}
 			if !p.atMenu && strings.Contains(lower, "|application|completeselectedprofile profileid:") {
-				events = append(events, Event{Kind: MenuReached, OccurredAt: stamp})
+				events = append(events, Event{Kind: MenuReached, OccurredAt: stamp, FromRaid: p.fromRaid})
 				p.atMenu = true
+				p.fromRaid = false
 			}
 		}
 	}

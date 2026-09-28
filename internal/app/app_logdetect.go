@@ -161,9 +161,13 @@ func (a *App) handleLogEvent(event logdetect.Event) {
 		a.emitEvent("status:update", status)
 		a.addLog("Info", "Raid", "Raid ended")
 	case logdetect.MenuReached:
-		// Back at the menu (or at the game's start), where the next raid is
-		// got ready for: a reminder at the raid's start came too late.
-		a.notify(settings, sound.QuestItems)
+		// Back at the menu from a raid (dead or alive: the logs do not say),
+		// or at the game's start: each has its own notification.
+		if event.FromRaid {
+			a.notify(settings, sound.QuestItems)
+		} else {
+			a.notify(settings, sound.GameStart)
+		}
 		if failedTasks > 0 {
 			a.addLog("Warn", "TarkovTracker", fmt.Sprintf("%d failed task(s) may need to be restarted", failedTasks))
 			a.notify(settings, sound.RestartTasks)

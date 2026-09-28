@@ -249,18 +249,19 @@ func containsPath(paths []string, wanted string) bool {
 }
 
 // The menu is reported once on the way back (EFT loads the profile twice),
+// marked as from a raid; at the game's start it is not.
 // and again after the next raid; also at the game's start, with no raid.
 func TestEventParserReportsMenuOncePerReturn(t *testing.T) {
 	parser := &EventParser{}
 	complete := "2026-09-10 16:11:25.106|x|Info|application|CompleteSelectedProfile ProfileId:abc AccountId:123\n"
-	if got := parser.Parse(complete); len(got) != 1 || got[0].Kind != MenuReached {
+	if got := parser.Parse(complete); len(got) != 1 || got[0].Kind != MenuReached || got[0].FromRaid {
 		t.Fatalf("start: %v", got)
 	}
 	if got := parser.Parse(complete); len(got) != 0 {
 		t.Fatalf("second load: %v", got)
 	}
 	_ = parser.Parse("2026-09-10 16:20:00.000|x|Info|application|MatchingCompleted:0 real:1.2 diff:1\n2026-09-10 16:21:00.000|x|Info|application|GameStarted:68.86\n")
-	if got := parser.Parse(complete); len(got) != 2 || got[1].Kind != MenuReached {
+	if got := parser.Parse(complete); len(got) != 2 || got[1].Kind != MenuReached || !got[1].FromRaid {
 		t.Fatalf("after raid: %v", got)
 	}
 }

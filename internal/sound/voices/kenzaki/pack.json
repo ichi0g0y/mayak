@@ -24,7 +24,8 @@
     "matchFound": "マッチング完了",
     "raidStart": "レイドを開始します",
     "runThrough": "脱出可能な時間になりました",
-    "questItems": "おかえりなさい",
+    "gameStart": "おかえりなさい",
+    "questItems": "お疲れさまでした。一息つきましょう",
     "restartTasks": "失敗したタスクがあります"
   }
 }

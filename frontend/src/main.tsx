@@ -411,6 +411,7 @@ function App() {
     | 'matchFoundSoundPath'
     | 'raidStartSoundPath'
     | 'runThroughSoundPath'
+    | 'gameStartSoundPath'
     | 'questItemsSoundPath'
     | 'restartTasksSoundPath'
   const chooseSound = async (key: SoundPathKey) => {
@@ -537,6 +538,13 @@ function App() {
       kind: 'runThrough',
       enabledKey: 'runThroughSoundEnabled',
       pathKey: 'runThroughSoundPath',
+    },
+    {
+      id: 'game-start-sound',
+      label: t('gameStartSound'),
+      kind: 'gameStart',
+      enabledKey: 'gameStartSoundEnabled',
+      pathKey: 'gameStartSoundPath',
     },
     {
       id: 'quest-items-sound',
