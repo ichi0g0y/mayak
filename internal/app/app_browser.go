@@ -227,7 +227,7 @@ func (a *App) BrowserView(command string, v browserview.Options) error {
 		return errors.New("invalid browser bounds or ID")
 	}
 	switch command {
-	case "show", "preload", "navigate":
+	case "show", "navigate":
 		u, e := url.Parse(v.URL)
 		if e != nil || u.Host == "" || u.User != nil || (u.Scheme != "https" && u.Scheme != "http") || strings.EqualFold(u.Hostname(), "wails.localhost") {
 			return errors.New("invalid browser URL")

@@ -12,6 +12,7 @@ These changes are planned for the next version.
 
 - The update channel under Settings → About MAYAK can be chosen on a Mac and on Linux too (it was on the Windows Host only).
 - On a Mac the window's close, minimize and zoom buttons are the red, yellow and green ones at the top left, as on any Mac window, instead of Windows-style ones at the top right; the sidebar and the toolbar move right for them.
+- The TARKOV.DEV map is no longer loaded in the background at start-up; its tab loads the first time it opens.
 
 ### Fixed
 

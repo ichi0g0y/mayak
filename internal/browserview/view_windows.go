@@ -193,12 +193,7 @@ func (m *Manager) command(command string, o Options) error {
 			}
 			return nil
 		}
-		// "preload" creates and loads a tab without showing it, so it is ready
-		// when it is first shown.
-		if command == "preload" && v != nil {
-			return nil
-		}
-		if (command == "show" || command == "preload") && v == nil {
+		if command == "show" && v == nil {
 			if len(views) >= 80 {
 				return errors.New("too many browser tabs")
 			}
@@ -272,14 +267,6 @@ func (m *Manager) command(command string, o Options) error {
 						w32.DestroyWindow(host)
 						delete(views, o.ID)
 						return err
-					}
-					if command == "preload" {
-						dpi := w32.GetDpiForWindow(w32.HWND(m.native.hwnd))
-						if dpi == 0 {
-							dpi = 96
-						}
-						m.place(v, dpi)
-						return nil
 					}
 					m.native.active = o.ID
 					return m.showOnly(v)

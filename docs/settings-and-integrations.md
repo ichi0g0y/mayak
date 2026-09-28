@@ -290,7 +290,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - 設定 `playerMarkerEffect` と `playerMarkerColor` に応じたスタイルシートを、ドキュメントスクリプト（`tarkovDevScript`。Remote Control の接続と同じスクリプト。マップページと `/maps/` だけ）が `<style id="mayak-player-marker">` として差し込みます。画像は `img[src$="/player-position.png"]` で選び、マーカーの箱には `:has()` で届きます。`rotate` は独立したプロパティなので、シートの `filter` と合成され、tarkov.dev の向きは保たれます。
 - エフェクト（`playerMarkerRules`）: `outline`（細い影 3 枚で作る縁取り）、`glow`（光彩）、`pulse`（箱の `::before` に脈打つリング）、`beacon`（光彩と、箱の `::before` に色が薄れていく放射状の光。`rgba()` で色にアルファを付ける）。色は `playerMarkerColor`、空ならエフェクト固有の色（縁取りは白、ほかは `#ff3b30`）。どれもアイコン自体は tarkov.dev の画像と 24 px のままで、拡大も差し替えもしません（効果だけが外へ広がる）。0.1.15 で試した画像の置き換えはやめました（純正のアイコンのまま、エフェクトと色だけを変える）。
 - 設定ページのギャラリーは同じ規則を `.marker-preview[data-effect=…] .marker-icon`（と `img`）向けに、選んでいる色で作ったシート（`PlayerMarkerPreviewCSS(color)`）で、`public/marker-arrow.svg`（tarkov.dev のマーカーに似せた絵）を 35° 回して見せます。色の入力（`<input type="color">`）はプレビューにすぐ反映し、設定への保存は 400 ms 手を止めてからです（保存のたびにマップビューを作り直すため）。
-- 保存時にマーカーの設定が変わると `applyBrowserScript` でシェルとポップアップのドキュメントスクリプトを作り直し、`browser:document-script` を送ります。開いているページはスクリプトを持ち替えないので、シェルはマップビューを閉じて作り直します（表示中なら `show`、それ以外は `preload`）。
+- 保存時にマーカーの設定が変わると `applyBrowserScript` でシェルとポップアップのドキュメントスクリプトを作り直し、`browser:document-script` を送ります。開いているページはスクリプトを持ち替えないので、シェルはマップビューを閉じ、表示中ならすぐ（それ以外は次に表示したときに）作り直します。
 - 対象は内蔵ブラウザのマップだけです。自分の Chrome で開いた tarkov.dev には効きません（Stylus などで同じ CSS を入れる形になります）。tarkov.dev がファイル名やクラスを変えると効かなくなり、標準の表示に戻ります。
 
 ## Host / Client モード

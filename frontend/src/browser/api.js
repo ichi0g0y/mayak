@@ -800,7 +800,8 @@ const ready = (async () => {
   window.mayakDesktop.on('browser:map', (map) => void display({ event: 'browser:map', args: [map] }))
   window.mayakDesktop.on('browser:position', (map) => void display({ event: 'browser:position', args: [map] }))
   // The document script changed (the player marker style): a page keeps the
-  // script it was created with, so the map view is created again.
+  // script it was created with, so the map view is closed and created again
+  // when it shows next (at once when it is showing).
   window.mayakDesktop.on(
     'browser:document-script',
     () =>
@@ -811,7 +812,6 @@ const ready = (async () => {
         views.delete(tab.id)
         loadingViews.delete(tab.id)
         if (state.active === tab.id) await show()
-        else await preloadMap()
       }),
   )
   // A shortcut pressed inside a page view (Ctrl+T and the like) is handled by
@@ -963,17 +963,9 @@ const ready = (async () => {
     void enqueue(persist)
   })
   for (const url of new Set([...Object.values(state.favicons), ...state.tabs.map((t) => t.favicon)])) loadFavicon(url)
-  void show().then(preloadMap).catch(messageError)
+  void show().catch(messageError)
   return snapshot()
 })()
-// The fixed tarkov.dev map loads in the background at start-up, so the first
-// switch to it (often triggered by a detection) shows a ready page.
-async function preloadMap() {
-  const tab = state.tabs.find((t) => t.id === mapTabID)
-  if (!tab || views.has(tab.id)) return
-  await native('preload', { id: tab.id, url: viewURL(tab), ...bounds(), background: pageBackground() })
-  views.set(tab.id, tab.url)
-}
 async function perform(type, data) {
   const tab = state.tabs.find((t) => t.id === state.active)
   switch (type) {

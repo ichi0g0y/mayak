@@ -86,7 +86,7 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 
 `state.js` の `mapTab()` と `trackerTab()` で作られる 2 つの `fixed` タブです。常に先頭にあり、閉じる・ピン留め・移動はできません。タブ一覧ではなく、その上にナビ項目として表示されます。
 
-- **TARKOV.DEV**（`id: 'map'`）: 既定は `https://tarkov.dev/maps/`。マップ検出はすべてこのタブに入ります。起動時にバックグラウンドで先読みされ（`preloadMap()`）、初めて切り替えたときにすぐ表示されます。マップページ（`/map/…`）とマップ一覧（`/maps/`）の表示時は URL に `?connection=<Remote Control ID>` が付けられますが、保存されるタブの URL からは取り除かれます（`viewURL()` / `pageURL()`）。
+- **TARKOV.DEV**（`id: 'map'`）: 既定は `https://tarkov.dev/maps/`。マップ検出はすべてこのタブに入ります。ほかのタブと同じく、初めて表示したときに読み込みます（起動時の先読みはしません）。マップページ（`/map/…`）とマップ一覧（`/maps/`）の表示時は URL に `?connection=<Remote Control ID>` が付けられますが、保存されるタブの URL からは取り除かれます（`viewURL()` / `pageURL()`）。
 - **TarkovTracker**（`id: 'tracker'`）: 既定は `https://tarkovtracker.org/`。
 
 固定ビューのツールバーは、戻る・進む・再読み込み・ホーム・読み取り専用のアドレス欄・「既定のブラウザで開く」です。アドレス欄では Enter を押しても移動しません。ホームボタンは `home`（TARKOV.DEV では最後に検出したマップ）へ戻り、既にホームにいるときは無効になります。
@@ -330,5 +330,5 @@ Host で初めて起動したとき（`browser.json` の `tutorialDone` が `tru
 - **URL の検証**: シェル（`webURL()`）、Go（`BrowserView`）、WebView2（`browserURL()`）のすべてで、http/https のみ、ユーザー名・パスワードを含まない、`wails.localhost` ではないことを確認します。`NavigationStarting` でも検査するため、リダイレクト先も対象になります。
 - **新しいウインドウ**: ページの `window.open` などは `NewWindowRequested` で受けます（`browser_tabs.go`）。ユーザー操作によらないものは開きません（ポップアップブロック）。ユーザー操作によるもののうち、`target=_blank` のリンクのようにサイズも位置も指定しないものは新しいタブとして開きます（ポップアップウインドウからの場合も新しいタブ）。サイズか位置を指定した `window.open`（`ICoreWebView2WindowFeatures` の `HasSize` / `HasPosition`）は、開いた側に結果を返すダイアログ（Google ログインの `accounts.google.com/gsi/transform` は `window.opener` に postMessage して自分で閉じる）なので、イベントを未処理のままにして WebView2 に本物のポップアップウインドウを作らせます。タブにすると `window.opener` がなく、そこで止まってしまうためです。このウインドウは同じプロファイル（Cookie）を使いますが、広告ブロックや Remote Control のスクリプトは付きません。
 - **分離**（`BrowserIsolation`）: Web メッセージングは無効、ホストオブジェクトの登録なし、権限要求はすべて拒否します。外部ページには Wails のバインディングも `window.mayakDesktop` も渡りません（`window.mayakDesktop` は信頼できるシェル文書だけのものです）。
-- **命令の検証**: `BrowserView` はビュー ID（`^[a-zA-Z0-9_-]{1,80}$`）、インセット（0〜4096）、命令名（`show` / `preload` / `navigate` / `hideAll` / `close` / `back` / `forward` / `reload`）を検証します。`BrowserPopupShow` も配置の範囲を検証します。
+- **命令の検証**: `BrowserView` はビュー ID（`^[a-zA-Z0-9_-]{1,80}$`）、インセット（0〜4096）、命令名（`show` / `navigate` / `hideAll` / `close` / `back` / `forward` / `reload`）を検証します。`BrowserPopupShow` も配置の範囲を検証します。
 - **保存データ**: `browser.json` には接続キーや WebRTC の SDP を保存しません。ファビコンの取得先はローカル・LAN のアドレスを除外しています。
