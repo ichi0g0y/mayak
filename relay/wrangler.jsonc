@@ -1,0 +1,18 @@
+// Cloudflare Worker "mayak-relay": the squad rooms MAYAK joins by a squad
+// code (worker/index.js, a Durable Object per room), at
+// https://mayak-relay.ich.sh. It is its own Worker so that publishing the
+// landing page (the "mayak" Worker, site/) does not drop everyone's
+// connection: deploying a Worker restarts its Durable Objects. `task
+// relay:deploy` publishes it; sign in once with `wrangler login`.
+{
+  "$schema": "../site/node_modules/wrangler/config-schema.json",
+  "name": "mayak-relay",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-25",
+  "durable_objects": {
+    "bindings": [{ "name": "SQUAD", "class_name": "SquadRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SquadRoom"] }],
+  "routes": [{ "pattern": "mayak-relay.ich.sh", "custom_domain": true }],
+  "workers_dev": true
+}

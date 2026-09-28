@@ -46,3 +46,4 @@ Thumbs.db
 /site/dist/
 /build/nsis-cache/
 site/.wrangler/
+relay/.wrangler/

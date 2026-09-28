@@ -115,8 +115,37 @@ function loadFavicon(url, refresh = false) {
     .catch(() => {})
 }
 
+// The squad (app_squad.go, view-squad.js): whether this build offers it, the
+// room as the Go side last reported it, the maps' geometry and the map
+// pictures loaded (by "map|floor").
+const squad = { available: false, state: null, maps: null, mapsError: false, images: {} }
+async function loadSquadMaps() {
+  if (!squad.available || squad.maps) return
+  try {
+    squad.maps = (await go.BrowserSquadMaps()) || []
+    squad.mapsError = false
+  } catch {
+    squad.mapsError = true
+  }
+  update()
+}
+async function squadJoin(code, name) {
+  name = String(name || '')
+    .trim()
+    .slice(0, 24)
+  if (!name) throw new Error(t(state.language, 'squadNeedName'))
+  state.squadName = name
+  state.squadCode = await go.SquadJoin(String(code || ''), name)
+  squad.state = await go.SquadState()
+  openLocal(state, 'squadmap')
+  void loadSquadMaps()
+}
+
 const snapshot = () => ({
   ...state,
+  squad: squad.available
+    ? { state: squad.state, maps: squad.maps, mapsError: squad.mapsError, images: squad.images }
+    : null,
   snapNotes: snapsAvailable()
     ? {
         list: snaps.list,
@@ -302,6 +331,8 @@ async function persist() {
     taskMode,
     questSite,
     translateWiki,
+    squadName,
+    squadCode,
     bookmarks,
     tabs,
     active,
@@ -335,6 +366,8 @@ async function persist() {
       taskMode,
       questSite,
       translateWiki,
+      squadName,
+      squadCode,
       bookmarks,
       tabs,
       active,
@@ -918,6 +951,27 @@ const ready = (async () => {
   window.mayakDesktop.on('browser:screenshot', () => void loadShots())
   window.mayakDesktop.on('snapnote:changed', () => void loadSnaps())
   window.mayakDesktop.on('menu:choice', (choice) => onMenu(String(choice?.id || '')))
+  // The squad: a nightly feature (SquadAvailable). The squad joined before
+  // is joined again; a build without squads drops its tab.
+  window.mayakDesktop.on('squad:state', (next) => {
+    squad.state = next || null
+    update()
+  })
+  try {
+    squad.available = !!(await go.SquadAvailable())
+  } catch {}
+  if (!squad.available) state.tabs = state.tabs.filter((t) => t.kind !== 'squadmap')
+  else {
+    if (state.tabs.find((t) => t.id === state.active)?.kind === 'squadmap') void loadSquadMaps()
+    if (state.squadCode && state.squadName)
+      go.SquadJoin(state.squadCode, state.squadName)
+        .then(() => go.SquadState())
+        .then((s) => {
+          squad.state = s || null
+          update()
+        })
+        .catch(() => {})
+  }
   void loadSnaps()
   void loadShots()
   void loadBosses()
@@ -1212,6 +1266,41 @@ async function perform(type, data) {
       const note = snaps.open?.note.id === data ? snaps.open.note : snaps.list.find((n) => n.id === data)
       if (!note?.url) return snapshot()
       return perform('openOrFocus', note.url)
+    }
+    case 'squadmap':
+      if (!squad.available) return snapshot()
+      openLocal(state, 'squadmap')
+      void loadSquadMaps()
+      break
+    case 'squadCreate':
+      await squadJoin(await go.SquadNewCode(), data?.name)
+      break
+    case 'squadJoin':
+      await squadJoin(data?.code, data?.name)
+      break
+    case 'squadLeave':
+      await go.SquadLeave()
+      squad.state = null
+      state.squadCode = ''
+      break
+    case 'squadRename': {
+      const name = String(data || '')
+        .trim()
+        .slice(0, 24)
+      if (!name) return snapshot()
+      state.squadName = name
+      await go.SquadRename(name)
+      break
+    }
+    case 'squadCopy':
+      await Clipboard.SetText(state.squadCode || '')
+      return snapshot()
+    case 'squadMapImage': {
+      const key = `${data?.map}|${data?.layer || ''}`
+      if (!squad.images[key])
+        squad.images[key] = await go.BrowserSquadMapImage(String(data?.map || ''), String(data?.layer || ''))
+      update()
+      return snapshot()
     }
     case 'screenshots':
       openLocal(state, 'screenshots')

@@ -11,6 +11,7 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 | `frontend/src/browser/shell.js` | DOM の描画（`render`）、タブ・ブックマーク・設定ページ、クリック・ドラッグ・キー操作、サイドバーのリサイズ、テーマ適用 |
 | `frontend/src/browser/shell-core.js` | シェルの各部が共有するもの: `window.mayak`、現在の状態 `state`、`action`、`render` の入口、`t` と HTML の部品（`esc`、`icon`、`select`）。ビューはここから import し、`shell.js` からは import しない |
 | `frontend/src/browser/view-snapnotes.js` | スナップノート: ツールバーのボタンとメニュー、サイドバーの欄、一覧と書き込み画面（[スナップノート](#スナップノート)） |
+| `frontend/src/browser/view-squad.js`, `squad-geo.js` | 分隊マップ: 分隊への参加と一覧、Leaflet の地図と仲間の印（[分隊マップ](#分隊マップ)）。`squad-geo.js` は、地図と階の選び方や印の向きなど、Leaflet を使わない計算 |
 | `frontend/src/browser/view-bosses.js`, `view-screenshots.js`, `view-item.js`, `view-tutorial.js` | サイドバーのボス、スクリーンショットページ、アイテム欄、チュートリアル。それぞれ描画関数と自分のイベント処理を持ち、クリックは `clickHandlers` に登録した関数で受けます |
 | `frontend/src/browser/api.js` | 状態の保持と操作（`window.mayak.action`）、ネイティブビューへの命令、永続化、ナビゲーションイベントの受信 |
 | `frontend/src/browser/state.js` | 既定値、`browser.json` の復元と検証、タブ・ブックマークの並べ替え規則、URL 検証 |
@@ -76,6 +77,8 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 | `blank` | 新しいタブ（アドレス入力待ち） |
 | `settings` | 設定ページ（1 つだけ） |
 | `bookmarks` | ブックマーク一覧ページ（1 つだけ） |
+| `screenshots`, `snapnotes`, `bosses`, `tabs` | スクリーンショット、スナップノート、ボス、タブ一覧のページ（それぞれ 1 つだけ） |
+| `squadmap` | 分隊マップ（1 つだけ。nightly 版と開発版のみ） |
 
 - タブ一覧に並ぶのは固定ビュー・設定・ブックマーク以外のタブです（`listedTabs()`）。設定とブックマークはドックやブックマーク欄のボタンから開きます。
 - 設定を開いている間、サイドバーはタブの代わりに設定のセクション一覧を表示します。設定を閉じると、開く前のタブ（なければ TARKOV.DEV）に戻ります。
@@ -191,6 +194,19 @@ Host がスクリーンショットを解析するたびに、何と判定した
 - **保存**: 最後の変更の約 0.9 秒後に、タイトル・線・一覧用の縮小画像（幅 360px の JPEG。縦長の画像は上端）を保存します。一覧に戻るときと別のノートを開くときにも、未保存なら保存します。保存先は `%AppData%\Mayak\snapnotes\<ID>\`（`note.json`、`base.png`、`thumb.jpg`）で、再起動しても残ります。変更は `snapnote:changed` イベントでシェルに伝わります。
 - **一覧**: サイドバーの「スナップノート」欄（最新のノート。折りたたみは `snapNotesCollapsed`）と、一覧ページ（タブ種別 `snapnotes`。「すべて／ページのノート／単独のノート」で絞り込み）。削除は 2 回押しで確定します。
 - **再描画との関係**: シェルは状態が変わるたびに描き直すため、ノートの画像と canvas には `data-keep` を付け、morphdom はその印が同じ間は触りません。画像の読み込みと線の描画は、描画後のフック（`afterRenderHooks`）で行い、線が変わったときだけ描き直します（描いている途中の線を消さないため）。
+
+## 分隊マップ
+
+分隊コードを共有した仲間の位置を、1 つの地図に表示します（`view-squad.js`、`internal/app/app_squad.go`、`internal/squad`、`internal/mapdata`）。今は **nightly 版と開発版だけ**の機能です（`version.IsPrerelease`）。リリース版では `SquadAvailable` が false になり、サイドバーの入口を出さず、保存されたタブも外します。
+
+- **入口**: サイドバーの固定ビュー（TARKOV.DEV・TarkovTracker）の下にある「分隊マップ」。分隊に 2 人以上いると人数が付きます。
+- **参加**: 表示名を入れて「分隊を作る」（`SquadNewCode` で新しいコードを作って参加）か、仲間から聞いたコードを入れて「参加」（`SquadJoin`）を押します。コードは Crockford base32 の 8 文字（`ABCD-1234`。小文字・空白・O/I/L も受け付けます）です。表示名は 24 文字まで、分隊は 10 人までです。
+- **保存**: 表示名は `squadName`（ブラウザの好み、`browser-preferences.json`）、分隊コードは `squadCode`（この PC、`browser.json`）です。起動時に、保存されたコードの分隊へ入り直します。「分隊を抜ける」でコードを消します。
+- **共有する内容**: 表示名と、レイド中に位置のスクリーンショットを撮ったときのマップ・座標・向き・撮った時刻だけです（[settings-and-integrations.md](settings-and-integrations.md#分隊ルーム)）。レイドが終わると「レイド外」を送ります。位置を送るのは Host（`local`）だけで、Client は見るだけです。
+- **地図**: Leaflet（`leaflet`）で描きます。Leaflet はタブを初めて表示したときに読み込む別 chunk です。座標変換は tarkov.dev の `getCRS` と同じで、`coordinateRotation` で回してから `transform` で拡大・移動します。地図の絵は、Go が SVG に階の表示を書き込んだ data URL を `L.imageOverlay`（`<img>`）で貼るので、SVG の中身はシェルで動きません。地図は `#squad-map`（`data-keep`）に描き、描画のあとに `afterRenderHooks` で状態に合わせます。
+- **マップと階**: 既定（自動）では、自分がレイド中なら自分のマップ、そうでなければ最後に位置を送った仲間のマップ、それもなければ Host の現在のマップを出します。階は自分の高さと位置から `floorFor`（`mapdata.Floor` と同じ規則）で選び、別の階にいる仲間の印は薄く出します。マップも階もプルダウンで手動で選べます。The Lab・Labyrinth・Icebreaker はタイルの地図しかないため、まだ表示できません。
+- **印**: 仲間ごとに、名前から決まる色、名前、向きの矢印を出します。自分の印は白い縁取りです。5 分より古い位置は薄く、30 分より古い位置は出しません。表示中は 30 秒ごとに描き直します。
+- **帰属表示**: 地図の右下に「Map: Shebuka / tarkov-dev-svg-maps (CC BY-NC-SA 4.0) · tarkov.dev」を出します。地図の絵には非営利・チート目的禁止の条件があるので、有料の機能の中では使いません。
 
 ## ツールバーのアイコンの並び
 

@@ -42,6 +42,7 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `app_adblock.go` | 内蔵ブラウザの広告ブロック設定 |
 | `app_favicon.go` | サイトアイコンのディスクキャッシュ |
 | `app_catalog.go` | ゲームデータカタログの更新と定期監視（[catalog.md](catalog.md)） |
+| `app_squad.go` | 分隊ルームへの参加・報告・退出と、分隊マップの地図データ（`internal/squad`、`internal/mapdata`。nightly 版と開発版のみ） |
 | `app_snapnote.go` | スナップノートの撮影・作成・保存・紐付け（保存は `internal/snapnote`、撮影は `browserview.Capture`） |
 | `app_screenshots.go` | スクリーンショット解析後の処理、デバッグ用メタデータ、古いスクリーンショットの整理 |
 | `app_item.go` | 認識したアイテムをアイテム欄へ送る。アイテム検索と詳細取得 |
@@ -77,6 +78,8 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `position` | スクリーンショットのファイル名からの座標・向きの解析 |
 | `questapi` | タスク一覧、日本語名・公式 Wiki による補完 |
 | `questmatch` | OCR 結果からタスク名への照合 |
+| `squad` | 分隊ルーム: 分隊コード、コードから作る鍵での暗号化、中継（`relay/`）への WebSocket と再接続 |
+| `mapdata` | 分隊マップの地図: tarkov.dev の maps.json と SVG の取得・キャッシュ、階の判定、階ごとの画像 |
 | `remote` | tarkov.dev Remote Control（`wss://socket.tarkov.dev`）への送信 |
 | `remoteid` | ブラウザの Local Storage のコピーから Remote ID を自動検出（Windows のみ） |
 | `screenshotstore` | 認識デバッグ用の画像保存と古いスクリーンショットの削除 |
@@ -278,6 +281,8 @@ macOS／Linux のビルドは CI でコンパイルしているだけで、動�
 
 Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker 名 `mayak`。同じ Worker の `site/worker/index.js` が `/api/pair` のペアリング中継も受け持ちます）として公開し、独自ドメイン https://mayak.ich.sh（`routes` の `custom_domain`。ゾーン `ich.sh` は同じアカウント）と mayak.ichi0g0y.workers.dev で配信します。初回だけ `wrangler login` でサインインし（CI なら `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID`）、あとは `task site:deploy`（`bun run build` → `wrangler deploy`）です。wrangler はリポジトリ内で使ってください（Node はプロジェクトの `mise.toml` でだけ有効です）。仕様書（`docs/`）は公開しません。
 
+分隊ルームの中継（`relay/`、Worker 名 `mayak-relay`、https://mayak-relay.ich.sh）は別の Worker です。サイトを deploy すると同じ Worker の Durable Object が再起動して接続が切れるため、分けてあります。`task relay:dev` でローカルに立て、`task relay:deploy` で公開します（[settings-and-integrations.md](settings-and-integrations.md#分隊ルーム)）。
+
 ## テスト
 
 | コマンド | 対象 |
@@ -285,7 +290,7 @@ Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker
 | `go test ./...` | Go の全ユニットテスト |
 | `go test -run '^$' ./...` | コンパイルのみ |
 | `go test -run '^TestBrowser' ./internal/app` | ブラウザ状態の一時ファイル保存、特権ナビゲーション・ID の拒否、内蔵ブラウザ用 Remote ID の生成と送信先 |
-| `bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js ./frontend/src/browser/words.test.js ./frontend/src/browser/shell-core.test.js` | ブラウザシェルの純粋ロジック |
+| `bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js ./frontend/src/browser/words.test.js ./frontend/src/browser/shell-core.test.js ./frontend/src/browser/squad-geo.test.js` | ブラウザシェルの純粋ロジック |
 | `task lint` | Go の静的解析（staticcheck。設定は `staticcheck.conf`。エラー文は画面にそのまま出すので ST1005 は外している） |
 | `task check:offline` | 上記のコンパイル、`TestBrowser*`、bun のテストをまとめて実行 |
 

@@ -47,6 +47,7 @@ import { shotBadges, screenshotsPage } from './view-screenshots.js'
 import { itemToggle, itemPanel } from './view-item.js'
 import { tutorialOpen, tutorialHTML, handleTutorial, openTutorial } from './view-tutorial.js'
 import { snapButton, snapSection, snapNotesPage, snapMenuHTML, snapToolbar } from './view-snapnotes.js'
+import { squadEntry, squadPage } from './view-squad.js'
 setRender(render)
 
 // The changelog page, rendered from CHANGELOG.md in the repository.
@@ -119,11 +120,13 @@ const tabName = (tab) =>
               ? t('screenshots')
               : tab.kind === 'snapnotes'
                 ? t('snapNotes')
-                : tab.kind === 'bookmarks'
-                  ? t('bookmarks')
-                  : tab.kind === 'tabs'
-                    ? t('allTabs')
-                    : tab.title || tab.url
+                : tab.kind === 'squadmap'
+                  ? t('squadMap')
+                  : tab.kind === 'bookmarks'
+                    ? t('bookmarks')
+                    : tab.kind === 'tabs'
+                      ? t('allTabs')
+                      : tab.title || tab.url
 // Tabs listed in the tab section (the strip sizes itself by their number).
 const listedTabs = () =>
   state.tabs.filter(
@@ -133,6 +136,7 @@ const listedTabs = () =>
       tab.kind !== 'settings' &&
       tab.kind !== 'screenshots' &&
       tab.kind !== 'snapnotes' &&
+      tab.kind !== 'squadmap' &&
       tab.kind !== 'bosses' &&
       tab.kind !== 'tabs',
   )
@@ -147,13 +151,15 @@ function tabs() {
 }
 // Fixed views (TARKOV.DEV, TarkovTracker) sit above the sections like nav items.
 function mapEntry() {
-  return state.tabs
-    .filter((tab) => tab.fixed)
-    .map(
-      (tab) =>
-        `<div class="tab map-entry ${state.active === tab.id ? 'active' : ''}"><button data-action="activate" data-id="${esc(tab.id)}" class="tab-select" title="${esc(tab.role === 'map' ? t('mapTabHelp') : tabName(tab))}">${tabIcon(tab) ? favicon(tabIcon(tab)) : icon(tab.role === 'map' ? 'map' : 'tracker', 'tab-icon')}<span class="tab-name">${esc(tabName(tab))}</span></button></div>`,
-    )
-    .join('')
+  return (
+    state.tabs
+      .filter((tab) => tab.fixed)
+      .map(
+        (tab) =>
+          `<div class="tab map-entry ${state.active === tab.id ? 'active' : ''}"><button data-action="activate" data-id="${esc(tab.id)}" class="tab-select" title="${esc(tab.role === 'map' ? t('mapTabHelp') : tabName(tab))}">${tabIcon(tab) ? favicon(tabIcon(tab)) : icon(tab.role === 'map' ? 'map' : 'tracker', 'tab-icon')}<span class="tab-name">${esc(tabName(tab))}</span></button></div>`,
+      )
+      .join('') + squadEntry()
+  )
 }
 function connectionLabel() {
   const mode = state.connection.mode
@@ -734,7 +740,7 @@ function render() {
       ? `<button data-action="back" aria-label="${t('back')}" title="${t('back')}" ${!tab.canBack ? 'disabled' : ''}>${icon('back')}</button><button data-action="forward" aria-label="${t('forward')}" title="${t('forward')}" ${!tab.canForward ? 'disabled' : ''}>${icon('forward')}</button><button data-action="reload" aria-label="${t('reload')}" title="${t('reload')}">${icon('reload')}</button><button data-action="home" aria-label="${esc(t('home'))}" title="${esc(t('homeHelp'))}" ${tab.url === tab.home ? 'disabled' : ''}>${icon('home')}</button><form id="address-form" class="readonly">${icon('globe', 'address-icon')}<input id="address" readonly aria-readonly="true" aria-label="${esc(tabName(tab))}" title="${esc(t('fixedAddress'))}" value="${esc(tab.url)}">${loadBar(tab)}</form>`
       : tab?.kind === 'snapnotes'
         ? snapToolbar()
-        : tab?.kind === 'bookmarks' || tab?.kind === 'screenshots' || tab?.kind === 'bosses'
+        : tab?.kind === 'bookmarks' || tab?.kind === 'screenshots' || tab?.kind === 'bosses' || tab?.kind === 'squadmap'
           ? ''
           : tab?.kind === 'settings'
             ? ''
@@ -745,7 +751,7 @@ function render() {
                       .join('')}</select>`
                   : ''
               }`
-  }${toolIcons(tab)}${state.layout === 'vertical' ? '<div class="titlebar-grip"></div>' : ''}</div><main>${tab?.kind === 'settings' ? settings() : tab?.kind === 'bookmarks' ? bookmarksPage() : tab?.kind === 'tabs' ? tabsPage() : tab?.kind === 'screenshots' ? screenshotsPage() : tab?.kind === 'snapnotes' ? snapNotesPage() : tab?.kind === 'bosses' ? bossesPage() : !tab ? `<p class="empty-tabs">${t('noTabs')}</p>` : ''}</main>${tab?.kind === 'settings' ? `<button class="page-close" data-action="closeSettings" title="${esc(t('closeSettings'))}" aria-label="${esc(t('closeSettings'))}">${icon('x')}</button>` : ''}${itemPanel()}${contextMenuHTML()}${placeMenuHTML()}${snapMenuHTML()}${state.error ? `<aside class="error-bar" role="alert"><span title="${esc(state.error)}">${esc(state.error)}</span><button data-action="dismiss" title="${esc(t('dismiss'))}" aria-label="${esc(t('dismiss'))}">${icon('x')}</button></aside>` : ''}${updateBarHTML()}${tutorialOpen ? tutorialHTML() : ''}`
+  }${toolIcons(tab)}${state.layout === 'vertical' ? '<div class="titlebar-grip"></div>' : ''}</div><main>${tab?.kind === 'settings' ? settings() : tab?.kind === 'bookmarks' ? bookmarksPage() : tab?.kind === 'tabs' ? tabsPage() : tab?.kind === 'screenshots' ? screenshotsPage() : tab?.kind === 'snapnotes' ? snapNotesPage() : tab?.kind === 'bosses' ? bossesPage() : tab?.kind === 'squadmap' ? squadPage() : !tab ? `<p class="empty-tabs">${t('noTabs')}</p>` : ''}</main>${tab?.kind === 'settings' ? `<button class="page-close" data-action="closeSettings" title="${esc(t('closeSettings'))}" aria-label="${esc(t('closeSettings'))}">${icon('x')}</button>` : ''}${itemPanel()}${contextMenuHTML()}${placeMenuHTML()}${snapMenuHTML()}${state.error ? `<aside class="error-bar" role="alert"><span title="${esc(state.error)}">${esc(state.error)}</span><button data-action="dismiss" title="${esc(t('dismiss'))}" aria-label="${esc(t('dismiss'))}">${icon('x')}</button></aside>` : ''}${updateBarHTML()}${tutorialOpen ? tutorialHTML() : ''}`
   // The DOM is morphed to the new markup rather than rebuilt: elements that
   // stay keep their node, so hover, focus, a press in flight and scroll
   // positions survive a render, and a render costs only its differences.

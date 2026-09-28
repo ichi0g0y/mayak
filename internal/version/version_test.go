@@ -27,3 +27,17 @@ func TestCurrent(t *testing.T) {
 		t.Errorf("UserAgent() = %q", got)
 	}
 }
+
+func TestIsPrerelease(t *testing.T) {
+	defer func(saved string) { Version = saved }(Version)
+	for version, want := range map[string]bool{
+		"v0.1.18": false, "0.1.18": false,
+		"0.1.18-3-g1a2b3c4": true, "v0.1.18-3-g1a2b3c4": true,
+		Development: true, "": true,
+	} {
+		Version = version
+		if got := IsPrerelease(); got != want {
+			t.Errorf("IsPrerelease() with %q = %v, want %v", version, got, want)
+		}
+	}
+}

@@ -226,6 +226,10 @@ function defaults() {
     taskMode: 'new',
     questSite: 'host',
     translateWiki: false,
+    // The squad (view-squad.js): the name shown to it (a preference) and the
+    // code of the squad joined (this PC's), joined again at start.
+    squadName: '',
+    squadCode: '',
     connection: { mode: 'local', stun: DEFAULT_STUN },
     bookmarks: structuredClone(defaultBookmarks),
     tabs: [mapTab(), trackerTab(), { id: 'settings', kind: 'settings' }],
@@ -271,6 +275,9 @@ function restore(raw = {}) {
   state.favicons = restoreFavicons(raw.favicons)
   state.questSite = ['host', ...sites].includes(raw.questSite) ? raw.questSite : 'host'
   state.translateWiki = raw.translateWiki === true
+  state.squadName = typeof raw.squadName === 'string' ? raw.squadName.trim().slice(0, 24) : ''
+  state.squadCode =
+    typeof raw.squadCode === 'string' && /^[0-9A-Z]{4}-[0-9A-Z]{4}$/.test(raw.squadCode) ? raw.squadCode : ''
   // The LAN receiving mode ("remote") is gone; a browser saved in it starts off.
   if (raw.connection && ['local', 'remote', 'webrtc', 'off'].includes(raw.connection.mode))
     state.connection = {
@@ -302,6 +309,7 @@ function restore(raw = {}) {
       bookmarksPage = false,
       screenshotsPage = false,
       snapNotesPage = false,
+      squadPage = false,
       bossesPage = false,
       tabsPage = false
     const savedMap = raw.tabs.find((t) => t?.id === mapTabID),
@@ -328,6 +336,9 @@ function restore(raw = {}) {
         } else if (t.kind === 'snapnotes') {
           if (snapNotesPage) return false
           snapNotesPage = true
+        } else if (t.kind === 'squadmap') {
+          if (squadPage) return false
+          squadPage = true
         } else if (t.kind === 'bosses') {
           if (bossesPage) return false
           bossesPage = true

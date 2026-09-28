@@ -97,7 +97,7 @@ var browserPreferenceKeys = map[string]bool{
 	"sidebarSide": true, "sidebarCollapsed": true, "bookmarksCollapsed": true,
 	"screenshotsCollapsed": true, "snapNotesCollapsed": true, "toolOrder": true,
 	"bossesView": true, "bookmarkView": true, "adblock": true, "taskMode": true,
-	"questSite": true, "translateWiki": true, "bookmarkRevision": true,
+	"questSite": true, "translateWiki": true, "bookmarkRevision": true, "squadName": true,
 }
 
 func browserFile(name string) (string, error) { return appdir.Path(name) }

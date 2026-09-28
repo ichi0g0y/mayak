@@ -141,6 +141,21 @@ tasks:
       - task: site:build
       - wrangler deploy
 
+  # The squad relay (relay/): the "mayak-relay" Worker at
+  # https://mayak-relay.ich.sh, kept apart from the site so that publishing
+  # the site does not drop the squads' connections.
+  relay:dev:
+    summary: Run the squad relay locally (ws://127.0.0.1:8787/squad/<room>)
+    dir: relay
+    cmds:
+      - wrangler dev --ip 127.0.0.1 --port 8787
+
+  relay:deploy:
+    summary: Publish the squad relay to Cloudflare
+    dir: relay
+    cmds:
+      - wrangler deploy
+
   dev:
     summary: Run with hot reload (Go changes rebuild and restart the app; WebUI changes reload via Vite)
     cmds:
@@ -166,7 +181,7 @@ tasks:
     cmds:
       - go test -p 2 -run '^$' ./...
       - go test -p 2 -run '^TestBrowser' ./internal/app
-      - bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js ./frontend/src/browser/words.test.js ./frontend/src/browser/shell-core.test.js
+      - bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js ./frontend/src/browser/words.test.js ./frontend/src/browser/shell-core.test.js ./frontend/src/browser/squad-geo.test.js
 
   run:
     summary: Launch the application (only when explicitly requested)

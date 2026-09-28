@@ -381,6 +381,22 @@ test('the bookmark section fold state is remembered', () => {
   )
 })
 
+test('the squad tab, name and code come back, one tab at most', () => {
+  const restored = restore({
+    squadName: '  Alice ',
+    squadCode: 'ABCD-1234',
+    tabs: [
+      { id: 's1', kind: 'squadmap' },
+      { id: 's2', kind: 'squadmap' },
+    ],
+  })
+  assert.equal(restored.squadName, 'Alice')
+  assert.equal(restored.squadCode, 'ABCD-1234')
+  assert.equal(restored.tabs.filter((tab) => tab.kind === 'squadmap').length, 1)
+  assert.equal(restore({ squadCode: 'abcd1234' }).squadCode, '')
+  assert.equal(restore({ squadName: 42 }).squadName, '')
+})
+
 test('dropping a tab on the pinned bookmarks bookmarks and pins it once', () => {
   const s = defaults()
   s.bookmarks = []

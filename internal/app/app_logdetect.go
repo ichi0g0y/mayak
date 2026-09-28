@@ -160,6 +160,7 @@ func (a *App) handleLogEvent(event logdetect.Event) {
 		a.mu.Unlock()
 		a.emitEvent("status:update", status)
 		a.addLog("Info", "Raid", "Raid ended")
+		a.squadLeftRaid()
 	case logdetect.MenuReached:
 		// Back at the menu from a raid (dead or alive: the logs do not say),
 		// or at the game's start: each has its own notification.

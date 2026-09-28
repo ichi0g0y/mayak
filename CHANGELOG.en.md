@@ -8,6 +8,10 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 These changes are planned for the next version.
 
+### New
+
+- Squad map, as a trial (nightly build only): create a squad under "Squad map" in the sidebar and share its code, and where each of you takes a screenshot in a raid shows on everyone’s map with a name, a colour and the direction faced. The map is tarkov.dev’s latest, and the floor follows your height. Only display names and positions are shared, encrypted with the squad code; the relay cannot read them.
+
 ### Improved
 
 - The update channel under Settings → About MAYAK can be chosen on a Mac and on Linux too (it was on the Windows Host only).

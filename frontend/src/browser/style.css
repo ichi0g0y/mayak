@@ -929,3 +929,42 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 .snap-adjust-row output{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .snap-adjust-row input{grid-column:1/-1;width:100%;accent-color:var(--accent)}
 .snap-adjust .hint{margin:0!important;font-size:11px;line-height:1.5}
+/* The squad map (view-squad.js): the squad above, the map filling the rest
+   of the page. Leaflet draws inside #squad-map; its markers are the
+   .squad-marker spans. */
+main:has(.squad-page){overflow:hidden}
+.squad-page{max-width:none;height:100%;box-sizing:border-box;padding:20px 24px 16px;display:flex;flex-direction:column;gap:12px}
+.squad-page .field{margin-bottom:0}
+.squad-form{display:flex;flex-direction:column;gap:10px;max-width:640px}
+.squad-form .hint{margin:0}
+.squad-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.squad-actions input{width:130px;height:36px;font-family:ui-monospace,"Cascadia Code",Consolas,monospace;text-transform:uppercase}
+.squad-or{color:var(--muted);font-size:12.5px}
+.squad-notice{margin:0;color:var(--danger)}
+.squad-joined{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.squad-code{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.squad-code>span:first-child{font-size:12.5px;color:var(--text-2)}
+.squad-code output{font:600 22px/1.2 ui-monospace,"Cascadia Code",Consolas,monospace;letter-spacing:.12em;color:var(--text)}
+.squad-code button{display:inline-flex;align-items:center;gap:6px}
+.squad-phase{font-size:12.5px;color:var(--muted)}
+.squad-phase[data-phase=connected]{color:var(--success)}
+.squad-phase[data-phase=offline],.squad-phase[data-phase=full]{color:var(--warn)}
+.squad-name input{width:200px}
+.squad-members{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 18px}
+.squad-member{display:flex;align-items:center;gap:7px;font-size:13px}
+.squad-member.stale,.squad-member.gone{opacity:.6}
+.squad-dot{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.squad-member-name small{color:var(--muted)}
+.squad-member-where{color:var(--text-2)}
+.squad-map-tools{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.squad-map-tools select{width:200px}
+.squad-map-tools .hint{margin:0 0 9px}
+.squad-map-wrap{position:relative;flex:1;min-height:240px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--sidebar)}
+#squad-map{position:absolute;inset:0;background:var(--sidebar)}
+.squad-map-note{position:absolute;inset:0;margin:0;display:flex;align-items:center;justify-content:center;color:var(--muted);pointer-events:none}
+.squad-marker-icon{background:none;border:0}
+.squad-marker{position:relative;display:block;width:28px;height:28px;color:var(--c)}
+.squad-marker svg{width:28px;height:28px;fill:var(--c);stroke:#000a;stroke-width:1.5;display:block}
+.squad-marker.me svg{stroke:#fff;stroke-width:2}
+.squad-label{position:absolute;top:28px;left:50%;transform:translateX(-50%);white-space:nowrap;font:600 11.5px/1.3 system-ui,sans-serif;color:#fff;background:#000a;padding:1px 6px;border-radius:4px}
+.squad-entry .squad-count{margin-left:auto;font-size:11px;color:var(--muted)}

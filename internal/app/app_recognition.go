@@ -242,6 +242,10 @@ func (a *App) handleCoordinateScreenshot(ctx context.Context, sequence uint64, p
 	if settings.Map != "" {
 		a.emitEvent("browser:position", settings.Map)
 	}
+	// The squad sees it too (app_squad.go).
+	if settings.Map != "" {
+		a.squadSendPosition(settings.Map, parsed)
+	}
 	if len(remoteTargetIDs(settings, "map")) > 0 && settings.Map != "" {
 		sent, err := a.runRemoteIfCurrent(sequence, func() error {
 			return a.sendPosition(settings, parsed)

@@ -325,6 +325,22 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - **共有する内容**: ordered DataChannel `mayak-display-v1` で、`browser:task`（タスク）、`browser:map`（マップ）、`browser:item`（アイテム情報）の 3 種類だけを Host から受信側へ一方向に送ります。1 メッセージは 64 KiB までで、送信バッファが 256 KiB を超えると `slow-peer` として切断します。設定、API キー、トークンは送りません。受信側は接続を確認するまで、最大 32 件のメッセージを保留します。
 - アプリを再起動した場合や接続が切れた場合は、コードを再交換する必要があります。コードは保存しません。
 
+## 分隊ルーム
+
+分隊マップ（[browser-shell.md](browser-shell.md#分隊マップ)）の仲間は、Cloudflare Worker「mayak-relay」（`relay/worker/index.js`、`https://mayak-relay.ich.sh`）の部屋で会います。ランディングページの Worker（`mayak`）と分けてあるのは、Worker を deploy すると Durable Object が再起動して接続が切れるためです。サイトを更新しても分隊は切れません。
+
+- **部屋**: `wss://mayak-relay.ich.sh/squad/<room>`。room は分隊コードの SHA-256（`squad.RoomID`）で、部屋ごとに Durable Object `SquadRoom` が 1 つあります。WebSocket Hibernation API を使うので、誰も送らないあいだは眠っています。`ping` にはランタイムが `pong` を返すので、DO は起きません。
+- **中継の動き**: 接続ごとに乱数の ID を付け、`welcome`（自分の ID と、部屋にいる人の ID と最後のメッセージ）、`join`、`leave`、`msg`（誰かのメッセージ）を送ります。メッセージは 4 KB まで、1 人 10 秒に 30 件まで、部屋は 10 人まで（11 人目は HTTP 409）です。何も保存せず、全員が抜けると部屋は消えます。
+- **暗号化**: メッセージはすべて、分隊コードから HKDF-SHA256 で作った鍵を使い、AES-256-GCM で封じます（`internal/squad/seal.go`）。中継が見るのは room の ID と暗号文だけで、コード・名前・位置は読めません。コードは 8 文字（約 40 bit）なので、総当たりへの強さはその程度です。
+- **クライアント**（`internal/squad/client.go`）: 切れたら、5 秒から 1 分まで間隔を延ばしながらつなぎ直し、つながるたびに自分の最新の報告を送り直します。30 秒ごとに `ping` を送り、75 秒何も届かなければ切れたとみなします。部屋が変わるたびに `squad:state` をシェルへ送ります。
+- **開発**: `task relay:dev` で中継をローカル（`ws://127.0.0.1:8787/squad/`）に立て、開発版の MAYAK を環境変数 `MAYAK_SQUAD_RELAY=ws://127.0.0.1:8787/squad/` 付きで起動すると、そちらにつなぎます。公開は `task relay:deploy` です（`wrangler login` が必要）。
+
+### 地図データ（`internal/mapdata`）
+
+- 地図の一覧と座標変換は tarkov.dev の `src/data/maps.json`（MIT、`raw.githubusercontent.com`）、地図の絵は `assets.tarkov.dev` の SVG（Shebuka ほか、CC BY-NC-SA 4.0）です。どちらも最新を取り、`%AppData%\Mayak\maps\`（キャッシュ）に置いて、1 日ごとに ETag で確かめます。取れないときや形がおかしいときは、前に取れたものを使います。
+- 使うのは、`projection: "interactive"` の地図の `transform`・`coordinateRotation`・`bounds`・`svgBounds`・`svgPath`・`svgLayer`・`layers[].extents`（階の高さと範囲）と、`altMaps`（night-factory、ground-zero-21 などの別名）です。
+- `BrowserSquadMapImage` は SVG の先頭に `<style>` を足して、地上（`svgLayer` と `data-keep-with-group` のグループ）だけ、または選んだ階と薄くした地上を表示させ、data URL で返します。
+
 ## ログ
 
 - **アプリのログ**（`internal/applog`）: メモリ上に最大 500 件を保持し、`%APPDATA%\MAYAK\mayak.log` に 1 行 1 件で追記します。ファイルの行数がメモリ上の上限の 2 倍（1000 行）に達すると、メモリに残っている項目だけで書き直すので、ファイルは際限なく大きくなりません。ファイルへの書き込みは読み出し側のロックを持たずに行います（書き込み順は専用のロックで保ちます）。起動時にこのファイルから読み込みます。レベルは `Error` / `Warn` / `Info` / `Debug` です。

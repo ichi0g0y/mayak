@@ -25,9 +25,9 @@ MAYAK が `%AppData%\Mayak`（`internal/appdir`）に保存するデータの置
 |---|---|---|
 | `preferences.json` | ユーザーデータ | Host 設定の好み（言語、通知の声・音量、自動更新など）。`Keyed` |
 | `settings.json` | この PC | Host 設定のうち PC に属するもの（`config.deviceKeys`: スクショ・ログのフォルダ、Tesseract、OCR エンジン、tarkov.dev 連携の ID、ブラウザのリモート ID、自動起動、優先度、古いウィンドウ位置） |
-| `browser-preferences.json` | ユーザーデータ | ブラウザシェルの好み（テーマ、時計、レイアウト、ツールの並びなど。`app_browser.go` の `browserPreferenceKeys`）。`Keyed` |
+| `browser-preferences.json` | ユーザーデータ | ブラウザシェルの好み（テーマ、時計、レイアウト、ツールの並び、分隊の表示名 `squadName` など。`app_browser.go` の `browserPreferenceKeys`）。`Keyed` |
 | `bookmarks.json` | ユーザーデータ | ブックマーク。`Records`（値はシェルのブックマーク `{id, name, url, group, sidebar}`） |
-| `browser.json` | この PC | ブラウザシェルのそれ以外（タブ、パネルの大きさ、アイテム欄、Host／クライアントの役割、ファビコンの対応表） |
+| `browser.json` | この PC | ブラウザシェルのそれ以外（タブ、パネルの大きさ、アイテム欄、Host／クライアントの役割、ファビコンの対応表、入っている分隊のコード `squadCode`） |
 | `snapnotes/<id>/` | ユーザーデータ | スナップノート。`note.json`（`createdAt`・`updatedAt`・`changedAt`、削除すると `deleted` の記録だけ残る）、`base.png`、`thumb.jpg` |
 | `sounds/<hash>-<名前>` | ユーザーデータ | 通知のカスタム音声。選んだファイルを取り込んだもの。設定はこの名前（`sounds/…`）で指す |
 | `tracker-tokens.dat` | この PC（秘密） | TarkovTracker のキーとプロフィール。DPAPI で暗号化 |
@@ -35,7 +35,7 @@ MAYAK が `%AppData%\Mayak`（`internal/appdir`）に保存するデータの置
 | `processed-screenshot.json` | この PC | 最後に処理したスクショ（同じものを二度処理しないため） |
 | `screenshots.json` | この PC | この PC のスクショ フォルダの解析結果 |
 | `hideout/events.json` | この PC | ゲームのログから読んだハイドアウトの記録 |
-| `catalog/`・`thumbs/`・`favicons/`・`adblock/`・`updates/` | キャッシュ | tarkov.dev のデータ、サムネイル、アイコン、フィルター、更新ファイル |
+| `catalog/`・`thumbs/`・`favicons/`・`adblock/`・`updates/`・`maps/` | キャッシュ | tarkov.dev のデータ、サムネイル、アイコン、フィルター、更新ファイル、分隊マップの地図（`maps.json` と SVG） |
 | `browser-webdata/` | この PC | ページタブの WebView2 プロファイル（ログイン情報など） |
 | `mayak.log` | この PC | アプリのログ |
 

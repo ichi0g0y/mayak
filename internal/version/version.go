@@ -22,3 +22,9 @@ func IsDevelopment() bool { return Current() == "" || Current() == Development }
 
 // UserAgent is the User-Agent this build sends to web services.
 func UserAgent() string { return "MAYAK/" + Current() }
+
+// IsPrerelease reports whether this build is not a release: a development
+// build, or a `git describe` version with commits after the tag (the
+// nightly build, "0.1.18-3-g1a2b3c4"). Features still being tried are
+// offered only there.
+func IsPrerelease() bool { return IsDevelopment() || strings.Contains(Current(), "-") }
