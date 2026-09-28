@@ -114,12 +114,14 @@
         matchFound: ['マッチング成立', ''],
         raidStart: ['レイド開始', ''],
         runThrough: ['ランスルー回避', '設定の秒数が経過'],
-        questItems: ['クエストアイテム確認', 'メニューに戻ったとき'],
+        questItems: ['おかえり', 'メニューに戻ったとき'],
         restartTasks: ['失敗タスクの再開', 'メニューに戻ったとき'],
       }
       let data = null
       let current = localStorage.getItem('pack') || ''
       let saveTimer = 0
+      // The changes not saved yet, a pack: { lines: {kind: line}, voicevox?, kokoro? }.
+      let pending = {}
       let playing = null
       let version = Date.now()
       // The progress bar shows from a generation seen on this page on.
@@ -129,10 +131,30 @@
       const lineObject = (line) => (typeof line === 'string' ? { text: line } : { ...(line || { text: '' }) })
       const packEntry = () => data.packs.find((p) => p.id === current) || data.packs[0]
 
+      // The state from the server, with the edits not saved yet on top; the
+      // field being typed in keeps its caret.
       async function load() {
-        data = await (await fetch('/api/state')).json()
+        const next = await (await fetch('/api/state')).json()
+        const active = document.activeElement
+        const typing = active?.dataset?.text ? [active.dataset.text, active.selectionStart, active.selectionEnd] : null
+        data = overlay(next)
         if (!data.packs.some((p) => p.id === current)) current = data.packs[0]?.id || ''
         render()
+        if (typing) {
+          const input = document.querySelector(`[data-text="${typing[0]}"]`)
+          input?.focus()
+          input?.setSelectionRange(typing[1], typing[2])
+        }
+      }
+      function overlay(state) {
+        for (const [id, change] of Object.entries(pending)) {
+          const entry = state.packs.find((p) => p.id === id)
+          if (!entry) continue
+          Object.assign(entry.pack.lines, change.lines)
+          if (change.voicevox) entry.pack.voicevox = change.voicevox
+          if (change.kokoro) entry.pack.kokoro = change.kokoro
+        }
+        return state
       }
 
       function render() {
@@ -213,27 +235,37 @@
         $('errors').textContent = job.errors.join('\n')
       }
 
-      // Saving: the pack as edited, a moment after the last keystroke.
-      function edited(apply) {
+      // Saving: only what was changed here (a line, or the pack's engine
+      // settings), a moment after the last keystroke, so that what changed on
+      // disk meanwhile is kept.
+      function edited(apply, what) {
         const entry = packEntry()
         apply(entry.pack)
+        const change = (pending[entry.id] ||= { lines: {} })
+        if (what.line) change.lines[what.line] = entry.pack.lines[what.line]
+        else if (entry.pack.voicevox) change.voicevox = entry.pack.voicevox
+        else if (entry.pack.kokoro) change.kokoro = entry.pack.kokoro
         $('saved').textContent = '保存待ち…'
         clearTimeout(saveTimer)
         saveTimer = setTimeout(save, 500)
       }
       async function save() {
-        const entry = packEntry()
-        const res = await fetch('/api/packs/' + entry.id, { method: 'PUT', body: JSON.stringify(entry.pack) })
-        const next = await res.json()
-        if (next.error) {
-          $('saved').textContent = '保存に失敗: ' + next.error
-          return
+        clearTimeout(saveTimer)
+        saveTimer = 0
+        const sending = pending
+        pending = {}
+        let next = null
+        for (const [id, change] of Object.entries(sending)) {
+          const res = await fetch('/api/packs/' + id, { method: 'PATCH', body: JSON.stringify(change) })
+          next = await res.json()
+          if (next.error) {
+            $('saved').textContent = '保存に失敗: ' + next.error
+            return
+          }
         }
-        // The page's own copy of the pack stays: keys typed while this save
-        // was on its way are in it, and go with the next save.
-        data = next
-        const same = data.packs.find((p) => p.id === entry.id)
-        if (same) same.pack = entry.pack
+        if (!next) return
+        // Keys typed while this save was on its way stay, for the next save.
+        data = overlay(next)
         renderHeader()
         updateMarks()
         $('saved').textContent = '保存しました'
@@ -247,24 +279,35 @@
 
       document.addEventListener('input', (e) => {
         const el = e.target
-        if (el.dataset.text) edited((pack) => setLine(pack, el.dataset.text, { text: el.value }))
+        if (el.dataset.text) edited((pack) => setLine(pack, el.dataset.text, { text: el.value }), { line: el.dataset.text })
         else if (el.dataset.query !== undefined)
-          edited((pack) => {
-            const q = { ...(pack.voicevox.query || {}) }
-            if (el.value === '') delete q[el.dataset.query]
-            else q[el.dataset.query] = Number(el.value)
-            pack.voicevox.query = Object.keys(q).length ? q : undefined
-          })
+          edited(
+            (pack) => {
+              const q = { ...(pack.voicevox.query || {}) }
+              if (el.value === '') delete q[el.dataset.query]
+              else q[el.dataset.query] = Number(el.value)
+              pack.voicevox = { ...pack.voicevox, query: Object.keys(q).length ? q : undefined }
+            },
+            { settings: true },
+          )
         else if (el.dataset.speed !== undefined)
-          edited((pack) => {
-            pack.kokoro.speed = el.value === '' ? undefined : Number(el.value)
-          })
+          edited(
+            (pack) => {
+              pack.kokoro = { ...pack.kokoro, speed: el.value === '' ? undefined : Number(el.value) }
+            },
+            { settings: true },
+          )
       })
       document.addEventListener('change', (e) => {
         const el = e.target
-        if (el.dataset.style) edited((pack) => setLine(pack, el.dataset.style, { style: el.value ? Number(el.value) : undefined }))
-        else if (el.dataset.speaker !== undefined) edited((pack) => (pack.voicevox.speaker = Number(el.value)))
-        else if (el.dataset.voice !== undefined) edited((pack) => (pack.kokoro.voice = el.value))
+        if (el.dataset.style)
+          edited((pack) => setLine(pack, el.dataset.style, { style: el.value ? Number(el.value) : undefined }), {
+            line: el.dataset.style,
+          })
+        else if (el.dataset.speaker !== undefined)
+          edited((pack) => (pack.voicevox = { ...pack.voicevox, speaker: Number(el.value) }), { settings: true })
+        else if (el.dataset.voice !== undefined)
+          edited((pack) => (pack.kokoro = { ...pack.kokoro, voice: el.value }), { settings: true })
       })
       document.addEventListener('click', async (e) => {
         const el = e.target.closest('button')
@@ -322,20 +365,39 @@
         if (data) renderPack()
       }
 
-      // The generation's progress, from the server as it goes.
+      // From the server as it goes: the generation's progress, and what to
+      // load again. On connecting it says which page it serves: another one
+      // (editor.html changed) reloads this page, and after a restart of the
+      // server (its code changed) the state is read again.
       const events = new EventSource('/api/events')
       let wasRunning = false
-      events.onmessage = (e) => {
-        const job = JSON.parse(e.data)
-        if (data) {
-          data.job = job
-          renderJob(job)
+      let page = ''
+      events.onmessage = async (e) => {
+        const message = JSON.parse(e.data)
+        if (message.type === 'hello') {
+          if (page && message.page !== page) return reloadPage()
+          if (page) void load()
+          page = message.page
+        } else if (message.type === 'reload') {
+          reloadPage()
+        } else if (message.type === 'packs') {
+          if (!data?.job.running) void load()
+        } else if (message.type === 'job') {
+          const job = message.job
+          if (data) {
+            data.job = job
+            renderJob(job)
+          }
+          if (wasRunning && !job.running) {
+            version = Date.now()
+            void load()
+          } else if (!wasRunning && job.running && data) renderPack()
+          wasRunning = job.running
         }
-        if (wasRunning && !job.running) {
-          version = Date.now()
-          void load()
-        } else if (!wasRunning && job.running && data) renderPack()
-        wasRunning = job.running
+      }
+      async function reloadPage() {
+        if (Object.keys(pending).length) await save()
+        location.reload()
       }
 
       async function loadSamples() {

@@ -56,11 +56,13 @@ tasks:
 
   # The built-in voices' editor (development only): the lines of every pack in
   # a table, saved as typed, made again with a progress bar, played one by one
-  # or a pack in a row (tools/voices/server.ts, http://127.0.0.1:5178/).
+  # or a pack in a row (tools/voices/server.ts, http://127.0.0.1:5178/). It
+  # reloads itself: a change to its code restarts it, one to the page reloads
+  # the page, and a pack.json changed from outside shows at once.
   dev:voice:
     cmds:
       - bun install --frozen-lockfile --cwd tools/voices
-      - bun tools/voices/server.ts
+      - bun --watch tools/voices/server.ts
 
   build:
     summary: Build the Wails v3 application without launching it

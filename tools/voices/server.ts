@@ -3,7 +3,14 @@
 // typed; the lines changed since their WAV was made are marked and made
 // again from the page (with a progress bar); each line, or a whole pack in a
 // row, plays as it is now. It listens on 127.0.0.1 only.
-import { readdirSync, statSync } from 'node:fs'
+//
+// It reloads itself: task dev:voice runs it with bun --watch (a change to its
+// code restarts it, and the page reconnects and reads the state again), a
+// change to editor.html reloads the page, and a pack.json changed from
+// outside (by hand, task voices) shows at once. The page saves only the lines
+// it changed, so what changed outside is not written over.
+import { createHash } from 'node:crypto'
+import { readdirSync, readFileSync, statSync, watch } from 'node:fs'
 import { join, normalize, relative } from 'node:path'
 import { decodeWave, pcmWave } from './adpcm'
 import {
@@ -14,7 +21,9 @@ import {
   loadManifest,
   loadPack,
   type Pack,
+  packFile,
   packIDs,
+  root,
   savePack,
   voicevoxReady,
   voicevoxStyles,
@@ -23,12 +32,33 @@ import {
 
 const port = Number(process.env.VOICE_EDITOR_PORT ?? 5178)
 const samplesDir = join(import.meta.dir, 'samples')
+const editorFile = join(import.meta.dir, 'editor.html')
 
 // The generation under way: one at a time, its progress sent to every page.
 type Job = { running: boolean; done: number; total: number; current: string; errors: string[] }
 let job: Job = { running: false, done: 0, total: 0, current: '', errors: [] }
-const listeners = new Set<(job: Job) => void>()
-const announce = () => listeners.forEach((send) => send(job))
+// What the pages are told: the job, the page itself changed (reload), the
+// packs changed on disk, and on connecting which page they should be.
+type Message = { type: 'job'; job: Job } | { type: 'reload' } | { type: 'packs' } | { type: 'hello'; page: string }
+const listeners = new Set<(message: Message) => void>()
+const broadcast = (message: Message) => listeners.forEach((send) => send(message))
+const announce = () => broadcast({ type: 'job', job })
+const pageVersion = () => createHash('sha1').update(readFileSync(editorFile)).digest('hex').slice(0, 12)
+
+// A pack written from the page is not news to it; one written from outside is.
+const ownWrites = new Map<string, number>()
+let packsTimer: ReturnType<typeof setTimeout> | undefined
+watch(root, { recursive: true }, (_event, name) => {
+  if (!name || !String(name).endsWith('pack.json')) return
+  if (Date.now() - (ownWrites.get(join(root, String(name))) ?? 0) < 1500) return
+  clearTimeout(packsTimer)
+  packsTimer = setTimeout(() => broadcast({ type: 'packs' }), 300)
+})
+let pageTimer: ReturnType<typeof setTimeout> | undefined
+watch(editorFile, () => {
+  clearTimeout(pageTimer)
+  pageTimer = setTimeout(() => broadcast({ type: 'reload' }), 200)
+})
 
 async function generate(items: { id: string; kind: string }[]) {
   job = { running: true, done: 0, total: items.length, current: '', errors: [] }
@@ -99,19 +129,22 @@ Bun.serve({
     const url = new URL(req.url)
     const path = url.pathname
     try {
-      if (path === '/') return new Response(Bun.file(join(import.meta.dir, 'editor.html')))
+      if (path === '/') return new Response(Bun.file(editorFile), { headers: { 'cache-control': 'no-store' } })
       if (path === '/api/state') return json(await state())
       if (path === '/api/samples') return json(samples())
-      // A pack's settings and lines, saved as the page sends them.
+      // The lines and engine settings the page changed, put into the pack as
+      // it is on disk now.
       const packMatch = path.match(/^\/api\/packs\/([a-z0-9-]+)$/)
-      if (packMatch && req.method === 'PUT') {
+      if (packMatch && req.method === 'PATCH') {
         const id = packMatch[1]
         const current = await loadPack(id)
-        const next = (await req.json()) as Pack
-        // Only what the page edits: the lines and the engine settings.
-        const saved: Pack = { ...current, lines: next.lines }
-        if (current.voicevox && next.voicevox) saved.voicevox = next.voicevox
-        if (current.kokoro && next.kokoro) saved.kokoro = next.kokoro
+        const change = (await req.json()) as Partial<Pick<Pack, 'lines' | 'voicevox' | 'kokoro'>>
+        const saved: Pack = { ...current, lines: { ...current.lines } }
+        for (const [kind, line] of Object.entries(change.lines ?? {}))
+          if ((kinds as readonly string[]).includes(kind)) saved.lines[kind] = line
+        if (current.voicevox && change.voicevox) saved.voicevox = change.voicevox
+        if (current.kokoro && change.kokoro) saved.kokoro = change.kokoro
+        ownWrites.set(packFile(id), Date.now())
         await savePack(id, saved)
         return json(await state())
       }
@@ -124,12 +157,15 @@ Bun.serve({
         return json(job)
       }
       if (path === '/api/events') {
-        let send: (job: Job) => void = () => {}
+        let send: (message: Message) => void = () => {}
         const stream = new ReadableStream({
           start(controller) {
-            send = (j) => controller.enqueue(`data: ${JSON.stringify(j)}\n\n`)
+            send = (message) => controller.enqueue(`data: ${JSON.stringify(message)}\n\n`)
             listeners.add(send)
-            send(job)
+            // After a restart the page reconnects within half a second.
+            controller.enqueue('retry: 500\n\n')
+            send({ type: 'hello', page: pageVersion() })
+            send({ type: 'job', job })
           },
           cancel() {
             listeners.delete(send)
@@ -156,4 +192,8 @@ Bun.serve({
 
 const address = `http://127.0.0.1:${port}/`
 console.log(`Voice editor: ${address} (Ctrl+C to stop)`)
-if (process.platform === 'win32' && !process.env.VOICE_EDITOR_NO_OPEN) Bun.spawn(['cmd', '/c', 'start', '', address])
+// The browser opens once: after a restart, the page already open reconnects.
+setTimeout(() => {
+  if (process.platform === 'win32' && !process.env.VOICE_EDITOR_NO_OPEN && listeners.size === 0)
+    Bun.spawn(['cmd', '/c', 'start', '', address])
+}, 2500)
