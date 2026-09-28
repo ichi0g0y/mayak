@@ -287,6 +287,13 @@ func normalizeSettings(s config.Settings) config.Settings {
 			delete(s.SoundVoices, kind)
 		}
 	}
+	for kind, offset := range s.SoundVolumeOffsets {
+		if _, ok := sound.ParseKind(kind); !ok || offset == 0 {
+			delete(s.SoundVolumeOffsets, kind)
+			continue
+		}
+		s.SoundVolumeOffsets[kind] = min(max(offset, -50), 50)
+	}
 	if s.ScreenshotDirectory != "" {
 		s.ScreenshotDirectory = filepath.Clean(s.ScreenshotDirectory)
 	}

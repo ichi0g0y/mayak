@@ -40,6 +40,7 @@ export type Settings = {
   soundVolume: number
   soundVoice: string
   soundVoices: Record<string, string>
+  soundVolumeOffsets: Record<string, number>
   autoStartMonitoring: boolean
   openMapOnRaidStart: boolean
   navigateMapOnPositionScreenshot: boolean
@@ -219,6 +220,7 @@ export const defaults: Settings = {
   soundVolume: 28,
   soundVoice: '',
   soundVoices: {},
+  soundVolumeOffsets: {},
   autoStartMonitoring: true,
   openMapOnRaidStart: true,
   navigateMapOnPositionScreenshot: true,

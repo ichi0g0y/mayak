@@ -114,7 +114,13 @@ func (a *App) notify(s config.Settings, kind sound.Kind) {
 		return
 	}
 	a.addLog("Info", "Sound", "Playing "+string(kind)+" alert")
-	playNotification(kind, path, voiceFor(s, kind), s.SoundVolume)
+	playNotification(kind, path, voiceFor(s, kind), volumeFor(s, kind))
+}
+
+// volumeFor is a notification's volume: the one for all with its own
+// adjustment, within 0–100.
+func volumeFor(s config.Settings, kind sound.Kind) int {
+	return min(max(s.SoundVolume+s.SoundVolumeOffsets[string(kind)], 0), 100)
 }
 
 // voiceFor is the built-in voice a notification speaks with: its own choice,

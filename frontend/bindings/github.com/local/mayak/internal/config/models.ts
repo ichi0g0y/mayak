@@ -96,6 +96,12 @@ export class Settings {
      * sound.Kind, to a pack or "beep"); one not in it takes SoundVoice.
      */
     "soundVoices": { [_ in string]?: string };
+
+    /**
+     * SoundVolumeOffsets turns a notification (its kind) up or down from
+     * SoundVolume, in points (-50 to +50).
+     */
+    "soundVolumeOffsets": { [_ in string]?: number };
     "autoStartMonitoring": boolean;
     "openMapOnRaidStart": boolean;
     "navigateMapOnPositionScreenshot": boolean;
@@ -265,6 +271,9 @@ export class Settings {
         if (!("soundVoices" in $$source)) {
             this["soundVoices"] = {};
         }
+        if (!("soundVolumeOffsets" in $$source)) {
+            this["soundVolumeOffsets"] = {};
+        }
         if (!("autoStartMonitoring" in $$source)) {
             this["autoStartMonitoring"] = false;
         }
@@ -362,12 +371,16 @@ export class Settings {
     static createFrom($$source: any = {}): Settings {
         const $$createField8_0 = $$createType1;
         const $$createField35_0 = $$createType2;
+        const $$createField36_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("remoteTargets" in $$parsedSource) {
             $$parsedSource["remoteTargets"] = $$createField8_0($$parsedSource["remoteTargets"]);
         }
         if ("soundVoices" in $$parsedSource) {
             $$parsedSource["soundVoices"] = $$createField35_0($$parsedSource["soundVoices"]);
+        }
+        if ("soundVolumeOffsets" in $$parsedSource) {
+            $$parsedSource["soundVolumeOffsets"] = $$createField36_0($$parsedSource["soundVolumeOffsets"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }
@@ -377,3 +390,4 @@ export class Settings {
 const $$createType0 = RemoteTarget.createFrom;
 const $$createType1 = $Create.Array($$createType0);
 const $$createType2 = $Create.Map($Create.Any, $Create.Any);
+const $$createType3 = $Create.Map($Create.Any, $Create.Any);

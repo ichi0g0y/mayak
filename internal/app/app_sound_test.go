@@ -43,3 +43,20 @@ func TestNormalizeSettingsDropsUnknownVoices(t *testing.T) {
 		t.Fatalf("unknown voice kept: %q", s.SoundVoice)
 	}
 }
+
+// A notification's volume is the one for all with its adjustment, within
+// 0–100; adjustments are kept within ±50 and dropped at 0 or for no kind.
+func TestVolumeFor(t *testing.T) {
+	s := normalizeSettings(config.Settings{SoundVolume: 30, SoundVolumeOffsets: map[string]int{"raidStart": 20, "error": -80, "quest": 0, "gone": 5}})
+	if len(s.SoundVolumeOffsets) != 2 || s.SoundVolumeOffsets["error"] != -50 {
+		t.Fatalf("offsets %v", s.SoundVolumeOffsets)
+	}
+	for kind, want := range map[sound.Kind]int{sound.RaidStart: 50, sound.Error: 0, sound.Quest: 30} {
+		if got := volumeFor(s, kind); got != want {
+			t.Fatalf("%s: %d, want %d", kind, got, want)
+		}
+	}
+	if got := volumeFor(config.Settings{SoundVolume: 90, SoundVolumeOffsets: map[string]int{"quest": 30}}, sound.Quest); got != 100 {
+		t.Fatalf("over 100: %d", got)
+	}
+}

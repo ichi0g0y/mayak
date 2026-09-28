@@ -320,7 +320,9 @@ select option { background: var(--raised); color: var(--text); }
 .sound-options { display: grid; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
 .sound-options .field { margin: 2px 0 0; }
 .sound-setting { display: grid; gap: 9px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-.sound-voice-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 7px; }
+.sound-voice-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 7px; }
+.volume-offset { display: flex; align-items: center; gap: 2px; }
+.volume-offset-value { min-width: 34px; text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--muted-foreground); }
 .sound-voice { width: 100%; white-space: nowrap; }
 .sound-voice > span { overflow: hidden; text-overflow: ellipsis; }
 .sound-file-row { display: grid; grid-template-columns: auto minmax(80px, 1fr); align-items: center; gap: 7px; }

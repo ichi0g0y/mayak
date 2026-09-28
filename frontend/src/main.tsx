@@ -9,6 +9,7 @@ import {
   FolderOpen,
   MapPinned,
   MonitorCog,
+  Minus,
   Play,
   Plus,
   RefreshCw,
@@ -428,12 +429,7 @@ function App() {
   }
   const previewSound = async (kind: string, path: string) => {
     try {
-      await PreviewSound(
-        kind,
-        choiceOf(kind, path) === 'custom' ? path : '',
-        voiceOf(kind)?.id ?? '',
-        settings.soundVolume,
-      )
+      await PreviewSound(kind, choiceOf(kind, path) === 'custom' ? path : '', voiceOf(kind)?.id ?? '', volumeOf(kind))
     } catch (error) {
       setNotice(String(error))
       setNoticeError(true)
@@ -461,6 +457,19 @@ function App() {
     // Another choice than a file lets go of the file.
     patch({ soundVoices: next, ...(value !== 'custom' ? { [pathKey]: '' } : {}) } as Partial<Settings>)
   }
+  // A notification's volume: the one for all with its own adjustment (±50,
+  // in steps of 5), within 0–100 (as internal/app/app_sound.go volumeFor).
+  const volumeOffsets = settings.soundVolumeOffsets ?? {}
+  const offsetOf = (kind: string) => volumeOffsets[kind] ?? 0
+  const volumeOf = (kind: string) => Math.min(100, Math.max(0, settings.soundVolume + offsetOf(kind)))
+  const setOffsetOf = (kind: string, offset: number) => {
+    const next = { ...volumeOffsets }
+    const clamped = Math.min(50, Math.max(-50, offset))
+    if (clamped === 0) delete next[kind]
+    else next[kind] = clamped
+    patch({ soundVolumeOffsets: next })
+  }
+  const offsetLabel = (offset: number) => (offset > 0 ? `+${offset}` : offset === 0 ? '±0' : `${offset}`)
   const quote = (text: string) => (settings.language === 'ja' ? `「${text}」` : `“${text}”`)
   // What a notification plays: its file, the line of its voice, or the beeps.
   const saidBy = (kind: string, path: string) => {
@@ -1156,6 +1165,34 @@ function App() {
                                 <SelectItem value="custom">{t('soundVoiceCustom')}</SelectItem>
                               </SelectContent>
                             </Select>
+                            <div className="volume-offset" role="group" aria-label={t('soundVolumeOffset')}>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                aria-label={t('soundSofter')}
+                                disabled={offsetOf(alert.kind) <= -50}
+                                onClick={() => setOffsetOf(alert.kind, offsetOf(alert.kind) - 5)}
+                              >
+                                <Minus />
+                              </Button>
+                              <span
+                                className="volume-offset-value"
+                                title={`${t('soundVolumeActual')} ${volumeOf(alert.kind)}%`}
+                              >
+                                {offsetLabel(offsetOf(alert.kind))}
+                              </span>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                aria-label={t('soundLouder')}
+                                disabled={offsetOf(alert.kind) >= 50}
+                                onClick={() => setOffsetOf(alert.kind, offsetOf(alert.kind) + 5)}
+                              >
+                                <Plus />
+                              </Button>
+                            </div>
                             <Button
                               type="button"
                               size="sm"
