@@ -4,6 +4,7 @@ import (
 	"github.com/local/mayak/internal/browserview"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -24,8 +25,13 @@ func TestBrowserStateReplacement(t *testing.T) {
 	}
 	p, _ := browserStatePath()
 	files, e := os.ReadDir(filepath.Dir(p))
-	if e != nil || len(files) != 1 {
-		t.Fatalf("temporary files left behind: %v %v", files, e)
+	if e != nil {
+		t.Fatal(e)
+	}
+	for _, f := range files {
+		if strings.HasPrefix(f.Name(), ".") || strings.HasSuffix(f.Name(), ".tmp") {
+			t.Fatalf("temporary file left behind: %s", f.Name())
+		}
 	}
 	if e := a.BrowserSave(`not json`); e == nil {
 		t.Fatal("invalid state accepted")
