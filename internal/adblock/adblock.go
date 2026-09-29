@@ -79,6 +79,11 @@ type Blocker struct {
 
 	cssMu sync.Mutex
 	css   map[string]string
+
+	// Run when the lists are rebuilt or blocking is turned on or off: the
+	// Mac's content blocker (WebKitRules) is made again or switched.
+	hooksMu sync.Mutex
+	hooks   []func()
 }
 
 // New creates a blocker that caches its lists in dir. It is enabled but blocks
@@ -89,8 +94,29 @@ func New(dir string, logf func(level, message string)) *Blocker {
 	return b
 }
 
-func (b *Blocker) SetEnabled(enabled bool) { b.enabled.Store(enabled) }
-func (b *Blocker) Enabled() bool           { return b.enabled.Load() }
+func (b *Blocker) SetEnabled(enabled bool) {
+	if b.enabled.Swap(enabled) != enabled {
+		b.changed()
+	}
+}
+
+// OnChange adds a function run (on its own goroutine) when the lists are
+// rebuilt or blocking is turned on or off.
+func (b *Blocker) OnChange(f func()) {
+	b.hooksMu.Lock()
+	defer b.hooksMu.Unlock()
+	b.hooks = append(b.hooks, f)
+}
+
+func (b *Blocker) changed() {
+	b.hooksMu.Lock()
+	hooks := append([]func(){}, b.hooks...)
+	b.hooksMu.Unlock()
+	for _, f := range hooks {
+		go f()
+	}
+}
+func (b *Blocker) Enabled() bool { return b.enabled.Load() }
 
 // Start loads the cached lists, then keeps them up to date until ctx ends.
 func (b *Blocker) Start(ctx context.Context) {
@@ -197,6 +223,7 @@ func (b *Blocker) rebuild() error {
 	b.css = map[string]string{}
 	b.cssMu.Unlock()
 	b.logf("Info", fmt.Sprintf("Ad blocking ready (%d filter lists)", len(lists)))
+	b.changed()
 	return nil
 }
 

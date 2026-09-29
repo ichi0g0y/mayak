@@ -65,6 +65,50 @@ static WKWebView *mayakOpenPopup(WKWebViewConfiguration *configuration,WKWindowF
 -(void)webView:(WKWebView*)view requestMediaCapturePermissionForOrigin:(WKSecurityOrigin*)origin initiatedByFrame:(WKFrameInfo*)frame type:(WKMediaCaptureType)type decisionHandler:(void (^)(WKPermissionDecision))handler API_AVAILABLE(macos(12.0)){handler(WKPermissionDecisionDeny);}
 -(void)dealloc{[_constraints release];[_view release];[super dealloc];}
 @end
+// The ad blocker (adblock/webkit.go, view_darwin.go watchRules): one WebKit
+// content blocker every tab takes (and the popups they open, which share the
+// tab's content controller), made from the filter lists and kept by WebKit
+// under an identifier with their version, so a start with the same lists
+// finds it compiled. Should WebKit refuse the element hiding, the network
+// rules go alone.
+static WKContentRuleList *mayakRules;
+static BOOL mayakRulesOn=YES;
+static NSMutableArray *mayakTabs;
+static void mayakApplyRules(WKWebView *view){
+ WKUserContentController *controller=view.configuration.userContentController;
+ [controller removeAllContentRuleLists];
+ if(mayakRules&&mayakRulesOn)[controller addContentRuleList:mayakRules];
+}
+static void mayakApplyAll(void){for(MayakBrowserTab *tab in mayakTabs)mayakApplyRules(tab.view);}
+static void mayakSetRules(WKContentRuleList *list){
+ dispatch_async(dispatch_get_main_queue(),^{[mayakRules release];mayakRules=[list retain];mayakApplyAll();});
+}
+static void mayakForgetOthers(WKContentRuleListStore *store,NSString *keep){
+ [store getAvailableContentRuleListIdentifiers:^(NSArray<NSString*> *identifiers){
+  for(NSString *identifier in identifiers)if([identifier hasPrefix:@"mayak-adblock-"]&&![identifier isEqualToString:keep])[store removeContentRuleListForIdentifier:identifier completionHandler:^(NSError *error){}];
+ }];
+}
+void rl_browser_rules(const char *all,const char *network,const char *version){
+ NSString *allText=[NSString stringWithUTF8String:all],*networkText=[NSString stringWithUTF8String:network];
+ NSString *identifier=[NSString stringWithFormat:@"mayak-adblock-%s",version];
+ dispatch_async(dispatch_get_main_queue(),^{
+  WKContentRuleListStore *store=[WKContentRuleListStore defaultStore];
+  [store lookUpContentRuleListForIdentifier:identifier completionHandler:^(WKContentRuleList *found,NSError *lookUpError){
+   if(found){mayakSetRules(found);return;}
+   [store compileContentRuleListForIdentifier:identifier encodedContentRuleList:allText completionHandler:^(WKContentRuleList *list,NSError *error){
+    if(list){mayakSetRules(list);mayakForgetOthers(store,identifier);return;}
+    NSLog(@"MAYAK: content blocker refused (%@); network rules only",error);
+    [store compileContentRuleListForIdentifier:identifier encodedContentRuleList:networkText completionHandler:^(WKContentRuleList *network,NSError *networkError){
+     if(network){mayakSetRules(network);mayakForgetOthers(store,identifier);}
+     else NSLog(@"MAYAK: content blocker failed: %@",networkError);
+    }];
+   }];
+  }];
+ });
+}
+void rl_browser_rules_enabled(int on){
+ dispatch_async(dispatch_get_main_queue(),^{if(mayakRulesOn!=(on!=0)){mayakRulesOn=on!=0;mayakApplyAll();}});
+}
 static void onMain(void (^block)(void)){if([NSThread isMainThread])block();else dispatch_sync(dispatch_get_main_queue(),block);}
 void *rl_browser_new(void *ptr,uintptr_t handle){
  __block MayakBrowserTab *tab=nil;
@@ -81,6 +125,8 @@ void *rl_browser_new(void *ptr,uintptr_t handle){
   tab.constraints=@[[view.leadingAnchor constraintEqualToAnchor:content.leadingAnchor], [view.topAnchor constraintEqualToAnchor:content.topAnchor], [view.trailingAnchor constraintEqualToAnchor:content.trailingAnchor], [view.bottomAnchor constraintEqualToAnchor:content.bottomAnchor]];
   [NSLayoutConstraint activateConstraints:tab.constraints];
   for(NSString *key in @[@"URL",@"title",@"canGoBack",@"canGoForward"])[view addObserver:tab forKeyPath:key options:0 context:NULL];
+  if(!mayakTabs)mayakTabs=[[NSMutableArray alloc]init];
+  [mayakTabs addObject:tab];mayakApplyRules(view);
   [view release];
  });return tab;
 }
@@ -97,7 +143,7 @@ void rl_browser_action(void *ptr,const char *rawCommand,const char *rawURL,int l
   else if([command isEqualToString:@"close"]){
    view.navigationDelegate=nil;view.UIDelegate=nil;
    for(NSString *key in @[@"URL",@"title",@"canGoBack",@"canGoForward"])[view removeObserver:tab forKeyPath:key];
-   [view stopLoading];[NSLayoutConstraint deactivateConstraints:tab.constraints];[view removeFromSuperview];[tab release];
+   [view stopLoading];[NSLayoutConstraint deactivateConstraints:tab.constraints];[view removeFromSuperview];[mayakTabs removeObject:tab];[tab release];
   }
  });
 }

@@ -337,7 +337,7 @@ Web ページのツールバー右側のアイコン（翻訳、スナップノ�
 
 ## 広告ブロック
 
-`app_adblock.go` と `internal/adblock`（AdGuard の urlfilter エンジン）で実装されています。Windows のみ有効です。
+`app_adblock.go` と `internal/adblock`（AdGuard の urlfilter エンジン）で実装されています。Windows と Mac で有効です（Linux はまだ）。
 
 - フィルタリスト: EasyList、EasyPrivacy、AdGuard 日本語フィルタ（`DefaultLists`）。`Mayak/adblock/<name>.txt` にキャッシュします。
 - 更新: 4 日（`maxAge`）より古いリストをダウンロードし、6 時間（`retryAfter`）ごとに確認します。1 リストは最大 32 MiB です。
@@ -345,6 +345,12 @@ Web ページのツールバー右側のアイコン（翻訳、スナップノ�
 - ページ本体（トップレベルのドキュメント）はブロックしません。サブリソース（画像、スクリプト、XHR/fetch、iframe など）を WebView2 の `WebResourceRequested` で判定してブロックします（`internal/browserview/filter_windows.go`）。
 - ブロックした画像・iframe・メディアの跡は `collapse.js` で詰め、要素非表示ルールは `DOMContentLoaded` で CSS として挿入します。ホスト名の親ドメインのルールも適用します。
 - 設定の ON/OFF はすぐに反映され（`BrowserSetAdblock`）、表示中の `web` タブを再読み込みします。
+- **Mac**: WKWebView は通信を 1 件ずつ確かめられないので、リストを WebKit のコンテンツブロッカー（WKContentRuleList）に変換して、全タブ（とタブが開いたポップアップ）に付けます（`webkit.go` の `WebKitRules`、`view_darwin.go` の `watchRules`）。
+  - 変換するのは、WebKit の正規表現で言えるネットワークのルール（`||`、`|`、`*`、`^`。種類、third-party、`domain=`）と、WebKit が確実に受け付けるセレクタの要素非表示（`:has` などの拡張、疑似要素、多くの疑似クラスは除く）、例外（`@@`）です。正規表現のルールや `redirect`・`removeparam` などは外します。今のリストで約 11.6 万件（上限 15 万件に対し 14 万件まで。多いときは要素非表示から削る）。
+  - 並びはブロック → 要素非表示 → 例外（`ignore-previous-rules`）→ `tarkov.dev` の除外です。ページ本体と popup は対象外です。
+  - WebKit はリストの版（内容のハッシュ）ごとにコンパイルしたものを保存し、同じ版なら次の起動ではすぐ使います。古い版は消します。要素非表示を WebKit が受け付けなかったときは、ネットワークのルールだけでコンパイルし直します。
+  - リストが更新されたとき・ON/OFF を変えたときは、Blocker の `OnChange` で付け直します。
+  - Windows の `collapse.js`（ブロックした跡を詰める）はありません。
 
 ## ネイティブビュー
 

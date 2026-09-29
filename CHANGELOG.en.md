@@ -15,6 +15,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - The map pens' lines grow and shrink with the map's zoom, so writing drawn close up keeps its shape for a squadmate seeing it from afar; the squad pen's position goes twenty times a second and glides, and the squad pen is put down after three minutes unused.
 - "Look here": the crosshair button on the map shares the view shown with the squad; pressing it brings up the same map, floor, place and zoom, with a ring where it points.
 - The squad code is typed into boxes of one character, as the pairing code is (no hyphen to type); the eighth joins.
+- Ad blocking works on a Mac too: the same filter lists as on Windows (EasyList, EasyPrivacy, AdGuard Japanese) become a WebKit content blocker. After the first start or a list update it takes a moment to be ready.
 
 ### Improved
 

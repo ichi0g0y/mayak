@@ -13,8 +13,72 @@ import (
 	"fmt"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"runtime/cgo"
+	"sync"
 	"unsafe"
 )
+
+// webkitBlocker is a ContentBlocker the Mac can use (adblock.Blocker): WKWebView
+// cannot be asked about each request, so its lists become one WebKit content
+// blocker that every tab takes, made again when they change.
+type webkitBlocker interface {
+	WebKitRules() (all, network, version string)
+	Enabled() bool
+	OnChange(func())
+}
+
+var (
+	rulesMu      sync.Mutex
+	rulesWatched = map[webkitBlocker]bool{}
+	rulesVersion string
+)
+
+// watchRules hands b's rules to WebKit, and again when they change.
+func watchRules(b ContentBlocker) {
+	w, ok := b.(webkitBlocker)
+	if !ok {
+		return
+	}
+	rulesMu.Lock()
+	seen := rulesWatched[w]
+	rulesWatched[w] = true
+	rulesMu.Unlock()
+	if seen {
+		return
+	}
+	w.OnChange(func() { applyRules(w) })
+	go applyRules(w)
+}
+
+func applyRules(w webkitBlocker) {
+	if !w.Enabled() {
+		C.rl_browser_rules_enabled(0)
+		return
+	}
+	all, network, version := w.WebKitRules()
+	if version == "" {
+		return
+	}
+	rulesMu.Lock()
+	same := version == rulesVersion
+	rulesVersion = version
+	rulesMu.Unlock()
+	if same {
+		C.rl_browser_rules_enabled(1)
+		return
+	}
+	ca, cn, cv := C.CString(all), C.CString(network), C.CString(version)
+	defer C.free(unsafe.Pointer(ca))
+	defer C.free(unsafe.Pointer(cn))
+	defer C.free(unsafe.Pointer(cv))
+	C.rl_browser_rules(ca, cn, cv)
+	C.rl_browser_rules_enabled(1)
+}
+
+func (m *Manager) contentBlocker() ContentBlocker {
+	m.scriptMu.Lock()
+	defer m.scriptMu.Unlock()
+	return m.blocker
+}
 
 type nativeView struct {
 	ptr    unsafe.Pointer
@@ -70,6 +134,9 @@ func (m *Manager) command(command string, o Options) error {
 			}
 			v = &nativeView{ptr, h}
 			views[o.ID] = v
+			if b := m.contentBlocker(); b != nil {
+				watchRules(b)
+			}
 			v.action("navigate", o.URL, 0, 0, 0, 0)
 		}
 		if command == "show" || command == "hideAll" {
