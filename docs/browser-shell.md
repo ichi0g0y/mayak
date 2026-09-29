@@ -11,7 +11,7 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 | `frontend/src/browser/shell.js` | DOM の描画（`render`）、タブ・ブックマーク・設定ページ、クリック・ドラッグ・キー操作、サイドバーのリサイズ、テーマ適用 |
 | `frontend/src/browser/shell-core.js` | シェルの各部が共有するもの: `window.mayak`、現在の状態 `state`、`action`、`render` の入口、`t` と HTML の部品（`esc`、`icon`、`select`）。ビューはここから import し、`shell.js` からは import しない |
 | `frontend/src/browser/view-snapnotes.js` | スナップノート: ツールバーのボタンとメニュー、サイドバーの欄、一覧と書き込み画面（[スナップノート](#スナップノート)） |
-| `frontend/src/browser/view-map.js`, `map-geo.js`, `map-draw.js`, `squad-draw.js`, `squad-share.js`, `view-squad.js` | マップ: Leaflet の地図、フィルターで出し分ける地点、分隊のパネルと仲間の印（[マップ](#マップ)）。`map-draw.js` は自分のペンと分隊ペン、`squad-draw.js` は分隊ペンの線の送受信、`squad-share.js` は分隊への共有、`view-squad.js` はサイドバーの分隊セクションと分隊ページ（[分隊](#分隊)）。`map-geo.js` は、地図と階の選び方、地点の種類と色、印の向きなど、Leaflet を使わない計算 |
+| `frontend/src/browser/view-map.js`, `map-geo.js`, `map-draw.js`, `squad-draw.js`, `squad-share.js`, `view-squad.js` | マップ: Leaflet の地図、フィルターで出し分ける地点、仲間の印（[マップ](#マップ)）。`map-draw.js` は自分のペンと分隊ペン、`squad-draw.js` は分隊ペンの線の送受信、`squad-share.js` は分隊への共有、`view-squad.js` はサイドバーの分隊セクションと分隊ページ（[分隊](#分隊)）。`map-geo.js` は、地図と階の選び方、地点の種類と色、印の向きなど、Leaflet を使わない計算 |
 | `frontend/src/browser/view-bosses.js`, `view-screenshots.js`, `view-item.js`, `view-tutorial.js` | サイドバーのボス、スクリーンショットページ、アイテム欄、チュートリアル。それぞれ描画関数と自分のイベント処理を持ち、クリックは `clickHandlers` に登録した関数で受けます |
 | `frontend/src/browser/api.js` | 状態の保持と操作（`window.mayak.action`）、ネイティブビューへの命令、永続化、ナビゲーションイベントの受信 |
 | `frontend/src/browser/state.js` | 既定値、`browser.json` の復元と検証、タブ・ブックマークの並べ替え規則、URL 検証 |
@@ -208,7 +208,6 @@ MAYAK が自分で描く tarkov.dev の地図です。tarkov.dev のマップと
   - **検索**: tarkov.dev と同じく、カンマで区切った語のどれかを名前・アイテム名・タスク名に含む地点だけを出します（`searchTerms` / `found`）。検索中は地名を出しません。
   - **スナップノート**: 見えている地図（ボタン類と自分のペンの線を除く）を modern-screenshot で画像にし、スナップノートにして書き込み画面で開きます。表示中の階の分隊ペンの線と自分のペンの線（上）は、まとめてノートのレイヤー 1 に線として入り、レイヤー 2・3 は書き足す用に空けます（画像のピクセルに直して `SnapNoteSave`。ノートで消したり隠したりできる）。tarkov.dev のタイルは CORS を返さずページから読めないので、Go の `BrowserMapTile`（`assets.tarkov.dev/maps/…` のタイルだけ）を通して取ります。スナップノートと同じく Windows だけです。
   - **自分のペン**・**分隊ペン**: 後述の [自分のペン](#自分のペン)、[分隊ペン](#分隊ペン)。
-  - **分隊**: 後述。
   - **設定**: 「狙撃 Scav のスポーンを常に表示」（既定オン）、「脱出地点を常に表示」、「進行中のタスクの印だけ表示」（TarkovTracker で完了・失敗したタスクの地点を隠す）、「地名を目立たなくする」のチェックと、「別の階の濃さ」（0〜60%、既定 20）、「脱出地点の名前の大きさ」「地名の大きさ」（50〜200%）のスライダーです。
 - **地図**: Leaflet（`leaflet`）で描きます。Leaflet はビューを初めて表示したときに読み込む別 chunk です。地図の一覧と形は tarkov.dev の maps.json（`BrowserSquadMaps`。ETag 付きで 1 日ごとに確かめる）で、座標変換は tarkov.dev の `getCRS` と同じく、`coordinateRotation` で回してから `transform` で拡大・移動します。絵は SVG（tarkov.dev の Abstract）かタイル（Satellite）で、両方ある地図は設定 `style` で選び、タイルしかない地図（The Lab・Labyrinth・Icebreaker）はタイルで描きます。SVG は Go が階の表示を書き込んだ data URL（`BrowserSquadMapImage`）を `L.imageOverlay`（`<img>`）で貼るので、SVG の中身はシェルで動きません。地図は `#live-map`（`data-keep`）に描き、描画のあとに `afterRenderHooks` で状態に合わせます。
 - **マップの自動**: 自分がレイド中なら自分のマップ、そうでなければ最後に位置を送った仲間のマップ、それもなければ Host の現在のマップです。
@@ -216,7 +215,7 @@ MAYAK が自分で描く tarkov.dev の地図です。tarkov.dev のマップと
   - 階を出しているとき、別の階のもの（地上の絵とタイル、別の階の地点、別の階の地名）は設定 `fade` の濃さで薄く出します。高さの無い地名は地上のものとして扱います（`Label.Ground`）。`show` の階では地上を薄くしません。
   - SVG の階は、SVG のその階のグループを薄くした地上の上に描きます。SVG に無くタイルだけの階は、そのタイルを地上の絵の上に重ねます。Satellite では、SVG にしか無い階は何も重ねません（地点で分かる。tarkov.dev の Satellite と同じ）。
 - **地点**: tarkov.dev のカタログ（選んだゲームモード、自動ならプレイ中のモード）から `BrowserMapMarkers(name, language, mode)`（`mapdata.Markers`）が tarkov.dev の地図と同じ作り方で作り、Go がマップ・言語・モードごとに 10 分間覚えます。アイテムとタスクの名前は表示言語です。脱出は色付きの名前で、それ以外はアイコンで描き、押すと詳細のポップアップ（タスク、ボスと出現率、鍵の種類と電源、スイッチが動かすもの、必要なアイテム、物資の中身など）を開きます。脱出や危険地帯の範囲は、ポインタを乗せると多角形で出し、押すと出たままになります。タスクの地点のポップアップからは、認識したタスクと同じ規則（タスクのサイトとタブの開き方の設定）でタスクのページを開けます（`mapTask`）。
-- **分隊**: マップのパネルには、接続の状態と仲間の一覧、分隊ページを開くボタンだけを出します（分隊に入っていなければ説明と「分隊を作る・参加する」）。分隊の作成・参加・表示名・分隊カラー・退出は [分隊](#分隊) のページです。
+- **分隊**: マップのボタンの列に分隊のボタンとパネルはありません（仲間の一覧と接続の状態はサイドバーの分隊セクション、作成・参加・表示名・分隊カラー・退出は [分隊](#分隊) のページ）。地図に出すのは仲間の印だけです。
 - **伏せ字**: 分隊ページの分隊コード、参加の入力欄、最近の分隊のコードは、配信やスクリーンショットで漏れないよう「•」で出し、横の目のボタン（`shell-core.js` の `revealButton`、`data-action="reveal"`）で表示します。入力欄は `.masked`（`-webkit-text-security: disc`）で伏せます。表示したものは、もう一度押すかアプリを再起動するまで表示のままです（保存しません）。接続コードと Remote ID も同じです（[settings-and-integrations.md](settings-and-integrations.md)）。
 - **保存**: 表示名 `squadName`、分隊カラー `squadColor`、分隊セクションを畳んだか `squadCollapsed`、隠した層 `mapHidden`、設定 `mapSettings`、畳んだまとまり `mapCollapsed` はブラウザの好み（`browser-preferences.json`）、分隊コード `squadCode` と最近の分隊 `squadRecent` はこの PC（`browser.json`）です（[user-data.md](user-data.md)）。起動時に、保存されたコードの分隊へ入り直します。「分隊を抜ける」でコードを消します。
 - **共有する内容**: 表示名と分隊カラー、レイド中に位置のスクリーンショットを撮ったときのマップ・座標・向き・撮った時刻だけです（[settings-and-integrations.md](settings-and-integrations.md#分隊ルーム)）。レイドが終わると「レイド外」を送ります。位置を送るのは Host（`local`）だけです。Host では、分隊に入っていなくても自分の最後の位置を地図に出します。

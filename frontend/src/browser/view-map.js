@@ -17,7 +17,6 @@ import {
   nameColors,
   outlineColor,
   placed,
-  players,
   searchTerms,
   shows,
   tarkovTime,
@@ -25,7 +24,7 @@ import {
 } from './map-geo.js'
 import { state, esc, t, icon, action, clickHandlers, afterRenderHooks, render } from './shell-core.js'
 import { attach, clearNotice, drawLines, penBar, penButton, snapStrokes, squadSnapStrokes } from './map-draw.js'
-import { mapName, memberList, ownName } from './view-squad.js'
+import { mapName, ownName } from './view-squad.js'
 import { colorOf } from './squad-colors.js'
 import { canShare, mapFresh, shareView } from './squad-share.js'
 
@@ -114,11 +113,9 @@ const baseName = (map) => word('floorBase_' + (map?.key || '')) || t('mapGround'
 const floorName = (map, floor) => (floor ? map?.layers?.find((l) => l.id === floor)?.name || floor : baseName(map))
 
 // The icon buttons in a column under the zoom buttons: map, filters,
-// search, squad and settings, each opening its panel beside the column,
+// search and settings (the squad is in the sidebar and on its page), each opening its panel beside the column,
 // and under search the one that makes the map a snap note and your pen.
 function rail(map, floor) {
-  const s = state.squad.state
-  const count = players(s?.members).length
   const button = (id, iconName, label, extra = '') =>
     `<button class="map-rail-button ${view.panel === id ? 'selected' : ''}" data-action="mapPanel" data-id="${id}" aria-pressed="${view.panel === id}" title="${esc(label)}" aria-label="${esc(label)}">${icon(iconName)}${extra}</button>`
   const where = map ? `${mapName(map.key)}${map.layers?.length ? ' · ' + floorName(map, floor) : ''}` : ''
@@ -128,7 +125,7 @@ function rail(map, floor) {
   const snap = state.snapNotes
     ? `<button class="map-rail-button map-rail-snap" data-action="mapSnap" title="${esc(t('mapSnap'))}" aria-label="${esc(t('mapSnap'))}" ${!map || snapping ? 'disabled' : ''}>${icon('snap')}</button>`
     : ''
-  return `<div class="map-rail">${button('maps', 'map', `${t('mapPick')}${where ? `: ${where}` : ''}`, floorBadge)}${button('filters', 'list', t('mapFilters'))}${button('search', 'search', t('mapSearch'), view.search ? '<span class="map-rail-dot"></span>' : '')}${snap}${penButton(!map)}${canShare() ? `<button class="map-rail-button ${viewShared ? 'selected' : ''}" data-action="mapShareView" title="${esc(t(viewShared ? 'squadShareDone' : 'mapShareView'))}" aria-label="${esc(t('mapShareView'))}" ${map ? '' : 'disabled'}>${icon(viewShared ? 'check' : 'crosshair')}</button>` : ''}${button('squad', 'squad', t('squad'), s ? `<span class="squad-badge" data-phase="${esc(s.phase)}">${count}</span>` : '')}${button('settings', 'settings', t('mapSettings'))}</div>`
+  return `<div class="map-rail">${button('maps', 'map', `${t('mapPick')}${where ? `: ${where}` : ''}`, floorBadge)}${button('filters', 'list', t('mapFilters'))}${button('search', 'search', t('mapSearch'), view.search ? '<span class="map-rail-dot"></span>' : '')}${snap}${penButton(!map)}${canShare() ? `<button class="map-rail-button ${viewShared ? 'selected' : ''}" data-action="mapShareView" title="${esc(t(viewShared ? 'squadShareDone' : 'mapShareView'))}" aria-label="${esc(t('mapShareView'))}" ${map ? '' : 'disabled'}>${icon(viewShared ? 'check' : 'crosshair')}</button>` : ''}${button('settings', 'settings', t('mapSettings'))}</div>`
 }
 
 // The map panel: the maps, then the floors of the one shown.
@@ -238,16 +235,6 @@ function applyTextScale(settings = state.mapSettings || {}) {
   el.classList.toggle('subtle-labels', !!settings.subtleLabels)
 }
 
-// The squad's panel: who is in it; the squad's page (view-squad.js) has the
-// rest (the code, the name and colour, joining and leaving).
-function squadPanel() {
-  const s = state.squad.state
-  const head = panelHead(t('squad'))
-  const open = `<button class="squad-page-open" data-action="squadPage">${icon('squad')}<span>${esc(t(s ? 'squadOpen' : 'squadStart'))}</span></button>`
-  if (!s) return `<aside class="map-panel map-squad">${head}<p class="hint">${esc(t('squadIntro'))}</p>${open}</aside>`
-  return `<aside class="map-panel map-squad">${head}<p class="squad-phase" data-phase="${esc(s.phase)}">${esc(t('squadPhase_' + s.phase))}</p>${memberList(s.members)}${open}</aside>`
-}
-
 // The raid's facts at the top right: the two clocks (as tarkov.dev keeps
 // them), the raid's length and players, and who drew the map (its credit,
 // which the map's licence asks for; the name opens their page). The clocks
@@ -285,11 +272,9 @@ export function liveMapPage() {
         ? filtersPanel(map, data)
         : view.panel === 'settings'
           ? settingsPanel()
-          : view.panel === 'squad'
-            ? squadPanel()
-            : view.panel === 'search'
-              ? searchPanel()
-              : ''
+          : view.panel === 'search'
+            ? searchPanel()
+            : ''
   return `<div class="live-map-page"><div id="live-map" data-keep="livemap"></div>${note ? `<p class="map-note">${esc(note)}</p>` : ''}${rail(map, floor)}${penBar()}${clearNotice()}${panel ? `<div class="map-panel-host">${panel}</div>` : ''}${raidInfo(map, data)}<div class="map-coords" data-keep="map-coords"></div></div>`
 }
 

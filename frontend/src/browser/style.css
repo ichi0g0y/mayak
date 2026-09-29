@@ -1025,7 +1025,6 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-rail-button:disabled{background:var(--surface);color:var(--muted);cursor:default}
 .map-rail-button.selected{background:var(--selected);color:var(--accent)}
 .map-rail-button .icon{width:17px;height:17px}
-.map-rail-button .squad-badge{position:absolute;top:-5px;right:-7px}
 .map-rail-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
 .map-rail-floor{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);height:22px;padding:0 8px;display:flex;align-items:center;white-space:nowrap;border:2px solid rgba(0,0,0,.2);border-radius:8px;background:var(--surface);background-clip:padding-box;color:var(--accent);font:600 11.5px/1 system-ui,sans-serif;pointer-events:none}
 .map-panel-host{position:absolute;top:12px;left:56px;z-index:800}
@@ -1069,9 +1068,6 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-choice:hover{background:var(--hover)}
 .map-choice.selected{background:var(--selected);color:var(--accent);font-weight:600}
 .map-panel h3{margin:10px 0 4px;font-size:12px;font-weight:500;color:var(--muted)}
-.squad-badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;font-size:11px;line-height:18px;text-align:center;background:var(--muted);color:var(--bg)}
-.squad-badge[data-phase=connected]{background:var(--success)}
-.squad-badge[data-phase=offline],.squad-badge[data-phase=full]{background:var(--warn)}
 .map-panel{width:300px;max-height:calc(100vh - var(--page-top, 48px) - 190px);overflow:auto;box-sizing:border-box;padding:12px 14px 14px}
 .map-panel header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .map-panel h2{margin:0;font-size:14px}
@@ -1174,7 +1170,6 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .squad-color:disabled{opacity:.28;cursor:not-allowed}
 .squad-colors .hint{margin:0!important}
 /* The map's squad panel: its members, and a way to the squad's page. */
-.squad-page-open{width:100%;margin-top:4px}
 /* The sidebar's squad section: how many are in the squad (coloured by the
    connection) after its name, and who they are. */
 .squad-section-count{min-width:17px;height:17px;padding:0 5px;margin-left:2px;border-radius:9px;font-size:10.5px;line-height:17px;text-align:center;background:var(--muted);color:var(--bg)}
