@@ -200,6 +200,17 @@ func (a *App) SquadSend(data string, droppable bool) bool {
 	return client != nil && client.Send(json.RawMessage(data), droppable)
 }
 
+// SquadRecheck asks the relay its version again when it did not say it
+// takes the squad pen (see squad.Client.Recheck).
+func (a *App) SquadRecheck() {
+	squadMu.Lock()
+	client := squadClient
+	squadMu.Unlock()
+	if client != nil {
+		client.Recheck()
+	}
+}
+
 // SquadState returns the squad joined, or nil.
 func (a *App) SquadState() *squad.State {
 	squadMu.Lock()

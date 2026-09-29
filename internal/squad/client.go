@@ -79,6 +79,12 @@ const (
 	sendWindow = 10 * time.Second
 )
 
+// A relay deployed while this PC stays connected keeps the connection (the
+// room hibernates), so its welcome, which tells the relay's version, is not
+// said again: connected to one that did not take the squad pen, the client
+// connects again this often to ask anew (and when asked, Recheck).
+const recheckEvery = 10 * time.Minute
+
 // Member is one player in the room, as last reported.
 type Member struct {
 	ID string `json:"id"`
@@ -121,6 +127,8 @@ type Client struct {
 	mine    Report
 	members map[string]Report
 	drawing bool
+	// recheck makes the next connection at once, without the pause.
+	recheck bool
 	done    chan struct{}
 	closed  bool
 
@@ -245,6 +253,14 @@ func (c *Client) run() {
 		if err == nil {
 			wait = 5 * time.Second
 			c.serve(conn)
+			c.mu.Lock()
+			again := c.recheck && !c.closed
+			c.recheck = false
+			c.mu.Unlock()
+			if again {
+				c.setPhase(PhaseConnecting)
+				continue
+			}
 		} else if resp != nil && resp.StatusCode == http.StatusConflict {
 			c.setPhase(PhaseFull)
 			wait = time.Minute
@@ -324,9 +340,19 @@ func (c *Client) serve(conn *websocket.Conn) {
 					c.members[other.ID] = r
 				}
 			}
+			drawing := c.drawing
 			c.mu.Unlock()
 			c.send(conn)
 			c.changed()
+			if !drawing {
+				go func() {
+					select {
+					case <-stop:
+					case <-time.After(recheckEvery):
+						c.Recheck()
+					}
+				}()
+			}
 		case "msg":
 			if r, ok := c.openReport(m.Data); ok {
 				c.mu.Lock()
@@ -373,6 +399,22 @@ func (c *Client) send(conn *websocket.Conn) {
 	}
 	c.take(false)
 	if c.write(conn, []byte(c.seal.seal(body))) != nil {
+		_ = conn.Close()
+	}
+}
+
+// Recheck connects again at once when connected to a relay that did not
+// say it takes the squad pen, to hear its version again (a relay deployed
+// since this PC connected).
+func (c *Client) Recheck() {
+	c.mu.Lock()
+	conn := c.conn
+	stale := conn != nil && !c.drawing && c.phase == PhaseConnected
+	if stale {
+		c.recheck = true
+	}
+	c.mu.Unlock()
+	if stale {
 		_ = conn.Close()
 	}
 }

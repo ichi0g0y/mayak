@@ -133,7 +133,7 @@ function rail(map, floor) {
   const opening = map?.layers?.find((l) => l.show)?.id || ''
   const floorBadge = map && floor !== opening ? `<span class="map-rail-floor">${esc(floorName(map, floor))}</span>` : ''
   const snap = state.snapNotes
-    ? `<button class="map-rail-button map-rail-snap" data-action="mapSnap" title="${esc(t('mapSnap'))}" aria-label="${esc(t('mapSnap'))}" ${!map || snapping ? 'disabled' : ''}>${icon('brush')}</button>`
+    ? `<button class="map-rail-button map-rail-snap" data-action="mapSnap" title="${esc(t('mapSnap'))}" aria-label="${esc(t('mapSnap'))}" ${!map || snapping ? 'disabled' : ''}>${icon('snap')}</button>`
     : ''
   return `<div class="map-rail">${button('maps', 'map', `${t('mapPick')}${where ? `: ${where}` : ''}`, floorBadge)}${button('filters', 'list', t('mapFilters'))}${button('search', 'search', t('mapSearch'), view.search ? '<span class="map-rail-dot"></span>' : '')}${snap}${penButton(!map)}${button('squad', 'squad', t('squad'), s ? `<span class="squad-badge" data-phase="${esc(s.phase)}">${count}</span>` : '')}${button('settings', 'settings', t('mapSettings'))}</div>`
 }

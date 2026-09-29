@@ -143,7 +143,9 @@ export function penButton(disabled) {
   const s = state.squad.state
   const on = squadMode()
   const why = !s ? 'mapSquadPenJoin' : !s.drawing && s.phase === 'connected' ? 'mapSquadPenRelay' : 'mapSquadPen'
-  const off = disabled || !squad.canDraw()
+  // Connected to a relay that did not take the pen, a press asks it again.
+  const stale = !!s && s.phase === 'connected' && !s.drawing
+  const off = disabled || (!squad.canDraw() && !stale)
   return `${button}<button class="map-rail-button map-rail-squad-pen ${on ? 'selected' : ''}" data-action="mapSquadPen" aria-pressed="${on}" title="${esc(t(why))}" aria-label="${esc(t('mapSquadPen'))}" ${off && !on ? 'disabled' : ''}>${icon('pencil')}<span class="map-rail-pen-dot" style="--c:${squad.myStyle().c}"></span></button>`
 }
 
@@ -193,6 +195,7 @@ function pickPen(mode) {
 clickHandlers.push(async (type, id) => {
   if (type === 'mapSquadPen') {
     if (squadMode() || squad.canDraw()) pickPen('squad')
+    else void window.mayakDesktop?.backend?.SquadRecheck?.()
     render()
     return true
   }

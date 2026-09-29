@@ -85,7 +85,7 @@ function postText(note, title) {
 export function snapButton(tab) {
   if (!state.snapNotes || tab?.kind !== 'web') return ''
   const count = pageNotes(tab.url).length
-  return `<button class="snap-page${count ? ' has-notes' : ''}${menu && !menu.share ? ' on' : ''}" data-action="snapMenu" title="${esc(t('snapTake'))}" aria-label="${esc(t('snapTake'))}" aria-haspopup="menu" ${state.snapNotes.busy ? 'disabled' : ''}>${icon('brush')}${count ? `<span class="snap-count">${count}</span>` : ''}</button>`
+  return `<button class="snap-page${count ? ' has-notes' : ''}${menu && !menu.share ? ' on' : ''}" data-action="snapMenu" title="${esc(t('snapTake'))}" aria-label="${esc(t('snapTake'))}" aria-haspopup="menu" ${state.snapNotes.busy ? 'disabled' : ''}>${icon('snap')}${count ? `<span class="snap-count">${count}</span>` : ''}</button>`
 }
 
 // The menu under the button: the two captures, the page's notes and the
@@ -152,7 +152,7 @@ export function snapSection() {
   const preview = latest
     ? `<button class="shot-latest snap-latest" data-action="snapOpen" data-id="${esc(latest.id)}" title="${esc(latest.title)}">${thumbHTML(latest)}<span class="shot-age">${esc(noteTime(latest))}</span></button>`
     : `<p class="shot-empty">${esc(t('snapNewBlank'))}…</p>`
-  return `<div class="section-label screenshot-section-label snap-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSnapSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('snapNotes'))}${icon('chevron', 'section-chevron')}</button><button class="new-tab shots-open" data-action="snapnotes" title="${esc(t('snapNotesAll'))}" aria-label="${esc(t('snapNotesAll'))}" aria-pressed="${open}">${icon('brush')}</button></div>${folded ? '' : `<div class="shot-section">${preview}</div>`}`
+  return `<div class="section-label screenshot-section-label snap-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSnapSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('snapNotes'))}${icon('chevron', 'section-chevron')}</button><button class="new-tab shots-open" data-action="snapnotes" title="${esc(t('snapNotesAll'))}" aria-label="${esc(t('snapNotesAll'))}" aria-pressed="${open}">${icon('snap')}</button></div>${folded ? '' : `<div class="shot-section">${preview}</div>`}`
 }
 
 // A card's delete, at the other corner from the star: the first press arms

@@ -306,3 +306,35 @@ func TestSendKeepsUnderTheRelaysLimit(t *testing.T) {
 		t.Fatal("a message waiting for room went after Close")
 	}
 }
+
+func TestRecheckHearsARelayDeployedSince(t *testing.T) {
+	var mu sync.Mutex
+	version := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := (&websocket.Upgrader{}).Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		mu.Lock()
+		v := version
+		mu.Unlock()
+		_ = conn.WriteJSON(map[string]any{"t": "welcome", "id": "m1", "v": v})
+		for {
+			if _, _, err := conn.ReadMessage(); err != nil {
+				return
+			}
+		}
+	}))
+	defer srv.Close()
+	states := make(chan State, 64)
+	c, _ := Join("ABCD1234", "ws"+strings.TrimPrefix(srv.URL, "http")+"/squad/", "test", Report{Name: "Alice"}, func(s State) { states <- s }, nil)
+	defer c.Close()
+	waitFor(t, states, func(s State) bool { return s.Phase == PhaseConnected && !s.Drawing })
+	// The relay is deployed anew; asked again, the client hears its version.
+	mu.Lock()
+	version = 2
+	mu.Unlock()
+	c.Recheck()
+	waitFor(t, states, func(s State) bool { return s.Phase == PhaseConnected && s.Drawing })
+}

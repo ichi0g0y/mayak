@@ -711,6 +711,14 @@ export function SquadNewCode(): $CancellablePromise<string> {
 }
 
 /**
+ * SquadRecheck asks the relay its version again when it did not say it
+ * takes the squad pen (see squad.Client.Recheck).
+ */
+export function SquadRecheck(): $CancellablePromise<void> {
+    return $Call.ByID(2435469919);
+}
+
+/**
  * SquadRename changes the name this PC shows in its squad.
  */
 export function SquadRename(name: string): $CancellablePromise<void> {
