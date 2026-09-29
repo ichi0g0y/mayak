@@ -170,7 +170,8 @@ export function drawLines(L, map, key, floor, alpha) {
     else handler.enable()
   if (drawn.map !== map) {
     const pane = map.createPane('mapDraw')
-    pane.style.zIndex = '590'
+    // Over the markers (600) and the squad, under tooltips (650) and popups (700).
+    pane.style.zIndex = '640'
     pane.style.pointerEvents = 'none'
     drawn.map = map
     drawn.layer = L.layerGroup().addTo(map)
