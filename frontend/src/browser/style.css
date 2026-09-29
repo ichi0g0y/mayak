@@ -1020,8 +1020,9 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 /* The columns of buttons under the zoom buttons: the map's, and while in a squad the squad's under it. */
 .map-rails{position:absolute;top:96px;left:12px;z-index:800;display:flex;flex-direction:column;gap:8px}
 .map-rail{position:relative;display:flex;flex-direction:column;overflow:visible}
-.map-rail-squad{border-color:var(--c)}
-.map-rail-head{display:flex;align-items:center;justify-content:center;height:16px;background:var(--c);color:#16181d;border-radius:5px 5px 0 0}
+/* The squad's column: what is in it is cut to its rounded corners. */
+.map-rail-squad{border-color:var(--c);border-radius:8px;overflow:hidden}
+.map-rail-head{display:flex;align-items:center;justify-content:center;height:16px;background:var(--c);color:#16181d}
 .map-rail-head .icon{width:12px;height:12px;stroke-width:2.6}
 .map-rail-button{position:relative;width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border:0;border-bottom:1px solid rgba(0,0,0,.2);border-radius:0;background:var(--surface);color:var(--text)}
 .map-rail-button:first-child{border-radius:8px 8px 0 0}
@@ -1049,10 +1050,8 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
    tools, the clear-all, the others' pens, the drawer's name under the
    pointer and the notice of a clear-all. */
 /* The squad pen: its pencil moves up and left for the squad's icon on the member's colour. */
-.map-rail-squad-pen>.icon{transform:translate(-3px,-3px)}
-.map-rail-pen-badge,.map-draw-squad-badge{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--c);color:#16181d;flex:none}
-.map-rail-pen-badge{position:absolute;right:3px;bottom:3px;box-shadow:0 0 0 1.5px var(--surface)}
-.map-rail-pen-badge .icon,.map-draw-squad-badge .icon{width:10px;height:10px;stroke-width:2.6}
+.map-rail-pen-badge,.map-draw-squad-badge{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.map-rail-pen-badge{position:absolute;right:5px;bottom:5px;box-shadow:0 0 0 1.5px var(--surface)}
 .map-rail-button:disabled .map-rail-pen-badge{opacity:.45}
 .map-draw-bar.squad{border-color:var(--c)}
 .map-draw-own-color{display:inline-flex;align-items:center;gap:6px;padding:0 6px;font-size:12.5px;white-space:nowrap;color:var(--text-2)}

@@ -143,9 +143,9 @@ function clearHere() {
 }
 const linesHere = () => (squadMode() ? squadHere().length > 0 : lines.some(here))
 
-// The squad pen's mark: the squad's icon on this member's squad colour, over
-// the pencil in the column of buttons and at the head of its tools.
-const squadBadge = (cls) => `<span class="${cls}" style="--c:${squad.myStyle().c}">${icon('squad')}</span>`
+// The squad pen's mark: a dot of this member's squad colour, on the pencil
+// in the squad's column and beside the name in its tools.
+const squadDot = (cls) => `<span class="${cls}" style="--c:${squad.myStyle().c}"></span>`
 
 // The pens' buttons in the map's columns of buttons: yours, and the
 // squad's (in the squad's column; usable in a squad, through a relay that
@@ -163,7 +163,7 @@ export function squadPenButton(disabled) {
   // Connected to a relay that did not take the pen, a press asks it again.
   const stale = !!s && s.phase === 'connected' && !s.drawing
   const off = disabled || (!squad.canDraw() && !stale)
-  return `<button class="map-rail-button map-rail-squad-pen ${on ? 'selected' : ''}" data-action="mapSquadPen" aria-pressed="${on}" title="${esc(t(why))}" aria-label="${esc(t('mapSquadPen'))}" ${off && !on ? 'disabled' : ''}>${icon('pencil')}${squadBadge('map-rail-pen-badge')}</button>`
+  return `<button class="map-rail-button map-rail-squad-pen ${on ? 'selected' : ''}" data-action="mapSquadPen" aria-pressed="${on}" title="${esc(t(why))}" aria-label="${esc(t('mapSquadPen'))}" ${off && !on ? 'disabled' : ''}>${icon('pencil')}${squadDot('map-rail-pen-badge')}</button>`
 }
 
 // The notice of a squad clear-all while it can be undone.
@@ -179,7 +179,7 @@ export function penBar() {
   const tool = (id, iconName, label) =>
     `<button class="map-draw-tool ${pen.tool === id ? 'on' : ''}" data-action="mapPenTool" data-id="${id}" aria-pressed="${pen.tool === id}" title="${esc(t(label))}" aria-label="${esc(t(label))}">${icon(iconName)}</button>`
   const colors = squadMode()
-    ? `<span class="map-draw-own-color" title="${esc(t('mapSquadPenColor'))}">${squadBadge('map-draw-squad-badge')}${esc(squad.myStyle().name)}</span>`
+    ? `<span class="map-draw-own-color" title="${esc(t('mapSquadPenColor'))}">${squadDot('map-draw-squad-badge')}${esc(squad.myStyle().name)}</span>`
     : palette
         .map(
           (c) =>
