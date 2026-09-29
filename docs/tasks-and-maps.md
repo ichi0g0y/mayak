@@ -1,6 +1,6 @@
 # タスクとマップ
 
-タスク画面のスクリーンショットを認識するとタスクのページを開きます。EFT のログや座標付きスクリーンショットをもとに、tarkov.dev のマップも表示します。画像の分類と OCR については [スクリーンショット認識](recognition.md)、タブの動作全般は [ブラウザシェル](browser-shell.md) を参照してください。
+タスク画面のスクリーンショットを認識するとタスクのページを開きます。EFT のログや座標付きスクリーンショットをもとに、マップ（nightly 版と開発版では MAYAK 自身の [マップ](browser-shell.md#マップ)）も表示します。画像の分類と OCR については [スクリーンショット認識](recognition.md)、タブの動作全般は [ブラウザシェル](browser-shell.md) を参照してください。
 
 ## タスク認識後の流れ
 
@@ -51,7 +51,7 @@ Host 設定の「タスクを開く」（`OpenQuestPage`）は、最後に認識
 ### Host のサイト設定との関係
 
 - **Host モード（このPCで検出）**: ブラウザ設定「タスク」の「表示するサイト」は Host の `QuestSite` そのものを変更します（`PersistSettings`）。ブラウザ側の `questSite` は `host` に固定されます。以前ブラウザ側で別のサイトを選んでいた場合は、起動時にその値を Host 設定へ移します。
-- **別の PC の Host に接続（WebRTC）**: Host から転送された `browser:task` を受け取り、「Hostの設定に従う」か、自分のサイト選択を使います。
+- **別の PC の Host に接続（Client）**: Host からリンクで届いた `browser:task` を受け取り（この PC に出すものでタスクを外していなければ）、「Hostの設定に従う」か、自分のサイト選択を使います。
 - アイテム欄から開くタスクページも同じ規則です。Host モードでは Host の設定、クライアントではブラウザの選択またはアイテム情報に付いたサイトを使います。
 
 ## Remote Control（tarkov.dev）
@@ -63,14 +63,13 @@ tarkov.dev のマップ・タスクページは、`wss://socket.tarkov.dev` 経�
 | 種類 | 内容 |
 |---|---|
 | `RemoteTargets` | 設定で登録する外部の ID。各 ID に `Map` / `Tasks` の役割を指定。旧設定の `RemoteID` は `Remote 1`（両方の役割）へ移行 |
-| `BrowserRemoteID` | 内蔵ブラウザのマップビュー用の ID |
+| `BrowserRemoteID` | 内蔵ブラウザで開いた tarkov.dev のマップページ用の ID |
 
 - `BrowserRemoteID` は初回起動時に `A-Z0-9` の 12 文字を `crypto/rand` で生成して保存します（`app_browser_remote.go`）。設定を保存しても値は保たれます。tarkov.dev 自身の ID は 4 文字で、ほかのページとかぶりえます。この ID は MAYAK の中だけで使うので、かぶらず推測もされない長さにしています。
-- MAYAK はこの ID の Remote Control セッションに、ページと同じ受け手としても接続します（`remote.Watch`）。この ID へは MAYAK しか送らないので、MAYAK が直前（15 秒以内）に送っていない命令が届いたら、ほかのページが同じ ID を使っていると判断します。そのときは新しい ID を生成して保存し、警告をログに出します。シェルは `browser:remote-id` を受けてマップビューを新しい ID で開き直します。ほかの端末からこの ID でマップビューを操作した場合も同じ扱いになり、ID が変わります。
+- MAYAK はこの ID の Remote Control セッションに、ページと同じ受け手としても接続します（`remote.Watch`）。この ID へは MAYAK しか送らないので、MAYAK が直前（15 秒以内）に送っていない命令が届いたら、ほかのページが同じ ID を使っていると判断します。そのときは新しい ID を生成して保存し、警告をログに出し、`browser:remote-id` を送ります（今のシェルはこのイベントでタブを開き直さないので、新しい ID はそのあとに開いたタブから使われます）。ほかの端末からこの ID でマップページを操作した場合も同じ扱いになり、ID が変わります。
 - `BrowserRemoteID` はマップ系の命令（`map` チャンネル）の送信先にだけ加わります。タスクは内蔵ブラウザ自身が開くので、Remote Control では送りません。
 - 内蔵ブラウザは tarkov.dev の `/map/` ページとマップ一覧（`/maps/`）にだけ `?connection=<ID>` を付けて Remote Control に接続させます。tarkov.dev はページを開いた時点で localStorage に残っている `sessionId` で接続するため、ドキュメントスクリプトはこの ID を localStorage にも先に書き込みます。
-  - Host は tarkov.dev のスクリプトより先に実行するドキュメントスクリプトで付与します。
-  - ブラウザシェルも固定マップタブを開くときに直接付けます（`viewURL`）。
+  - Host は tarkov.dev のスクリプトより先に実行するドキュメントスクリプトで付与します。どのタブで開いたマップページも対象です（固定のマップタブは無くなり、tarkov.dev はサイドバーにピン留めしたブックマークです）。
   - タスクページは接続させません（マップ命令でページが移動してしまうため）。
   - 保存するタブ URL からはこのパラメータを取り除きます（`pageURL`）。
 
@@ -143,18 +142,16 @@ tarkov.dev のマップ・タスクページは、`wss://socket.tarkov.dev` 経�
 4. `Map` 役割の送信先と `BrowserRemoteID` に `playerPosition` を送ります。`NavigateMapOnShot` がオンなら、続けて `map` 命令も送ります。位置を先に送るのは、座標の高さから正しい階を選べるようにするためです。
 5. `ground-zero-21` は tarkov.dev では `ground-zero` として送ります。
 
-位置の送信では `browser:map` を送りません。内蔵ブラウザのマップタブは Remote Control 接続で追従します。代わりに `browser:position`（マップ名）を送り、シェルはマップタブを前面にします（`state.js` の `receivePosition`）。マップタブがそのマップの `tarkov.dev/map/<name>` を表示していればページはそのまま（読み込み直すと tarkov.dev 側の状態が失われるため）、別のマップや別のページなら `browser:map` と同じく開き直します。最後に認識したもの（タスク → タスクのページ、位置 → マップ、アイテム → アイテム欄）が表示されるようにするためです。WebRTC の受信側にも同じイベントを転送します。
+位置の送信では `browser:map` を送りません。内蔵ブラウザや外部で開いた tarkov.dev のマップページは Remote Control 接続で追従します。代わりに `browser:position`（マップ名）を送り、シェルはマップのビューを開くか前面にします（`state.js` の `receivePosition`。`receiveMap` と同じ）。最後に認識したもの（タスク → タスクのページ、位置 → マップ、アイテム → アイテム欄）が表示されるようにするためです。Client にもリンクで同じイベントを送ります（[settings-and-integrations.md](settings-and-integrations.md#リンク)）。
 
-分隊に入っていれば、同じ位置（マップ・座標・向き・時刻）を分隊にも送ります（`squadSendPosition`。[browser-shell.md](browser-shell.md#分隊マップ)）。レイドが終わると（`RaidExited`）、分隊には「レイド外」を送ります。
+分隊に入っていれば、同じ位置（マップ・座標・向き・時刻）を分隊にも送ります（`squadSendPosition`。[browser-shell.md](browser-shell.md#マップ)）。レイドが終わると（`RaidExited`）、分隊には「レイド外」を送ります。
 
-### 固定マップタブ
+### マップのビュー
 
-- タブ一覧の先頭には、閉じる・ピン留め・移動のできないマップタブ（`id: map`）が固定されています。
-- `browser:map` を受け取ると、このタブを `https://tarkov.dev/map/<name>` に変えてアクティブにします。`ground-zero-21` は `ground-zero` として開きます。
+- `browser:map` と `browser:position` を受け取ると、シェルは MAYAK の [マップ](browser-shell.md#マップ)（タブの種類 `livemap`、1 つだけ）を開くか前面にします（`receiveMap`）。無ければ作ります。
+- マップのビューは、手で選んだマップと階を「自動」に戻し（`mayak:map-follow`）、自分の位置（なければ仲間や Host の現在のマップ）に合わせて地図と階を選びます。`ground-zero-21` や `night-factory` などの別名は、maps.json の `altMaps` で同じ地図になります。
 - マップ名は `^[a-z0-9-]{1,60}$` に一致するものだけを受け付けます。
-- 初期ページは `https://tarkov.dev/maps/` です。
-- 2 番目の固定タブは TarkovTracker（`https://tarkovtracker.org/`）です。
-- 固定タブのアドレス欄は読み取り専用で、URL を入力できません。使えるのは戻る・進む・再読み込み・ホーム・外部ブラウザで開く、だけです。
+- 以前は tarkov.dev（`https://tarkov.dev/maps/`）と TarkovTracker が閉じられない固定タブで、マップ検出は tarkov.dev のタブを `https://tarkov.dev/map/<name>` に変えていました。今は 2 つともサイドバーにピン留めした既定のブックマークで、開くと普通のタブです。
 
 ## 走り抜けタイマー（`RunThroughSeconds`）
 

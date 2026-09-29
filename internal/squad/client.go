@@ -36,9 +36,12 @@ type Position struct {
 // Report is what a member tells the room: their name and, while in a raid,
 // the map and their last position. An empty Map is "not in a raid".
 type Report struct {
-	Name string    `json:"name"`
-	Map  string    `json:"map,omitempty"`
-	Pos  *Position `json:"pos,omitempty"`
+	Name string `json:"name"`
+	// Viewer is a PC that only watches: a client of a Host in the squad,
+	// the same player, so the others leave it out of their list.
+	Viewer bool      `json:"viewer,omitempty"`
+	Map    string    `json:"map,omitempty"`
+	Pos    *Position `json:"pos,omitempty"`
 	// At is when the position was taken.
 	At time.Time `json:"at,omitzero"`
 }

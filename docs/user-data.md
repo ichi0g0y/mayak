@@ -25,9 +25,9 @@ MAYAK が `%AppData%\Mayak`（`internal/appdir`）に保存するデータの置
 |---|---|---|
 | `preferences.json` | ユーザーデータ | Host 設定の好み（言語、通知の声・音量、自動更新など）。`Keyed` |
 | `settings.json` | この PC | Host 設定のうち PC に属するもの（`config.deviceKeys`: スクショ・ログのフォルダ、Tesseract、OCR エンジン、tarkov.dev 連携の ID、ブラウザのリモート ID、自動起動、優先度、古いウィンドウ位置） |
-| `browser-preferences.json` | ユーザーデータ | ブラウザシェルの好み（テーマ、時計、レイアウト、ツールの並び、分隊の表示名 `squadName` など。`app_browser.go` の `browserPreferenceKeys`）。`Keyed` |
+| `browser-preferences.json` | ユーザーデータ | ブラウザシェルの好み（テーマ、時計、レイアウト、ツールの並び、ブックマークの版 `bookmarkRevision`、マップの設定など。`app_browser.go` の `browserPreferenceKeys`）。`Keyed`。マップの分は下の表 |
 | `bookmarks.json` | ユーザーデータ | ブックマーク。`Records`（値はシェルのブックマーク `{id, name, url, group, sidebar}`） |
-| `browser.json` | この PC | ブラウザシェルのそれ以外（タブ、パネルの大きさ、アイテム欄、Host／クライアントの役割、ファビコンの対応表、入っている分隊のコード `squadCode`） |
+| `browser.json` | この PC | ブラウザシェルのそれ以外（タブ、パネルの大きさ、アイテム欄、接続 `connection`、ファビコンの対応表、分隊のコード `squadCode` と最近の分隊 `squadRecent`）。`browserPreferenceKeys` に無いキーはすべてここ |
 | `snapnotes/<id>/` | ユーザーデータ | スナップノート。`note.json`（`createdAt`・`updatedAt`・`changedAt`、削除すると `deleted` の記録だけ残る）、`base.png`、`thumb.jpg` |
 | `sounds/<hash>-<名前>` | ユーザーデータ | 通知のカスタム音声。選んだファイルを取り込んだもの。設定はこの名前（`sounds/…`）で指す |
 | `tracker-tokens.dat` | この PC（秘密） | TarkovTracker のキーとプロフィール。DPAPI で暗号化 |
@@ -35,9 +35,23 @@ MAYAK が `%AppData%\Mayak`（`internal/appdir`）に保存するデータの置
 | `processed-screenshot.json` | この PC | 最後に処理したスクショ（同じものを二度処理しないため） |
 | `screenshots.json` | この PC | この PC のスクショ フォルダの解析結果 |
 | `hideout/events.json` | この PC | ゲームのログから読んだハイドアウトの記録 |
-| `catalog/`・`thumbs/`・`favicons/`・`adblock/`・`updates/`・`maps/` | キャッシュ | tarkov.dev のデータ、サムネイル、アイコン、フィルター、更新ファイル、分隊マップの地図（`maps.json` と SVG） |
+| `catalog/`・`thumbs/`・`favicons/`・`adblock/`・`updates/`・`maps/` | キャッシュ | tarkov.dev のデータ、サムネイル、アイコン、フィルター、更新ファイル、マップの地図（`maps.json` と SVG） |
 | `browser-webdata/` | この PC | ページタブの WebView2 プロファイル（ログイン情報など） |
 | `mayak.log` | この PC | アプリのログ |
+
+### ブラウザシェルの接続・マップ・分隊のキー
+
+| キー | ファイル | 内容 |
+|---|---|---|
+| `connection.mode` | `browser.json` | `local`（Host）/ `client`（Client。以前の `webrtc` は読み込み時に `client` にする）/ `off`。以前の `stun` は読み込まず、次の保存で消える |
+| `connection.link` | `browser.json` | ペアリング `{key, role}`。`key` は 32 バイトの鍵の base64url（43 文字）、`role` は `host` / `client`。なければ `null`。鍵は PC ごとのもので、同期しない（[settings-and-integrations.md](settings-and-integrations.md#ペアリング)） |
+| `connection.receive` | `browser.json` | Client で出すもの `{task, map, item}`（真偽値、既定はすべて `true`。`map` は位置も含む） |
+| `squadCode` | `browser.json` | 参加中の分隊コード（`ABCD-1234`）。起動時に入り直す |
+| `squadRecent` | `browser.json` | 最近の分隊 `[{code, at}]`（新しい順に最大 5 件、30 日より古いものは捨てる） |
+| `squadName` | `browser-preferences.json` | 分隊での表示名（24 文字まで） |
+| `mapHidden` | `browser-preferences.json` | マップのフィルターで隠した層のキー（最大 400 件） |
+| `mapCollapsed` | `browser-preferences.json` | フィルターで畳んだまとまり |
+| `mapSettings` | `browser-preferences.json` | マップの設定 `{snipers, extracts, activeTasks, subtleLabels, extractText, labelText, fade, style, mode}`。既定は `snipers: true`、ほかの真偽値は `false`、`extractText` / `labelText` は 100（50〜200%）、`fade` は 20（別の階の濃さ、0〜60%）、`style` は `svg`（`tile` で Satellite）、`mode` は `auto`（`regular` / `pve` / `pvp-season`: 地点のデータのゲームモード） |
 
 ## 読み書きの流れ
 
@@ -52,4 +66,6 @@ MAYAK が `%AppData%\Mayak`（`internal/appdir`）に保存するデータの置
 
 - 分ける前の `settings.json`（全部入り）は、そのまま読めます。次に保存したとき、好みが `preferences.json` に移ります。
 - 分ける前の `browser.json` も同じで、次の保存で好みとブックマークが別のファイルに移ります。
+- 接続モード `webrtc`（WebRTC で直接つないでいたころの Client）は `client` として読み、`stun` は捨てます。以前のマップの `mapFilters` は使いません（今は `mapHidden`）。
+- `bookmarkRevision` が 3 より前なら、tarkov.dev と TarkovTracker をサイドバーにピン留めしたブックマークにし、以前の固定タブ（`map`・`tracker`）を捨てます（[browser-shell.md](browser-shell.md#tarkovdev-と-tarkovtracker)）。
 - 絶対パスで選んでいたカスタム音声は、起動時に `sounds/` に取り込みます。ファイルが見つからないものはパスのまま残ります（再生時は声かビープ音になる）。

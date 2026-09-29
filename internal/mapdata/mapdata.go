@@ -47,29 +47,59 @@ type Extent struct {
 	Bounds [][2][2]float64 `json:"bounds,omitempty"`
 }
 
-// Layer is a floor above or below the ground level.
+// Layer is a floor above or below the ground level, drawn from the SVG map
+// (SVGLayer, a group in it) and/or from tiles of its own (TilePath). ID
+// names it: its SVGLayer, or "tile-<n>" for a floor only in tiles. Show is
+// the floor tarkov.dev shows first (Icebreaker's), over an undimmed base.
 type Layer struct {
+	ID       string   `json:"id"`
 	Name     string   `json:"name"`
-	SVGLayer string   `json:"svgLayer"`
+	SVGLayer string   `json:"svgLayer,omitempty"`
+	TilePath string   `json:"tilePath,omitempty"`
+	Show     bool     `json:"show,omitempty"`
 	Extents  []Extent `json:"extents"`
 }
 
+// Label is a place name written on the map: at (X, Z), turned by Rotation
+// degrees, Size percent of the normal size; it shows on the floors between
+// Bottom and Top (and Y, its height). Ground is a name given no height: it
+// spans every floor, as tarkov.dev has it, but names a place on the ground.
+type Label struct {
+	Text     string  `json:"text"`
+	X        float64 `json:"x"`
+	Z        float64 `json:"z"`
+	Y        float64 `json:"y"`
+	Rotation float64 `json:"rotation,omitempty"`
+	Size     float64 `json:"size,omitempty"`
+	Top      float64 `json:"top"`
+	Bottom   float64 `json:"bottom"`
+	Ground   bool    `json:"ground,omitempty"`
+}
+
 // Map is one interactive map. Keys are tarkov.dev's map names; Aliases are
-// the other names that use the same map (night-factory, ground-zero-21).
+// the other names that use the same map (night-factory, ground-zero-21). A
+// map has an SVG picture (SVG, with its ground level SVGLayer), tiles on
+// tarkov.dev (TilePath, a URL template with {z}/{x}/{y}, TileSize pixels
+// square), or both, as tarkov.dev's Abstract and Satellite.
 type Map struct {
-	Key        string         `json:"key"`
-	Aliases    []string       `json:"aliases,omitempty"`
-	SVG        string         `json:"svg,omitempty"`
-	SVGLayer   string         `json:"svgLayer,omitempty"`
-	Transform  [4]float64     `json:"transform"`
-	Rotation   float64        `json:"rotation"`
-	Bounds     [2][2]float64  `json:"bounds"`
-	SVGBounds  *[2][2]float64 `json:"svgBounds,omitempty"`
-	MinZoom    float64        `json:"minZoom"`
-	MaxZoom    float64        `json:"maxZoom"`
-	Author     string         `json:"author,omitempty"`
-	AuthorLink string         `json:"authorLink,omitempty"`
-	Layers     []Layer        `json:"layers,omitempty"`
+	Key      string   `json:"key"`
+	Aliases  []string `json:"aliases,omitempty"`
+	SVG      string   `json:"svg,omitempty"`
+	SVGLayer string   `json:"svgLayer,omitempty"`
+	TilePath string   `json:"tilePath,omitempty"`
+	TileSize float64  `json:"tileSize,omitempty"`
+	// HeightRange bounds the ground level's heights (none: all of them).
+	HeightRange *[2]float64    `json:"heightRange,omitempty"`
+	Transform   [4]float64     `json:"transform"`
+	Rotation    float64        `json:"rotation"`
+	Bounds      [2][2]float64  `json:"bounds"`
+	SVGBounds   *[2][2]float64 `json:"svgBounds,omitempty"`
+	MinZoom     float64        `json:"minZoom"`
+	MaxZoom     float64        `json:"maxZoom"`
+	Author      string         `json:"author,omitempty"`
+	AuthorLink  string         `json:"authorLink,omitempty"`
+	Layers      []Layer        `json:"layers,omitempty"`
+	Labels      []Label        `json:"labels,omitempty"`
 }
 
 // Source fetches and keeps the map list and pictures.
@@ -128,9 +158,10 @@ func Find(maps []Map, name string) (Map, bool) {
 var layerID = regexp.MustCompile(`^[A-Za-z0-9_-]{1,80}$`)
 
 // Image returns the map's picture as a data URL showing the ground level,
-// or with layer (a Layer's SVGLayer) that floor over a faded ground level.
-// It is meant for an <img>, where nothing in the SVG runs.
-func (s *Source) Image(ctx context.Context, m Map, layer string) (string, error) {
+// or with layer (a Layer's SVGLayer) that floor over the ground level faded
+// to fade percent (tarkov.dev: 20). It is meant for an <img>, where nothing
+// in the SVG runs.
+func (s *Source) Image(ctx context.Context, m Map, layer string, fade int) (string, error) {
 	if !strings.HasPrefix(m.SVG, svgHost) || !layerID.MatchString(m.SVGLayer) {
 		return "", errors.New("the map has no picture")
 	}
@@ -150,18 +181,55 @@ func (s *Source) Image(ctx context.Context, m Map, layer string) (string, error)
 	if err != nil {
 		return "", err
 	}
-	styled, err := withLayer(body, m.SVGLayer, layer)
+	styled, err := withLayer(body, m.SVGLayer, layer, fade)
 	if err != nil {
 		return "", err
 	}
 	return "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString(styled), nil
 }
 
+// A tile of a map drawn from tiles (a Layer's or a Map's TilePath filled in).
+var tileURL = regexp.MustCompile(`^https://assets\.tarkov\.dev/maps/[A-Za-z0-9_/-]{1,120}/\d{1,2}/\d{1,6}/\d{1,6}\.(png|jpg|webp)$`)
+
+const maxTile = 4 << 20
+
+// Tile returns one tile of a tile map as a data URL, for a picture of the
+// map made in the shell: tarkov.dev serves its tiles to be shown, not to be
+// read by a page.
+func (s *Source) Tile(ctx context.Context, url string) (string, error) {
+	match := tileURL.FindStringSubmatch(url)
+	if match == nil || strings.Contains(url, "..") {
+		return "", errors.New("invalid map tile")
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("User-Agent", s.agent)
+	resp, err := s.http.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("%s: %s", url, resp.Status)
+	}
+	b, err := io.ReadAll(io.LimitReader(resp.Body, maxTile+1))
+	if err != nil {
+		return "", err
+	}
+	if len(b) > maxTile {
+		return "", errors.New("the tile is too large")
+	}
+	kind := map[string]string{"png": "image/png", "jpg": "image/jpeg", "webp": "image/webp"}[match[1]]
+	return "data:" + kind + ";base64," + base64.StdEncoding.EncodeToString(b), nil
+}
+
 // withLayer adds a style to the SVG that shows the ground level (the base
 // group and the groups kept with it) and, with layer, that floor over the
-// ground level faded, as tarkov.dev shows it. The SVG's top-level groups
-// with an id are its levels.
-func withLayer(svg []byte, base, layer string) ([]byte, error) {
+// ground level faded to fade percent, as tarkov.dev shows it. The SVG's
+// top-level groups with an id are its levels.
+func withLayer(svg []byte, base, layer string, fade int) ([]byte, error) {
 	open := strings.Index(string(svg), "<svg")
 	if open < 0 {
 		return nil, errors.New("not an SVG")
@@ -174,7 +242,7 @@ func withLayer(svg []byte, base, layer string) ([]byte, error) {
 	baseSel := fmt.Sprintf(`:root>g[id="%s"],:root>g[data-keep-with-group="%s"]`, base, base)
 	style := `:root>g[id]{display:none}` + baseSel + `{display:inline}`
 	if layer != "" && layer != base {
-		style += baseSel + `{opacity:.2}` + fmt.Sprintf(`:root>g[id="%s"]{display:inline}`, layer)
+		style += baseSel + fmt.Sprintf(`{opacity:%.2f}`, float64(min(100, max(0, fade)))/100) + fmt.Sprintf(`:root>g[id="%s"]{display:inline}`, layer)
 	}
 	out := make([]byte, 0, len(svg)+len(style)+32)
 	out = append(out, svg[:at]...)

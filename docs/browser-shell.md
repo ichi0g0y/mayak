@@ -11,7 +11,7 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 | `frontend/src/browser/shell.js` | DOM の描画（`render`）、タブ・ブックマーク・設定ページ、クリック・ドラッグ・キー操作、サイドバーのリサイズ、テーマ適用 |
 | `frontend/src/browser/shell-core.js` | シェルの各部が共有するもの: `window.mayak`、現在の状態 `state`、`action`、`render` の入口、`t` と HTML の部品（`esc`、`icon`、`select`）。ビューはここから import し、`shell.js` からは import しない |
 | `frontend/src/browser/view-snapnotes.js` | スナップノート: ツールバーのボタンとメニュー、サイドバーの欄、一覧と書き込み画面（[スナップノート](#スナップノート)） |
-| `frontend/src/browser/view-squad.js`, `squad-geo.js` | 分隊マップ: 分隊への参加と一覧、Leaflet の地図と仲間の印（[分隊マップ](#分隊マップ)）。`squad-geo.js` は、地図と階の選び方や印の向きなど、Leaflet を使わない計算 |
+| `frontend/src/browser/view-map.js`, `map-geo.js` | マップ: Leaflet の地図、フィルターで出し分ける地点、分隊のパネルと仲間の印（[マップ](#マップ)）。`map-geo.js` は、地図と階の選び方、地点の種類と色、印の向きなど、Leaflet を使わない計算 |
 | `frontend/src/browser/view-bosses.js`, `view-screenshots.js`, `view-item.js`, `view-tutorial.js` | サイドバーのボス、スクリーンショットページ、アイテム欄、チュートリアル。それぞれ描画関数と自分のイベント処理を持ち、クリックは `clickHandlers` に登録した関数で受けます |
 | `frontend/src/browser/api.js` | 状態の保持と操作（`window.mayak.action`）、ネイティブビューへの命令、永続化、ナビゲーションイベントの受信 |
 | `frontend/src/browser/state.js` | 既定値、`browser.json` の復元と検証、タブ・ブックマークの並べ替え規則、URL 検証 |
@@ -46,12 +46,13 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 - シェルは `body` の `data-nav`（`left` / `right` / `top`）と `data-item`（`right` / `left` / `bottom` / `closed`）から、ページ領域の余白 `--page-left` / `--page-top` / `--page-right` / `--page-bottom` を CSS で計算します。`main`、スクショの拡大表示、Host 設定の iframe、設定の閉じるボタンはこの余白に従います。ネイティブビューは同じ値を `bounds()` で計算します（後述）。
 - 右のタブ欄はツールバーの行の下から始まり、ウインドウ操作ボタンはツールバーの右端（ウインドウの右上）に残ります。
 - 下のアイテム欄はページ領域と同じ幅で、ボタンを左に縦に並べ、中身を幅 280px ごとの段組みにして縦にスクロールします。高さは上端をドラッグして 180〜560px（既定 280px、`itemPanelHeights`）で変えられます。
+- アイテム欄のスクロールバーは Mac のように、スクロールしているあいだかポインタが上で動いているあいだだけ出し、1.2 秒後に消します（`body[data-item-scroll]`）。
 
 ### 縦レイアウト（左右のサイドバー）
 
 `layout: 'vertical'`（既定）。以下は左に置いた場合です。右に置くと左右が入れ替わります。
 
-- 左サイドバーに、上から状態表示、固定ビュー（TARKOV.DEV / TarkovTracker）、ピン留めしたブックマーク、タブ一覧が並びます。下部のドックにはサイドバー開閉・配置・アイテムサイドバー・設定のボタンがあります（開閉ボタンは上のウインドウのボタンから離して下に置きます）。
+- 左サイドバーに、上から状態表示、「マップ」（[マップ](#マップ)。nightly 版と開発版のみ）、ピン留めしたブックマーク（既定で tarkov.dev と TarkovTracker）、スクリーンショット、スナップノート、ボス、タブ一覧が並びます。下部のドックにはサイドバー開閉・配置・アイテムサイドバー・設定のボタンがあります（開閉ボタンは上のウインドウのボタンから離して下に置きます）。
 - ツールバー（高さ 48px）はサイドバーの右、ページはその下に置かれます。
 - サイドバーの幅は右端をドラッグして 180〜420px の範囲で変えられます（既定 224px、`sidebarWidths`）。ダブルクリックで既定値に戻ります。ドラッグ中は CSS 幅がすぐに追従し、ページのネイティブビューは 1 フレームに 1 回追従し、幅はドラッグ終了時に保存されます。
 - サイドバーを閉じると幅 52px のアイコンだけの表示になります（`sidebarCollapsed`）。タブ名・操作ボタン・状態表示は隠れます。
@@ -61,7 +62,7 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 
 `layout: 'horizontal'`。
 
-- 1 段目（高さ 48px）: 固定ビュー、ピン留めブックマークのアイコン、タブ、新規タブボタン。右端に幅 180px のドック（状態表示を含む）とウインドウ操作ボタン。
+- 1 段目（高さ 48px）: マップ、ピン留めブックマークのアイコン、タブ、新規タブボタン。右端に幅 180px のドック（状態表示を含む）とウインドウ操作ボタン。
 - 2 段目: ツールバー。ページは上から 96px の位置から始まります。
 - タブは Chrome のように縮みます。タブ列全体はタブ数 × 182px を上限に伸び（`--n`）、各タブは最大 180px・最小 40px です。コンテナ幅が 72px 以下になると、タブ名と操作ボタンを隠してアイコンだけにします（`style.css` の `@container (max-width:72px)`）。
 - ピン留めタブとその他のタブの間には区切り線が入ります。
@@ -78,25 +79,23 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 | `settings` | 設定ページ（1 つだけ） |
 | `bookmarks` | ブックマーク一覧ページ（1 つだけ） |
 | `screenshots`, `snapnotes`, `bosses`, `tabs` | スクリーンショット、スナップノート、ボス、タブ一覧のページ（それぞれ 1 つだけ） |
-| `squadmap` | 分隊マップ（1 つだけ。nightly 版と開発版のみ） |
+| `livemap` | マップ（1 つだけ。nightly 版と開発版のみ） |
 
-- タブ一覧に並ぶのは固定ビュー・設定・ブックマーク以外のタブです（`listedTabs()`）。設定とブックマークはドックやブックマーク欄のボタンから開きます。
-- 設定を開いている間、サイドバーはタブの代わりに設定のセクション一覧を表示します。設定を閉じると、開く前のタブ（なければ TARKOV.DEV）に戻ります。
+- タブ一覧に並ぶのは `web` と `blank` のタブだけです（`listedTabs()`）。設定・ブックマーク・マップなどシェル自身のページは、ドックやサイドバーの項目から開きます。
+- 設定を開いている間、サイドバーはタブの代わりに設定のセクション一覧を表示します。設定を閉じると、開く前のタブ（なければマップ、それもなければ設定以外の最初のタブ）に戻ります。
 - タスク検出で開いたタブ（`role: 'task'`）には、ツールバーにサイト選択と Wiki 内検索が付きます（[tasks-and-maps.md](tasks-and-maps.md)）。
 - タブは合計 80 個まで（`tab-limit`）。ネイティブビューも 80 個までです。
 
-### 固定ビュー
+### tarkov.dev と TarkovTracker
 
-`state.js` の `mapTab()` と `trackerTab()` で作られる 2 つの `fixed` タブです。常に先頭にあり、閉じる・ピン留め・移動はできません。タブ一覧ではなく、その上にナビ項目として表示されます。
+以前はサイドバーの先頭に、閉じられない固定ビュー（TARKOV.DEV・TarkovTracker）がありました。今はどちらもサイドバーにピン留めした既定のブックマーク（`https://tarkov.dev/`、`https://tarkovtracker.org/`）で、開くと普通の `web` タブになります。マップの検出は tarkov.dev のタブではなく [マップ](#マップ) に入ります。
 
-- **TARKOV.DEV**（`id: 'map'`）: 既定は `https://tarkov.dev/maps/`。マップ検出はすべてこのタブに入ります。ほかのタブと同じく、初めて表示したときに読み込みます（起動時の先読みはしません）。マップページ（`/map/…`）とマップ一覧（`/maps/`）の表示時は URL に `?connection=<Remote Control ID>` が付けられますが、保存されるタブの URL からは取り除かれます（`viewURL()` / `pageURL()`）。
-- **TarkovTracker**（`id: 'tracker'`）: 既定は `https://tarkovtracker.org/`。
-
-固定ビューのツールバーは、戻る・進む・再読み込み・ホーム・読み取り専用のアドレス欄・「既定のブラウザで開く」です。アドレス欄では Enter を押しても移動しません。ホームボタンは `home`（TARKOV.DEV では最後に検出したマップ）へ戻り、既にホームにいるときは無効になります。
+- 以前の `browser.json` は、`bookmarkRevision` 3 への移行で 2 つをブックマークに加えてサイドバーにピン留めします（同じ ID か URL のブックマークがあればそれをピン留め）。保存されていた固定ビューのタブ（ID `map`・`tracker`、`formerFixedTabIDs`）は捨てます。
+- tarkov.dev のマップページ（`/map/…`）とマップ一覧（`/maps/`）は、どのタブで開いても Host のドキュメントスクリプトが `?connection=<Remote Control ID>` を付けて Remote Control につなぎます（[tasks-and-maps.md](tasks-and-maps.md#remote-controltarkovdev)）。保存されるタブの URL からは取り除きます（`pageURL()`）。
 
 ### ピン留め・並べ替え・閉じる
 
-- ピン留めできるのは固定ビュー以外の `web` タブだけです。並び順は常に「固定ビュー → ピン留め → その他」（`orderTabs()`）。ピン留めするとピン留めグループの末尾へ、外すとその他のグループの先頭へ移ります。
+- ピン留めできるのは `web` タブだけです。並び順は常に「ピン留め → その他」（`orderTabs()`）。ピン留めするとピン留めグループの末尾へ、外すとその他のグループの先頭へ移ります。
 - ピン留めタブには閉じるボタンがなく、閉じられません。
 - ドラッグでの並べ替え（`tab-drag.js`）:
   - 5px 以上動かすと開始します。つかんだタブがポインタに追従し、ほかのタブが移動先を空けます。
@@ -112,7 +111,7 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 
 | キー | 内容 / 既定値 |
 | --- | --- |
-| `version`, `bookmarkRevision` | 形式のバージョン。`bookmarkRevision` は現在 2（TarkovTracker を `.org` へ移行） |
+| `version`, `bookmarkRevision` | 形式のバージョン。`bookmarkRevision` は現在 3（2 で TarkovTracker を `.org` へ移行、3 で tarkov.dev と TarkovTracker をサイドバーにピン留めしたブックマークに） |
 | `language` | `ja`（既定）/ `en` |
 | `clock` | 時刻の表示。`24`（既定）/ `12`。Host 設定の画面（iframe）にも `data-clock` で伝えます |
 | `layout` | `vertical`（既定）/ `horizontal` |
@@ -133,17 +132,19 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 | `questSite` | `host`（既定）/ `tarkov-dev` / `official-wiki` / `japanese-wiki` |
 | `bookmarks` | 最大 100 件 |
 | `tabs`, `active` | タブ一覧とアクティブなタブ |
-| `connection` | `mode` と `stun` のみ。接続キーや WebRTC のコードは保存しません |
+| `mapHidden`, `mapSettings`, `mapCollapsed`, `squadName`, `squadCode`, `squadRecent` | マップの隠した層・設定・畳んだまとまり、分隊の表示名・参加中のコード・最近の分隊（[マップ](#マップ)、[user-data.md](user-data.md)） |
+| `connection` | `{mode, link, receive}`。接続モード（`local` / `client` / `off`）、ペアリングの鍵と役割（`link: {key, role}`、なければ `null`）、Client で出すもの（`receive: {task, map, item}`）。接続コードは保存しません（[settings-and-integrations.md](settings-and-integrations.md#host--client-モード)） |
 
 ウインドウの位置とサイズは `browser.json` には保存しません（`window.json`）。以前のファイルにある `window` は読み込まず、次の保存で消えます。
 
 復元時（`restore()`）の検証:
 
-- タブ ID は `^[a-zA-Z0-9_-]{1,80}$`。重複と、固定ビューの ID を持つ保存タブは捨てます。
-- `web` タブは有効な http/https URL のものだけ残します。`settings` と `bookmarks` は 1 つずつ。
-- 保存タブは 79 件まで。その先頭に固定ビュー 2 つを作り直します。TARKOV.DEV は保存されていた URL とホームを、TarkovTracker は保存 URL を引き継ぎます（`tarkovtracker.io` の URL は引き継ぎません）。
+- タブ ID は `^[a-zA-Z0-9_-]{1,80}$`。重複と、以前の固定ビューの ID（`map`・`tracker`）を持つ保存タブは捨てます。
+- `web` タブは有効な http/https URL のものだけ残します。`settings`・`bookmarks`・`livemap` などシェル自身のページは 1 つずつ。
+- 保存タブは 79 件まで。
 - タイトルは 160 文字、ブックマーク名は 150 文字、分類名は 40 文字で切り詰めます。
-- 初回起動の既定タブは TARKOV.DEV・TarkovTracker・設定で、アクティブは TARKOV.DEV です（`defaults()` の `active`）。
+- 初回起動の既定タブはマップ（`livemap`）と設定で、アクティブはマップです（`defaults()` の `active`）。マップの無いリリース版では、マップのタブを外します（`SquadAvailable`）。
+- 設定のタブは、アクティブなタブとしては復元しません（起動は設定ではなく、保存されていた別のタブか先頭のタブから）。
 
 ## ブックマーク
 
@@ -195,18 +196,33 @@ Host がスクリーンショットを解析するたびに、何と判定した
 - **一覧**: サイドバーの「スナップノート」欄（最新のノート。折りたたみは `snapNotesCollapsed`）と、一覧ページ（タブ種別 `snapnotes`。「すべて／ページのノート／単独のノート」で絞り込み）。削除は 2 回押しで確定します。
 - **再描画との関係**: シェルは状態が変わるたびに描き直すため、ノートの画像と canvas には `data-keep` を付け、morphdom はその印が同じ間は触りません。画像の読み込みと線の描画は、描画後のフック（`afterRenderHooks`）で行い、線が変わったときだけ描き直します（描いている途中の線を消さないため）。
 
-## 分隊マップ
+## マップ
 
-分隊コードを共有した仲間の位置を、1 つの地図に表示します（`view-squad.js`、`internal/app/app_squad.go`、`internal/squad`、`internal/mapdata`）。今は **nightly 版と開発版だけ**の機能です（`version.IsPrerelease`）。リリース版では `SquadAvailable` が false になり、サイドバーの入口を出さず、保存されたタブも外します。
+MAYAK が自分で描く tarkov.dev の地図です。tarkov.dev のマップと同じ地点をフィルターで出し分け、分隊コードを共有した仲間の位置も同じ地図に出します（`view-map.js`、`map-geo.js`、`internal/app/app_squad.go`、`internal/squad`、`internal/mapdata`）。今は **nightly 版と開発版だけ**の機能です（`version.IsPrerelease`）。リリース版では `SquadAvailable` が false になり、サイドバーの入口を出さず、保存されたタブ（種類 `livemap`）も外します。
 
-- **入口**: サイドバーの固定ビュー（TARKOV.DEV・TarkovTracker）の下にある「分隊マップ」。分隊に 2 人以上いると人数が付きます。
-- **参加**: 表示名を入れて「分隊を作る」（`SquadNewCode` で新しいコードを作って参加）か、仲間から聞いたコードを入れて「参加」（`SquadJoin`）を押します。コードは Crockford base32 の 8 文字（`ABCD-1234`。小文字・空白・O/I/L も受け付けます）です。表示名は 24 文字まで、分隊は 10 人までです。
-- **保存**: 表示名は `squadName`（ブラウザの好み、`browser-preferences.json`）、分隊コードは `squadCode`（この PC、`browser.json`）です。起動時に、保存されたコードの分隊へ入り直します。「分隊を抜ける」でコードを消します。
-- **共有する内容**: 表示名と、レイド中に位置のスクリーンショットを撮ったときのマップ・座標・向き・撮った時刻だけです（[settings-and-integrations.md](settings-and-integrations.md#分隊ルーム)）。レイドが終わると「レイド外」を送ります。位置を送るのは Host（`local`）だけで、Client は見るだけです。
-- **地図**: Leaflet（`leaflet`）で描きます。Leaflet はタブを初めて表示したときに読み込む別 chunk です。座標変換は tarkov.dev の `getCRS` と同じで、`coordinateRotation` で回してから `transform` で拡大・移動します。地図の絵は、Go が SVG に階の表示を書き込んだ data URL を `L.imageOverlay`（`<img>`）で貼るので、SVG の中身はシェルで動きません。地図は `#squad-map`（`data-keep`）に描き、描画のあとに `afterRenderHooks` で状態に合わせます。
-- **マップと階**: 既定（自動）では、自分がレイド中なら自分のマップ、そうでなければ最後に位置を送った仲間のマップ、それもなければ Host の現在のマップを出します。階は自分の高さと位置から `floorFor`（`mapdata.Floor` と同じ規則）で選び、別の階にいる仲間の印は薄く出します。マップも階もプルダウンで手動で選べます。The Lab・Labyrinth・Icebreaker はタイルの地図しかないため、まだ表示できません。
-- **印**: 仲間ごとに、名前から決まる色、名前、向きの矢印を出します。自分の印は白い縁取りです。5 分より古い位置は薄く、30 分より古い位置は出しません。表示中は 30 秒ごとに描き直します。
-- **帰属表示**: 地図の右下に「Map: Shebuka / tarkov-dev-svg-maps (CC BY-NC-SA 4.0) · tarkov.dev」を出します。地図の絵には非営利・チート目的禁止の条件があるので、有料の機能の中では使いません。
+- **入口**: サイドバーのいちばん上（状態表示の下）にある「マップ」の行です。タブと同じ形で、行全体が押せ、表示中は選択中の色になり、右端に地図のアイコンがあります。分隊に 2 人以上（見るだけの PC を除く）いると人数が付きます。マップの検出（`browser:map`、`browser:position`）でもこのビューが開くか前面に出て（`receiveMap` / `receivePosition`）、手で選んだマップと階は「自動」に戻ります（`mayak:map-follow`）。
+- **画面**: ページ全体が地図です。ツールバーの行は空なので、地図はその下まで広がります（`body[data-page=livemap]`）。左上にズームのボタン、その下にアイコンの縦の列があり、押すとその内容のパネルが列の横に開きます（もう一度押すか、×・Esc・地図を押すと閉じる）。右上にはレイドの時計 2 つ（tarkov.dev と同じく、モスクワ時間から実時間の 7 倍で進み、2 つは 12 時間ずれる。Factory は固定、The Lab は出さない）、レイドの長さと人数、地図の作者の帰属表示、右下にはポインタの位置のゲーム座標を出します。
+- **アイコンの列**:
+  - **マップ**: ゲームモード（自動・PvP・PvE・Season。地点のデータのモードで、ボスの出現率などが変わる。自動はプレイ中のモード）、マップの一覧（「自動」と各マップ）、階（「自動」・地上・各階）、表示の形（SVG とタイルの両方がある地図だけ。Abstract / Satellite）。今の階が、その地図を開いたときの階と違うときは、ボタンの横に階の名前を出します。
+  - **フィルター**: tarkov.dev のマーカーの層を、tarkov.dev と同じまとまり（脱出・危険・目印・床置きの物資・コンテナ・スポーン・タスク・設備。`markerGroups` / `mapdata.Groups`）に分けたチェックボックスです。まとまりごとに一括で切り替えられ、畳めます。地名（maps.json の `labels`）も目印の中の 1 つの層です。既定ではすべての層を出します。アイコンは tarkov.dev のもの（MIT、`frontend/public/map-icons`）です。
+  - **検索**: tarkov.dev と同じく、カンマで区切った語のどれかを名前・アイテム名・タスク名に含む地点だけを出します（`searchTerms` / `found`）。検索中は地名を出しません。
+  - **スナップノート**: 見えている地図（ボタン類を除く）を modern-screenshot で画像にし、スナップノートにして書き込み画面で開きます。tarkov.dev のタイルは CORS を返さずページから読めないので、Go の `BrowserMapTile`（`assets.tarkov.dev/maps/…` のタイルだけ）を通して取ります。スナップノートと同じく Windows だけです。
+  - **分隊**: 後述。
+  - **設定**: 「狙撃 Scav のスポーンを常に表示」（既定オン）、「脱出地点を常に表示」、「進行中のタスクの印だけ表示」（TarkovTracker で完了・失敗したタスクの地点を隠す）、「地名を目立たなくする」のチェックと、「別の階の濃さ」（0〜60%、既定 20）、「脱出地点の名前の大きさ」「地名の大きさ」（50〜200%）のスライダーです。
+- **地図**: Leaflet（`leaflet`）で描きます。Leaflet はビューを初めて表示したときに読み込む別 chunk です。地図の一覧と形は tarkov.dev の maps.json（`BrowserSquadMaps`。ETag 付きで 1 日ごとに確かめる）で、座標変換は tarkov.dev の `getCRS` と同じく、`coordinateRotation` で回してから `transform` で拡大・移動します。絵は SVG（tarkov.dev の Abstract）かタイル（Satellite）で、両方ある地図は設定 `style` で選び、タイルしかない地図（The Lab・Labyrinth・Icebreaker）はタイルで描きます。SVG は Go が階の表示を書き込んだ data URL（`BrowserSquadMapImage`）を `L.imageOverlay`（`<img>`）で貼るので、SVG の中身はシェルで動きません。地図は `#live-map`（`data-keep`）に描き、描画のあとに `afterRenderHooks` で状態に合わせます。
+- **マップの自動**: 自分がレイド中なら自分のマップ、そうでなければ最後に位置を送った仲間のマップ、それもなければ Host の現在のマップです。
+- **階**: 「自動」では、自分がそのマップにいれば自分の高さと位置から `floorFor`（`mapdata.Floor` と同じ規則）で選び、そうでなければ tarkov.dev が `show` を付けた階（Icebreaker の甲板）、それもなければ地上です。階の一覧から選ぶか、地図の上の Ctrl+ホイールで高さの順に 1 階ずつ動かせます（`floorOrder`。いちばん上と下で止まる）。別の階にある地点を押すと、その階に移ります。
+  - 階を出しているとき、別の階のもの（地上の絵とタイル、別の階の地点、別の階の地名）は設定 `fade` の濃さで薄く出します。高さの無い地名は地上のものとして扱います（`Label.Ground`）。`show` の階では地上を薄くしません。
+  - SVG の階は、SVG のその階のグループを薄くした地上の上に描きます。SVG に無くタイルだけの階は、そのタイルを地上の絵の上に重ねます。Satellite では、SVG にしか無い階は何も重ねません（地点で分かる。tarkov.dev の Satellite と同じ）。
+- **地点**: tarkov.dev のカタログ（選んだゲームモード、自動ならプレイ中のモード）から `BrowserMapMarkers(name, language, mode)`（`mapdata.Markers`）が tarkov.dev の地図と同じ作り方で作り、Go がマップ・言語・モードごとに 10 分間覚えます。アイテムとタスクの名前は表示言語です。脱出は色付きの名前で、それ以外はアイコンで描き、押すと詳細のポップアップ（タスク、ボスと出現率、鍵の種類と電源、スイッチが動かすもの、必要なアイテム、物資の中身など）を開きます。脱出や危険地帯の範囲は、ポインタを乗せると多角形で出し、押すと出たままになります。タスクの地点のポップアップからは、認識したタスクと同じ規則（タスクのサイトとタブの開き方の設定）でタスクのページを開けます（`mapTask`）。
+- **分隊**: パネルで表示名（既定は TarkovTracker の表示名）を入れ、「分隊を作る」（`SquadNewCode` で新しいコードを作って参加）か、仲間から聞いたコードを入れて「参加」（`SquadJoin`）を押します。コードは Crockford base32 の 8 文字（`ABCD-1234`。小文字・空白・O/I/L も受け付けます）です。表示名は 24 文字まで、分隊は 10 人までです。
+  - 「最近の分隊」（最大 5 件、30 日使わなければ消える。`squadRecent`）は押すだけで入り直せます。中継は分隊を何も残さず、誰もいなくなった部屋は消えますが、同じコードでまた集まれます。
+  - 参加中は、コード（コピーのボタン付き）、接続の状態（「接続しています…」「接続済み」、届かないときと満員のときはその旨）、仲間の一覧（マップと何分前か、またはレイド外）、表示名の変更、「分隊を抜ける」を出します。一覧の仲間を押すと、その人のマップと階に切り替えて中心に出します。
+  - Host と Client のあいだでは、分隊の参加・退出を両方向に揃えます（`squad:sync`。[settings-and-integrations.md](settings-and-integrations.md#host--client-モード)）。Host は Client から届いた変更をほかの Client にも伝えます。つながったとき Host がどの分隊にも入っておらず Client が入っていれば、Host が Client の分隊に入ります。Client は見るだけの PC（Host と同じプレイヤー）として参加し（`Report.Viewer`）、ほかの人の一覧と地図にはプレイヤーとして出ません。
+- **保存**: 表示名 `squadName`、隠した層 `mapHidden`、設定 `mapSettings`、畳んだまとまり `mapCollapsed` はブラウザの好み（`browser-preferences.json`）、分隊コード `squadCode` と最近の分隊 `squadRecent` はこの PC（`browser.json`）です（[user-data.md](user-data.md)）。起動時に、保存されたコードの分隊へ入り直します。「分隊を抜ける」でコードを消します。
+- **共有する内容**: 表示名と、レイド中に位置のスクリーンショットを撮ったときのマップ・座標・向き・撮った時刻だけです（[settings-and-integrations.md](settings-and-integrations.md#分隊ルーム)）。レイドが終わると「レイド外」を送ります。位置を送るのは Host（`local`）だけです。Host では、分隊に入っていなくても自分の最後の位置を地図に出します。
+- **印**: 仲間ごとに、名前から決まる色、名前、向きの矢印を出します。自分の印は白い縁取りです。5 分より古い位置と別の階にいる仲間は薄く、30 分より古い位置は出しません。表示中は 30 秒ごとに描き直します。
+- **帰属表示**: 右上に「By: 作者」（maps.json の `author`、無ければ Shebuka。押すと作者のページ）と「CC BY-NC-SA 4.0 · tarkov.dev」を出します。地図の絵には非営利・チート目的禁止の条件があるので、有料の機能の中では使いません。
 
 ## ツールバーのアイコンの並び
 
@@ -235,10 +251,10 @@ Web ページのツールバー右側のアイコン（翻訳、スナップノ�
 
 - 通常の `web` / `blank` タブ: 戻る・進む・再読み込み・アドレス欄。`web` タブでは右端に「既定のブラウザで開く」ボタンが付きます（`Browser.OpenURL`、http/https のみ）。
 - アドレス欄は Chrome と同じく URL と検索の両方を受け付けます（`state.js` の `resolveAddress`）。`http://` / `https://` で始まるもの、ドットを含むホスト名、`host:port`、IPv4、`localhost` は URL として開き（スキームがなければ `https://` を補います）、それ以外（空白を含むもの、単語だけ、`3.14` のようなもの）は Google 検索（`https://www.google.com/search?q=`）にします。先頭に `?` を付けると必ず検索です。`file:` や `javascript:`、認証情報付きの URL は開かず検索になります。`web` / `blank` タブでは現在のタブを移動させ、それ以外のタブからは新しいタブを開きます。Enter で移動したあとはページにキーボードフォーカスが移り、Esc はタブの URL に戻してページへ戻ります。
-- キーボードショートカットは Chrome に合わせています（`state.js` の `shortcut()`。macOS では Ctrl の代わりに Cmd も使えます）。Ctrl+T 新しいタブ（アドレス欄にフォーカス）、Ctrl+W / Ctrl+F4 タブを閉じる（固定表示とピン留めは除く）、Ctrl+Shift+T 最後に閉じた Web タブを元の位置に開き直す（起動中に閉じた 20 件まで、保存はしない）、Ctrl+Tab / Ctrl+PageDown 次のタブ、Ctrl+Shift+Tab / Ctrl+PageUp 前のタブ、Ctrl+1〜8 サイドバー順で n 番目のタブ（固定表示が 1・2 番目）、Ctrl+9 最後のタブ、Ctrl+L / Alt+D / F6 アドレス欄にフォーカス、Ctrl+D 表示中のページをブックマークしてサイドバーにピン留め。
+- キーボードショートカットは Chrome に合わせています（`state.js` の `shortcut()`。macOS では Ctrl の代わりに Cmd も使えます）。Ctrl+T 新しいタブ（アドレス欄にフォーカス）、Ctrl+W / Ctrl+F4 タブを閉じる（ピン留めは除く）、Ctrl+Shift+T 最後に閉じた Web タブを元の位置に開き直す（起動中に閉じた 20 件まで、保存はしない）、Ctrl+Tab / Ctrl+PageDown 次のタブ、Ctrl+Shift+Tab / Ctrl+PageUp 前のタブ、Ctrl+1〜8 タブの並び（`state.tabs`。マップや設定などシェルのページも含む）で n 番目のタブ、Ctrl+9 最後のタブ、Ctrl+L / Alt+D / F6 アドレス欄にフォーカス、Ctrl+D 表示中のページをブックマークしてサイドバーにピン留め。
   - ページビュー（WebView2 の子ウインドウ）にフォーカスがあるときは、シェルの `keydown` には届きません。Windows では各ビューの `AcceleratorKeyPressed`（`view_windows.go` の `acceleratorKey`）が修飾キー付きのキーをキー名（`event.key` を小文字にしたもの）に直して `SetKeyHandler` に渡し、Go 側の許可リスト（`app_browser.go` の `browserShortcutKey`。`shortcut()` と同じ組み合わせ）にあるものだけ `browser:key` イベントでシェルに送り、ページには渡しません。それ以外のキー（Ctrl+R、Ctrl+F、Ctrl+C など）はページのままです。macOS / Linux ではページ内のキーは転送しません。
   - タブを切り替えたあとのキーボードフォーカスは、Web タブならそのページ、シェルのページ（設定など）ならシェルに移します（`BrowserView` の `focus` コマンド。ID `shell` はウインドウの `Focus()`、それ以外はビューの `MoveFocus`）。ページビューはネイティブのウインドウなので、シェルからは `focus()` だけでは移せません。
-- **翻訳ボタン**（`translate-page`、固定表示でない Web タブだけ）: Chrome の「ページを翻訳」は WebView2 に無いので、代わりに Google 翻訳のプロキシで開き直します（`state.js` の `translatedURL`）。ホスト名のドットをハイフンに（元のハイフンは `--` に）して `.translate.goog` を付け、`_x_tr_sl=auto`・`_x_tr_tl`・`_x_tr_hl`（表示言語: ja / en）を付けます。翻訳中はボタンが点灯し、もう一度押すと元の URL に戻します（`originalURL`。`_x_tr_*` を外してホスト名を戻す）。プロキシは別オリジンなので、ログインが要るページや tarkov.dev の Remote Control（マップの固定表示は対象外）には向きません。タスクのサイト選択は翻訳前の URL で判定します（`sitesForURL`）。
+- **翻訳ボタン**（`translate-page`、Web タブだけ）: Chrome の「ページを翻訳」は WebView2 に無いので、代わりに Google 翻訳のプロキシで開き直します（`state.js` の `translatedURL`）。ホスト名のドットをハイフンに（元のハイフンは `--` に）して `.translate.goog` を付け、`_x_tr_sl=auto`・`_x_tr_tl`・`_x_tr_hl`（表示言語: ja / en）を付けます。翻訳中はボタンが点灯し、もう一度押すと元の URL に戻します（`originalURL`。`_x_tr_*` を外してホスト名を戻す）。プロキシは別オリジンなので、ログインが要るページや tarkov.dev の Remote Control には向きません。タスクのサイト選択は翻訳前の URL で判定します（`sitesForURL`）。
 - 設定 → タスク の「公式 Wiki（英語）を翻訳して開く」（`translateWiki`、`browser.json`）をオンにすると、タスク検出で開く公式 Wiki のページを最初から翻訳版で開きます（`receiveTask`）。日本語 Wiki と tarkov.dev には掛かりません。
 - 戻る・進むのボタンは、ナビゲーションイベントの `canBack` / `canForward` に合わせて有効・無効が切り替わります。
 - 再読み込みは Ctrl+Shift+R と同じくキャッシュを無視します。DevTools プロトコルの `Page.reload`（`ignoreCache: true`）を使い、失敗した場合だけ通常の再読み込みになります（`browser_tabs.go` の `BrowserCommand`）。キャッシュが壊れたときも再読み込みで回復させるためです。
@@ -323,7 +339,7 @@ Windows 実装（`internal/browserview/view_windows.go`）の動作:
 
 ## 初回チュートリアル
 
-Host で初めて起動したとき（`browser.json` の `tutorialDone` が `true` でないとき）、シェルは 7 ステップのチュートリアルをオーバーレイで表示します。ようこそ → EFT のフォルダ（`GetSettings` で見つけたスクリーンショット / ログのフォルダを表示）→ スクリーンショットキー → マップ → 別の PC や普段のブラウザ（tarkov.dev 連携）→ TarkovTracker → 完了、の順です。各ステップのボタンは、対応する設定セクション（`settings` → `settingsSection`）やマップタブ（`activate`）を開きます。
+Host で初めて起動したとき（`browser.json` の `tutorialDone` が `true` でないとき）、シェルは 7 ステップのチュートリアルをオーバーレイで表示します。ようこそ → EFT のフォルダ（`GetSettings` で見つけたスクリーンショット / ログのフォルダを表示）→ スクリーンショットキー → マップ → 別の PC や普段のブラウザ（tarkov.dev 連携）→ TarkovTracker → 完了、の順です。各ステップのボタンは、対応する設定セクション（`settings` → `settingsSection`）やマップ（`livemap`。マップの無いリリース版では何もしない）を開きます。
 
 - 操作: 「次へ」「戻る」「スキップ」「あとで」「完了」のボタンのほか、Enter / → で進み、← で戻り、Esc で閉じます。
 - 閉じるかスキップすると `preferences` で `tutorialDone: true` を保存します。設定 → 表示 の「チュートリアルを表示」でいつでも再表示できます。
@@ -347,4 +363,4 @@ Host で初めて起動したとき（`browser.json` の `tutorialDone` が `tru
 - **新しいウインドウ**: ページの `window.open` などは `NewWindowRequested` で受けます（`browser_tabs.go`）。ユーザー操作によらないものは開きません（ポップアップブロック）。ユーザー操作によるもののうち、`target=_blank` のリンクのようにサイズも位置も指定しないものは新しいタブとして開きます（ポップアップウインドウからの場合も新しいタブ）。サイズか位置を指定した `window.open`（`ICoreWebView2WindowFeatures` の `HasSize` / `HasPosition`）は、開いた側に結果を返すダイアログ（Google ログインの `accounts.google.com/gsi/transform` は `window.opener` に postMessage して自分で閉じる）なので、イベントを未処理のままにして WebView2 に本物のポップアップウインドウを作らせます。タブにすると `window.opener` がなく、そこで止まってしまうためです。このウインドウは同じプロファイル（Cookie）を使いますが、広告ブロックや Remote Control のスクリプトは付きません。
 - **分離**（`BrowserIsolation`）: Web メッセージングは無効、ホストオブジェクトの登録なし、権限要求はすべて拒否します。外部ページには Wails のバインディングも `window.mayakDesktop` も渡りません（`window.mayakDesktop` は信頼できるシェル文書だけのものです）。
 - **命令の検証**: `BrowserView` はビュー ID（`^[a-zA-Z0-9_-]{1,80}$`）、インセット（0〜4096）、命令名（`show` / `navigate` / `hideAll` / `close` / `back` / `forward` / `reload`）を検証します。`BrowserPopupShow` も配置の範囲を検証します。
-- **保存データ**: `browser.json` には接続キーや WebRTC の SDP を保存しません。ファビコンの取得先はローカル・LAN のアドレスを除外しています。
+- **保存データ**: `browser.json` にはトークンや接続コードを保存しません。ペアリングの鍵（`connection.link`）はこの PC のデータとして保存し、同期しません。ファビコンの取得先はローカル・LAN のアドレスを除外しています。

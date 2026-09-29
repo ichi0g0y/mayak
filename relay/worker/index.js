@@ -1,23 +1,28 @@
-// The "mayak-relay" Worker: squad rooms. Players who share a squad code join
-// the same room over a WebSocket and see each other's last position on
-// MAYAK's squad map.
+// The "mayak-relay" Worker: squad rooms and links. Players who share a
+// squad code join the same room over a WebSocket and see each other's last
+// position on MAYAK's squad map (/squad/<room>); a Host and the Clients
+// paired with it meet in a link (/link/<room>), which carries
+// what the Host recognizes to the Client.
 //
-// The app derives the room from the code (a SHA-256, 64 hex digits) and
-// encrypts every message with a key derived from the code as well, so the
-// relay never sees the code, the names or the positions: it forwards opaque
-// strings between the members of a room and keeps each member's last one
-// for whoever joins later. Nothing is written to storage; a room is gone
-// once its last member leaves.
+// The app derives the room from the code (or the pairing's key: a SHA-256,
+// 64 hex digits) and encrypts every message with a key derived from it as
+// well, so the relay never sees the code, the names, the positions or what
+// is recognized: it forwards opaque strings between the members of a room
+// (a squad room keeps each member's last one for whoever joins later).
+// Nothing is written to storage; a room is gone once its last member leaves.
 //
 // The room uses the WebSocket Hibernation API: while nobody sends anything
 // the Durable Object sleeps and costs no duration, and the clients' "ping"
 // is answered by the runtime without waking it.
 
-const MAX_MEMBERS = 10;
-const MAX_MESSAGE = 4096;
-// A member may send this many messages per window before it is dropped.
+// A member may send so many messages per window before it is dropped.
 const RATE_WINDOW_MS = 10_000;
-const RATE_MAX = 30;
+// A squad: ten players' positions, small and seldom.
+const SQUAD = { members: 10, message: 4096, rate: 30, replay: true };
+// A link: the Host and its Clients (a few, and room for a dropped socket the
+// relay has not noticed yet); an item's details can be large, and a burst of
+// recognitions comes quickly.
+const LINK = { members: 10, message: 131072, rate: 120, replay: false };
 
 function text(body, status) {
   return new Response(body, { status, headers: { 'content-type': 'text/plain', 'cache-control': 'no-store' } });
@@ -28,9 +33,10 @@ function randomID() {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-export class SquadRoom {
-  constructor(state) {
+class Room {
+  constructor(state, limits) {
     this.state = state;
+    this.limits = limits;
     this.state.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
   }
 
@@ -57,12 +63,12 @@ export class SquadRoom {
 
   async fetch(request) {
     if (request.headers.get('upgrade')?.toLowerCase() !== 'websocket') return text('websocket only', 426);
-    if (this.state.getWebSockets().length >= MAX_MEMBERS) return text('full', 409);
+    if (this.state.getWebSockets().length >= this.limits.members) return text('full', 409);
     const [client, server] = Object.values(new WebSocketPair());
     const member = { id: randomID(), last: '', since: Date.now(), count: 0 };
     this.state.acceptWebSocket(server);
     server.serializeAttachment(member);
-    const others = this.members(server).map(({ member: m }) => ({ id: m.id, last: m.last }));
+    const others = this.members(server).map(({ member: m }) => ({ id: m.id, last: this.limits.replay ? m.last : '' }));
     server.send(JSON.stringify({ t: 'welcome', id: member.id, members: others }));
     this.broadcast(server, { t: 'join', id: member.id });
     return new Response(null, { status: 101, webSocket: client });
@@ -71,7 +77,7 @@ export class SquadRoom {
   async webSocketMessage(ws, message) {
     const member = ws.deserializeAttachment();
     if (!member) return;
-    if (typeof message !== 'string' || message.length > MAX_MESSAGE) {
+    if (typeof message !== 'string' || message.length > this.limits.message) {
       ws.close(1009, 'message too big');
       return;
     }
@@ -81,11 +87,11 @@ export class SquadRoom {
       member.count = 0;
     }
     member.count++;
-    if (member.count > RATE_MAX) {
+    if (member.count > this.limits.rate) {
       ws.close(1008, 'too many messages');
       return;
     }
-    member.last = message;
+    if (this.limits.replay) member.last = message;
     ws.serializeAttachment(member);
     this.broadcast(ws, { t: 'msg', from: member.id, data: message });
   }
@@ -109,12 +115,25 @@ export class SquadRoom {
   }
 }
 
+export class SquadRoom extends Room {
+  constructor(state) {
+    super(state, SQUAD);
+  }
+}
+
+export class LinkRoom extends Room {
+  constructor(state) {
+    super(state, LINK);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const match = url.pathname.match(/^\/squad\/([0-9a-f]{64})$/);
+    const match = url.pathname.match(/^\/(squad|link)\/([0-9a-f]{64})$/);
     if (!match) return text('not found', 404);
-    const room = env.SQUAD.get(env.SQUAD.idFromName(match[1]));
+    const rooms = match[1] === 'squad' ? env.SQUAD : env.LINK;
+    const room = rooms.get(rooms.idFromName(match[2]));
     return room.fetch(request);
   },
 };

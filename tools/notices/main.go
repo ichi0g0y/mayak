@@ -201,6 +201,18 @@ var bundledData = []entry{
 			"https://github.com/tesseract-ocr/tessdata_best (Apache License, Version 2.0).",
 	},
 	{
+		name: "Map marker icons (the-hideout/tarkov-dev)", license: "MIT",
+		text: readFile("frontend/public/map-icons/LICENSE.txt"),
+	},
+	{
+		name: "Map pictures (tarkov-dev-svg-maps)", license: "CC BY-NC-SA 4.0",
+		text: "The map view downloads tarkov.dev's SVG maps (Shebuka and others,\n" +
+			"https://github.com/the-hideout/tarkov-dev-svg-maps) at first use; they\n" +
+			"are not distributed with MAYAK. Licensed under Creative Commons\n" +
+			"Attribution-NonCommercial-ShareAlike 4.0 International; use in software\n" +
+			"meant for cheating in Escape from Tarkov is not allowed.",
+	},
+	{
 		name: "EasyList and EasyPrivacy", license: "GPL-3.0-or-later or CC-BY-SA-3.0",
 		text: "The built-in browser downloads these filter lists at first use; they are\n" +
 			"not distributed with MAYAK. Copyright (C) The EasyList authors,\n" +

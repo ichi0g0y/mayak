@@ -4,7 +4,6 @@ import { itemInfo, clampItemPanel, clampItemPanelHeight, historyPoints, names } 
 import {
   browserSections,
   hostSections,
-  mapTabID,
   randomUUID,
   bookmarkGroup,
   clampSidebar,
@@ -17,6 +16,9 @@ import {
   receiveTask,
   receiveMap,
   receivePosition,
+  rememberSquad,
+  receiveOf,
+  linkKind,
   translatedURL,
   originalURL,
   isTranslated,
@@ -29,7 +31,8 @@ import {
   tabAt,
   cycleTab,
 } from './state.js'
-import { encode, decode, iceServers, PAIR_RELAY } from './peer-code.js'
+import { encode, decode, MAX_AGE, PAIR_RELAY } from './peer-code.js'
+import { hiddenOf, mapSettingsOf } from './map-geo.js'
 import { t } from './words.js'
 import './transport.js'
 
@@ -39,7 +42,6 @@ let state,
   go,
   platform,
   returnTo = '',
-  remoteID = '',
   host = null,
   hostQuestSite = 'tarkov-dev',
   updateChannel = 'stable',
@@ -55,8 +57,7 @@ let state,
   onKey = /** @type {(key:any)=>void} */ (() => {}),
   section = 'appearance',
   error = '',
-  peerState = { phase: 'idle' },
-  invite = null
+  peerState = { phase: 'idle' }
 // Tabs closed in this session, newest last, for Ctrl+Shift+T (not saved).
 const closedTabs = []
 let queue = Promise.resolve(),
@@ -115,10 +116,11 @@ function loadFavicon(url, refresh = false) {
     .catch(() => {})
 }
 
-// The squad (app_squad.go, view-squad.js): whether this build offers it, the
-// room as the Go side last reported it, the maps' geometry and the map
-// pictures loaded (by "map|floor").
-const squad = { available: false, state: null, maps: null, mapsError: false, images: {} }
+// The map view and its squad (app_squad.go, view-map.js): whether this build
+// offers it, the squad as the Go side last reported it, the maps' geometry,
+// the map pictures loaded (by "map|floor") and the markers (by
+// "map|language").
+const squad = { available: false, state: null, maps: null, mapsError: false, images: {}, markers: {} }
 async function loadSquadMaps() {
   if (!squad.available || squad.maps) return
   try {
@@ -129,22 +131,34 @@ async function loadSquadMaps() {
   }
   update()
 }
-async function squadJoin(code, name) {
+// squadJoin joins a squad as name; here (not for the other PC's word) it
+// also brings the map forward and tells the other PC.
+async function squadJoin(code, name, here = true) {
   name = String(name || '')
     .trim()
     .slice(0, 24)
-  if (!name) throw new Error(t(state.language, 'squadNeedName'))
-  state.squadName = name
-  state.squadCode = await go.SquadJoin(String(code || ''), name)
+  if (!name && here) throw new Error(t(state.language, 'squadNeedName'))
+  if (name) state.squadName = name
+  state.squadCode = await go.SquadJoin(String(code || ''), name || host?.player || 'Player')
+  state.squadRecent = rememberSquad(state.squadRecent, state.squadCode)
   squad.state = await go.SquadState()
-  openLocal(state, 'squadmap')
+  if (here) {
+    openLocal(state, 'livemap')
+    shareSquad()
+  }
   void loadSquadMaps()
 }
 
 const snapshot = () => ({
   ...state,
   squad: squad.available
-    ? { state: squad.state, maps: squad.maps, mapsError: squad.mapsError, images: squad.images }
+    ? {
+        state: squad.state,
+        maps: squad.maps,
+        mapsError: squad.mapsError,
+        images: squad.images,
+        markers: squad.markers,
+      }
     : null,
   snapNotes: snapsAvailable()
     ? {
@@ -186,7 +200,8 @@ const snapshot = () => ({
         : peerState.phase === 'connected'
           ? 'connected'
           : 'disconnected',
-  peer: peerState,
+  // paired: a pairing is kept for this mode.
+  peer: { ...peerState, paired: !!state.connection.link && state.connection.link.role === linkRole() },
   error,
 })
 const update = () => notify(snapshot())
@@ -224,16 +239,10 @@ function bounds() {
 // The rows along the bottom that the pages make room for: the update bar and
 // the error strip. The shell lays them out from the same count.
 const statusRows = () => (updateBarVisible() ? 1 : 0) + (error ? 1 : 0)
-// The map view opens with the Host's Remote Control ID, so tarkov.dev connects
-// on load and follows map/position commands itself.
-function viewURL(tab) {
-  if (tab.id !== mapTabID || !remoteID) return tab.url
-  const url = new URL(tab.url),
-    p = url.pathname
-  if (url.hostname !== 'tarkov.dev' || !(p.startsWith('/map/') || p === '/maps' || p === '/maps/')) return tab.url
-  url.searchParams.set('connection', remoteID)
-  return url.href
-}
+// A page view opens at its tab's address. (The fixed tarkov.dev map view,
+// which added the Host's Remote Control ID, is gone: map detections show on
+// the map view, view-map.js.)
+const viewURL = (tab) => tab.url
 // The theme background fills a tab until its page paints, instead of white.
 const pageBackground = () => getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()
 // Pages opened from the item sidebar show in a popup window of their own
@@ -331,8 +340,12 @@ async function persist() {
     taskMode,
     questSite,
     translateWiki,
+    mapHidden,
+    mapSettings,
+    mapCollapsed,
     squadName,
     squadCode,
+    squadRecent,
     bookmarks,
     tabs,
     active,
@@ -366,12 +379,16 @@ async function persist() {
       taskMode,
       questSite,
       translateWiki,
+      mapHidden,
+      mapSettings,
+      mapCollapsed,
       squadName,
       squadCode,
+      squadRecent,
       bookmarks,
       tabs,
       active,
-      connection: { mode: state.connection.mode, stun: state.connection.stun },
+      connection: { mode: state.connection.mode, link: state.connection.link, receive: state.connection.receive },
     }),
   )
 }
@@ -387,7 +404,9 @@ function enqueue(fn) {
 }
 function display(message, remote = false) {
   return enqueue(async () => {
-    if (remote ? state.connection.mode !== 'webrtc' : state.connection.mode !== 'local') return
+    if (remote ? state.connection.mode !== 'client' : state.connection.mode !== 'local') return
+    // A Client shows only what it takes from its Host.
+    if (remote && state.connection.receive?.[linkKind(message.event)] === false) return
     if (message.event === 'browser:item') {
       const next = itemInfo(message.args[0])
       if (!next) return
@@ -412,6 +431,8 @@ function display(message, remote = false) {
             : null
     if (tab) {
       if (!remote) peer.send(message)
+      // The map view follows the map played again (view-map.js).
+      if (tab.kind === 'livemap') window.dispatchEvent(new Event('mayak:map-follow'))
       await changed()
     }
   })
@@ -423,9 +444,19 @@ function hostStatus(s) {
   if ('monitoring' in s) out.monitoring = !!s.monitoring
   if ('currentMap' in s) out.map = String(s.currentMap || '')
   if ('raidActive' in s) out.raid = !!s.raidActive
+  // The last position screenshot, for the map view (in game coordinates).
+  if ('position' in s) {
+    const p = s.position
+    out.position =
+      p && [p.x, p.y, p.z].every(Number.isFinite)
+        ? { x: p.x, y: p.y, z: p.z, rot: Number(p.rotation) || 0, at: String(p.detectedAt || '') }
+        : null
+  }
   if (s.tracker && typeof s.tracker === 'object') {
     out.tracker = String(s.tracker.connection || '')
     out.mode = String(s.tracker.mode || '')
+    // The player's name, the map view's default name for a squad.
+    out.player = String(s.tracker.displayName || '').trim().slice(0, 24)
     out.identity = [s.tracker.accountId, s.tracker.profileId, s.tracker.mode].map((v) => String(v || '')).join('|')
   }
   return out
@@ -624,10 +655,12 @@ async function loadHistory(again = false) {
     update()
   }
 }
-// The pairing relay: the Host parks its invitation under an 8-digit code and
-// polls for the answer; the other PC fetches the invitation by that code and
-// posts its answer. The relay is optional: the long codes can still be
-// exchanged by hand, and a relay error leaves that path open.
+// Pairing: the Host makes a key for the link (transport.js) and parks the
+// invitation under an 8-digit code on the pairing relay (the long code can be
+// copied by hand as well); the other PC fetches it by that code and joins the
+// link. Once the two have met, both keep the key (connection.link), meet again
+// at every start and the code is dropped. The relay is optional: a relay
+// error leaves the long code.
 async function relay(method, path, body) {
   const res = await fetch(PAIR_RELAY + path, {
     method,
@@ -639,57 +672,126 @@ async function relay(method, path, body) {
   if (!res.ok) throw new Error(res.status === 404 ? 'pair-code-not-found' : 'relay-unavailable')
   return res.json()
 }
-let pairPoll = 0
-function stopPairPoll() {
-  clearInterval(pairPoll)
-  pairPoll = 0
-}
 function forgetPairCode() {
   const code = peerState.pairCode
   if (code) void relay('DELETE', '/' + code).catch(() => {})
 }
-function startPairPoll(code) {
-  stopPairPoll()
-  pairPoll = setInterval(async () => {
-    if (peerState.pairCode !== code || peerState.phase !== 'waiting-answer') {
-      stopPairPoll()
-      return
-    }
-    try {
-      const got = await relay('GET', '/' + code + '/answer')
-      if (got?.answer) {
-        stopPairPoll()
-        await pairing('peerAnswer', got.answer)
-      }
-    } catch {}
-  }, 2000)
-}
-const peer = new /** @type {any} */ (globalThis).MayakPeer({
+// The pairing being made: kept once the other PC is met.
+let pending = null
+// linkRole is the side this PC takes in the mode chosen.
+const linkRole = () => (state.connection.mode === 'local' ? 'host' : state.connection.mode === 'client' ? 'client' : '')
+const peer = new /** @type {any} */ (globalThis).MayakLink({
   onState: (next) => {
     peerState = { ...peerState, ...next, busy: false }
-    if (next.phase === 'connected') {
-      peerState.code = ''
-      stopPairPoll()
-      forgetPairCode()
-      clearTimeout(expiry)
+    if (next.joined) {
+      // A PC met for the first time by the code: the code has done its work
+      // (a Client coming back leaves the Host's code for the next one).
+      if (next.newcomer || pending) {
+        forgetPairCode()
+        peerState.code = ''
+        peerState.pairCode = ''
+        clearTimeout(expiry)
+      }
+      if (pending) {
+        state.connection.link = pending
+        pending = null
+        void persist().catch(() => {})
+      }
+      // The Host says which squad it is in; a client in one the Host is
+      // not answers with its own (receiveSquad).
+      if (state.connection.mode === 'local' && squad.available)
+        peer.sendSquad({ code: state.squadCode, name: state.squadName, initial: true })
     }
     update()
   },
   onMessage: (message) => void display(message, true),
+  onSquad: (s) => void enqueue(() => receiveSquad(s)),
+  // The Host ended the pairing: this Client forgets it too.
+  onUnpair: () => void enqueue(() => unpair(false)),
 })
-function closePeer() {
-  stopPairPoll()
+// startLink joins the link of the pairing kept (or being made) when this
+// PC's mode is its side, and leaves it otherwise.
+function startLink() {
+  const link = pending || state.connection.link
+  if (!link || link.role !== linkRole()) {
+    peer.stop()
+    peerState = { phase: 'idle' }
+    return
+  }
+  peerState = { ...peerState, phase: 'connecting', role: link.role, reason: '' }
+  void peer.start(link.key, link.role, link === pending && link.role === 'client').catch(messageError)
+}
+// receiveSquad follows the squad the other PC joined or left, without
+// telling it back. On connecting, a client already in a squad keeps it and
+// brings the Host in instead when the Host is in none.
+async function receiveSquad({ code, name, initial }) {
+  if (!squad.available) return
+  if (!code) {
+    if (initial && state.squadCode) {
+      peer.sendSquad({ code: state.squadCode, name: state.squadName })
+      return
+    }
+    if (!state.squadCode) return
+    await go.SquadLeave()
+    squad.state = null
+    state.squadCode = ''
+  } else if (code !== state.squadCode) {
+    await squadJoin(code, state.squadName || name, false)
+  } else return
+  // The Host passes a Client's word on to its other Clients.
+  if (state.connection.mode === 'local') shareSquad()
+  await changed()
+}
+// shareSquad tells the other PC of a squad joined or left here.
+const shareSquad = () => peer.sendSquad({ code: state.squadCode, name: state.squadName })
+// unpair ends the pairing (or the one being made), telling the other PC
+// unless it told this one.
+async function unpair(tell = true) {
   forgetPairCode()
   clearTimeout(expiry)
-  invite = null
-  peer.close()
+  pending = null
+  if (tell) await peer.unpair()
+  else peer.stop()
+  state.connection.link = null
   peerState = { phase: 'idle' }
+  await persist()
   update()
+}
+// expireIn drops a code not used within its ten minutes, and a pairing not
+// made by then.
+function expireIn(ms) {
+  clearTimeout(expiry)
+  expiry = setTimeout(() => void enqueue(() => cancelCode(true)), ms)
+}
+// cancelCode drops the code handed out (and the pairing being made with it).
+function cancelCode(expired = false) {
+  clearTimeout(expiry)
+  forgetPairCode()
+  peerState = { ...peerState, code: '', pairCode: '', relayError: '' }
+  if (pending) {
+    pending = null
+    startLink()
+    if (peerState.phase === 'idle' && expired) peerState = { phase: 'failed', reason: 'invite-expired' }
+  }
+  update()
+}
+// join takes an invitation (a long code) on the Client.
+function join(code, pairCode = '') {
+  if (state.connection.mode !== 'client') throw new Error('receiver-required')
+  const offer = decode(code)
+  pending = { key: offer.key, role: 'client' }
+  peerState = { role: 'client', phase: 'connecting', pairCode }
+  startLink()
+  expireIn(Math.max(0, MAX_AGE - (Date.now() - offer.createdAt)))
 }
 async function pairing(type, data) {
   if (peerState.busy) return snapshot()
   if (type === 'peerClose') {
-    closePeer()
+    await unpair()
+    return snapshot()
+  }
+  if (type === 'peerCancel') {
+    cancelCode()
     return snapshot()
   }
   if (type === 'peerCopy') {
@@ -700,82 +802,57 @@ async function pairing(type, data) {
     await Clipboard.SetText(peerState.pairCode || '')
     return snapshot()
   }
-  const pairCode = type === 'peerAnswer' ? peerState.pairCode || '' : ''
-  peerState = {
-    ...peerState,
-    busy: true,
-    phase: type === 'peerAnswer' ? 'connecting' : 'gathering',
-    code: '',
-    pairCode,
-    relayError: '',
-  }
+  peerState = { ...peerState, busy: true, code: '', pairCode: '', relayError: '', reason: '' }
   update()
   try {
     if (type === 'peerInvite') {
       if (platform !== 'windows' || state.connection.mode !== 'local') throw new Error('host-required')
-      const sdp = await peer.offer({ iceServers: iceServers(state.connection.stun) })
-      invite = { version: 1, type: 'offer', id: randomUUID(), createdAt: Date.now(), sdp }
-      peerState = { role: 'sender', phase: 'waiting-answer', code: encode(invite) }
+      // Another Client joins the pairing kept, with its key.
+      const kept = state.connection.link?.role === 'host' ? state.connection.link.key : ''
+      const invite = {
+        version: 2,
+        type: 'link',
+        id: randomUUID(),
+        createdAt: Date.now(),
+        key: kept || /** @type {any} */ (globalThis).newLinkKey(),
+      }
+      const code = encode(invite)
+      if (!kept) {
+        pending = { key: invite.key, role: 'host' }
+        startLink()
+      }
+      peerState = { ...peerState, role: 'host', code, busy: false }
+      expireIn(MAX_AGE)
       try {
-        const posted = await relay('POST', '', { invite: peerState.code })
-        peerState.pairCode = posted.code
-        startPairPoll(posted.code)
+        const posted = await relay('POST', '', { invite: code })
+        if (peerState.code === code) peerState.pairCode = posted.code
+        else void relay('DELETE', '/' + posted.code).catch(() => {})
       } catch (e) {
         peerState.relayError = String(e?.message || e)
       }
     } else if (type === 'peerJoin') {
-      if (state.connection.mode !== 'webrtc') throw new Error('receiver-required')
+      if (state.connection.mode !== 'client') throw new Error('receiver-required')
       const digits = String(data || '').replace(/\D/g, '')
       if (digits.length !== 8) throw new Error('pair-code-invalid')
       const fetched = await relay('GET', '/' + digits)
-      const offer = decode(fetched?.invite)
-      if (offer.type !== 'offer') throw new Error('offer-required')
-      const sdp = await peer.answer({ iceServers: iceServers(state.connection.stun), sdp: offer.sdp })
-      const answer = encode({ ...offer, type: 'answer', sdp })
-      await relay('PUT', '/' + digits, { answer })
-      invite = offer
-      peerState = { role: 'receiver', phase: 'waiting-host', code: answer, pairCode: digits }
+      join(fetched?.invite, digits)
     } else if (type === 'peerAccept') {
-      if (state.connection.mode !== 'webrtc') throw new Error('receiver-required')
-      const offer = decode(data)
-      if (offer.type !== 'offer') throw new Error('offer-required')
-      const sdp = await peer.answer({ iceServers: iceServers(state.connection.stun), sdp: offer.sdp })
-      invite = offer
-      peerState = { role: 'receiver', phase: 'waiting-host', code: encode({ ...offer, type: 'answer', sdp }) }
-    } else if (type === 'peerAnswer') {
-      const answer = decode(data)
-      if (!invite || answer.type !== 'answer' || answer.id !== invite.id || answer.createdAt !== invite.createdAt)
-        throw new Error('answer-mismatch')
-      await peer.acceptAnswer({ sdp: answer.sdp })
-      peerState = { role: 'sender', phase: 'connecting', pairCode }
+      join(String(data || ''))
     }
-    clearTimeout(expiry)
-    if (invite)
-      expiry = setTimeout(
-        () => {
-          if (peerState.phase !== 'connected') {
-            peer.close()
-            peerState = { phase: 'failed', reason: 'invite-expired' }
-            update()
-          }
-        },
-        Math.max(0, 600000 - (Date.now() - invite.createdAt)),
-      )
   } catch (e) {
-    stopPairPoll()
-    peer.close()
-    peerState = { phase: 'failed' }
+    pending = null
+    clearTimeout(expiry)
+    startLink()
+    peerState = { ...peerState, phase: 'failed', busy: false }
     messageError(e)
   }
+  peerState.busy = false
   update()
   return snapshot()
 }
 const ready = (async () => {
   go = AppService
   platform = await go.BrowserPlatform()
-  try {
-    remoteID = await go.BrowserRemoteID()
-  } catch {}
   let migrated = false
   try {
     const saved = JSON.parse(await go.BrowserLoad())
@@ -806,9 +883,12 @@ const ready = (async () => {
       })
       .catch(() => {})
   }
-  if (!['local', 'webrtc', 'off'].includes(state.connection.mode)) state.connection.mode = 'off'
-  if (platform !== 'windows' && state.connection.mode === 'local') state.connection.mode = 'webrtc'
+  if (!['local', 'client', 'off'].includes(state.connection.mode)) state.connection.mode = 'off'
+  if (platform !== 'windows' && state.connection.mode === 'local') state.connection.mode = 'client'
   await go.BrowserSetMode(state.connection.mode)
+  // The pairing kept meets its other PC again (transport.js).
+  peer.relay = (await go.BrowserLinkRelay()) || peer.relay
+  startLink()
   try {
     await go.BrowserSetAdblock(state.adblock)
   } catch (e) {
@@ -832,39 +912,12 @@ const ready = (async () => {
   window.mayakDesktop.on('browser:task', (task) => void display({ event: 'browser:task', args: [task] }))
   window.mayakDesktop.on('browser:map', (map) => void display({ event: 'browser:map', args: [map] }))
   window.mayakDesktop.on('browser:position', (map) => void display({ event: 'browser:position', args: [map] }))
-  // The document script changed (the player marker style): a page keeps the
-  // script it was created with, so the map view is closed and created again
-  // when it shows next (at once when it is showing).
-  window.mayakDesktop.on(
-    'browser:document-script',
-    () =>
-      void enqueue(async () => {
-        const tab = state.tabs.find((t) => t.id === mapTabID)
-        if (!tab || !views.has(tab.id)) return
-        await native('close', { id: tab.id })
-        views.delete(tab.id)
-        loadingViews.delete(tab.id)
-        if (state.active === tab.id) await show()
-      }),
-  )
   // A shortcut pressed inside a page view (Ctrl+T and the like) is handled by
   // the shell, like one pressed in the shell itself.
   window.mayakDesktop.on('browser:key', (key) => {
     if (key && typeof key.key === 'string')
       onKey({ key: key.key, ctrl: !!key.ctrl, shift: !!key.shift, alt: !!key.alt })
   })
-  // Another page used the map view's Remote ID, so Go replaced it: reopen the
-  // map view with the new one (its tab keeps the old document script).
-  window.mayakDesktop.on(
-    'browser:remote-id',
-    (id) =>
-      void enqueue(async () => {
-        if (typeof id !== 'string' || !id) return
-        remoteID = id
-        const tab = state.tabs.find((t) => t.id === mapTabID)
-        if (tab && views.has(tab.id)) await native('navigate', { id: tab.id, url: viewURL(tab) })
-      }),
-  )
   // The update channel is this PC's, whichever mode it runs in.
   try {
     updateChannel = (await go.GetSettings()).updateChannel === 'nightly' ? 'nightly' : 'stable'
@@ -951,8 +1004,8 @@ const ready = (async () => {
   window.mayakDesktop.on('browser:screenshot', () => void loadShots())
   window.mayakDesktop.on('snapnote:changed', () => void loadSnaps())
   window.mayakDesktop.on('menu:choice', (choice) => onMenu(String(choice?.id || '')))
-  // The squad: a nightly feature (SquadAvailable). The squad joined before
-  // is joined again; a build without squads drops its tab.
+  // The map view: a nightly feature (SquadAvailable). The squad joined
+  // before is joined again; a build without it drops its tab.
   window.mayakDesktop.on('squad:state', (next) => {
     squad.state = next || null
     update()
@@ -960,9 +1013,9 @@ const ready = (async () => {
   try {
     squad.available = !!(await go.SquadAvailable())
   } catch {}
-  if (!squad.available) state.tabs = state.tabs.filter((t) => t.kind !== 'squadmap')
+  if (!squad.available) state.tabs = state.tabs.filter((t) => t.kind !== 'livemap')
   else {
-    if (state.tabs.find((t) => t.id === state.active)?.kind === 'squadmap') void loadSquadMaps()
+    if (state.tabs.find((t) => t.id === state.active)?.kind === 'livemap') void loadSquadMaps()
     if (state.squadCode && state.squadName)
       go.SquadJoin(state.squadCode, state.squadName)
         .then(() => go.SquadState())
@@ -1037,10 +1090,18 @@ async function perform(type, data) {
       if (tab?.kind !== 'settings') returnTo = state.active
       openLocal(state, 'settings')
       break
-    // Closing settings returns to the tab it was opened from, or TARKOV.DEV.
+    // Settings opened at a section (an indicator pressed).
+    case 'settingsAt':
+      if (tab?.kind !== 'settings') returnTo = state.active
+      openLocal(state, 'settings')
+      if (browserSections.includes(data) || (platform === 'windows' && hostSections.includes(data))) section = data
+      break
+    // Closing settings returns to the tab it was opened from, or the map.
     case 'closeSettings': {
       const back =
-        state.tabs.find((t) => t.id === returnTo && t.kind !== 'settings') || state.tabs.find((t) => t.id === mapTabID)
+        state.tabs.find((t) => t.id === returnTo && t.kind !== 'settings') ||
+        state.tabs.find((t) => t.kind === 'livemap') ||
+        state.tabs.find((t) => t.kind !== 'settings')
       if (back) state.active = back.id
       break
     }
@@ -1224,6 +1285,10 @@ async function perform(type, data) {
     case 'snapFonts':
       if (!snaps.fonts) snaps.fonts = (await go.SystemFonts()) || []
       return snapshot()
+    // The map view could not make its picture (view-map.js snapMap).
+    case 'mapSnapFailed':
+      error = t(state.language, 'mapSnapFailed') + String(data || '')
+      return snapshot()
     case 'snapNew': {
       const note = await go.SnapNoteCreate(String(data?.image || ''), String(data?.title || ''))
       openLocal(state, 'snapnotes')
@@ -1267,9 +1332,9 @@ async function perform(type, data) {
       if (!note?.url) return snapshot()
       return perform('openOrFocus', note.url)
     }
-    case 'squadmap':
+    case 'livemap':
       if (!squad.available) return snapshot()
-      openLocal(state, 'squadmap')
+      openLocal(state, 'livemap')
       void loadSquadMaps()
       break
     case 'squadCreate':
@@ -1282,6 +1347,7 @@ async function perform(type, data) {
       await go.SquadLeave()
       squad.state = null
       state.squadCode = ''
+      shareSquad()
       break
     case 'squadRename': {
       const name = String(data || '')
@@ -1295,10 +1361,37 @@ async function perform(type, data) {
     case 'squadCopy':
       await Clipboard.SetText(state.squadCode || '')
       return snapshot()
+    case 'mapHidden':
+      state.mapHidden = hiddenOf(data)
+      break
+    case 'mapCollapsed':
+      state.mapCollapsed = hiddenOf(data)
+      break
+    case 'mapSettings':
+      state.mapSettings = mapSettingsOf({ ...state.mapSettings, ...data })
+      break
+    case 'mapMarkers': {
+      // By map, language and game mode (auto: the one played).
+      const mode = state.mapSettings?.mode || 'auto'
+      const key = `${data?.map}|${state.language}|${mode}`
+      if (!squad.markers[key])
+        squad.markers[key] = (await go.BrowserMapMarkers(
+          String(data?.map || ''),
+          state.language,
+          mode === 'auto' ? '' : mode,
+        )) || {
+          layers: [],
+          markers: [],
+        }
+      update()
+      return snapshot()
+    }
     case 'squadMapImage': {
-      const key = `${data?.map}|${data?.layer || ''}`
+      // By map, floor and how faded the ground is under a floor.
+      const fade = Math.round(Number(data?.fade) || 0)
+      const key = `${data?.map}|${data?.layer || ''}|${fade}`
       if (!squad.images[key])
-        squad.images[key] = await go.BrowserSquadMapImage(String(data?.map || ''), String(data?.layer || ''))
+        squad.images[key] = await go.BrowserSquadMapImage(String(data?.map || ''), String(data?.layer || ''), fade)
       update()
       return snapshot()
     }
@@ -1466,14 +1559,17 @@ async function perform(type, data) {
       break
     }
     case 'connection': {
+      if (data.receive !== undefined) state.connection.receive = receiveOf(data.receive)
       if (data.mode !== undefined) await go.BrowserSetMode(data.mode)
-      if (data.stun !== undefined) {
-        iceServers(data.stun)
-        state.connection.stun = data.stun
-      }
-      if (['local', 'webrtc', 'off'].includes(data.mode) && (data.mode !== 'local' || platform === 'windows')) {
-        closePeer()
+      if (['local', 'client', 'off'].includes(data.mode) && (data.mode !== 'local' || platform === 'windows')) {
+        // A pairing being made ends; the one kept runs while the mode is
+        // its side.
+        forgetPairCode()
+        clearTimeout(expiry)
+        pending = null
         state.connection.mode = data.mode
+        peerState = { phase: 'idle' }
+        startLink()
       }
       break
     }
@@ -1525,6 +1621,16 @@ async function perform(type, data) {
         await go.BrowserSetWindowTheme(data.caption, data.text, data.border, !!data.dark)
       } catch {}
       return snapshot()
+    // A task marker of the map view opens its task in a tab as a recognized
+    // task does: the task site set (the Host's on the Host) and the tab setting.
+    case 'mapTask': {
+      const id = String(data?.id || '')
+      const urls = id ? await go.QuestSiteURLs(id, '') : null
+      if (!urls || !Object.keys(urls).length) return snapshot()
+      const site = state.connection.mode === 'local' ? hostQuestSite : 'tarkov-dev'
+      if (!receiveTask(state, { id, name: String(data?.name || id).slice(0, 200), site, urls })) return snapshot()
+      break
+    }
     // A task in the item sidebar opens like a recognized task, on the task site
     // set now (on the Host its current setting, not the one when the item came).
     case 'itemTask': {
@@ -1736,4 +1842,4 @@ window.mayak = {
     return result
   },
 }
-window.addEventListener('beforeunload', () => peer.close())
+window.addEventListener('beforeunload', () => peer.stop())

@@ -6,6 +6,89 @@
 import { Create as $Create } from "@wailsio/runtime";
 
 /**
+ * Chance is a boss that may spawn somewhere, and how likely it is (0-1).
+ */
+export class Chance {
+    "name": string;
+    "chance": number;
+
+    /** Creates a new Chance instance. */
+    constructor($$source: Partial<Chance> = {}) {
+        if (!("name" in $$source)) {
+            this["name"] = "";
+        }
+        if (!("chance" in $$source)) {
+            this["chance"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Chance instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Chance {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new Chance($$parsedSource as Partial<Chance>);
+    }
+}
+
+/**
+ * Detail is what a marker's popup tells beyond its name.
+ */
+export class Detail {
+    "lockType"?: string;
+    "needsPower"?: boolean;
+    "bosses"?: Chance[];
+    "activatedBy"?: string[];
+    "activates"?: Target[];
+    "item"?: Ref | null;
+    "items"?: Ref[];
+    "task"?: string;
+    "taskId"?: string;
+    "objective"?: string;
+
+    /**
+     * Active is a task marker of a task being done (see Sources.TaskActive).
+     */
+    "active"?: boolean;
+
+    /** Creates a new Detail instance. */
+    constructor($$source: Partial<Detail> = {}) {
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Detail instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Detail {
+        const $$createField2_0 = $$createType1;
+        const $$createField3_0 = $$createType2;
+        const $$createField4_0 = $$createType4;
+        const $$createField5_0 = $$createType6;
+        const $$createField6_0 = $$createType7;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("bosses" in $$parsedSource) {
+            $$parsedSource["bosses"] = $$createField2_0($$parsedSource["bosses"]);
+        }
+        if ("activatedBy" in $$parsedSource) {
+            $$parsedSource["activatedBy"] = $$createField3_0($$parsedSource["activatedBy"]);
+        }
+        if ("activates" in $$parsedSource) {
+            $$parsedSource["activates"] = $$createField4_0($$parsedSource["activates"]);
+        }
+        if ("item" in $$parsedSource) {
+            $$parsedSource["item"] = $$createField5_0($$parsedSource["item"]);
+        }
+        if ("items" in $$parsedSource) {
+            $$parsedSource["items"] = $$createField6_0($$parsedSource["items"]);
+        }
+        return new Detail($$parsedSource as Partial<Detail>);
+    }
+}
+
+/**
  * Extent is a height range of a floor, optionally only within some areas
  * ([[x1, z1], [x2, z2]] in game coordinates).
  */
@@ -26,7 +109,7 @@ export class Extent {
      * Creates a new Extent instance from a string or object.
      */
     static createFrom($$source: any = {}): Extent {
-        const $$createField1_0 = $$createType0;
+        const $$createField1_0 = $$createType8;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("bounds" in $$parsedSource) {
             $$parsedSource["bounds"] = $$createField1_0($$parsedSource["bounds"]);
@@ -36,20 +119,76 @@ export class Extent {
 }
 
 /**
- * Layer is a floor above or below the ground level.
+ * Label is a place name written on the map: at (X, Z), turned by Rotation
+ * degrees, Size percent of the normal size; it shows on the floors between
+ * Bottom and Top (and Y, its height). Ground is a name given no height: it
+ * spans every floor, as tarkov.dev has it, but names a place on the ground.
+ */
+export class Label {
+    "text": string;
+    "x": number;
+    "z": number;
+    "y": number;
+    "rotation"?: number;
+    "size"?: number;
+    "top": number;
+    "bottom": number;
+    "ground"?: boolean;
+
+    /** Creates a new Label instance. */
+    constructor($$source: Partial<Label> = {}) {
+        if (!("text" in $$source)) {
+            this["text"] = "";
+        }
+        if (!("x" in $$source)) {
+            this["x"] = 0;
+        }
+        if (!("z" in $$source)) {
+            this["z"] = 0;
+        }
+        if (!("y" in $$source)) {
+            this["y"] = 0;
+        }
+        if (!("top" in $$source)) {
+            this["top"] = 0;
+        }
+        if (!("bottom" in $$source)) {
+            this["bottom"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Label instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Label {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new Label($$parsedSource as Partial<Label>);
+    }
+}
+
+/**
+ * Layer is a floor above or below the ground level, drawn from the SVG map
+ * (SVGLayer, a group in it) and/or from tiles of its own (TilePath). ID
+ * names it: its SVGLayer, or "tile-<n>" for a floor only in tiles. Show is
+ * the floor tarkov.dev shows first (Icebreaker's), over an undimmed base.
  */
 export class Layer {
+    "id": string;
     "name": string;
-    "svgLayer": string;
+    "svgLayer"?: string;
+    "tilePath"?: string;
+    "show"?: boolean;
     "extents": Extent[];
 
     /** Creates a new Layer instance. */
     constructor($$source: Partial<Layer> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
         if (!("name" in $$source)) {
             this["name"] = "";
-        }
-        if (!("svgLayer" in $$source)) {
-            this["svgLayer"] = "";
         }
         if (!("extents" in $$source)) {
             this["extents"] = [];
@@ -62,10 +201,10 @@ export class Layer {
      * Creates a new Layer instance from a string or object.
      */
     static createFrom($$source: any = {}): Layer {
-        const $$createField2_0 = $$createType2;
+        const $$createField5_0 = $$createType10;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("extents" in $$parsedSource) {
-            $$parsedSource["extents"] = $$createField2_0($$parsedSource["extents"]);
+            $$parsedSource["extents"] = $$createField5_0($$parsedSource["extents"]);
         }
         return new Layer($$parsedSource as Partial<Layer>);
     }
@@ -73,13 +212,23 @@ export class Layer {
 
 /**
  * Map is one interactive map. Keys are tarkov.dev's map names; Aliases are
- * the other names that use the same map (night-factory, ground-zero-21).
+ * the other names that use the same map (night-factory, ground-zero-21). A
+ * map has an SVG picture (SVG, with its ground level SVGLayer), tiles on
+ * tarkov.dev (TilePath, a URL template with {z}/{x}/{y}, TileSize pixels
+ * square), or both, as tarkov.dev's Abstract and Satellite.
  */
 export class Map {
     "key": string;
     "aliases"?: string[];
     "svg"?: string;
     "svgLayer"?: string;
+    "tilePath"?: string;
+    "tileSize"?: number;
+
+    /**
+     * HeightRange bounds the ground level's heights (none: all of them).
+     */
+    "heightRange"?: number[] | null;
     "transform": number[];
     "rotation": number;
     "bounds": number[][];
@@ -89,6 +238,7 @@ export class Map {
     "author"?: string;
     "authorLink"?: string;
     "layers"?: Layer[];
+    "labels"?: Label[];
 
     /** Creates a new Map instance. */
     constructor($$source: Partial<Map> = {}) {
@@ -118,23 +268,237 @@ export class Map {
      * Creates a new Map instance from a string or object.
      */
     static createFrom($$source: any = {}): Map {
-        const $$createField1_0 = $$createType3;
-        const $$createField12_0 = $$createType5;
+        const $$createField1_0 = $$createType2;
+        const $$createField15_0 = $$createType12;
+        const $$createField16_0 = $$createType14;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("aliases" in $$parsedSource) {
             $$parsedSource["aliases"] = $$createField1_0($$parsedSource["aliases"]);
         }
         if ("layers" in $$parsedSource) {
-            $$parsedSource["layers"] = $$createField12_0($$parsedSource["layers"]);
+            $$parsedSource["layers"] = $$createField15_0($$parsedSource["layers"]);
+        }
+        if ("labels" in $$parsedSource) {
+            $$parsedSource["labels"] = $$createField16_0($$parsedSource["labels"]);
         }
         return new Map($$parsedSource as Partial<Map>);
     }
 }
 
+/**
+ * MapMarkers is everything the map view shows of one map from the
+ * catalog.
+ */
+export class MapMarkers {
+    "layers": MarkerLayer[];
+    "markers": Marker[];
+    "raidDuration"?: number;
+    "players"?: string;
+
+    /**
+     * Mode is the catalog's game mode the markers come from.
+     */
+    "mode"?: string;
+
+    /** Creates a new MapMarkers instance. */
+    constructor($$source: Partial<MapMarkers> = {}) {
+        if (!("layers" in $$source)) {
+            this["layers"] = [];
+        }
+        if (!("markers" in $$source)) {
+            this["markers"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new MapMarkers instance from a string or object.
+     */
+    static createFrom($$source: any = {}): MapMarkers {
+        const $$createField0_0 = $$createType16;
+        const $$createField1_0 = $$createType18;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("layers" in $$parsedSource) {
+            $$parsedSource["layers"] = $$createField0_0($$parsedSource["layers"]);
+        }
+        if ("markers" in $$parsedSource) {
+            $$parsedSource["markers"] = $$createField1_0($$parsedSource["markers"]);
+        }
+        return new MapMarkers($$parsedSource as Partial<MapMarkers>);
+    }
+}
+
+/**
+ * Marker is one thing on the map, in game coordinates. Layer is its filter
+ * entry (Layers when it is in several: loose loot of several categories);
+ * Icon a picture in map-icons, or IconURL one on tarkov.dev (with IconSize
+ * in pixels); Name is shown on it (extracts) or on hover and searched;
+ * Outline, when there is one, is the area it covers ([x, z] points); Top and
+ * Bottom bound its height, for the floor it is on.
+ */
+export class Marker {
+    "layer": string;
+    "layers"?: string[];
+    "icon"?: string;
+    "iconUrl"?: string;
+    "iconSize"?: number[];
+    "name"?: string;
+    "id"?: string;
+    "x": number;
+    "y": number;
+    "z": number;
+    "top"?: number;
+    "bottom"?: number;
+    "outline"?: number[][];
+    "detail"?: Detail | null;
+
+    /** Creates a new Marker instance. */
+    constructor($$source: Partial<Marker> = {}) {
+        if (!("layer" in $$source)) {
+            this["layer"] = "";
+        }
+        if (!("x" in $$source)) {
+            this["x"] = 0;
+        }
+        if (!("y" in $$source)) {
+            this["y"] = 0;
+        }
+        if (!("z" in $$source)) {
+            this["z"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Marker instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Marker {
+        const $$createField1_0 = $$createType2;
+        const $$createField12_0 = $$createType19;
+        const $$createField13_0 = $$createType21;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("layers" in $$parsedSource) {
+            $$parsedSource["layers"] = $$createField1_0($$parsedSource["layers"]);
+        }
+        if ("outline" in $$parsedSource) {
+            $$parsedSource["outline"] = $$createField12_0($$parsedSource["outline"]);
+        }
+        if ("detail" in $$parsedSource) {
+            $$parsedSource["detail"] = $$createField13_0($$parsedSource["detail"]);
+        }
+        return new Marker($$parsedSource as Partial<Marker>);
+    }
+}
+
+/**
+ * MarkerLayer is one entry of the map's filters: a kind of marker. Group is the
+ * filters' section (Groups); Name is the entry's name where the data names
+ * it (a container, a boss, a handbook category), else empty and the shell
+ * names it by Key. Icon is a picture in the shell's map-icons, or IconURL
+ * one on tarkov.dev.
+ */
+export class MarkerLayer {
+    "key": string;
+    "group": string;
+    "name"?: string;
+    "icon"?: string;
+    "iconUrl"?: string;
+
+    /** Creates a new MarkerLayer instance. */
+    constructor($$source: Partial<MarkerLayer> = {}) {
+        if (!("key" in $$source)) {
+            this["key"] = "";
+        }
+        if (!("group" in $$source)) {
+            this["group"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new MarkerLayer instance from a string or object.
+     */
+    static createFrom($$source: any = {}): MarkerLayer {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new MarkerLayer($$parsedSource as Partial<MarkerLayer>);
+    }
+}
+
+/**
+ * Ref is an item (or anything else) a popup names, with its picture.
+ */
+export class Ref {
+    "name": string;
+    "image"?: string;
+    "count"?: number;
+
+    /** Creates a new Ref instance. */
+    constructor($$source: Partial<Ref> = {}) {
+        if (!("name" in $$source)) {
+            this["name"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Ref instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Ref {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new Ref($$parsedSource as Partial<Ref>);
+    }
+}
+
+/**
+ * Target is something a switch opens: another switch or an extract (with
+ * its faction).
+ */
+export class Target {
+    "name": string;
+    "faction"?: string;
+
+    /** Creates a new Target instance. */
+    constructor($$source: Partial<Target> = {}) {
+        if (!("name" in $$source)) {
+            this["name"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Target instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Target {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new Target($$parsedSource as Partial<Target>);
+    }
+}
+
 // Private type creation functions
-const $$createType0 = $Create.Array($Create.Any);
-const $$createType1 = Extent.createFrom;
-const $$createType2 = $Create.Array($$createType1);
-const $$createType3 = $Create.Array($Create.Any);
-const $$createType4 = Layer.createFrom;
-const $$createType5 = $Create.Array($$createType4);
+const $$createType0 = Chance.createFrom;
+const $$createType1 = $Create.Array($$createType0);
+const $$createType2 = $Create.Array($Create.Any);
+const $$createType3 = Target.createFrom;
+const $$createType4 = $Create.Array($$createType3);
+const $$createType5 = Ref.createFrom;
+const $$createType6 = $Create.Nullable($$createType5);
+const $$createType7 = $Create.Array($$createType5);
+const $$createType8 = $Create.Array($Create.Any);
+const $$createType9 = Extent.createFrom;
+const $$createType10 = $Create.Array($$createType9);
+const $$createType11 = Layer.createFrom;
+const $$createType12 = $Create.Array($$createType11);
+const $$createType13 = Label.createFrom;
+const $$createType14 = $Create.Array($$createType13);
+const $$createType15 = MarkerLayer.createFrom;
+const $$createType16 = $Create.Array($$createType15);
+const $$createType17 = Marker.createFrom;
+const $$createType18 = $Create.Array($$createType17);
+const $$createType19 = $Create.Array($Create.Any);
+const $$createType20 = Detail.createFrom;
+const $$createType21 = $Create.Nullable($$createType20);

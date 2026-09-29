@@ -12,6 +12,12 @@ export class Member {
     "id": string;
     "me": boolean;
     "name": string;
+
+    /**
+     * Viewer is a PC that only watches: a client of a Host in the squad,
+     * the same player, so the others leave it out of their list.
+     */
+    "viewer"?: boolean;
     "map"?: string;
     "pos"?: Position | null;
 
@@ -39,10 +45,10 @@ export class Member {
      * Creates a new Member instance from a string or object.
      */
     static createFrom($$source: any = {}): Member {
-        const $$createField4_0 = $$createType1;
+        const $$createField5_0 = $$createType1;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("pos" in $$parsedSource) {
-            $$parsedSource["pos"] = $$createField4_0($$parsedSource["pos"]);
+            $$parsedSource["pos"] = $$createField5_0($$parsedSource["pos"]);
         }
         return new Member($$parsedSource as Partial<Member>);
     }

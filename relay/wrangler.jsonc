@@ -1,5 +1,6 @@
 // Cloudflare Worker "mayak-relay": the squad rooms MAYAK joins by a squad
-// code (worker/index.js, a Durable Object per room), at
+// code and the links between a Host and its Clients (worker/index.js, a
+// Durable Object per room), at
 // https://mayak-relay.ich.sh. It is its own Worker so that publishing the
 // landing page (the "mayak" Worker, site/) does not drop everyone's
 // connection: deploying a Worker restarts its Durable Objects. `task
@@ -10,9 +11,15 @@
   "main": "worker/index.js",
   "compatibility_date": "2026-09-25",
   "durable_objects": {
-    "bindings": [{ "name": "SQUAD", "class_name": "SquadRoom" }]
+    "bindings": [
+      { "name": "SQUAD", "class_name": "SquadRoom" },
+      { "name": "LINK", "class_name": "LinkRoom" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SquadRoom"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["SquadRoom"] },
+    { "tag": "v2", "new_sqlite_classes": ["LinkRoom"] }
+  ],
   "routes": [{ "pattern": "mayak-relay.ich.sh", "custom_domain": true }],
   "workers_dev": true
 }

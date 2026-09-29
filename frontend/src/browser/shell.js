@@ -47,7 +47,7 @@ import { shotBadges, screenshotsPage } from './view-screenshots.js'
 import { itemToggle, itemPanel } from './view-item.js'
 import { tutorialOpen, tutorialHTML, handleTutorial, openTutorial } from './view-tutorial.js'
 import { snapButton, snapSection, snapNotesPage, snapMenuHTML, snapToolbar } from './view-snapnotes.js'
-import { squadEntry, squadPage } from './view-squad.js'
+import { liveMapEntry, liveMapPage } from './view-map.js'
 setRender(render)
 
 // The changelog page, rendered from CHANGELOG.md in the repository.
@@ -58,7 +58,7 @@ let editingBookmark = null,
   tabQuery = '',
   contextMenu = null,
   placeMenu = null
-const peerDrafts = { offer: '', answer: '', pairCode: '' }
+const peerDrafts = { offer: '', pairCode: '' }
 let copied = false,
   windowTheme = '',
   renderDeferred = false
@@ -120,8 +120,8 @@ const tabName = (tab) =>
               ? t('screenshots')
               : tab.kind === 'snapnotes'
                 ? t('snapNotes')
-                : tab.kind === 'squadmap'
-                  ? t('squadMap')
+                : tab.kind === 'livemap'
+                  ? t('liveMap')
                   : tab.kind === 'bookmarks'
                     ? t('bookmarks')
                     : tab.kind === 'tabs'
@@ -136,7 +136,7 @@ const listedTabs = () =>
       tab.kind !== 'settings' &&
       tab.kind !== 'screenshots' &&
       tab.kind !== 'snapnotes' &&
-      tab.kind !== 'squadmap' &&
+      tab.kind !== 'livemap' &&
       tab.kind !== 'bosses' &&
       tab.kind !== 'tabs',
   )
@@ -149,34 +149,27 @@ function tabs() {
     )
     .join('')
 }
-// Fixed views (TARKOV.DEV, TarkovTracker) sit above the sections like nav items.
+// The map view first, then the fixed views (TARKOV.DEV, TarkovTracker), above
+// the sections like nav items.
 function mapEntry() {
   return (
+    liveMapEntry() +
     state.tabs
       .filter((tab) => tab.fixed)
       .map(
         (tab) =>
           `<div class="tab map-entry ${state.active === tab.id ? 'active' : ''}"><button data-action="activate" data-id="${esc(tab.id)}" class="tab-select" title="${esc(tab.role === 'map' ? t('mapTabHelp') : tabName(tab))}">${tabIcon(tab) ? favicon(tabIcon(tab)) : icon(tab.role === 'map' ? 'map' : 'tracker', 'tab-icon')}<span class="tab-name">${esc(tabName(tab))}</span></button></div>`,
       )
-      .join('') + squadEntry()
+      .join('')
   )
 }
 function connectionLabel() {
   const mode = state.connection.mode
   if (mode === 'off') return t('off')
-  const phase = state.peer?.phase || 'idle'
-  const status =
-    {
-      connected: 'p2pConnected',
-      connecting: 'p2pConnecting',
-      gathering: 'p2pGathering',
-      'waiting-answer': 'p2pWaitingAnswer',
-      'waiting-host': 'p2pWaitingHost',
-      failed: 'p2pFailed',
-      disconnected: 'p2pDisconnected',
-    }[phase] || 'p2pIdle'
+  const p = state.peer || { phase: 'idle' }
+  const status = linkStatus(p, mode === 'client')
   return mode === 'local'
-    ? `${t('hostMode')} · ${t('local')}${phase !== 'idle' ? ' · ' + t(status) : ''}`
+    ? `${t('hostMode')} · ${t('local')}${p.phase !== 'idle' ? ' · ' + t(status).replace('{n}', String(p.peers || 0)) : ''}`
     : `${t('clientMode')} · ${t(status)}`
 }
 // The top of the sidebar: the status indicators; the rest of the row is title
@@ -191,7 +184,17 @@ function indicators() {
   const mode = state.connection.mode
   const status =
     mode === 'local' ? 'host' : mode === 'off' ? 'off' : state.peer?.phase === 'connected' ? 'linked' : 'unlinked'
-  return `<span class="mode-status ${status}" tabindex="0" role="img" aria-label="${esc(label)}">${icon(status)}<span class="status-tooltip" role="tooltip">${esc(label)}</span></span>${monitorButton()}`
+  return `${gameModeBadge()}<span class="mode-status ${status}" tabindex="0" role="button" data-action="settingsAt" data-id="connection" aria-label="${esc(label)}">${icon(status)}<span class="status-tooltip" role="tooltip">${esc(label)}</span></span>${monitorButton()}`
+}
+// The game mode being played (PvP, PvE, Season), as the Host detects it
+// from the game's logs and TarkovTracker; none while it is unknown. It opens
+// the setting it comes from (Recognition), as the connection's opens
+// Connection.
+function gameModeBadge() {
+  const mode = { pvp: 'regular', pve: 'pve', seasonal: 'pvp-season' }[state.host?.mode || '']
+  if (!mode) return ''
+  const name = t('gameMode_' + mode)
+  return `<span class="game-mode-badge" data-mode="${mode}" tabindex="0" role="button" data-action="settingsAt" data-id="recognition" title="${esc(t('gameModeNow'))}: ${esc(name)}">${esc(name)}</span>`
 }
 // The collapse button is the first of the sidebar's bottom buttons, away from
 // the window buttons at the top.
@@ -583,45 +586,62 @@ function browserSettings(key) {
     case 'adblock':
       return `<section class="panel"><label class="check"><input type="checkbox" data-action="adblock" ${state.adblock ? 'checked' : ''}>${t('adblockEnable')}</label><p class="hint">${t('adblockHelp')}</p></section>`
     default:
-      return `<section class="panel"><h2>${t('connection')}</h2>${select('mode', t('mode'), [...(state.localHost ? [['local', t('local')]] : []), ['webrtc', t('webrtc')], ['off', t('disabled')]], state.connection.mode, 'connection')}${state.connection.mode === 'local' ? `<p class="hint">${t('localHelp')}</p>` : ''}</section>${peerPanel()}`
+      return `<section class="panel"><h2>${t('connection')}</h2>${select('mode', t('mode'), [...(state.localHost ? [['local', t('local')]] : []), ['client', t('clientConnection')], ['off', t('disabled')]], state.connection.mode, 'connection')}${state.connection.mode === 'local' ? `<p class="hint">${t('localHelp')}</p>` : ''}</section>${peerPanel()}`
   }
 }
-function peerPanel() {
-  if (state.connection.mode !== 'webrtc' && !(state.localHost && state.connection.mode === 'local')) return ''
-  const p = state.peer || { phase: 'idle', role: '' }
-  const receive = state.connection.mode === 'webrtc'
-  const statusKey =
+// linkStatus is the word for the link's phase (api.js peerState).
+function linkStatus(p, receive) {
+  if (p.reason === 'invite-expired') return 'p2pExpired'
+  if (p.phase === 'connected' && !receive && p.peers > 1) return 'linkConnectedCount'
+  return (
     {
-      idle: 'p2pIdle',
-      gathering: 'p2pGathering',
-      'waiting-answer': 'p2pWaitingAnswer',
-      'waiting-host': p.pairCode ? 'p2pWaitingHostAuto' : 'p2pWaitingHost',
-      connecting: 'p2pConnecting',
-      connected: 'p2pConnected',
-      failed: 'p2pFailed',
-      disconnected: 'p2pDisconnected',
-      closed: 'p2pDisconnected',
-    }[p.phase] || 'p2pIdle'
+      connecting: 'linkConnecting',
+      waiting: receive ? 'linkWaitingHost' : 'linkWaitingClient',
+      connected: 'linkConnected',
+      offline: 'linkOffline',
+      failed: 'linkFailed',
+    }[p.phase] || 'linkIdle'
+  )
+}
+// The pairing with the other PCs: the Host hands out codes (another Client
+// can join the pairing kept with one), a Client enters one; then the state
+// and the way to end it (on the Host for every Client, on a Client for it).
+function peerPanel() {
+  const mode = state.connection.mode
+  if (mode !== 'client' && !(state.localHost && mode === 'local')) return ''
+  const p = state.peer || { phase: 'idle' }
+  const receive = mode === 'client'
   const disabled = p.busy ? 'disabled' : ''
-  const idle = !p.code || ['failed', 'disconnected', 'closed'].includes(p.phase)
-  const waiting = p.role === 'sender' && p.phase === 'waiting-answer'
+  // A Client meeting its Host for the first time.
+  const joining = receive && !p.paired && !['idle', 'failed'].includes(p.phase)
   const pairCode = p.pairCode ? `${p.pairCode.slice(0, 4)} ${p.pairCode.slice(4)}` : ''
-  return `<section class="panel peer-panel"><h2>${t(receive ? 'p2pReceive' : 'p2pTitle')}</h2><p class="hint">${t('p2pHelp')}</p><p class="peer-status" role="status">${t(p.reason === 'invite-expired' ? 'p2pExpired' : statusKey)}</p>${p.phase === 'failed' && state.platform === 'darwin' ? `<p class="hint">${t('p2pMacLocalNetwork')}</p>` : ''}
-  ${!receive && p.phase !== 'connected' && !waiting ? `<button class="primary" data-action="peerInvite" ${disabled}>${t('createInvite')}</button>` : ''}
-  ${waiting && p.pairCode ? `<div class="pair-code"><output>${esc(pairCode)}</output><button data-action="peerCopyPair">${t(copied ? 'copied' : 'copyCode')}</button></div><p class="hint">${t('pairCodeHelp')}</p>` : ''}
-  ${waiting && p.relayError ? `<p class="hint peer-error">${t('relayFailed')}</p>` : ''}
-  ${receive && idle && p.phase !== 'connected' ? `<form id="peer-join-form"><label class="field"><span>${t('enterPairCode')}</span><input name="pairCode" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="1234 5678" value="${esc(peerDrafts.pairCode || '')}" required></label><button class="primary" type="submit" ${disabled}>${t('joinPair')}</button></form>` : ''}
-  ${
-    p.phase !== 'connected'
-      ? `<details class="peer-manual" ${p.code && !p.pairCode ? 'open' : ''}><summary>${t('manualExchange')}</summary><p class="hint">${t('manualExchangeHelp')}</p>
-  ${receive && idle ? `<form id="peer-offer-form"><label class="field"><span>${t('enterOffer')}</span><textarea name="peerOffer" required spellcheck="false" maxlength="100000" rows="3">${esc(peerDrafts.offer)}</textarea></label><button type="submit" ${disabled}>${t('createAnswer')}</button></form>` : ''}
-  ${p.code ? `<div class="code-output"><p class="hint">${t(p.role === 'sender' ? 'offerStep' : 'answerStep')}</p><label class="field"><span>${t(p.role === 'sender' ? 'inviteCode' : 'answerCode')}</span><textarea readonly rows="2" spellcheck="false">${esc(p.code)}</textarea></label><button data-action="peerCopy">${t(copied ? 'copied' : 'copyCode')}</button></div>` : ''}
-  ${waiting ? `<form id="peer-answer-form"><label class="field"><span>${t('enterAnswer')}</span><textarea name="peerAnswer" required spellcheck="false" maxlength="100000" rows="3">${esc(peerDrafts.answer)}</textarea></label><button type="submit" ${disabled}>${t('finishPairing')}</button></form>` : ''}
-  </details>`
+  const hostCode =
+    !receive && p.code
+      ? `${pairCode ? `<div class="pair-code"><output>${esc(pairCode)}</output><button data-action="peerCopyPair">${t(copied ? 'copied' : 'copyCode')}</button></div><p class="hint">${t('pairCodeHelp')}</p>` : ''}${p.relayError ? `<p class="hint peer-error">${t('relayFailed')}</p>` : ''}<details class="peer-manual" ${p.relayError ? 'open' : ''}><summary>${t('manualExchange')}</summary><p class="hint">${t('manualExchangeHelp')}</p><div class="code-output"><label class="field"><span>${t('inviteCode')}</span><textarea readonly rows="2" spellcheck="false">${esc(p.code)}</textarea></label><button data-action="peerCopy">${t(copied ? 'copied' : 'copyCode')}</button></div></details><button data-action="peerCancel" ${disabled}>${t('cancelPairing')}</button>`
       : ''
-  }
-  ${p.phase !== 'idle' ? `<button data-action="peerClose" ${disabled}>${t('disconnectPeer')}</button>` : ''}
-  <p class="hint">${t('p2pLimit')}</p><details><summary>${t('stunLabel')}</summary><label class="field"><span>${t('stunLabel')}</span><input data-scope="connection" data-key="stun" value="${esc(state.connection.stun || '')}" placeholder="stun:stun.cloudflare.com:3478"></label><p class="hint">${t('stunHelp')}</p></details></section>`
+  const invite =
+    !receive && !p.code
+      ? `<button class="primary" data-action="peerInvite" ${disabled}>${t(p.paired ? 'addPeer' : 'createInvite')}</button>`
+      : ''
+  const clientForms =
+    receive && !p.paired && !joining
+      ? `<form id="peer-join-form"><label class="field"><span>${t('enterPairCode')}</span><input name="pairCode" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="1234 5678" value="${esc(peerDrafts.pairCode || '')}" required></label><button class="primary" type="submit" ${disabled}>${t('joinPair')}</button></form><details class="peer-manual"><summary>${t('manualExchange')}</summary><form id="peer-offer-form"><label class="field"><span>${t('enterOffer')}</span><textarea name="peerOffer" required spellcheck="false" maxlength="4096" rows="3">${esc(peerDrafts.offer)}</textarea></label><button type="submit" ${disabled}>${t('acceptInvite')}</button></form></details>`
+      : ''
+  // What this Client takes from its Host (the others choose their own).
+  const takes = receive
+    ? `<fieldset class="link-receive"><legend>${t('linkReceive')}</legend>${['task', 'map', 'item']
+        .map(
+          (k) =>
+            `<label class="check"><input type="checkbox" data-action="linkReceive" data-id="${k}" ${state.connection.receive?.[k] !== false ? 'checked' : ''}>${esc(t('linkReceive_' + k))}</label>`,
+        )
+        .join('')}<p class="hint">${t('linkReceiveHelp')}</p></fieldset>`
+    : ''
+  const end = p.paired
+    ? `<button class="peer-unpair" data-action="peerClose" ${disabled}>${t(receive ? 'unpairPeer' : 'unpairAll')}</button>`
+    : joining
+      ? `<button data-action="peerCancel" ${disabled}>${t('cancelPairing')}</button>`
+      : ''
+  return `<section class="panel peer-panel"><h2>${t(receive ? 'p2pReceive' : 'p2pTitle')}</h2><p class="hint">${t('p2pHelp')}</p><p class="peer-status" role="status" data-phase="${esc(p.phase)}">${esc(t(linkStatus(p, receive)).replace('{n}', String(p.peers || 0)))}</p>${invite}${hostCode}${clientForms}${takes}${end}<p class="hint">${t('p2pLimit')}</p></section>`
 }
 function settingsHost() {
   return (
@@ -651,6 +671,18 @@ const loadBar = (tab) =>
 // Areas that scroll on their own, by selector.
 let scrolledTab = ''
 const scrollAreas = ['.item-body', '.tab-strip', 'main', '.item-results']
+// The item panel's scrollbar shows as a Mac's does: while it scrolls or the
+// pointer moves over it, and fades a moment after (body[data-item-scroll];
+// on the body, which a render leaves as it is).
+let itemScrollTimer = 0
+function showItemScroll(event) {
+  if (!event.target?.closest?.('.item-body')) return
+  document.body.dataset.itemScroll = 'on'
+  clearTimeout(itemScrollTimer)
+  itemScrollTimer = setTimeout(() => delete document.body.dataset.itemScroll, 1200)
+}
+document.addEventListener('scroll', showItemScroll, { capture: true, passive: true })
+document.addEventListener('pointermove', showItemScroll, { passive: true })
 // The update bar: a status strip along the bottom of the window (api.js lifts
 // the page views by it), shown while a newer version is found, downloading
 // or ready, until it is applied or put off.
@@ -722,6 +754,9 @@ function render() {
     document.documentElement.style.setProperty('--item-height', state.itemPanelHeight + 'px')
   }
   const tab = state.tabs.find((tab) => tab.id === state.active)
+  // The view shown, for what the frame does around it (the map runs under
+  // the toolbar row).
+  document.body.dataset.page = tab?.kind || ''
   const isWeb = tab?.kind === 'web'
   // A rebuilt element under the pointer would fade into its hover colour
   // again on every render (a page loading in the popup renders often).
@@ -742,7 +777,7 @@ function render() {
       ? `<button data-action="back" aria-label="${t('back')}" title="${t('back')}" ${!tab.canBack ? 'disabled' : ''}>${icon('back')}</button><button data-action="forward" aria-label="${t('forward')}" title="${t('forward')}" ${!tab.canForward ? 'disabled' : ''}>${icon('forward')}</button><button data-action="reload" aria-label="${t('reload')}" title="${t('reload')}">${icon('reload')}</button><button data-action="home" aria-label="${esc(t('home'))}" title="${esc(t('homeHelp'))}" ${tab.url === tab.home ? 'disabled' : ''}>${icon('home')}</button><form id="address-form" class="readonly">${icon('globe', 'address-icon')}<input id="address" readonly aria-readonly="true" aria-label="${esc(tabName(tab))}" title="${esc(t('fixedAddress'))}" value="${esc(tab.url)}">${loadBar(tab)}</form>`
       : tab?.kind === 'snapnotes'
         ? snapToolbar()
-        : tab?.kind === 'bookmarks' || tab?.kind === 'screenshots' || tab?.kind === 'bosses' || tab?.kind === 'squadmap'
+        : tab?.kind === 'bookmarks' || tab?.kind === 'screenshots' || tab?.kind === 'bosses' || tab?.kind === 'livemap'
           ? ''
           : tab?.kind === 'settings'
             ? ''
@@ -753,7 +788,7 @@ function render() {
                       .join('')}</select>`
                   : ''
               }`
-  }${toolIcons(tab)}${state.layout === 'vertical' ? '<div class="titlebar-grip"></div>' : ''}</div><main>${tab?.kind === 'settings' ? settings() : tab?.kind === 'bookmarks' ? bookmarksPage() : tab?.kind === 'tabs' ? tabsPage() : tab?.kind === 'screenshots' ? screenshotsPage() : tab?.kind === 'snapnotes' ? snapNotesPage() : tab?.kind === 'bosses' ? bossesPage() : tab?.kind === 'squadmap' ? squadPage() : !tab ? `<p class="empty-tabs">${t('noTabs')}</p>` : ''}</main>${tab?.kind === 'settings' ? `<button class="page-close" data-action="closeSettings" title="${esc(t('closeSettings'))}" aria-label="${esc(t('closeSettings'))}">${icon('x')}</button>` : ''}${itemPanel()}${contextMenuHTML()}${placeMenuHTML()}${snapMenuHTML()}${state.error ? `<aside class="error-bar" role="alert"><span title="${esc(state.error)}">${esc(state.error)}</span><button data-action="dismiss" title="${esc(t('dismiss'))}" aria-label="${esc(t('dismiss'))}">${icon('x')}</button></aside>` : ''}${updateBarHTML()}${tutorialOpen ? tutorialHTML() : ''}`
+  }${toolIcons(tab)}${state.layout === 'vertical' ? '<div class="titlebar-grip"></div>' : ''}</div><main>${tab?.kind === 'settings' ? settings() : tab?.kind === 'bookmarks' ? bookmarksPage() : tab?.kind === 'tabs' ? tabsPage() : tab?.kind === 'screenshots' ? screenshotsPage() : tab?.kind === 'snapnotes' ? snapNotesPage() : tab?.kind === 'bosses' ? bossesPage() : tab?.kind === 'livemap' ? liveMapPage() : !tab ? `<p class="empty-tabs">${t('noTabs')}</p>` : ''}</main>${tab?.kind === 'settings' ? `<button class="page-close" data-action="closeSettings" title="${esc(t('closeSettings'))}" aria-label="${esc(t('closeSettings'))}">${icon('x')}</button>` : ''}${itemPanel()}${contextMenuHTML()}${placeMenuHTML()}${snapMenuHTML()}${state.error ? `<aside class="error-bar" role="alert"><span title="${esc(state.error)}">${esc(state.error)}</span><button data-action="dismiss" title="${esc(t('dismiss'))}" aria-label="${esc(t('dismiss'))}">${icon('x')}</button></aside>` : ''}${updateBarHTML()}${tutorialOpen ? tutorialHTML() : ''}`
   // The DOM is morphed to the new markup rather than rebuilt: elements that
   // stay keep their node, so hover, focus, a press in flight and scroll
   // positions survive a render, and a render costs only its differences.
@@ -897,9 +932,9 @@ document.addEventListener('click', async (event) => {
     void Window.Close()
     return
   }
-  if (type === 'adblock' || type === 'translateWiki') return
+  if (type === 'adblock' || type === 'translateWiki' || type === 'linkReceive') return
   if (type === 'peerCopy' || type === 'peerCopyPair') copied = true
-  if (['peerInvite', 'peerAccept', 'peerJoin', 'peerClose'].includes(type)) copied = false
+  if (['peerInvite', 'peerAccept', 'peerJoin', 'peerClose', 'peerCancel'].includes(type)) copied = false
   if (type === 'addBookmark') {
     editingBookmark = { name: '', url: '', group: 'other' }
     render()
@@ -941,6 +976,8 @@ document.addEventListener('change', (event) => {
   else if (input.id === 'host-quest-site') void action('hostQuestSite', input.value)
   else if (input.dataset.action === 'adblock') void action('preferences', { adblock: input.checked })
   if (input.dataset.action === 'translateWiki') void action('preferences', { translateWiki: input.checked })
+  if (input.dataset.action === 'linkReceive')
+    void action('connection', { receive: { ...state.connection.receive, [input.dataset.id]: input.checked } })
 })
 document.addEventListener('input', (event) => {
   if (event.target.id === 'bookmark-search') {
@@ -955,7 +992,6 @@ document.addEventListener('input', (event) => {
   }
   if (event.target.closest('#bookmark-form') && editingBookmark) editingBookmark[event.target.name] = event.target.value
   if (event.target.name === 'peerOffer') peerDrafts.offer = event.target.value
-  if (event.target.name === 'peerAnswer') peerDrafts.answer = event.target.value
   if (event.target.name === 'pairCode') peerDrafts.pairCode = event.target.value
 })
 document.addEventListener('submit', (event) => {
@@ -970,10 +1006,7 @@ document.addEventListener('submit', (event) => {
     void action('peerAccept', peerDrafts.offer)
     return
   }
-  if (event.target.id === 'peer-answer-form') {
-    void action('peerAnswer', peerDrafts.answer)
-    return
-  } // Fixed views show their address read-only; Enter must not navigate them.
+  // Fixed views show their address read-only; Enter must not navigate them.
   if (event.target.id === 'address-form' && event.target.classList.contains('readonly')) return
   // A URL opens; anything else is searched (resolveAddress). Enter then
   // hands the keyboard to the page, as in Chrome.
@@ -1116,6 +1149,12 @@ async function runShortcut(key) {
 api.onKey((key) => void runShortcut(key))
 document.addEventListener('keydown', (event) => {
   if (event.defaultPrevented || event.isComposing) return
+  // An indicator that acts as a button (role="button") takes Enter and Space.
+  if ((event.key === 'Enter' || event.key === ' ') && event.target.matches?.('[role=button][data-action]')) {
+    event.preventDefault()
+    event.target.click()
+    return
+  }
   // Escape in the address bar puts the page's address back and returns to the page.
   if (event.key === 'Escape' && event.target.id === 'address') {
     const tab = state?.tabs.find((t) => t.id === state.active)

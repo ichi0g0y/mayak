@@ -19,13 +19,6 @@ import (
 
 const bundleID = "com.ichi0g0y.mayak"
 
-// localNetworkUsage is what macOS shows when it asks whether MAYAK may reach
-// the local network: pairing with the Host on the same network needs it.
-var localNetworkUsage = map[string]string{
-	"en": "MAYAK connects directly to MAYAK on your Windows PC (the Host) on the same network to show its maps and tasks.",
-	"ja": "同じネットワークの Windows PC（Host）の MAYAK と直接つないで、マップやタスクを表示するために使います。",
-}
-
 // buildApp lays out Mayak.app under dir and returns its path.
 func buildApp(dir, bin, version, iconPNG string) (string, error) {
 	app := filepath.Join(dir, "Mayak.app")
@@ -65,20 +58,10 @@ func buildApp(dir, bin, version, iconPNG string) (string, error) {
 	<key>LSMinimumSystemVersion</key><string>11.0</string>
 	<key>NSHighResolutionCapable</key><true/>
 	<key>NSHumanReadableCopyright</key><string>Copyright MAYAK contributors. GPL-3.0.</string>
-	<key>NSLocalNetworkUsageDescription</key><string>%s</string>
 </dict>
 </plist>
-`, bundleID, version, version, localNetworkUsage["en"])
+`, bundleID, version, version)
 	if err := os.WriteFile(filepath.Join(contents, "Info.plist"), []byte(plist), 0o644); err != nil {
-		return "", err
-	}
-	// The local network question in Japanese too (English is the plist's).
-	lproj := filepath.Join(contents, "Resources", "ja.lproj")
-	if err := os.MkdirAll(lproj, 0o755); err != nil {
-		return "", err
-	}
-	localized := fmt.Sprintf("\"NSLocalNetworkUsageDescription\" = \"%s\";\n", localNetworkUsage["ja"])
-	if err := os.WriteFile(filepath.Join(lproj, "InfoPlist.strings"), []byte(localized), 0o644); err != nil {
 		return "", err
 	}
 	// An ad-hoc signature: Apple silicon refuses unsigned code outright.

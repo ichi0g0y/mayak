@@ -2,26 +2,27 @@
 
 What changed in each version of MAYAK, from the user's side. The Japanese version is [CHANGELOG.md](CHANGELOG.md); the published page is https://mayak.ich.sh/changelog, which the app's update notice opens for "What changed".
 
-Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
+Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New
 
-## Nightly
-
-These changes are planned for the next version.
-
-### New
-
-- Squad map, as a trial (nightly build only): create a squad under "Squad map" in the sidebar and share its code, and where each of you takes a screenshot in a raid shows on everyone’s map with a name, a colour and the direction faced. The map is tarkov.dev’s latest, and the floor follows your height. Only display names and positions are shared, encrypted with the squad code; the relay cannot read them.
+- "Map", as a trial (nightly build only): a map over the whole page, opened from "Map" at the top of the sidebar. It has tarkov.dev's maps, markers and icons: filters show extracts, transits, spawns, bosses, locks, minefields, containers, loose loot, task objectives and more, and a search finds them. The floor follows your height, or is chosen from a list or with Ctrl + wheel, and how faint the other floors show is a setting. Settings also switch between Abstract (SVG) and Satellite, between PvP, PvE and Season data, set the size of extract and place names and keep sniper spawns always shown. A marker tells more when pressed, and a task objective opens the task's page. A button on the left makes the map as it shows into a snap note.
+- Squads: under "Squad" on the map, create a squad and share its code: where each of you takes a screenshot in a raid shows on everyone's map with a name, a colour and the direction faced. The display name starts as your TarkovTracker name. Pressing a squadmate in the list shows them, on their map and floor. A recent squad is joined again with one press. A Host and its Clients join and leave squads together. Only display names and positions are shared, encrypted with the squad code; the relay cannot read them.
 
 ### Improved
 
+- The connection to other PCs (from the Host to Clients) goes through a relay (mayak-relay.ich.sh): no network keeps it from connecting any more, and paired PCs connect again on their own at every start (and after a drop). What they say is encrypted with a key only the paired PCs have; the relay cannot read it. The 8-digit code from the Host, entered on the other PC, is all it takes (no response code any more), and a Host takes any number of PCs. Each Client chooses what it shows: tasks, maps and positions, items. The STUN setting is gone.
+- The TARKOV.DEV and TarkovTracker fixed tabs are gone; they are bookmarks pinned to the sidebar. Map detections show on "Map".
+- The connection status and the game mode (PvP, PvE, Season) at the top of the sidebar open the setting they come from when pressed. The game mode is bold, without a frame.
+- With a TarkovTracker key registered, its state shows right of the monitoring switch: green synced, amber connecting or waiting for a profile, red when the profile played has no key or it fails. It opens the TarkovTracker settings.
+- The item panel's scroll bar shows only while it scrolls or the pointer moves over it.
 - The update channel under Settings → About MAYAK can be chosen on a Mac and on Linux too (it was on the Windows Host only).
 - On a Mac the window's close, minimize and zoom buttons are macOS's own red, yellow and green ones at the top left, instead of Windows-style ones at the top right: the green one goes full screen, zooms with Option held and shows the tiling menu when held down. The sidebar and the toolbar move right for them (not in full screen).
-- The TARKOV.DEV map is no longer loaded in the background at start-up; its tab loads the first time it opens.
 - The sidebar's collapse button moved from the top of the sidebar to the buttons at its bottom, with an arrow that shows which way it opens or closes, so it is easy to tell from the placement button. In the collapsed sidebar the "Tabs" heading is an icon too (it opens the list of tabs).
 
 ### Fixed
 
-- On a Mac, the first direct connection to the Host failed and the second one worked: macOS held the connection back while it asked for Local Network access. MAYAK now brings that question up at start and says what it is for, and a failed connection on a Mac explains how to allow it and to make a fresh code.
+- A position found in a screenshot with coordinates did not reach the Client.
+- The corners of an item's picture in the item panel looked faint.
+- Settings → TarkovTracker: an unassigned key's remove button sat out of place and broke the layout; it is a trash can now. The page is as wide as the other settings, and adding a key has links to open TarkovTracker and to create API tokens.
 
 ## v0.1.18 (2026-09-29)
 

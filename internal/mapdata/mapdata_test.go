@@ -17,10 +17,13 @@ const fixture = `[
   {"key":"customs","projection":"interactive","transform":[0.239,168.65,0.239,136.35],"coordinateRotation":180,
    "bounds":[[698,-307],[-372,237]],"svgPath":"https://assets.tarkov.dev/maps/svg/Customs.svg","svgLayer":"Ground_Level",
    "minZoom":2,"maxZoom":6,"author":"Shebuka","authorLink":"https://github.com/the-hideout/tarkov-dev-svg-maps/",
+   "heightRange":[-10,10],
+   "labels":[{"position":[1,2],"text":"Dorms","rotation":"-9","size":80},{"position":[3,4,5],"text":"Roof","top":8,"bottom":2}],
    "layers":[
     {"name":"2nd Floor","svgLayer":"Second_Floor","extents":[{"height":[2.7,6.5],"bounds":[[[243,190],[165,125],"dorms"]]}]},
     {"name":"Underground","svgLayer":"Underground_Level","extents":[{"height":[-1000,-2]}]},
-    {"name":"Tiles only","tilePath":"https://x/{z}/{x}/{y}.png","extents":[{"height":[0,1]}]}
+    {"name":"Tiles only","tilePath":"https://assets.tarkov.dev/maps/customs/4th/{z}/{x}/{y}.png","extents":[{"height":[0,1]}]},
+    {"name":"Elsewhere","tilePath":"https://x/{z}/{x}/{y}.png","extents":[{"height":[0,1]}]}
    ]},
   {"key":"customs-2d","projection":"2D"}]},
  {"normalizedName":"factory","maps":[
@@ -40,14 +43,26 @@ func TestParseListKeepsInteractiveMaps(t *testing.T) {
 		t.Fatalf("maps = %d", len(maps))
 	}
 	c, ok := Find(maps, "customs")
-	if !ok || c.Rotation != 180 || c.Transform[1] != 168.65 || c.SVGLayer != "Ground_Level" || len(c.Layers) != 2 {
+	if !ok || c.Rotation != 180 || c.Transform[1] != 168.65 || c.SVGLayer != "Ground_Level" || len(c.Layers) != 3 {
 		t.Fatalf("customs = %+v", c)
 	}
 	if b := c.Layers[0].Extents[0].Bounds; len(b) != 1 || b[0][0][0] != 243 || b[0][1][1] != 125 {
 		t.Fatalf("areas = %+v", b)
 	}
+	// Place names, one with its rotation written as a string.
+	if l := c.Labels; len(l) != 2 || l[0].Rotation != -9 || l[0].Size != 80 || l[0].Y != 0 || l[0].Top != 1000 || !l[0].Ground || l[1].Ground || l[1].Y != 5 || l[1].Top != 8 {
+		t.Fatalf("labels = %+v", l)
+	}
 	if f, ok := Find(maps, "night-factory"); !ok || f.Key != "factory" {
 		t.Fatal("night-factory does not find the factory")
+	}
+	// A floor only in tiles is kept, named tile-<n>; tiles from elsewhere
+	// are not.
+	if l := c.Layers[2]; l.ID != "tile-2" || l.SVGLayer != "" || l.TilePath == "" || c.Layers[0].ID != "Second_Floor" {
+		t.Fatalf("floors = %+v", c.Layers)
+	}
+	if l, _ := Find(maps, "the-lab"); l.TilePath == "" || l.TileSize != 256 {
+		t.Fatalf("the lab has no tiles: %+v", l)
 	}
 	if l, _ := Find(maps, "the-lab"); l.SVG != "" {
 		t.Fatal("a tile map got a picture")
@@ -78,19 +93,19 @@ func TestFloorFollowsHeightAndAreas(t *testing.T) {
 
 func TestWithLayerStylesTheLevels(t *testing.T) {
 	svg := []byte(`<?xml version="1.0"?><svg viewBox="0 0 1 1"><g id="Ground_Level"/><g id="Second_Floor"/></svg>`)
-	out, err := withLayer(svg, "Ground_Level", "Second_Floor")
+	out, err := withLayer(svg, "Ground_Level", "Second_Floor", 20)
 	if err != nil {
 		t.Fatal(err)
 	}
 	s := string(out)
-	if !strings.HasPrefix(s, `<?xml version="1.0"?><svg viewBox="0 0 1 1"><style>`) || !strings.Contains(s, `:root>g[id="Second_Floor"]{display:inline}`) || !strings.Contains(s, `{opacity:.2}`) {
+	if !strings.HasPrefix(s, `<?xml version="1.0"?><svg viewBox="0 0 1 1"><style>`) || !strings.Contains(s, `:root>g[id="Second_Floor"]{display:inline}`) || !strings.Contains(s, `{opacity:0.20}`) {
 		t.Fatalf("styled = %s", s)
 	}
-	ground, _ := withLayer(svg, "Ground_Level", "")
+	ground, _ := withLayer(svg, "Ground_Level", "", 20)
 	if strings.Contains(string(ground), "opacity") {
 		t.Fatal("the ground level is faded without a floor")
 	}
-	if _, err := withLayer([]byte("<html>"), "a", ""); err == nil {
+	if _, err := withLayer([]byte("<html>"), "a", "", 20); err == nil {
 		t.Fatal("not an SVG was accepted")
 	}
 }
@@ -151,7 +166,7 @@ func TestImageServesTheStyledPicture(t *testing.T) {
 	m := Map{Key: "factory", SVG: svgHost + "maps/svg/Factory.svg", SVGLayer: "Ground_Floor"}
 	// Only assets.tarkov.dev is fetched; point the client at the test server.
 	s.http = &http.Client{Transport: rewrite{srv.URL}}
-	url, err := s.Image(context.Background(), m, "")
+	url, err := s.Image(context.Background(), m, "", 20)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,10 +174,10 @@ func TestImageServesTheStyledPicture(t *testing.T) {
 	if !strings.HasPrefix(url, "data:image/svg+xml;base64,") || !strings.Contains(string(raw), "<style>") {
 		t.Fatalf("image = %s", raw)
 	}
-	if _, err := s.Image(context.Background(), Map{SVG: "https://evil.example/x.svg", SVGLayer: "a"}, ""); err == nil {
+	if _, err := s.Image(context.Background(), Map{SVG: "https://evil.example/x.svg", SVGLayer: "a"}, "", 20); err == nil {
 		t.Fatal("a picture from another host was fetched")
 	}
-	if _, err := s.Image(context.Background(), m, `x"}*{display:none`); err == nil {
+	if _, err := s.Image(context.Background(), m, `x"}*{display:none`, 20); err == nil {
 		t.Fatal("an unsafe layer name was accepted")
 	}
 }
@@ -177,3 +192,21 @@ func (r rewrite) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func writeFile(name, content string) error { return os.WriteFile(name, []byte(content), 0o644) }
+
+func TestTileRefusesOtherURLs(t *testing.T) {
+	s := New(t.TempDir(), "test")
+	for _, url := range []string{
+		"https://example.com/maps/labs_v4/main/0/0/0.png",
+		"https://assets.tarkov.dev/maps/../secret/0/0/0.png",
+		"https://assets.tarkov.dev/maps/labs_v4/main/0/0/0.svg",
+		"http://assets.tarkov.dev/maps/labs_v4/main/0/0/0.png",
+		"https://assets.tarkov.dev/other/labs_v4/0/0/0.png",
+	} {
+		if _, err := s.Tile(context.Background(), url); err == nil {
+			t.Errorf("Tile(%q) was fetched", url)
+		}
+	}
+	if !tileURL.MatchString("https://assets.tarkov.dev/maps/labs_v4/main/3/5/7.png") {
+		t.Error("a tile URL is refused")
+	}
+}

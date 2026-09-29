@@ -71,7 +71,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `logsDirectory` | `""` | EFT の Logs フォルダ |
 | `remoteId` | `""` | 旧形式の Remote Control ID。互換用 |
 | `remoteTargets` | `[]` | tarkov.dev Remote Control の送信先。`{id, name, map, tasks}`。空 ID と重複 ID は除去し、名前が空なら `Remote N` |
-| `browserRemoteId` | 自動生成 | 内蔵ブラウザのマップビュー用 Remote Control ID（12 文字） |
+| `browserRemoteId` | 自動生成 | 内蔵ブラウザで開いた tarkov.dev のマップページ用 Remote Control ID（12 文字） |
 | `map` | `""` | マップ未検出時に使うマップ。空なら自動 |
 | `gameMode` | `"auto"` | `auto` / `regular` / `pve` / `pvp-season`。変更するとカタログを再取得 |
 | `ocrEngine` | `"tesseract"` | `tesseract` / `windows`。それ以外は `tesseract` |
@@ -135,7 +135,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 
 ## ブラウザ設定（シェル側）
 
-`state.js` の `defaults()` と `restore()` で決まります。`persist()` が保存するのは下表の項目だけで、WebRTC の招待コードや UI のエラーは保存しません。
+`state.js` の `defaults()` と `restore()` で決まります。`persist()` が保存するのは下表の項目だけで、接続コードや UI のエラーは保存しません。
 
 | キー | 既定値 | 取り得る値 / 意味 |
 |---|---|---|
@@ -150,10 +150,11 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `adblock` | `true` | 広告ブロック。切り替えると表示中のページを再読み込みする |
 | `taskMode` | `"new"` | 検出したタスクの開き方。`new`（新しいタブを追加）/ `reuse`（固定していないタスクタブを更新） |
 | `questSite` | `"host"` | `host`（Host の設定に従う）/ `tarkov-dev` / `official-wiki` / `japanese-wiki` |
-| `connection` | `{mode:"local", stun:"stun:stun.cloudflare.com:3478"}` | 接続方法と STUN サーバー（[Host / Client モード](#host--client-モード)） |
-| `bookmarks` / `bookmarkRevision` | 既定のブックマーク / `2` | 最大 100 件。revision 1 でブックマークを追加し、revision 2 で TarkovTracker を `.org` に移行 |
+| `connection` | `{mode:"local", link:null, receive:{task:true, map:true, item:true}}` | 接続方法、ペアリングの鍵と役割、Client で出すもの（[Host / Client モード](#host--client-モード)） |
+| `mapHidden` / `mapSettings` / `mapCollapsed` / `squadName` / `squadCode` / `squadRecent` | `[]` / 下記 / `[]` / `""` / `""` / `[]` | マップと分隊（[browser-shell.md](browser-shell.md#マップ)、[ユーザーデータの保存](user-data.md)）。`mapSettings` の既定は `{snipers:true, extracts:false, activeTasks:false, subtleLabels:false, extractText:100, labelText:100, fade:20, style:"svg", mode:"auto"}` |
+| `bookmarks` / `bookmarkRevision` | 既定のブックマーク / `3` | 最大 100 件。revision 1 でブックマークを追加し、revision 2 で TarkovTracker を `.org` に移行、revision 3 で tarkov.dev と TarkovTracker をサイドバーにピン留めしたブックマークにする（以前の固定タブの代わり） |
 | `favicons` | `{}` | ホスト名ごとのアイコン URL（最大 200 件） |
-| `tabs` / `active` | マップ、TarkovTracker、設定 / `map` | 固定タブ `map` と `tracker` は常に先頭。タブは最大 80 個 |
+| `tabs` / `active` | マップ（`livemap`）、設定 / マップ | 以前の固定タブ `map`・`tracker` は復元時に捨てる。タブは最大 80 個 |
 
 ウィンドウの位置とサイズは `window.json` に保存し、`browser.json` には持ちません（旧形式の `window` キーは読み込まず、次の保存で消えます）。
 
@@ -164,7 +165,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `appearance` | 表示言語、テーマ、時刻表示、タブとアイテム情報の位置、「チュートリアルを表示」 |
 | `tasks` | Host 上（`local`）では Host の `questSite` を直接編集する（`hostQuestSite` アクション。シェルの `questSite` は `host` に戻る）。Client では `questSite`（「Host の設定に従う」を含む）。どちらでも `taskMode` を設定する |
 | `adblock` | 有効化のチェックボックス。EasyList、EasyPrivacy、AdGuard 日本語フィルタを使う。tarkov.dev は対象外 |
-| `connection` | 接続方法（`local` は Windows のみ / `webrtc` / `off`）、WebRTC のペアリング、STUN サーバー |
+| `connection` | 接続方法（`local` は Windows のみ / `client` / `off`）。Host では接続コードの発行（ペアリング済みなら「別の PC を追加」）とすべての PC との解除、Client では接続コードの入力（長いコードの貼り付けも可）、この PC に出すもの（`connection.receive`）、この PC の解除 |
 | `about` | 名前とバージョン（`GetVersion`。開発ビルドでは「開発ビルド」）、公式サイト・ソースコード・変更履歴へのリンク、ライセンスとクレジット、アップデート（現在の版・最新の版・最終確認、「更新を確認」`CheckForUpdates`、「ダウンロード」`DownloadUpdate`、「再起動して適用」`InstallUpdate`）。タスクトレイの右クリックにも「更新を確認」がある |
 
 - 以前、ブラウザ側で `questSite` を選んでいた場合は、Windows の Host で起動したときに一度だけ Host の `questSite` へ移し、ブラウザ側を `host` に戻します。
@@ -184,12 +185,14 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 
 ### シェル上の状態表示
 
-サイドバーの上部（横並びレイアウトではタブ列の右端）に 2 つのインジケーターを表示します。
+サイドバーの上部（横並びレイアウトではタブ列の右端）にインジケーターを表示します。
 
 | 表示 | 状態 |
 |---|---|
-| Host アイコン（`mode-status`） | `host`（`local`・Host モード）/ `linked`（Client で WebRTC 接続済み）/ `unlinked`（Client で未接続）/ `off`（受信 OFF）。ツールチップには「Hostモード · このPCで検出する」や「Clientモード · 直接接続中」などを表示する |
+| ゲームモード（`game-mode-badge`） | Host が検出しているゲームモード（PvP / PvE / Season）を太字で出す（枠なし、PvE と Season は色付き）。分からないあいだは出さない。クリックで 設定 → ゲームと認識 を開く（`settingsAt`） |
+| Host アイコン（`mode-status`） | `host`（`local`・Host モード）/ `linked`（Client で Host とつながっている）/ `unlinked`（Client で未接続）/ `off`（受信 OFF）。ツールチップには「Hostモード · このPCで検出する」や「Clientモード · 接続中」などを出し、Host で接続中の PC があれば台数も出す。クリックで 設定 → 他のPCとの接続 を開く（`settingsAt`） |
 | 監視ドット（`monitor-toggle`） | Windows の Host のときだけ表示する。`on` クラスで監視中を示す。ツールチップは「監視中/監視停止中 · マップ · レイド中/外 · TarkovTracker: 状態 · クリックで開始/停止」。クリックで `StartMonitoring` / `StopMonitoring` を呼ぶ。監視停止中に押したとき Screenshots フォルダが未設定（`GetSettings` の `screenshotDirectory` が空）なら、監視を始める代わりに 設定 → フォルダ を開く（自動判別に失敗したまま「何も認識されない」状態から、選び直す場所へ直接行けるように） |
+| TarkovTracker（`tracker-status`） | Windows の Host で TarkovTracker のキーが 1 つ以上あるときだけ、監視ドットの右に出す（無ければ出さない）。`status.tracker.connection` に合わせて緑（`connected`・同期中）、黄（`connecting` / `waiting-profile`）、赤（`missing-token` / `error`）、灰（`disabled`）。ツールチップに状態と最後のエラー。クリックで 設定 → TarkovTracker を開く（`settingsAt`） |
 
 状態は Host が送る `status:update` イベント（`monitoring`、`currentMap`、`raidActive`、`tracker.connection`）から更新します。
 
@@ -273,14 +276,14 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - **書き込むデータ**: ログで検出したタスクの状態変化（`completed` / `failed` / `uncompleted`）を `SetTask` で送ります。`uncompleted`（再開）は、以前の状態が `failed` のときだけ送ります。キーを割り当てたあとの同期はライブで、MAYAK の起動中に EFT のログへ出たタスクの変化だけを送ります（起動時点のログの末尾から読むため）。キーをプロフィールに割り当てたとき（行のドロップダウン、割り当て待ちのキー、追加時の自動割り当てのどれでも）は、そのプロフィールの過去ログを裏で同期し（`syncAssignedHistory`）、結果を `tracker:history` イベントで設定ページのトーストに出します（送るものが無ければ何も出さない）。MAYAK を起動していなかった間の分は、行の「過去ログを再チェック」（`SyncTrackerProfileHistory`）で取り込みます。EFT の起動中は過去ログを同期しません（`eftdetect.GameRunning`: プロセス一覧に EscapeFromTarkov.exe があるか）。起動中はログが書き込まれ続け、ライブの同期も送っているので、そこへ古い状態の一括送信が後から届くと、タスクの状態が逆戻りするおそれがあるためです（例: 再開したタスクが「失敗」に戻る）。起動中はボタンを押せず、その理由を行の下に出します。キーの割り当て時の自動同期は EFT が閉じるまで待ち、閉じたら行います（`watchGame` が 5 秒ごとに確かめる。待っている同期は MAYAK を終了すると消えるが、ボタンが赤いまま残る）。プロフィールごとに最後に過去ログを同期した日時（`historySyncedAt`）を覚えておき、一度も同期していないプロフィールは、ボタンを赤くして行の下に説明を出します。そのプロフィールの最初のセッション以降のログを 1 回の走査で読み（`trackerlog.ProfileTaskHistory`）、タスクごとの最後の状態を `SetTasks` でまとめて送り、送った件数を通知します。1 つのプロフィールは 1 ワイプなので、開始地点は選ばせません。
 - **接続状態**: `disabled` / `waiting-profile` / `missing-token` / `connecting` / `connected` / `error`
 - **Hideout の進捗**: 検出中のアイデンティティと割り当てたキーから得た `hideoutModulesProgress` を、同じモードのカタログと組み合わせて表示します（読み取り専用）。Hideout のログイベントから TarkovTracker へ書き込むことはありません。状態は `disabled` / `waiting-profile` / `missing-token` / `waiting-progress` / `waiting-catalog` / `ready` です。詳細は [hideout.md](hideout.md) を参照してください。
-- 内蔵ブラウザでは、TarkovTracker（`https://tarkovtracker.org/`）が 2 番目の固定タブとして常に開いています。
+- 内蔵ブラウザでは、TarkovTracker（`https://tarkovtracker.org/`）がサイドバーにピン留めした既定のブックマークです（以前は固定タブ）。
 
 ## tarkov.dev Remote Control
 
 - `internal/remote` が `wss://socket.tarkov.dev` に接続し、`remoteTargets` の各 ID にマップ、タスク、位置を送ります。
   - `map` 役のターゲット: マップと位置を受け取る
   - `tasks` 役のターゲット: タスクを受け取る
-- 内蔵ブラウザのマップビューは `browserRemoteId` で自動接続します。ドキュメントスクリプトが `?connection=<ID>` を付与し、タブの URL からは取り除きます。アドレスに `?connection=` があればその ID を優先します（ID を作り直したあと、古いスクリプトのままのタブを新しい ID で開き直すため）。この ID はマップと位置だけを受け取り、タスクはシェルが自分でタブを開きます。
+- 内蔵ブラウザで開いた tarkov.dev のマップページ（`/map/…` と `/maps/`。どのタブでも）は `browserRemoteId` で自動接続します。ドキュメントスクリプトが `?connection=<ID>` を付与し、保存するタブの URL からは取り除きます。アドレスに `?connection=` があればその ID を優先します。この ID はマップと位置だけを受け取り、タスクはシェルが自分でタブを開きます。マップの検出そのものは、MAYAK の [マップ](browser-shell.md#マップ) に出ます。
 - 起動時、`remoteTargets` があれば接続テストをバックグラウンドで実行します。
 - 詳細は [tasks-and-maps.md](tasks-and-maps.md) を参照してください。
 
@@ -289,8 +292,8 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - tarkov.dev のマップは自分の位置を Leaflet の `divIcon`（class `marker`）で描き、中身は `<img src="/maps/interactive/player-position.png" style="width:24px;height:24px;rotate:Ndeg">`（向きが無いときは `player-position-no-rotation.png`）、アンカーは中心です。レイヤーグループ名は `player-position`、表示中はマップのコンテナに `player-position-shown` が付きます。
 - 設定 `playerMarkerEffect` と `playerMarkerColor` に応じたスタイルシートを、ドキュメントスクリプト（`tarkovDevScript`。Remote Control の接続と同じスクリプト。マップページと `/maps/` だけ）が `<style id="mayak-player-marker">` として差し込みます。画像は `img[src$="/player-position.png"]` で選び、マーカーの箱には `:has()` で届きます。`rotate` は独立したプロパティなので、シートの `filter` と合成され、tarkov.dev の向きは保たれます。
 - エフェクト（`playerMarkerRules`）: `outline`（細い影 3 枚で作る縁取り）、`glow`（光彩）、`pulse`（箱の `::before` に脈打つリング）、`beacon`（光彩と、箱の `::before` に色が薄れていく放射状の光。`rgba()` で色にアルファを付ける）。色は `playerMarkerColor`、空ならエフェクト固有の色（縁取りは白、ほかは `#ff3b30`）。どれもアイコン自体は tarkov.dev の画像と 24 px のままで、拡大も差し替えもしません（効果だけが外へ広がる）。0.1.15 で試した画像の置き換えはやめました（純正のアイコンのまま、エフェクトと色だけを変える）。
-- 設定ページのギャラリーは同じ規則を `.marker-preview[data-effect=…] .marker-icon`（と `img`）向けに、選んでいる色で作ったシート（`PlayerMarkerPreviewCSS(color)`）で、`public/marker-arrow.svg`（tarkov.dev のマーカーに似せた絵）を 35° 回して見せます。色の入力（`<input type="color">`）はプレビューにすぐ反映し、設定への保存は 400 ms 手を止めてからです（保存のたびにマップビューを作り直すため）。
-- 保存時にマーカーの設定が変わると `applyBrowserScript` でシェルとポップアップのドキュメントスクリプトを作り直し、`browser:document-script` を送ります。開いているページはスクリプトを持ち替えないので、シェルはマップビューを閉じ、表示中ならすぐ（それ以外は次に表示したときに）作り直します。
+- 設定ページのギャラリーは同じ規則を `.marker-preview[data-effect=…] .marker-icon`（と `img`）向けに、選んでいる色で作ったシート（`PlayerMarkerPreviewCSS(color)`）で、`public/marker-arrow.svg`（tarkov.dev のマーカーに似せた絵）を 35° 回して見せます。色の入力（`<input type="color">`）はプレビューにすぐ反映し、設定への保存は 400 ms 手を止めてからです（保存のたびにドキュメントスクリプトを作り直すため）。
+- 保存時にマーカーの設定が変わると `applyBrowserScript` でシェルとポップアップのドキュメントスクリプトを作り直し、`browser:document-script` を送ります。開いているページはスクリプトを持ち替えず、シェルもこのイベントでタブを作り直さないので、新しい設定はそのあとに開いたタブから効きます。
 - 対象は内蔵ブラウザのマップだけです。自分の Chrome で開いた tarkov.dev には効きません（Stylus などで同じ CSS を入れる形になります）。tarkov.dev がファイル名やクラスを変えると効かなくなり、標準の表示に戻ります。
 
 ## Host / Client モード
@@ -300,46 +303,56 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 | モード | 意味 |
 |---|---|
 | `local` | このPCで検出する（Host モード）。Windows のみ選択可。監視、認識、Host 設定を使える |
-| `webrtc` | インターネット経由の WebRTC 直接接続で、別の PC の Host から受信する（Client モード） |
+| `client` | 別の PC の Host から受け取る（Client モード）。Host とは中継サーバー経由の暗号化したリンクでつながる |
 | `off` | 接続しない（受信 OFF） |
 
-- Windows 以外で `local` が保存されている場合は `webrtc` にします。認識できないモードは `off` にします。旧 `remote`（LAN 受信）モードで保存されていた場合は `off` で起動します（`restore()`）。当時の接続先 URL とトークンは読み込まず、保存もしません。
-- Go 側は `BrowserSetMode` でモードを受け取り、`local` 以外のときは Client として扱います（`browserClient`）。Windows では起動時に `browser.json` を読み、`webrtc` / `off` なら Client として起動します（Windows 以外は常に Client）。このとき OCR やフォルダの初期化、自動監視は行いません。
+- Windows 以外で `local` が保存されている場合は `client` にします。認識できないモードは `off` にします。WebRTC で直接つないでいたころの `webrtc` は `client` に読み替えます。旧 `remote`（LAN 受信）モードで保存されていた場合は `off` で起動します（`restore()`）。当時の接続先 URL とトークンは読み込まず、保存もしません。
+- Go 側は `BrowserSetMode` でモード（`local` / `client` / `off`）を受け取り、`local` 以外のときは Client として扱います（`browserClient`）。Windows では起動時に `browser.json` を読み、`client`（旧 `webrtc`）/ `off` なら Client として起動します（Windows 以外は常に Client）。このとき OCR やフォルダの初期化、自動監視は行いません。
+- 1 台の Host に、Client を何台でもつなげます（中継の部屋の上限は後述）。LAN は使わないので、同じネットワークにいる必要も、macOS のローカルネットワークの許可もいりません。
 
-### WebRTC ペアリング
+### ペアリング
 
-`frontend/src/browser/peer-code.js` と `transport.js` が担当します。offer と answer の交換は、既定では 8 桁の接続コードで `https://mayak.ich.sh/api/pair`（`site/worker/index.js`、コードごとの Durable Object）を経由し、手動でも交換できます。
+`frontend/src/browser/peer-code.js`（招待コード）と `api.js`（`pairing`、`startLink`、`unpair`、`cancelCode`）が担当します。接続コードの受け渡しには、既定で `https://mayak.ich.sh/api/pair`（`site/worker/index.js`、コードごとの Durable Object）を使い、長いコードを手で渡すこともできます。
 
-1. Host（`local`）が「接続コードを発行」を押すと、offer を作成して ICE の収集（最大 10 秒）を待ち、招待コードを `POST /api/pair` に預けて 8 桁の接続コードを受け取ります。以後 2 秒ごとに `GET /api/pair/<code>/answer` で応答を待ちます（`peerInvite`）。
-2. 受信側（`webrtc`）は接続コードを入力します。`GET /api/pair/<code>` で招待コードを取り、応答コードを作って `PUT /api/pair/<code>` に置きます（`peerJoin`）。
-3. Host が応答を受け取ると `peerAnswer` と同じ手順で接続し、`DELETE /api/pair/<code>` で中継を消します。中継が使えないとき（`relayError`）や「コードを手動で交換する」を開いたときは、従来どおり招待コードと応答コードをコピーして渡します（`peerAccept` → `peerAnswer`）。
-4. コードの形式は `MAYAK1.` + base64url(JSON `{version:1,type,id,createdAt,sdp}`) です。応答の `id` と `createdAt` は招待と一致している必要があります。
+1. Host（`local`）が「接続コードを発行」を押すと、32 バイトの乱数の鍵を作り、招待を `POST /api/pair` に預けて 8 桁の接続コードを受け取ります（`peerInvite`）。Host は同時にその鍵のリンクに入り、相手を待ちます。
+2. Client（`client`）は接続コードを入力します。`GET /api/pair/<code>` で招待を取り、その鍵でリンクに入ります（`peerJoin`）。中継に届かないとき（`relayError`）や「コードを手で渡す」を開いたときは、Host の長い招待コードをコピーして Client に貼り付けます（`peerAccept`）。応答のコードはありません。
+3. 両方がリンクで会うと、ペアリングが決まります。両方が鍵と自分の役割を `connection.link`（`{key, role: "host" | "client"}`、この PC のデータ）に保存し、Host は接続コードを中継から消します（`DELETE /api/pair/<code>`）。以後は起動するたびに、コードなしで同じリンクにつなぎ直します。
+4. 招待コードの形式は `MAYAK1.` + base64url(JSON `{version:2, type:"link", id, createdAt, key}`) です。`key` は鍵の base64url（43 文字）です。
 
-- **中継サーバー**: 招待と応答の文字列だけを、接続コードごとに 10 分間保持します（`MAYAK1.` で始まる 100000 文字以内のものだけ受け付け、応答は一度だけ）。接続の中身は通りません。8 桁は総当たりに強くはないので、10 分の有効期限と「先に届いた応答を受け付ける」以上の保護はありません。
+- **期限**: 招待は 10 分で失効します。それまでに会えなければ、作りかけのペアリングも捨てます（`expireIn`）。「キャンセル」でも捨てます（`cancelCode`）。
+- **中継サーバー**: 招待の文字列だけを、接続コードごとに 10 分間保持します（`MAYAK1.` で始まる 100000 文字以内のものだけ受け付けます）。招待には鍵が入っているので、10 分のあいだに 8 桁を当てて招待を取った人は、そのあともリンクに入れます。8 桁は総当たりに強くはないので、10 分の有効期限以上の保護はありません。
+- **別の PC を追加**: ペアリング済みの Host は、同じ鍵で新しい接続コードを出せます。初めて会った Client（接続コードで入った PC）が来た時点でそのコードは消し、すでにペアリング済みの Client がつなぎ直しただけでは消しません。
+- **解除**: Host で「すべての PC とのペアリングを解除」を押すと、つながっている Client すべてに伝わり、どの Client もペアを忘れます。Client で解除すると、その Client だけが抜けます。全員が同じ鍵を持つので、Host から 1 台だけを外すことはできません（外すときは全部を解除してつなぎ直す）。モードを切り替えると、作りかけのペアリングは捨て、保存したペアリングはそのモードが自分の役割（Host なら `local`、Client なら `client`）のときだけつなぎます。
 
-- **期限**: 招待コードは 10 分で失効します。接続の待ち時間は、送信側が 45 秒、受信側が 120 秒です。
-- **検証**: SDP は `m=application` のみを許可し、sha-256 fingerprint を必須とします。音声・映像の m 行と relay 候補を含むものは拒否します。コードの長さは 100000 文字までです。
-- **STUN**: 既定は `stun:stun.cloudflare.com:3478` です。`stun:` / `stuns:` 形式だけを受け付け、空欄にすると STUN を使いません。TURN（中継）は使わず、接続後に選ばれた経路が relay であれば切断します（`relay-rejected`）。そのため、回線によっては接続できません。
-- **LAN**: 双方の候補が `host` 型であれば、経路を `local`（LAN 内の直接接続）と判定します。それ以外は `direct` です。
-- **macOS のローカルネットワーク**: macOS 15 以降は、アプリが初めて LAN に送るときに「ローカルネットワーク上のデバイスの検出」を尋ね、答えるまで LAN への通信を止めます。答える前に始めた接続は、同じネットワークの Host に届かずに失敗します。そのため受信側として起動した時点で mDNS の問い合わせを 1 つ送り（`internal/app/localnet_darwin.go` の `requestLocalNetwork`）、コードを入力する前に尋ねさせます。質問の文言は Info.plist の `NSLocalNetworkUsageDescription`（`tools/release/macos.go`。日本語は `ja.lproj/InfoPlist.strings`）です。Mac で接続に失敗したときは、許可とコードの作り直しを案内します（`p2pMacLocalNetwork`）。
-- **共有する内容**: ordered DataChannel `mayak-display-v1` で、`browser:task`（タスク）、`browser:map`（マップ）、`browser:item`（アイテム情報）の 3 種類だけを Host から受信側へ一方向に送ります。1 メッセージは 64 KiB までで、送信バッファが 256 KiB を超えると `slow-peer` として切断します。設定、API キー、トークンは送りません。受信側は接続を確認するまで、最大 32 件のメッセージを保留します。
-- アプリを再起動した場合や接続が切れた場合は、コードを再交換する必要があります。コードは保存しません。
+### リンク
+
+`frontend/src/browser/transport.js` の `MayakLink` が、中継の Worker「mayak-relay」（`relay/worker/index.js` の `LinkRoom`、[分隊ルーム](#分隊ルーム) と同じ Worker）の部屋 `wss://mayak-relay.ich.sh/link/<room>` に WebSocket でつなぎます。行き先は Go の `BrowserLinkRelay` から受け取ります。
+
+- **部屋と暗号化**: room は `"mayak-link-room\0"` と鍵を続けた SHA-256 の 16 進 64 文字です。メッセージはすべて、鍵から HKDF-SHA256（info `"mayak-link-key v1"`）で作った鍵の AES-256-GCM で封じます。中継は読めない文字列を部屋の中で転送するだけです。
+- **あいさつ**: 部屋に入ると、先にいる相手と `hello` を交わし、鍵で開けられた相手だけを仲間として数えます。Client どうしは互いを無視するので、Host は Client から、Client は Host からだけ受け取ります。
+- **つなぎ直し**: 切れたら 2 秒、4 秒…と間隔を倍にしながら（最大 1 分）つなぎ直します。30 秒ごとに `ping` を送り（中継のランタイムが `pong` を返すので、Durable Object は起きません）、75 秒何も届かなければ切ってつなぎ直します。
+- **中継の部屋**: `LinkRoom` は 10 本まで（Host と Client に、中継がまだ気づいていない切れた接続の分の余裕を足したもの）、1 メッセージ 128 KB まで、1 本 10 秒に 120 件まで。何も保存せず、あとから入った人に前のメッセージを送り直すこともしません。
+- **共有する内容**: Host から Client へは `browser:task`（タスク）、`browser:map`（マップ）、`browser:position`（位置）、`browser:item`（アイテム情報）を送ります（アプリ側で 64 KiB を超えるものは送りません）。参加中の分隊（`squad:sync`）は両方向です（[browser-shell.md](browser-shell.md#マップ)）。設定、API キー、トークンは送りません。
+- **Client で出すもの**: 各 Client は、Host から届いたもののうちこの PC で開くもの（タスク・マップと位置・アイテム）を選べます（`connection.receive`、この PC のデータ）。選ばなかったものは Client で捨てます。1 台はマップ、もう 1 台はタスク、のように分けられます。
+- **状態**: 接続しています → 相手を待っています（Host には「相手の PC を待っています」、Client には「Host を待っています」）→ 接続中（Host では台数）、中継に届かないときは「つなぎ直します」。
 
 ## 分隊ルーム
 
-分隊マップ（[browser-shell.md](browser-shell.md#分隊マップ)）の仲間は、Cloudflare Worker「mayak-relay」（`relay/worker/index.js`、`https://mayak-relay.ich.sh`）の部屋で会います。ランディングページの Worker（`mayak`）と分けてあるのは、Worker を deploy すると Durable Object が再起動して接続が切れるためです。サイトを更新しても分隊は切れません。
+マップ（[browser-shell.md](browser-shell.md#マップ)）の分隊の仲間は、Cloudflare Worker「mayak-relay」（`relay/worker/index.js`、`https://mayak-relay.ich.sh`）の部屋で会います。同じ Worker が Host と Client の [リンク](#リンク)（`/link/<room>`、`LinkRoom`）も受け持ちます。ランディングページの Worker（`mayak`）と分けてあるのは、Worker を deploy すると Durable Object が再起動して接続が切れるためです。サイトを更新しても分隊とリンクは切れません。
 
 - **部屋**: `wss://mayak-relay.ich.sh/squad/<room>`。room は分隊コードの SHA-256（`squad.RoomID`）で、部屋ごとに Durable Object `SquadRoom` が 1 つあります。WebSocket Hibernation API を使うので、誰も送らないあいだは眠っています。`ping` にはランタイムが `pong` を返すので、DO は起きません。
-- **中継の動き**: 接続ごとに乱数の ID を付け、`welcome`（自分の ID と、部屋にいる人の ID と最後のメッセージ）、`join`、`leave`、`msg`（誰かのメッセージ）を送ります。メッセージは 4 KB まで、1 人 10 秒に 30 件まで、部屋は 10 人まで（11 人目は HTTP 409）です。何も保存せず、全員が抜けると部屋は消えます。
+- **中継の動き**: 接続ごとに乱数の ID を付け、`welcome`（自分の ID と、部屋にいる人の ID と最後のメッセージ）、`join`、`leave`、`msg`（誰かのメッセージ）を送ります。メッセージは 4 KB まで、1 人 10 秒に 30 件まで、部屋は 10 人まで（11 人目は HTTP 409）です。何も保存せず、全員が抜けると部屋は消えます（分隊は残らないので、同じコードでまた集まれます）。リンクの部屋も同じ仕組みで、上限と、最後のメッセージを送り直さないところだけが違います。
 - **暗号化**: メッセージはすべて、分隊コードから HKDF-SHA256 で作った鍵を使い、AES-256-GCM で封じます（`internal/squad/seal.go`）。中継が見るのは room の ID と暗号文だけで、コード・名前・位置は読めません。コードは 8 文字（約 40 bit）なので、総当たりへの強さはその程度です。
 - **クライアント**（`internal/squad/client.go`）: 切れたら、5 秒から 1 分まで間隔を延ばしながらつなぎ直し、つながるたびに自分の最新の報告を送り直します。30 秒ごとに `ping` を送り、75 秒何も届かなければ切れたとみなします。部屋が変わるたびに `squad:state` をシェルへ送ります。
-- **開発**: `task relay:dev` で中継をローカル（`ws://127.0.0.1:8787/squad/`）に立て、開発版の MAYAK を環境変数 `MAYAK_SQUAD_RELAY=ws://127.0.0.1:8787/squad/` 付きで起動すると、そちらにつなぎます。公開は `task relay:deploy` です（`wrangler login` が必要）。
+- **開発**: `task relay:dev` で中継（分隊とリンクの両方）をローカル（`ws://127.0.0.1:8787/squad/`、`ws://127.0.0.1:8787/link/`）に立て、開発版の MAYAK を環境変数 `MAYAK_SQUAD_RELAY=ws://127.0.0.1:8787/squad/`（分隊）や `MAYAK_LINK_RELAY=ws://127.0.0.1:8787/link/`（リンク。`BrowserLinkRelay`）付きで起動すると、そちらにつなぎます。どちらの変数も nightly 版と開発版（`version.IsPrerelease`）でだけ効きます。公開は `task relay:deploy` です（`wrangler login` が必要）。
 
 ### 地図データ（`internal/mapdata`）
 
-- 地図の一覧と座標変換は tarkov.dev の `src/data/maps.json`（MIT、`raw.githubusercontent.com`）、地図の絵は `assets.tarkov.dev` の SVG（Shebuka ほか、CC BY-NC-SA 4.0）です。どちらも最新を取り、`%AppData%\Mayak\maps\`（キャッシュ）に置いて、1 日ごとに ETag で確かめます。取れないときや形がおかしいときは、前に取れたものを使います。
-- 使うのは、`projection: "interactive"` の地図の `transform`・`coordinateRotation`・`bounds`・`svgBounds`・`svgPath`・`svgLayer`・`layers[].extents`（階の高さと範囲）と、`altMaps`（night-factory、ground-zero-21 などの別名）です。
-- `BrowserSquadMapImage` は SVG の先頭に `<style>` を足して、地上（`svgLayer` と `data-keep-with-group` のグループ）だけ、または選んだ階と薄くした地上を表示させ、data URL で返します。
+- 地図の一覧と座標変換は tarkov.dev の `src/data/maps.json`（MIT、`raw.githubusercontent.com`）、地図の絵は `assets.tarkov.dev` の SVG（Shebuka ほか、CC BY-NC-SA 4.0）とタイルです。maps.json と SVG は最新を取り、`%AppData%\Mayak\maps\`（キャッシュ）に置いて、1 日ごとに ETag で確かめます。取れないときや形がおかしいときは、前に取れたものを使います。タイルは Leaflet が tarkov.dev から直接読みます。
+- 使うのは、`projection: "interactive"` の地図の `transform`・`coordinateRotation`・`bounds`・`svgBounds`・`svgPath`・`svgLayer`・`tilePath`・`tileSize`・`heightRange`・`minZoom`・`maxZoom`・`author`・`authorLink`・`labels`（地名）・`layers[]`（`svgLayer`・`tilePath`・`show`・`extents`: 階の高さと範囲）と、`altMaps`（night-factory、ground-zero-21 などの別名）です。SVG かタイルのどちらかがある地図を残すので、タイルしかない地図（The Lab・Labyrinth・Icebreaker）も入ります。高さの無い地名は `Label.Ground`（地上の地名）にします。
+- `BrowserSquadMapImage(map, layer, fade)` は SVG の先頭に `<style>` を足して、地上（`svgLayer` と `data-keep-with-group` のグループ）だけ、または選んだ階と `fade`% に薄くした地上を表示させ、data URL で返します。
+- `BrowserMapTile(url)` は `assets.tarkov.dev/maps/…` のタイル 1 枚を data URL で返します（マップをスナップノートにするとき用。tarkov.dev のタイルは CORS を返さないため）。
+- `BrowserMapMarkers(name, language, mode)` はカタログの `maps`・`items`・`tasks`（と表示言語の名前）から地点を作ります（`mapdata.Markers`、`internal/mapdata/markers.go`）。モード・マップ・言語と TarkovTracker のタスク状態ごとに 10 分間覚えます。
 
 ## ログ
 

@@ -5,8 +5,8 @@ function randomUUID() {
   const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('')
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`
 }
-import { DEFAULT_STUN } from './peer-code.js'
 import { clampItemPanel, clampItemPanelHeight } from './item.js'
+import { defaultMapSettings, hiddenOf, mapSettingsOf } from './map-geo.js'
 const sites = ['tarkov-dev', 'official-wiki', 'japanese-wiki']
 function webURL(value) {
   try {
@@ -48,8 +48,9 @@ const themes = [
   'solarized-light',
 ]
 // Revision 1 added bookmarks; revision 2 moved TarkovTracker to .org, the site
-// the tracker API integration (internal/tracker) uses.
-const bookmarkRevision = 2
+// the tracker API integration (internal/tracker) uses; revision 3 pinned
+// tarkov.dev and TarkovTracker to the sidebar, instead of the fixed views.
+const bookmarkRevision = 3
 const trackerHome = 'https://tarkovtracker.org/'
 const addedBookmarks = [
   { id: 'tarkov-market', name: 'Tarkov Market', url: 'https://tarkov-market.com/', group: 'items' },
@@ -57,6 +58,7 @@ const addedBookmarks = [
   { id: 'eft-ammo', name: 'EFT Ammo', url: 'https://www.eft-ammo.com/', group: 'items' },
 ]
 const defaultBookmarks = [
+  { id: 'tarkov-dev', name: 'tarkov.dev', url: 'https://tarkov.dev/', group: 'maps', sidebar: true },
   { id: 'maps', name: 'tarkov.dev — Maps', url: 'https://tarkov.dev/maps/', group: 'maps' },
   {
     id: 'tasks-ja',
@@ -71,41 +73,53 @@ const defaultBookmarks = [
     group: 'tasks',
   },
   { id: 'items', name: 'tarkov.dev — Items', url: 'https://tarkov.dev/items/', group: 'items' },
-  { id: 'tracker', name: 'TarkovTracker', url: trackerHome, group: 'progress' },
+  { id: 'tracker', name: 'TarkovTracker', url: trackerHome, group: 'progress', sidebar: true },
   ...addedBookmarks,
 ]
-// The fixed map tab always leads the tab list. It cannot be closed, pinned or
-// moved, and every map detection lands in it so Remote Control stays attached.
+// The map view (view-map.js) is where map detections land; tarkov.dev and
+// TarkovTracker, fixed views before it, are bookmarks pinned to the sidebar.
+// A browser saved with the fixed views drops them (their IDs).
+const liveMapTabID = 'livemap'
 const mapTabID = 'map'
-// A fixed view's home is where its home button returns after links led away:
-// the last detected map, or the site's start page.
-function mapTab(url, home) {
-  return {
-    id: mapTabID,
-    kind: 'web',
-    url: webURL(url) || 'https://tarkov.dev/maps/',
-    home: webURL(home) || 'https://tarkov.dev/maps/',
-    title: 'tarkov.dev',
-    pinned: false,
-    role: 'map',
-    fixed: true,
-  }
+const formerFixedTabIDs = [mapTabID, 'tracker']
+// The squads joined lately (this PC's), to join again with a click: the
+// last few, forgotten after a month unused. The relay keeps nothing of a
+// squad; its room is gone once no one is in it, and the code opens it anew.
+const squadCodePattern = /^[0-9A-Z]{4}-[0-9A-Z]{4}$/
+const recentSquadCount = 5
+const recentSquadDays = 30
+function recentSquadsOf(raw, now = Date.now()) {
+  if (!Array.isArray(raw)) return []
+  const seen = new Set()
+  return raw
+    .filter(
+      (r) =>
+        r &&
+        typeof r.code === 'string' &&
+        squadCodePattern.test(r.code) &&
+        Number.isFinite(r.at) &&
+        now - r.at < recentSquadDays * 24 * 60 * 60 * 1000 &&
+        !seen.has(r.code) &&
+        seen.add(r.code),
+    )
+    .map((r) => ({ code: r.code, at: r.at }))
+    .slice(0, recentSquadCount)
 }
-// TarkovTracker is the second fixed view, right after the map.
-const trackerTabID = 'tracker'
-function trackerTab(url) {
-  return {
-    id: trackerTabID,
-    kind: 'web',
-    url: webURL(url) || trackerHome,
-    home: trackerHome,
-    title: 'TarkovTracker',
-    pinned: false,
-    role: 'tracker',
-    fixed: true,
-  }
-}
-const fixedTabIDs = [mapTabID, trackerTabID]
+// rememberSquad puts code first in the recent squads.
+const rememberSquad = (list, code, now = Date.now()) =>
+  squadCodePattern.test(code) ? recentSquadsOf([{ code, at: now }, ...(list || [])], now) : recentSquadsOf(list, now)
+// What a Client shows of its Host's detections: tasks, maps (and positions)
+// and items, each on or off (one PC the map, another the tasks).
+const linkReceiveAll = { task: true, map: true, item: true }
+const receiveOf = (raw) => ({ task: raw?.task !== false, map: raw?.map !== false, item: raw?.item !== false })
+// linkKind is the kind of a detection sent over the link.
+const linkKind = (event) =>
+  ({ 'browser:task': 'task', 'browser:map': 'map', 'browser:position': 'map', 'browser:item': 'item' })[event] || ''
+// A pairing kept: a key as transport.js makes it and this PC's side.
+const linkOf = (raw) =>
+  raw && typeof raw.key === 'string' && /^[A-Za-z0-9_-]{43}$/.test(raw.key) && ['host', 'client'].includes(raw.role)
+    ? { key: raw.key, role: raw.role }
+    : null
 // Favicons by hostname, learned from visited pages and shown for bookmarks.
 const maxFavicons = 200
 function restoreFavicons(raw) {
@@ -226,14 +240,25 @@ function defaults() {
     taskMode: 'new',
     questSite: 'host',
     translateWiki: false,
-    // The squad (view-squad.js): the name shown to it (a preference) and the
-    // code of the squad joined (this PC's), joined again at start.
+    // The map view (view-map.js): the marker layers hidden, its settings and
+    // the filter groups folded (preferences), the name shown to the squad
+    // (a preference) and the code of the squad joined (this PC's), joined
+    // again at start.
+    mapHidden: [],
+    mapSettings: { ...defaultMapSettings },
+    mapCollapsed: [],
     squadName: '',
     squadCode: '',
-    connection: { mode: 'local', stun: DEFAULT_STUN },
+    squadRecent: [],
+    // The mode, the pairing kept (transport.js): its key and which side this
+    // PC is ("host" or "client"), and what a Client takes from its Host.
+    connection: { mode: 'local', link: null, receive: { ...linkReceiveAll } },
     bookmarks: structuredClone(defaultBookmarks),
-    tabs: [mapTab(), trackerTab(), { id: 'settings', kind: 'settings' }],
-    active: mapTabID,
+    tabs: [
+      { id: liveMapTabID, kind: 'livemap' },
+      { id: 'settings', kind: 'settings' },
+    ],
+    active: liveMapTabID,
   }
 }
 function restore(raw = {}) {
@@ -275,14 +300,20 @@ function restore(raw = {}) {
   state.favicons = restoreFavicons(raw.favicons)
   state.questSite = ['host', ...sites].includes(raw.questSite) ? raw.questSite : 'host'
   state.translateWiki = raw.translateWiki === true
+  state.mapHidden = hiddenOf(raw.mapHidden)
+  state.mapSettings = mapSettingsOf(raw.mapSettings)
+  state.mapCollapsed = hiddenOf(raw.mapCollapsed)
   state.squadName = typeof raw.squadName === 'string' ? raw.squadName.trim().slice(0, 24) : ''
   state.squadCode =
-    typeof raw.squadCode === 'string' && /^[0-9A-Z]{4}-[0-9A-Z]{4}$/.test(raw.squadCode) ? raw.squadCode : ''
-  // The LAN receiving mode ("remote") is gone; a browser saved in it starts off.
-  if (raw.connection && ['local', 'remote', 'webrtc', 'off'].includes(raw.connection.mode))
+    typeof raw.squadCode === 'string' && squadCodePattern.test(raw.squadCode) ? raw.squadCode : ''
+  state.squadRecent = recentSquadsOf(raw.squadRecent)
+  // The LAN receiving mode ("remote") is gone; a browser saved in it starts
+  // off. The Client mode was "webrtc" while the PCs talked over WebRTC.
+  if (raw.connection && ['local', 'remote', 'webrtc', 'client', 'off'].includes(raw.connection.mode))
     state.connection = {
-      mode: raw.connection.mode === 'remote' ? 'off' : raw.connection.mode,
-      stun: typeof raw.connection.stun === 'string' ? raw.connection.stun : DEFAULT_STUN,
+      mode: { remote: 'off', webrtc: 'client' }[raw.connection.mode] || raw.connection.mode,
+      link: linkOf(raw.connection.link),
+      receive: receiveOf(raw.connection.receive),
     }
   if (Array.isArray(raw.bookmarks))
     state.bookmarks = raw.bookmarks
@@ -303,24 +334,30 @@ function restore(raw = {}) {
     }
   }
   if (revision < 2) for (const b of state.bookmarks) if (b.url === 'https://tarkovtracker.io/') b.url = trackerHome
+  // The fixed tarkov.dev and TarkovTracker views became bookmarks pinned to
+  // the sidebar: added once (a bookmark the user has already stays, pinned).
+  if (revision < 3)
+    for (const pinned of defaultBookmarks.filter((b) => b.sidebar)) {
+      const have = state.bookmarks.find((b) => b.id === pinned.id || b.url === pinned.url)
+      if (have) have.sidebar = true
+      else if (state.bookmarks.length < 100) state.bookmarks.unshift({ ...pinned })
+    }
   if (Array.isArray(raw.tabs)) {
     const ids = new Set()
     let settings = false,
       bookmarksPage = false,
       screenshotsPage = false,
       snapNotesPage = false,
-      squadPage = false,
+      liveMapPage = false,
       bossesPage = false,
       tabsPage = false
-    const savedMap = raw.tabs.find((t) => t?.id === mapTabID),
-      savedTracker = raw.tabs.find((t) => t?.id === trackerTabID)
     state.tabs = raw.tabs
       .filter((t) => {
         if (
           !t ||
           typeof t.id !== 'string' ||
           !/^[a-zA-Z0-9_-]{1,80}$/.test(t.id) ||
-          fixedTabIDs.includes(t.id) ||
+          formerFixedTabIDs.includes(t.id) ||
           ids.has(t.id)
         )
           return false
@@ -336,9 +373,9 @@ function restore(raw = {}) {
         } else if (t.kind === 'snapnotes') {
           if (snapNotesPage) return false
           snapNotesPage = true
-        } else if (t.kind === 'squadmap') {
-          if (squadPage) return false
-          squadPage = true
+        } else if (t.kind === 'livemap') {
+          if (liveMapPage) return false
+          liveMapPage = true
         } else if (t.kind === 'bosses') {
           if (bossesPage) return false
           bossesPage = true
@@ -360,14 +397,6 @@ function restore(raw = {}) {
         role: t.role === 'task' ? 'task' : undefined,
         task: validTask(t.task) ? t.task : undefined,
       }))
-    state.tabs.unshift(
-      mapTab(savedMap?.kind === 'web' ? pageURL(savedMap.url) : undefined, savedMap?.home && pageURL(savedMap.home)),
-      trackerTab(
-        savedTracker?.kind === 'web' && hostname(savedTracker.url) !== 'tarkovtracker.io'
-          ? savedTracker.url
-          : undefined,
-      ),
-    )
     orderTabs(state)
   }
   // The settings view is not restored as the active tab: a start lands on the map, not on settings.
@@ -424,20 +453,10 @@ function samePage(a, b) {
   const x = page(a)
   return x !== null && x === page(b)
 }
+// A detected map brings the map view forward (it follows the map played).
 function receiveMap(state, name) {
   if (typeof name !== 'string' || !name.match(/^[a-z0-9-]{1,60}$/)) return null
-  if (name === 'ground-zero-21') name = 'ground-zero'
-  const url = `https://tarkov.dev/map/${name}`
-  let tab = state.tabs.find((t) => t.id === mapTabID)
-  if (!tab) {
-    tab = mapTab()
-    state.tabs.unshift(tab)
-  }
-  tab.kind = 'web'
-  tab.url = url
-  tab.home = url
-  state.active = tab.id
-  return tab
+  return openLocal(state, 'livemap')
 }
 // Tab order: the fixed map, then pinned tabs, then the rest. Sorting is stable,
 // so each group keeps its own order.
@@ -611,23 +630,8 @@ function cycleTab(state, delta) {
   state.active = tab.id
   return tab
 }
-// A detected position brings the map view forward. Its page is kept when it
-// already shows that map (a navigation would lose the state tarkov.dev holds);
-// another map, or another page, is opened like a detected map.
+// A detected position brings the map view forward too, where it shows.
 function receivePosition(state, name) {
-  if (typeof name !== 'string' || !name.match(/^[a-z0-9-]{1,60}$/)) return null
-  if (name === 'ground-zero-21') name = 'ground-zero'
-  const tab = state.tabs.find((t) => t.id === mapTabID)
-  if (tab && tab.kind === 'web') {
-    let url = null
-    try {
-      url = new URL(tab.url)
-    } catch {}
-    if (url && url.hostname === 'tarkov.dev' && url.pathname.replace(/\/$/, '') === `/map/${name}`) {
-      state.active = tab.id
-      return tab
-    }
-  }
   return receiveMap(state, name)
 }
 export {
@@ -638,7 +642,7 @@ export {
   hostSections,
   randomUUID,
   mapTabID,
-  trackerTabID,
+  liveMapTabID,
   themes,
   bookmarkGroups,
   bookmarkGroup,
@@ -652,6 +656,10 @@ export {
   pageURL,
   receiveTask,
   receiveMap,
+  receiveOf,
+  linkKind,
+  recentSquadsOf,
+  rememberSquad,
   moveTab,
   togglePin,
   pinBookmark,

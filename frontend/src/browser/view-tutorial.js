@@ -1,5 +1,5 @@
 import { Browser } from '@wailsio/runtime'
-import { mapTabID } from './state.js'
+
 import { esc, t, appVersion, icon, render, api, state, action, SUPPORT_URL } from './shell-core.js'
 
 // The first-run tutorial: an overlay that walks through the setup after
@@ -86,7 +86,7 @@ export async function handleTutorial(type) {
       return
     case 'tutorialMap':
       await closeTutorial()
-      return action('activate', mapTabID)
+      return action('livemap')
     case 'tutorialFolders':
     case 'tutorialRemote':
     case 'tutorialTracker': {

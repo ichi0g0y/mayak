@@ -12,6 +12,7 @@
         "clsx": "2.1.1",
         "leaflet": "1.9.4",
         "lucide-react": "1.38.0",
+        "modern-screenshot": "4.7.0",
         "morphdom": "^2.7.8",
         "react": "19.2.8",
         "react-dom": "19.2.8",
@@ -19,7 +20,7 @@
       },
       "devDependencies": {
         "@biomejs/biome": "2.5.14",
-        "@types/leaflet": "^1.9.22",
+        "@types/leaflet": "1.9.22",
         "@types/react": "19.2.18",
         "@types/react-dom": "19.2.5",
         "@vitejs/plugin-react": "6.1.1",
@@ -246,6 +247,8 @@
     "lightningcss-win32-x64-msvc": ["lightningcss-win32-x64-msvc@1.33.0", "", { "os": "win32", "cpu": "x64" }, "sha512-OlEICDx/Xl0FqSp4bry8zFnCvGpig3Gl4gCquvYwHuqJKEC1+n9NgDniFvqHGmMv1ZkqDJrDqKKSykTDX+ehuA=="],
 
     "lucide-react": ["lucide-react@1.38.0", "", { "peerDependencies": { "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-xZCyBd/wiVUDactoCc+42TjL0aB7EBOXsuX+tjz+W/sGzw2KhHpL1NOH3FIaVUcpimvUBpIYfz34Ofj9S5JEzQ=="],
+
+    "modern-screenshot": ["modern-screenshot@4.7.0", "", {}, "sha512-9YxN+ddPSMMlhylOv25VHzXrl9u67QRxoh7+SEewGtgUw7t6hHTrjptSDJUSne9oG4Xk/h2cwG15nIt4Hc9ujg=="],
 
     "morphdom": ["morphdom@2.7.8", "", {}, "sha512-D/fR4xgGUyVRbdMGU6Nejea1RFzYxYtyurG4Fbv2Fi/daKlWKuXGLOdXtl+3eIwL110cI2hz1ZojGICjjFLgTg=="],
 

@@ -162,8 +162,6 @@ func (a *App) startup(ctx context.Context) {
 	a.startUpdateChecks()
 
 	if a.browserClient.Load() {
-		// A client pairs with the Host over the LAN; macOS asks first.
-		go requestLocalNetwork()
 		return
 	}
 	// The bundled Tesseract became the default engine: settings still on the

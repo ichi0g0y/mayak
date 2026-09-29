@@ -18,6 +18,7 @@ import (
 	"github.com/local/mayak/internal/browserview"
 	"github.com/local/mayak/internal/model"
 	"github.com/local/mayak/internal/userdata"
+	"github.com/local/mayak/internal/version"
 )
 
 var browserStateMu sync.Mutex
@@ -39,10 +40,21 @@ func (a *App) browserStartsAsClient() bool {
 	if json.Unmarshal([]byte(raw), &saved) != nil {
 		return false
 	}
-	return saved.Connection.Mode == "webrtc" || saved.Connection.Mode == "off"
+	// "webrtc": the Client mode's name while the PCs talked over WebRTC.
+	return saved.Connection.Mode == "client" || saved.Connection.Mode == "webrtc" || saved.Connection.Mode == "off"
+}
+
+// BrowserLinkRelay is where a Host and its Client meet (the shell's
+// transport.js); MAYAK_LINK_RELAY points a development build at another one
+// (`task relay:dev`: ws://127.0.0.1:8787/link/).
+func (a *App) BrowserLinkRelay() string {
+	if v := os.Getenv("MAYAK_LINK_RELAY"); v != "" && version.IsPrerelease() {
+		return v
+	}
+	return "wss://mayak-relay.ich.sh/link/"
 }
 func (a *App) BrowserSetMode(mode string) error {
-	if mode != "local" && mode != "webrtc" && mode != "off" {
+	if mode != "local" && mode != "client" && mode != "off" {
 		return errors.New("invalid browser mode")
 	}
 	if mode == "local" && goruntime.GOOS != "windows" {
@@ -97,7 +109,7 @@ var browserPreferenceKeys = map[string]bool{
 	"sidebarSide": true, "sidebarCollapsed": true, "bookmarksCollapsed": true,
 	"screenshotsCollapsed": true, "snapNotesCollapsed": true, "toolOrder": true,
 	"bossesView": true, "bookmarkView": true, "adblock": true, "taskMode": true,
-	"questSite": true, "translateWiki": true, "bookmarkRevision": true, "squadName": true,
+	"questSite": true, "translateWiki": true, "bookmarkRevision": true, "squadName": true, "mapHidden": true, "mapSettings": true, "mapCollapsed": true,
 }
 
 func browserFile(name string) (string, error) { return appdir.Path(name) }
@@ -148,7 +160,8 @@ func loadBrowserState() (string, error) {
 }
 
 // BrowserSave keeps the shell's state: UI preferences, bookmarks and tabs.
-// Tokens and temporary WebRTC descriptions are never stored in it.
+// Tokens are never stored in it; the pairing's key is (connection.link),
+// with the other device settings.
 func (a *App) BrowserSave(raw string) error {
 	if len(raw) > 1024*1024 || !json.Valid([]byte(raw)) {
 		return errors.New("invalid browser state")

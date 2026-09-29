@@ -1,14 +1,16 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  mapTabID,
-  trackerTabID,
+  liveMapTabID,
   rememberFavicon,
   bookmarkGroup,
   defaults,
   restore,
   receiveTask,
   receiveMap,
+  recentSquadsOf,
+  rememberSquad,
+  linkKind,
   moveTab,
   togglePin,
   pinBookmark,
@@ -28,12 +30,17 @@ import {
   siteOfURL,
   isTranslated,
 } from './state.js'
-import { encode, decode, iceServers } from './peer-code.js'
+import { encode, decode } from './peer-code.js'
 test('curated bookmarks merge once and preserve user choices', () => {
   const existing = { id: 'custom-market', name: 'My prices', url: 'https://tarkov-market.com', group: 'other' }
   const s = restore({ bookmarks: [existing] })
-  assert.equal(s.bookmarks.length, 3)
-  assert.deepEqual(s.bookmarks[0], { ...existing, url: existing.url + '/' })
+  // The user's bookmark, the two added once since (revision 1) and the two
+  // pinned to the sidebar (revision 3).
+  assert.equal(s.bookmarks.length, 5)
+  assert.deepEqual(
+    s.bookmarks.find((b) => b.id === existing.id),
+    { ...existing, url: existing.url + '/' },
+  )
   assert.equal(
     s.bookmarks.some((b) => b.id === 'maps'),
     false,
@@ -89,7 +96,7 @@ test('reuse preserves pinned tasks and deduplicates repeated detections', () => 
   assert.equal(receiveTask(s, task('Checking')).id, second.id)
   assert.equal(receiveTask(s, task('Search')).id, second.id)
   assert.equal(first.task.id, 'Debut')
-  assert.equal(s.tabs.length, 5)
+  assert.equal(s.tabs.length, 4)
 })
 test('new-tab mode and selected wiki survive restoration', () => {
   const s = defaults()
@@ -127,31 +134,39 @@ test('invalid incoming sites, internal protocols and traversal IDs are rejected'
   assert.equal(receiveMap(s, '../settings'), null)
   assert.deepEqual(
     restore({ tabs: [{ id: '../../outside', kind: 'web', url: 'https://tarkov.dev' }] }).tabs.map((t) => t.id),
-    [mapTabID, trackerTabID],
+    [],
   )
 })
-test('every map lands in the fixed map tab, which always leads and survives restoration', () => {
+test('a detected map or position brings the map view forward; the fixed views are gone', () => {
   const s = defaults()
-  assert.equal(s.tabs[0].id, mapTabID)
-  const a = receiveMap(s, 'ground-zero-21')
-  assert.equal(a.id, mapTabID)
-  assert.equal(a.url, 'https://tarkov.dev/map/ground-zero')
-  assert.equal(receiveMap(s, 'customs').id, mapTabID)
-  assert.equal(s.tabs.filter((t) => t.role === 'map').length, 1)
+  assert.deepEqual(
+    s.tabs.map((t) => t.kind),
+    ['livemap', 'settings'],
+  )
+  assert.equal(s.active, liveMapTabID)
+  openLocal(s, 'settings')
+  assert.equal(receiveMap(s, 'ground-zero-21').kind, 'livemap')
+  assert.equal(s.active, liveMapTabID)
+  openLocal(s, 'settings')
+  assert.equal(receivePosition(s, 'customs').id, liveMapTabID)
+  assert.equal(receivePosition(s, 'Bad Map'), null)
+  assert.equal(s.tabs.filter((t) => t.kind === 'livemap').length, 1)
+  // A browser saved with the fixed tarkov.dev and TarkovTracker views drops them.
   const restored = restore({
     tabs: [
       { id: 'x', kind: 'blank' },
-      { id: mapTabID, kind: 'web', url: 'https://tarkov.dev/map/customs?connection=AB12' },
+      { id: 'map', kind: 'web', url: 'https://tarkov.dev/map/customs?connection=AB12' },
+      { id: 'tracker', kind: 'web', url: 'https://tarkovtracker.org/' },
       { id: 'old', kind: 'web', role: 'map', url: 'https://tarkov.dev/map/woods' },
     ],
+    active: 'map',
   })
   assert.deepEqual(
     restored.tabs.map((t) => t.id),
-    [mapTabID, trackerTabID, 'x', 'old'],
+    ['x', 'old'],
   )
-  assert.equal(restored.tabs[0].url, 'https://tarkov.dev/map/customs')
-  assert.equal(restored.tabs[0].fixed, true)
-  assert.equal(restored.tabs[3].role, undefined)
+  assert.equal(restored.tabs[1].role, undefined)
+  assert.equal(restored.active, 'x')
 })
 test('incoming traffic cannot grow tabs without a limit', () => {
   const s = defaults()
@@ -159,21 +174,27 @@ test('incoming traffic cannot grow tabs without a limit', () => {
   for (let i = 0; i < 100; i++) receiveTask(s, task(String(i)))
   assert.equal(s.tabs.length, 80)
 })
-test('pairing rejects expired, relayed, media and malformed descriptions without networking', () => {
+test('a pairing code carries a key for ten minutes and nothing malformed', () => {
   const code = {
-    version: 1,
-    type: 'offer',
+    version: 2,
+    type: 'link',
     id: '01234567-89ab-4cde-8fab-0123456789ab',
     createdAt: Date.now(),
-    sdp: 'v=0\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\na=fingerprint:sha-256 AA:BB\r\n',
+    key: 'A'.repeat(43),
   }
   assert.deepEqual(decode(encode(code)), code)
   assert.throws(() => decode(encode(code), code.createdAt + 600001))
-  assert.throws(() => encode({ ...code, sdp: code.sdp + 'a=candidate:1 1 UDP 1 1.2.3.4 9 typ relay\r\n' }))
-  assert.throws(() => encode({ ...code, sdp: code.sdp + 'm=audio 9 RTP/AVP 0\r\n' }))
+  assert.throws(() => encode({ ...code, key: 'short' }))
+  assert.throws(() => encode({ ...code, version: 1 }))
   assert.throws(() => decode('MAYAK1.invalid'))
-  assert.throws(() => iceServers('turn:example.com:3478'))
-  assert.deepEqual(iceServers(''), [])
+})
+
+test('a saved Client mode from the WebRTC days and a kept pairing are restored', () => {
+  const key = 'b'.repeat(43)
+  const s = restore({ connection: { mode: 'webrtc', stun: 'stun:x', link: { key, role: 'client' } } })
+  assert.deepEqual(s.connection.mode, 'client')
+  assert.deepEqual(s.connection.link, { key, role: 'client' })
+  assert.equal(restore({ connection: { mode: 'local', link: { key: 'bad', role: 'host' } } }).connection.link, null)
 })
 
 test('legacy home tabs are removed without losing bookmarks or web tabs', () => {
@@ -186,11 +207,8 @@ test('legacy home tabs are removed without losing bookmarks or web tabs', () => 
   )
   assert.ok(restored.tabs.some((t) => t.id === web.id))
   assert.deepEqual(restored.bookmarks, s.bookmarks)
-  assert.deepEqual(
-    restore({ tabs: [], active: '' }).tabs.map((t) => t.id),
-    [mapTabID, trackerTabID],
-  )
-  assert.equal(restore({ tabs: [], active: '' }).active, mapTabID)
+  assert.deepEqual(restore({ tabs: [], active: '' }).tabs, [])
+  assert.equal(restore({}).active, liveMapTabID)
 })
 
 test('pageURL strips the injected tarkov.dev connection only', () => {
@@ -225,39 +243,33 @@ test('theme defaults to MAYAK Dark, maps the earlier names and rejects unknown t
   assert.equal(restore({ theme: 'claude-light' }).theme, 'mayak-light')
 })
 
-test('tabs reorder before a tab or to the end, never past the fixed map', () => {
+test('tabs reorder before a tab or to the end', () => {
   const s = defaults()
   s.tabs.push({ id: 'a', kind: 'blank' }, { id: 'b', kind: 'blank' })
   const ids = () => s.tabs.map((t) => t.id)
   assert.equal(moveTab(s, 'b', 'settings'), true)
-  assert.deepEqual(ids(), [mapTabID, trackerTabID, 'b', 'settings', 'a'])
+  assert.deepEqual(ids(), [liveMapTabID, 'b', 'settings', 'a'])
   assert.equal(moveTab(s, 'b', null), true)
-  assert.deepEqual(ids(), [mapTabID, trackerTabID, 'settings', 'a', 'b'])
-  assert.equal(moveTab(s, 'a', mapTabID), false)
-  assert.equal(moveTab(s, trackerTabID, null), false)
+  assert.deepEqual(ids(), [liveMapTabID, 'settings', 'a', 'b'])
   assert.equal(moveTab(s, 'a', 'missing'), false)
-  assert.deepEqual(ids(), [mapTabID, trackerTabID, 'settings', 'a', 'b'])
+  assert.deepEqual(ids(), [liveMapTabID, 'settings', 'a', 'b'])
 })
 
 test('pinned tabs gather at the top and reorder only among themselves', () => {
   const s = defaults()
-  s.tabs = [
-    s.tabs[0],
-    s.tabs[1],
-    ...['a', 'b', 'c', 'd'].map((id) => ({ id, kind: 'web', url: 'https://example.com/' + id })),
-  ]
+  s.tabs = ['a', 'b', 'c', 'd'].map((id) => ({ id, kind: 'web', url: 'https://example.com/' + id }))
   const ids = () => s.tabs.map((t) => t.id).join(',')
   togglePin(s, 'c')
   togglePin(s, 'd')
-  assert.equal(ids(), mapTabID + ',' + trackerTabID + ',c,d,a,b')
+  assert.equal(ids(), 'c,d,a,b')
   assert.equal(moveTab(s, 'd', 'c'), true)
-  assert.equal(ids(), mapTabID + ',' + trackerTabID + ',d,c,a,b')
+  assert.equal(ids(), 'd,c,a,b')
   moveTab(s, 'a', 'd')
-  assert.equal(ids(), mapTabID + ',' + trackerTabID + ',d,c,a,b') // cannot jump into the pinned group
+  assert.equal(ids(), 'd,c,a,b') // cannot jump into the pinned group
   moveTab(s, 'd', null)
-  assert.equal(ids(), mapTabID + ',' + trackerTabID + ',c,d,a,b') // stays at the end of its group
+  assert.equal(ids(), 'c,d,a,b') // stays at the end of its group
   togglePin(s, 'c')
-  assert.equal(ids(), mapTabID + ',' + trackerTabID + ',d,c,a,b') // unpinned: top of the others
+  assert.equal(ids(), 'd,c,a,b') // unpinned: top of the others
   assert.equal(togglePin(s, 'settings'), false)
   const restored = restore({
     tabs: [
@@ -265,7 +277,7 @@ test('pinned tabs gather at the top and reorder only among themselves', () => {
       { id: 'y', kind: 'web', url: 'https://example.com/y', pinned: true },
     ],
   })
-  assert.equal(restored.tabs.map((t) => t.id).join(','), mapTabID + ',' + trackerTabID + ',y,x')
+  assert.equal(restored.tabs.map((t) => t.id).join(','), 'y,x')
 })
 
 test('bookmarks pin to the sidebar at a drop position and survive restoration', () => {
@@ -307,7 +319,7 @@ test('sidebar and bookmark view preferences restore with safe defaults', () => {
   })
   assert.deepEqual(
     r.tabs.map((t) => t.id),
-    [mapTabID, trackerTabID, 'b1'],
+    ['b1'],
   )
 })
 
@@ -332,7 +344,7 @@ test('favicons are kept per site with a limit and only as web URLs', () => {
     tabs: [{ id: 't', kind: 'web', url: 'https://a.test/', favicon: 'file:///x' }],
   })
   assert.equal(r.favicons['bad host'], undefined)
-  assert.equal(r.tabs[2].favicon, undefined)
+  assert.equal(r.tabs[0].favicon, undefined)
 })
 
 test('bookmark categories accept typed names', () => {
@@ -341,7 +353,7 @@ test('bookmark categories accept typed names', () => {
   assert.equal(bookmarkGroup(undefined), 'other')
   assert.equal(bookmarkGroup('x'.repeat(60)).length, 40)
   const r = restore({
-    bookmarkRevision: 1,
+    bookmarkRevision: 3,
     bookmarks: [
       { id: 'a', name: 'A', url: 'https://a.test/', group: '弾薬' },
       { id: 'b', name: 'B', url: 'https://b.test/', group: 'maps' },
@@ -381,20 +393,48 @@ test('the bookmark section fold state is remembered', () => {
   )
 })
 
-test('the squad tab, name and code come back, one tab at most', () => {
+test('the map view, its filters and the squad come back, one tab at most', () => {
   const restored = restore({
     squadName: '  Alice ',
     squadCode: 'ABCD-1234',
+    mapHidden: ['spawn_pmc', 'Bad Key!', 'spawn_pmc', 42],
+    mapSettings: { snipers: false, extracts: 'yes' },
     tabs: [
-      { id: 's1', kind: 'squadmap' },
-      { id: 's2', kind: 'squadmap' },
+      { id: 's1', kind: 'livemap' },
+      { id: 's2', kind: 'livemap' },
     ],
   })
   assert.equal(restored.squadName, 'Alice')
   assert.equal(restored.squadCode, 'ABCD-1234')
-  assert.equal(restored.tabs.filter((tab) => tab.kind === 'squadmap').length, 1)
+  assert.deepEqual(restored.mapHidden, ['spawn_pmc'])
+  assert.deepEqual(restored.mapSettings, {
+    snipers: false,
+    extracts: false,
+    activeTasks: false,
+    extractText: 100,
+    labelText: 100,
+    subtleLabels: false,
+    fade: 20,
+    style: 'svg',
+    mode: 'auto',
+  })
+  assert.equal(restore({ mapSettings: { extractText: 999, labelText: '75' } }).mapSettings.extractText, 200)
+  assert.equal(restore({ mapSettings: { labelText: '75' } }).mapSettings.labelText, 75)
+  assert.equal(restored.tabs.filter((tab) => tab.kind === 'livemap').length, 1)
   assert.equal(restore({ squadCode: 'abcd1234' }).squadCode, '')
   assert.equal(restore({ squadName: 42 }).squadName, '')
+  assert.deepEqual(restore({}).mapHidden, [])
+  assert.deepEqual(restore({}).mapSettings, {
+    snipers: true,
+    extracts: false,
+    activeTasks: false,
+    extractText: 100,
+    labelText: 100,
+    subtleLabels: false,
+    fade: 20,
+    style: 'svg',
+    mode: 'auto',
+  })
 })
 
 test('dropping a tab on the pinned bookmarks bookmarks and pins it once', () => {
@@ -409,55 +449,25 @@ test('dropping a tab on the pinned bookmarks bookmarks and pins it once', () => 
   assert.equal(bookmarkTab(s, 'settings', null), null)
 })
 
-test('TarkovTracker is a fixed view after the map and keeps its page', () => {
-  const s = defaults()
-  assert.deepEqual(
-    s.tabs.slice(0, 2).map((t) => [t.id, t.fixed, t.url]),
-    [
-      [mapTabID, true, 'https://tarkov.dev/maps/'],
-      [trackerTabID, true, 'https://tarkovtracker.org/'],
-    ],
-  )
-  const r = restore({
-    tabs: [
-      { id: trackerTabID, kind: 'web', url: 'https://tarkovtracker.org/tasks' },
-      { id: 'x', kind: 'blank' },
-    ],
-  })
-  assert.deepEqual(
-    r.tabs.map((t) => t.id),
-    [mapTabID, trackerTabID, 'x'],
-  )
-  assert.equal(r.tabs[1].url, 'https://tarkovtracker.org/tasks')
-  // The old .io site is replaced by the .org one the tracker API uses.
-  assert.equal(
-    restore({ tabs: [{ id: trackerTabID, kind: 'web', url: 'https://tarkovtracker.io/tasks' }] }).tabs[1].url,
-    'https://tarkovtracker.org/',
-  )
+test('tarkov.dev and TarkovTracker are bookmarks pinned to the sidebar, added once', () => {
+  const pinned = (b) => b.filter((x) => x.sidebar).map((x) => x.url)
+  assert.deepEqual(pinned(defaults().bookmarks), ['https://tarkov.dev/', 'https://tarkovtracker.org/'])
+  // Revision 2: the fixed views' bookmarks join, a bookmark already there is pinned.
   const old = restore({
+    bookmarkRevision: 2,
+    bookmarks: [{ id: 'mine', name: 'Tracker', url: 'https://tarkovtracker.org/', group: 'progress' }],
+  })
+  assert.deepEqual(pinned(old.bookmarks), ['https://tarkov.dev/', 'https://tarkovtracker.org/'])
+  assert.equal(old.bookmarks.length, 2)
+  // Unpinned since, it stays unpinned.
+  const unpinned = restore({ ...old, bookmarks: old.bookmarks.map((b) => ({ ...b, sidebar: false })) })
+  assert.deepEqual(pinned(unpinned.bookmarks), [])
+  // The old .io site is replaced by the .org one the tracker API uses.
+  const io = restore({
     bookmarkRevision: 1,
     bookmarks: [{ id: 'tracker', name: 'TarkovTracker', url: 'https://tarkovtracker.io/', group: 'progress' }],
   })
-  assert.deepEqual(
-    old.bookmarks.map((b) => b.url),
-    ['https://tarkovtracker.org/'],
-  )
-  assert.equal(receiveMap(s, 'customs').id, mapTabID)
-})
-
-test('fixed views return home after links led elsewhere', () => {
-  const s = defaults()
-  const map = s.tabs[0],
-    tracker = s.tabs[1]
-  receiveMap(s, 'woods')
-  map.url = 'https://tarkov.dev/items'
-  tracker.url = 'https://tarkov.dev/'
-  assert.equal(goHome(s, mapTabID), true)
-  assert.equal(map.url, 'https://tarkov.dev/map/woods')
-  assert.equal(goHome(s, trackerTabID), true)
-  assert.equal(tracker.url, 'https://tarkovtracker.org/')
-  assert.equal(goHome(s, 'settings'), false)
-  assert.equal(restore(JSON.parse(JSON.stringify(s))).tabs[0].home, 'https://tarkov.dev/map/woods')
+  assert.ok(io.bookmarks.some((b) => b.url === 'https://tarkovtracker.org/' && b.sidebar))
 })
 test('the item sidebar is restored with its item', () => {
   assert.deepEqual(restore({ itemPanel: { open: true, id: '57347ca924597744596b4e71', mode: 'pve' } }).itemPanel, {
@@ -537,37 +547,25 @@ test('keyboard shortcuts follow Chrome', () => {
 test('tab switching by number and cycling covers every tab', () => {
   const s = defaults()
   s.tabs = [
-    ...s.tabs.filter((t) => t.fixed),
+    { id: 'm', kind: 'livemap' },
+    { id: 't', kind: 'blank' },
     { id: 'a', kind: 'web', url: 'https://a.example/' },
     { id: 'b', kind: 'web', url: 'https://b.example/' },
     { id: 'c', kind: 'blank' },
   ]
   s.active = 'a'
-  assert.equal(tabAt(s, 1).id, mapTabID)
-  assert.equal(tabAt(s, 2).id, trackerTabID)
+  assert.equal(tabAt(s, 1).id, 'm')
+  assert.equal(tabAt(s, 2).id, 't')
   assert.equal(tabAt(s, 3).id, 'a')
   assert.equal(tabAt(s, 9).id, 'c')
   assert.equal(tabAt(s, 6), null)
   assert.equal(s.active, 'c')
-  assert.equal(cycleTab(s, 1).id, mapTabID)
+  assert.equal(cycleTab(s, 1).id, 'm')
   assert.equal(cycleTab(s, -1).id, 'c')
   assert.equal(cycleTab(s, -1).id, 'b')
   s.tabs = []
   assert.equal(cycleTab(s, 1), null)
   assert.equal(tabAt(s, 1), null)
-})
-test('a detected position brings the map view forward without reloading its map', () => {
-  const s = defaults()
-  receiveMap(s, 'customs')
-  s.tabs.find((t) => t.id === mapTabID).url = 'https://tarkov.dev/map/customs?layer=2'
-  openLocal(s, 'settings')
-  assert.equal(receivePosition(s, 'customs').id, mapTabID)
-  assert.equal(s.active, mapTabID)
-  assert.equal(s.tabs.find((t) => t.id === mapTabID).url, 'https://tarkov.dev/map/customs?layer=2')
-  receivePosition(s, 'woods')
-  assert.equal(s.tabs.find((t) => t.id === mapTabID).url, 'https://tarkov.dev/map/woods')
-  assert.equal(receivePosition(s, 'ground-zero-21').url, 'https://tarkov.dev/map/ground-zero')
-  assert.equal(receivePosition(s, 'Bad Map'), null)
 })
 test("pages translate through Google Translate's proxy and back", () => {
   const wiki = 'https://escapefromtarkov.fandom.com/wiki/Quests?x=1#top'
@@ -647,4 +645,32 @@ test('the task site of a page is its host, translated or moved on', () => {
   assert.equal(siteOfURL('https://tarkov.dev/task/debut'), 'tarkov-dev')
   assert.equal(siteOfURL('https://example.com/'), null)
   assert.equal(siteOfURL(''), null)
+})
+
+test('recent squads keep the last five, newest first, for a month', () => {
+  const day = 24 * 60 * 60 * 1000
+  const now = 100 * day
+  let list = []
+  for (const code of ['AAAA-0001', 'AAAA-0002', 'AAAA-0003', 'AAAA-0004', 'AAAA-0005', 'AAAA-0006'])
+    list = rememberSquad(list, code, now)
+  assert.deepEqual(
+    list.map((r) => r.code),
+    ['AAAA-0006', 'AAAA-0005', 'AAAA-0004', 'AAAA-0003', 'AAAA-0002'],
+  )
+  list = rememberSquad(list, 'AAAA-0003', now + 1)
+  assert.deepEqual(list.slice(0, 2).map((r) => r.code), ['AAAA-0003', 'AAAA-0006'])
+  assert.equal(new Set(list.map((r) => r.code)).size, list.length)
+  assert.deepEqual(recentSquadsOf([{ code: 'AAAA-0001', at: now - 31 * day }], now), [])
+  assert.deepEqual(recentSquadsOf([{ code: 'bad', at: now }, null, 'x'], now), [])
+  assert.deepEqual(restore({ squadRecent: [{ code: 'ABCD-1234', at: Date.now() }] }).squadRecent.map((r) => r.code), [
+    'ABCD-1234',
+  ])
+})
+
+test('a Client takes all of its Host detections unless it turns some off', () => {
+  assert.deepEqual(defaults().connection.receive, { task: true, map: true, item: true })
+  const s = restore({ connection: { mode: 'client', receive: { task: false, map: true, extra: false } } })
+  assert.deepEqual(s.connection.receive, { task: false, map: true, item: true })
+  assert.equal(linkKind('browser:position'), 'map')
+  assert.equal(linkKind('browser:item'), 'item')
 })

@@ -37,12 +37,12 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `app_remote.go` | 別の MAYAK へのマップ・タスク・位置の送信と接続テスト |
 | `app_lifecycle.go` | Wails v3 の `ServiceStartup` / `ServiceShutdown` を既存の起動・終了処理へ接続 |
 | `app_events.go` | Wails アプリ内イベントの発行（外部へのブリッジは起動しない） |
-| `app_browser.go` | ブラウザシェルの状態（`browser.json`）、ホスト／クライアントモード切替 |
+| `app_browser.go` | ブラウザシェルの状態（`browser.json`）、ホスト／クライアントモード切替、Host と Client のリンクの中継先（`BrowserLinkRelay`） |
 | `app_browser_remote.go` | 内蔵ブラウザ用 tarkov.dev Remote Control ID の生成と、マップページへの自動接続スクリプト |
 | `app_adblock.go` | 内蔵ブラウザの広告ブロック設定 |
 | `app_favicon.go` | サイトアイコンのディスクキャッシュ |
 | `app_catalog.go` | ゲームデータカタログの更新と定期監視（[catalog.md](catalog.md)） |
-| `app_squad.go` | 分隊ルームへの参加・報告・退出と、分隊マップの地図データ（`internal/squad`、`internal/mapdata`。nightly 版と開発版のみ） |
+| `app_squad.go` | 分隊ルームへの参加・報告・退出と、マップの地図データ・地点・タイル（`BrowserSquadMaps`、`BrowserSquadMapImage`、`BrowserMapMarkers`、`BrowserMapTile`。`internal/squad`、`internal/mapdata`。nightly 版と開発版のみ） |
 | `app_snapnote.go` | スナップノートの撮影・作成・保存・紐付け（保存は `internal/snapnote`、撮影は `browserview.Capture`） |
 | `app_screenshots.go` | スクリーンショット解析後の処理、デバッグ用メタデータ、古いスクリーンショットの整理 |
 | `app_item.go` | 認識したアイテムをアイテム欄へ送る。アイテム検索と詳細取得 |
@@ -79,7 +79,7 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `questapi` | タスク一覧、日本語名・公式 Wiki による補完 |
 | `questmatch` | OCR 結果からタスク名への照合 |
 | `squad` | 分隊ルーム: 分隊コード、コードから作る鍵での暗号化、中継（`relay/`）への WebSocket と再接続 |
-| `mapdata` | 分隊マップの地図: tarkov.dev の maps.json と SVG の取得・キャッシュ、階の判定、階ごとの画像 |
+| `mapdata` | マップの地図: tarkov.dev の maps.json と SVG の取得・キャッシュ、階の判定、階ごとの画像、タイルの取得、カタログからの地点（`markers.go`。tarkov.dev の地図と同じ層・まとまり・ポップアップの中身） |
 | `remote` | tarkov.dev Remote Control（`wss://socket.tarkov.dev`）への送信 |
 | `remoteid` | ブラウザの Local Storage のコピーから Remote ID を自動検出（Windows のみ） |
 | `screenshotstore` | 認識デバッグ用の画像保存と古いスクリーンショットの削除 |
@@ -141,10 +141,11 @@ ocrtrain -catalog %AppData%\Mayak\catalog\pve.json -fonts <dir with Bender*.otf>
 | `src/browser/shell-core.js` | シェルの共有部分（状態、`action`、`render` の入口、HTML の部品） |
 | `src/browser/view-snapnotes.js` | スナップノートの撮影メニュー、一覧、書き込み画面（[browser-shell.md](browser-shell.md#スナップノート)） |
 | `src/browser/view-bosses.js` / `view-screenshots.js` / `view-item.js` / `view-tutorial.js` | ボス、スクリーンショット、アイテム欄、チュートリアルの描画とイベント処理 |
+| `src/browser/view-map.js` / `map-geo.js` | マップ（Leaflet の地図、フィルター・検索・設定・分隊のパネル。[browser-shell.md](browser-shell.md#マップ)）と、Leaflet を使わない計算（マップと階の選び方、地点の階、検索、設定の検証） |
 | `src/browser/api.js` | バックエンド呼び出しとイベント処理、状態の保存。設定画面用のブリッジ `window.mayakDesktop` を用意する |
 | `src/browser/state.js` | タブ・ブックマークなどの状態操作（純粋関数中心） |
 | `src/browser/item.js` | アイテム欄の入力検証と価格・履歴の整形 |
-| `src/browser/peer-code.js` / `transport.js` | WebRTC 手動ペアリングのコード化と、データチャネルでの送受信 |
+| `src/browser/peer-code.js` / `transport.js` | ペアリングの招待コード（`MAYAK1.`）と、中継（`relay/` の `/link/`）を通した Host と Client のリンク（`MayakLink`。鍵から部屋と AES-GCM の鍵を作り、封じて送受信する） |
 | `src/browser/tab-drag.js` | タブのドラッグ並べ替え |
 | `src/browser/popup.js` | ポップアップのヘッダー描画 |
 | `tsconfig.shell.json` / `src/browser/shell-env.d.ts` | シェルの JavaScript（`src/browser/*.js`）の型チェック。`bun run build` が設定画面の `tsc` に続けて実行する。strict は切り、`window.mayak`・`window.mayakDesktop` の宣言と、イベントの対象と要素のメンバーを緩くする宣言を置く。名前・import・呼び出しは確かめられる（import 漏れなどが見つかる）。`shell-env.d.ts` は設定画面の型チェック（`tsconfig.json`）からは外す |
@@ -187,6 +188,7 @@ Wails 本体はフォークせず公式モジュールを使います。
 - `client/`: 以前の Electron クライアントの残骸（無視対象の依存・ビルド出力のみ）。現在のアプリにもビルドにも関係しません
 - `docs/`: この仕様書（Markdown のみ。目次は `SUMMARY.md`）と英語の開発メモ。公開はせず、開発時と AI の参照用に置いている
 - `site/`: ランディングページ（Vite + React + TypeScript + Tailwind + shadcn/ui + jotai）と Cloudflare の設定
+- `relay/`: 分隊ルームと Host・Client のリンクの中継（Cloudflare Worker `mayak-relay`。[ランディングページ](#ランディングページ)）
 
 ## Task
 
@@ -207,6 +209,8 @@ Wails 本体はフォークせず公式モジュールを使います。
 | `task dev:web` | ランディングページ（`site/`、Vite + React）をローカルの Web サーバー（http://localhost:5173）でホットリロード付きで動かす |
 | `task site:build` | ランディングページを `site/dist` にビルドする |
 | `task site:deploy` | ランディングページをビルドして Cloudflare に公開する（`wrangler deploy`、設定は `site/wrangler.jsonc`） |
+| `task relay:dev` | 中継の Worker（`relay/`、分隊ルーム `/squad/<room>` と Host・Client のリンク `/link/<room>`）をローカル（`ws://127.0.0.1:8787`）で動かす（`wrangler dev`） |
+| `task relay:deploy` | 中継の Worker `mayak-relay` を Cloudflare に公開する（`wrangler deploy`、設定は `relay/wrangler.jsonc`。頼まれたときだけ） |
 | `task dev` | 依存インストール → ホットリロード付き開発モード（下記）。アプリを起動する |
 | `task build:dev` | `dev` が使う開発ビルド。バインディング生成、Tesseract 同梱、`production` タグなしで `build/bin/Mayak-dev.exe` |
 | `task check:offline` | アプリを開かない検証。全パッケージのコンパイル、`TestBrowser*`、bun のテスト |
@@ -281,7 +285,7 @@ macOS／Linux のビルドは CI でコンパイルしているだけで、動�
 
 Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker 名 `mayak`。同じ Worker の `site/worker/index.js` が `/api/pair` のペアリング中継も受け持ちます）として公開し、独自ドメイン https://mayak.ich.sh（`routes` の `custom_domain`。ゾーン `ich.sh` は同じアカウント）と mayak.ichi0g0y.workers.dev で配信します。初回だけ `wrangler login` でサインインし（CI なら `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID`）、あとは `task site:deploy`（`bun run build` → `wrangler deploy`）です。wrangler はリポジトリ内で使ってください（Node はプロジェクトの `mise.toml` でだけ有効です）。仕様書（`docs/`）は公開しません。
 
-分隊ルームの中継（`relay/`、Worker 名 `mayak-relay`、https://mayak-relay.ich.sh）は別の Worker です。サイトを deploy すると同じ Worker の Durable Object が再起動して接続が切れるため、分けてあります。`task relay:dev` でローカルに立て、`task relay:deploy` で公開します（[settings-and-integrations.md](settings-and-integrations.md#分隊ルーム)）。
+分隊ルームと Host・Client のリンクの中継（`relay/`、Worker 名 `mayak-relay`、https://mayak-relay.ich.sh。Durable Object `SquadRoom` と `LinkRoom`）は別の Worker です。サイトを deploy すると同じ Worker の Durable Object が再起動して接続が切れるため、分けてあります。`task relay:dev` でローカル（`ws://127.0.0.1:8787/squad/` と `/link/`）に立て、開発版の MAYAK を `MAYAK_SQUAD_RELAY=ws://127.0.0.1:8787/squad/`（分隊）と `MAYAK_LINK_RELAY=ws://127.0.0.1:8787/link/`（リンク。`BrowserLinkRelay` がシェルに渡す）付きで起動すると、そちらにつなぎます（どちらも nightly 版と開発版でだけ効く）。公開は `task relay:deploy` です（[settings-and-integrations.md](settings-and-integrations.md#分隊ルーム)）。`site/worker/index.js` に残るのは、接続コードの受け渡し（`/api/pair`）と最新リリースの取得（`/api/release`）だけです。
 
 ## テスト
 
@@ -290,15 +294,17 @@ Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker
 | `go test ./...` | Go の全ユニットテスト |
 | `go test -run '^$' ./...` | コンパイルのみ |
 | `go test -run '^TestBrowser' ./internal/app` | ブラウザ状態の一時ファイル保存、特権ナビゲーション・ID の拒否、内蔵ブラウザ用 Remote ID の生成と送信先 |
-| `bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js ./frontend/src/browser/words.test.js ./frontend/src/browser/shell-core.test.js ./frontend/src/browser/squad-geo.test.js` | ブラウザシェルの純粋ロジック |
+| `bun test ./frontend/src/browser/state.test.js ./frontend/src/browser/item.test.js ./frontend/src/browser/words.test.js ./frontend/src/browser/shell-core.test.js ./frontend/src/browser/map-geo.test.js` | ブラウザシェルの純粋ロジック |
+| `bun test ./frontend/src/browser/transport.test.js` | リンクの鍵から作る部屋と AES-GCM の鍵（`task check:offline` には入っていない） |
 | `task lint` | Go の静的解析（staticcheck。設定は `staticcheck.conf`。エラー文は画面にそのまま出すので ST1005 は外している） |
 | `task check:offline` | 上記のコンパイル、`TestBrowser*`、bun のテストをまとめて実行 |
 
 主なテスト内容:
 
 - **ルートパッケージ**: 古い解析結果のリモート送信を捨てる処理、マップ設定の移行、設定と TarkovTracker 割り当ての保存、ウィンドウ位置の復元（負の座標、切断されたディスプレイ、最大化中のモニター移動）、タイトルバー色、タスクページ URL、アイテム検索（日本語名を含む）、favicon キャッシュ、ハイドアウト通知、Remote ID
-- **`internal/*`**: 検出器（`taskdetect`、`itemdetect`、`logdetect`、`hideoutlog`、`trackerlog`）、検出器と OCR 前処理が共有する画素アクセス・輝度・切り出し・data URL（`imaging`。`image.Image.At` はピクセルごとにインターフェース呼び出しと色変換が入るので、RGBA のバイト列を直接読む）、スクリーンショットの拡大・縮小（`screenscale`）、OCR 前処理（`ocr`）、照合（`questmatch`、`itemmatch`）、カタログ、設定、保存（`trackerstore`、`screenshotstore`、`applog`）、座標解析、広告ブロック、サウンド波形など。HTTP を使うものは `httptest` のローカルサーバーを使います
-- **bun**: `state.test.js`（ブックマークの統合、タスク／マップタブの再利用とピン留め、状態の復元、URL 検証、ペアリングコード、STUN 設定の検証など 25 件）、`item.test.js`（アイテム情報の検証、最良の売却先、価格と経過時間の整形、履歴グラフなど 6 件）
+- **`internal/app` の分隊**: `app_squad_test.go`（ローカルの WebSocket の中継に `MAYAK_SQUAD_RELAY` を向け、同じ分隊に入り直しても止まらないこと、別の分隊への切り替えと退出）
+- **`internal/*`**: `mapdata`（maps.json の読み込み、階の判定、SVG の階のスタイル、1 日ごとの確認と最後の良いコピー、タイルの URL の制限。`markers_test.go` はカタログから作る地点が tarkov.dev と同じ層・名前・詳細になること）、`squad`（コードの正規化、部屋の ID、封と開封、報告の検証、中継越しの報告のやりとり）、検出器（`taskdetect`、`itemdetect`、`logdetect`、`hideoutlog`、`trackerlog`）、検出器と OCR 前処理が共有する画素アクセス・輝度・切り出し・data URL（`imaging`。`image.Image.At` はピクセルごとにインターフェース呼び出しと色変換が入るので、RGBA のバイト列を直接読む）、スクリーンショットの拡大・縮小（`screenscale`）、OCR 前処理（`ocr`）、照合（`questmatch`、`itemmatch`）、カタログ、設定、保存（`trackerstore`、`screenshotstore`、`applog`）、座標解析、広告ブロック、サウンド波形など。HTTP を使うものは `httptest` のローカルサーバーを使います
+- **bun**: `state.test.js`（ブックマークの統合と固定ビューからの移行、タスクタブの再利用とピン留め、マップの検出でマップのビューを開くこと、状態の復元、`webrtc` から `client` への読み替えとペアリングの検証、招待コード、最近の分隊、Client で出すもの、URL 検証など 37 件）、`item.test.js`（アイテム情報の検証、最良の売却先、価格と経過時間の整形、履歴グラフなど 6 件）、`map-geo.test.js`（レイドの時計、検索、フィルター、見るだけの Client を仲間に数えないこと、マップと階の選び方、印の向きと古さ、tarkov.dev と同じ階の判定、高さの無い地名、Ctrl+ホイールの階の順）、`transport.test.js`（同じ鍵から同じ部屋と鍵ができ、別の鍵では違う部屋になること）
 
 環境変数で有効にするテスト（既定ではスキップ）:
 
@@ -315,8 +321,8 @@ Cloudflare には Workers の静的アセット（`site/wrangler.jsonc`、Worker
 - **Wails v3 はフォークしない**: `v3.0.0-beta.24` の公式モジュールを使います。ネイティブのタブ実装は `internal/browserview` に置き、v3 の公開 API（ネイティブウィンドウ、UI スレッドへのディスパッチ）だけを使います。go-webview2 の小さな拡張だけを `third_party` に置きます。
 - **外部サイトは分離する**: 外部サイトは同じウィンドウ内の独立したネイティブビューに表示します。Windows では別のブラウザデータディレクトリを使い、Wails のスクリプトは注入せず、Web メッセージングを無効にし、権限要求は拒否します。外部ページは Go バインディングに触れません。同一オリジンの iframe を使うのは、同梱の信頼できる `settings.html` だけです。
 - **ナビゲーションの制限**: 許可するのは HTTP/HTTPS だけで、認証情報付き URL と Wails 自身のホストは除外します。リダイレクトもネイティブ側で再チェックします。ポップアップは受け入れた場合もタブになり、Wails バインディング付きのドキュメントにはなりません。
-- **ブリッジを作らない**: ローカル HTTP／WebSocket ブリッジやヘルパープロセスは使いません。WebRTC（`RTCPeerConnection`）は信頼できるメイン文書が持ち、受信側はタスク／マップ表示のメッセージだけを受け付けます。TURN は使わず、STUN は経路探索だけに使います。
-- **保存**: ブラウザ状態は `Mayak/browser.json` に一時ファイル経由で置き換え保存します。トークンや SDP は保存しません。設定は即時に保存します。
+- **ブリッジを作らない**: ローカル HTTP／WebSocket ブリッジやヘルパープロセスは使いません。Host と Client のリンク（中継 `mayak-relay` への WebSocket、`transport.js`）は信頼できるメイン文書が持ち、中身はペアの鍵で封じます。受信側はタスク・マップ・位置・アイテムの表示と分隊の同期のメッセージだけを受け付けます。LAN には直接つなぎません。
+- **保存**: ブラウザ状態は `Mayak/browser.json` に一時ファイル経由で置き換え保存します。トークンや接続コードは保存しません（ペアリングの鍵はこの PC のデータとして保存します）。設定は即時に保存します。
 - **既存の改善を残す**: 日本語 OCR／カタログの改善、タスクサイトの選択、設定の即時保存を維持します。
 - **ユーザーはプレイ中に開発を進めている**: アプリの起動・再起動、ウィンドウ操作、ライブ OCR、ネットワーク接続テストは、実際のテストを明示的に頼まれたときだけ行います。それ以外は静的チェック、コンパイル、ネットワークを使わない分離されたユニットテスト（`task check:offline` など）で確認します。後片付けのために実行中のプロセスを止めてはいけません。
 
