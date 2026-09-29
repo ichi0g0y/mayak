@@ -1021,6 +1021,18 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-draw-color.on{background:transparent!important}
 .map-draw-size span{width:var(--dot);height:var(--dot);border-radius:50%;background:currentColor}
 .leaflet-mapDraw-pane{filter:drop-shadow(0 0 1px rgba(0,0,0,.55))}
+/* The squad pen: its button (a dot in your squad colour), its colour in the
+   tools, the clear-all, the others' pens, the drawer's name under the
+   pointer and the notice of a clear-all. */
+.map-rail-pen-dot{position:absolute;right:5px;bottom:5px;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 0 1.5px var(--surface)}
+.map-draw-own-color{display:inline-flex;align-items:center;gap:6px;padding:0 6px;font-size:12.5px;white-space:nowrap;color:var(--text-2)}
+.map-draw-bar button.map-draw-clear-all{width:auto;padding:0 9px;font-size:12px;font-weight:500;color:var(--danger,#e06c75)}
+.squad-pen-cursor-icon{background:none;border:0}
+.squad-pen-cursor{position:absolute;left:-2px;top:-16px;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;color:var(--c);font:600 11px/1 system-ui,sans-serif;text-shadow:0 0 2px #000,0 0 2px #000;pointer-events:none}
+.squad-pen-cursor .icon{width:15px;height:15px;filter:drop-shadow(0 0 1px #000)}
+.map-line-name{position:absolute;z-index:900;padding:2px 7px;border-radius:6px;border-left:3px solid var(--c);background:var(--surface);color:var(--text);font:500 12px/1.4 system-ui,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:none;white-space:nowrap}
+.map-clear-notice{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);z-index:800;display:flex;align-items:center;gap:12px;padding:6px 8px 6px 14px;border:2px solid rgba(0,0,0,.2);border-radius:8px;background:var(--surface);background-clip:padding-box;font-size:13px}
+.map-clear-notice button{height:28px;padding:0 10px}
 .map-drawing.leaflet-container,.map-drawing .leaflet-interactive{cursor:crosshair}
 .map-erasing.leaflet-container,.map-erasing .leaflet-interactive{cursor:cell}
 .map-drawing.map-grab.leaflet-container{cursor:grab}

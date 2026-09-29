@@ -33,7 +33,7 @@ import {
   afterRenderHooks,
   render,
 } from './shell-core.js'
-import { attach, drawLines, penBar, penButton, snapStrokes } from './map-draw.js'
+import { attach, clearNotice, drawLines, penBar, penButton, snapStrokes, squadSnapStrokes } from './map-draw.js'
 import { colorOf, mapName, memberList, ownName } from './view-squad.js'
 
 // The map view: tarkov.dev's interactive map redrawn by MAYAK (Leaflet over
@@ -297,7 +297,7 @@ export function liveMapPage() {
             : view.panel === 'search'
               ? searchPanel()
               : ''
-  return `<div class="live-map-page"><div id="live-map" data-keep="livemap"></div>${note ? `<p class="map-note">${esc(note)}</p>` : ''}${rail(map, floor)}${penBar()}${panel ? `<div class="map-panel-host">${panel}</div>` : ''}${raidInfo(map, data)}<div class="map-coords" data-keep="map-coords"></div></div>`
+  return `<div class="live-map-page"><div id="live-map" data-keep="livemap"></div>${note ? `<p class="map-note">${esc(note)}</p>` : ''}${rail(map, floor)}${penBar()}${clearNotice()}${panel ? `<div class="map-panel-host">${panel}</div>` : ''}${raidInfo(map, data)}<div class="map-coords" data-keep="map-coords"></div></div>`
 }
 
 // Leaflet and the map drawn with it.
@@ -806,7 +806,8 @@ async function snapMap() {
     const image = await domToPng(el, {
       scale,
       backgroundColor: getComputedStyle(el).backgroundColor,
-      // Your lines go in the note's first layer instead, to stay editable.
+      // Your lines and the squad's go in the note's first two layers
+      // instead, to stay editable.
       filter: (node) =>
         !(
           node instanceof Element &&
@@ -821,7 +822,7 @@ async function snapMap() {
       .filter(Boolean)
       .join(' · ')
     const layer = (strokes) => ({ visible: true, strokes })
-    const drawing = { v: 2, base: { visible: true }, layers: [layer(snapStrokes(scale)), layer([]), layer([])] }
+    const drawing = { v: 2, base: { visible: true }, layers: [layer(snapStrokes(scale)), layer(squadSnapStrokes(scale)), layer([])] }
     await action('snapNew', { image, title, drawing })
   } catch (e) {
     await action('mapSnapFailed', String(e?.message || e))

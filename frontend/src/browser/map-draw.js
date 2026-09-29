@@ -1,5 +1,6 @@
 import { state, esc, t, icon, render, clickHandlers } from './shell-core.js'
 import { hits, validLine } from './map-geo.js'
+import * as squad from './squad-draw.js'
 
 // Your own pen on the map (docs/squad-sharing.md): lines drawn over the map
 // in game coordinates, each on the map and floor it was drawn on, kept by Go
@@ -8,6 +9,12 @@ import { hits, validLine } from './map-geo.js'
 // a pane of their own, and while the pen is up the pointer draws instead of
 // dragging the map: the left button draws (or erases), the right or middle
 // button and Space + drag move the map, the wheel zooms.
+//
+// The squad pen (squad-draw.js) is a second pen with the same tools: its
+// lines, in each member's squad colour, show to the whole squad, as they are
+// drawn, and only their drawer can erase them; one button clears the map's
+// squad lines for everyone (undoable for a few seconds). While it is up, the
+// pen's place shows to the others; pointing at a squad line names its drawer.
 
 export const palette = ['#ff3b30', '#ffd60a', '#34c759', '#32ade6', '#ffffff', '#111111']
 // Widths in screen pixels: a line keeps its width at every zoom.
@@ -17,9 +24,10 @@ export const widths = /** @type {[string, number][]} */ ([
   ['l', 9],
 ])
 
-// on: the pen is up; tool: 'pen' or 'eraser'; hidden: your lines are hidden
-// (on this PC's screen only).
-export const pen = { on: false, tool: 'pen', color: palette[1], size: 'm', hidden: false }
+// on: a pen is up; mode: which ('mine' or 'squad'); tool: 'pen' or
+// 'eraser'; hidden: your own pen's lines are hidden (on this PC's screen only).
+export const pen = { on: false, mode: 'mine', tool: 'pen', color: palette[1], size: 'm', hidden: false }
+const squadMode = () => pen.on && pen.mode === 'squad'
 
 /** @typedef {{id: string, map: string, floor: string, c: string, w: number, p: number[][]}} Line */
 /** @type {Line[]} */
@@ -28,14 +36,15 @@ let loading = null
 let saveTimer = 0
 // Bumped on every change of the lines, for drawLines to know when to redraw.
 let revision = 0
-// {add: Line[]} or {remove: Line[]}, for undo and redo (this session only).
+// {mode, add: Line[]} or {mode, remove: Line[]}, for undo and redo (this
+// session only); mode is the pen's.
 const undoStack = []
 const redoStack = []
 
 // What shows now (drawLines): the Leaflet module, map, the map's key and the
 // floor, and how strong other floors show.
 const at = { L: null, map: null, key: '', floor: '', alpha: 0.2 }
-const drawn = { map: null, layer: null, key: '' }
+const drawn = { map: null, layer: null, key: '', live: null, liveKey: '' }
 
 const backend = () => window.mayakDesktop?.backend
 
@@ -76,6 +85,12 @@ const here = (l) => l.map === at.key && l.floor === at.floor
 function apply(entry, undoing) {
   const add = undoing ? entry.remove : entry.add
   const remove = undoing ? entry.add : entry.remove
+  if (entry.mode === 'squad') {
+    if (!squad.canDraw()) return
+    if (remove?.length) squad.erase(remove)
+    if (add?.length) squad.add(add)
+    return
+  }
   if (remove?.length) {
     const ids = new Set(remove.map((l) => l.id))
     lines = lines.filter((l) => !ids.has(l.id))
@@ -100,19 +115,43 @@ export function redo() {
   undoStack.push(entry)
   apply(entry, false)
 }
+// Your squad lines on the floor shown.
+const squadHere = () => squad.shownLines(at.key).filter((l) => l.floor === at.floor && l.by === squad.myKeyOf())
 function clearHere() {
+  if (squadMode()) {
+    const removed = squadHere()
+    if (!removed.length) return
+    squad.erase(removed)
+    record({ mode: 'squad', remove: removed })
+    return
+  }
   const removed = lines.filter(here)
   if (!removed.length) return
   lines = lines.filter((l) => !here(l))
-  record({ remove: removed })
+  record({ mode: 'mine', remove: removed })
   changed()
 }
-const linesHere = () => lines.some(here)
+const linesHere = () => (squadMode() ? squadHere().length > 0 : lines.some(here))
 
-// The pen's button in the map's column of buttons.
+// The pens' buttons in the map's column of buttons: yours, and the squad's
+// (in a squad, through a relay that takes it).
 export function penButton(disabled) {
+  const mine = pen.on && pen.mode === 'mine'
   const label = esc(t('mapPen'))
-  return `<button class="map-rail-button ${pen.on ? 'selected' : ''}" data-action="mapPen" aria-pressed="${pen.on}" title="${label}" aria-label="${label}" ${disabled ? 'disabled' : ''}>${icon('pencil')}</button>`
+  const button = `<button class="map-rail-button ${mine ? 'selected' : ''}" data-action="mapPen" aria-pressed="${mine}" title="${label}" aria-label="${label}" ${disabled ? 'disabled' : ''}>${icon('pencil')}</button>`
+  if (!state.squad) return button
+  const s = state.squad.state
+  const on = squadMode()
+  const why = !s ? 'mapSquadPenJoin' : !s.drawing && s.phase === 'connected' ? 'mapSquadPenRelay' : 'mapSquadPen'
+  const off = disabled || !squad.canDraw()
+  return `${button}<button class="map-rail-button map-rail-squad-pen ${on ? 'selected' : ''}" data-action="mapSquadPen" aria-pressed="${on}" title="${esc(t(why))}" aria-label="${esc(t('mapSquadPen'))}" ${off && !on ? 'disabled' : ''}>${icon('pencil')}<span class="map-rail-pen-dot" style="--c:${squad.myStyle().c}"></span></button>`
+}
+
+// The notice of a squad clear-all while it can be undone.
+export function clearNotice() {
+  const c = squad.clearedNow()
+  if (!c || c.map !== at.key) return ''
+  return `<div class="map-clear-notice" role="status"><span>${esc(t(c.mine ? 'mapClearedMine' : 'mapClearedBy').replace('{name}', c.name))}</span><button data-action="mapPenUnclear">${esc(t('mapClearedUndo'))}</button></div>`
 }
 
 // The pen's tools, over the top of the map while it is up.
@@ -120,7 +159,9 @@ export function penBar() {
   if (!pen.on) return ''
   const tool = (id, iconName, label) =>
     `<button class="map-draw-tool ${pen.tool === id ? 'on' : ''}" data-action="mapPenTool" data-id="${id}" aria-pressed="${pen.tool === id}" title="${esc(t(label))}" aria-label="${esc(t(label))}">${icon(iconName)}</button>`
-  const colors = palette
+  const colors = squadMode()
+    ? `<span class="map-draw-own-color" title="${esc(t('mapSquadPenColor'))}"><span class="squad-dot" style="--c:${squad.myStyle().c}"></span>${esc(squad.myStyle().name)}</span>`
+    : palette
     .map(
       (c) =>
         `<button class="map-draw-color ${pen.color === c && pen.tool === 'pen' ? 'on' : ''}" data-action="mapPenColor" data-id="${c}" title="${esc(t('snapColor'))} ${c}" style="--swatch:${c}"></button>`,
@@ -134,15 +175,33 @@ export function penBar() {
     .join('')
   const sep = '<span class="map-draw-sep"></span>'
   const eye = pen.hidden ? 'mapPenShow' : 'mapPenHide'
-  return `<div class="map-draw-bar" role="toolbar" aria-label="${esc(t('mapPen'))}" title="${esc(t('mapPenHint'))}">${tool('pen', 'pencil', 'snapPen')}${tool('eraser', 'eraser', 'snapEraser')}${sep}${colors}${sep}${sizes}${sep}<button data-action="mapPenUndo" title="${esc(t('snapUndo'))}" aria-label="${esc(t('snapUndo'))}" ${undoStack.length ? '' : 'disabled'}>${icon('undo')}</button><button data-action="mapPenRedo" title="${esc(t('snapRedo'))}" aria-label="${esc(t('snapRedo'))}" ${redoStack.length ? '' : 'disabled'}>${icon('redo')}</button>${sep}<button class="${pen.hidden ? 'on' : ''}" data-action="mapPenEye" aria-pressed="${pen.hidden}" title="${esc(t(eye))}" aria-label="${esc(t(eye))}">${icon(pen.hidden ? 'eyeOff' : 'eye')}</button><button data-action="mapPenClear" title="${esc(t('mapPenClear'))}" aria-label="${esc(t('mapPenClear'))}" ${linesHere() ? '' : 'disabled'}>${icon('trash')}</button>${sep}<button data-action="mapPen" title="${esc(t('mapPenDone'))}" aria-label="${esc(t('mapPenDone'))}">${icon('x')}</button></div>`
+  const hide = squadMode()
+    ? `<button class="map-draw-clear-all" data-action="mapPenClearAll" title="${esc(t('mapPenClearAll'))}" ${squad.shownLines(at.key).length ? '' : 'disabled'}>${esc(t('mapPenClearAllShort'))}</button>`
+    : `<button class="${pen.hidden ? 'on' : ''}" data-action="mapPenEye" aria-pressed="${pen.hidden}" title="${esc(t(eye))}" aria-label="${esc(t(eye))}">${icon(pen.hidden ? 'eyeOff' : 'eye')}</button>`
+  const name = squadMode() ? 'mapSquadPen' : 'mapPen'
+  return `<div class="map-draw-bar ${squadMode() ? 'squad' : ''}" role="toolbar" aria-label="${esc(t(name))}" title="${esc(t(squadMode() ? 'mapSquadPenHint' : 'mapPenHint'))}">${tool('pen', 'pencil', 'snapPen')}${tool('eraser', 'eraser', 'snapEraser')}${sep}${colors}${sep}${sizes}${sep}<button data-action="mapPenUndo" title="${esc(t('snapUndo'))}" aria-label="${esc(t('snapUndo'))}" ${undoStack.length ? '' : 'disabled'}>${icon('undo')}</button><button data-action="mapPenRedo" title="${esc(t('snapRedo'))}" aria-label="${esc(t('snapRedo'))}" ${redoStack.length ? '' : 'disabled'}>${icon('redo')}</button>${sep}<button data-action="mapPenClear" title="${esc(t('mapPenClear'))}" aria-label="${esc(t('mapPenClear'))}" ${linesHere() ? '' : 'disabled'}>${icon('trash')}</button>${hide}${sep}<button data-action="${squadMode() ? 'mapSquadPen' : 'mapPen'}" title="${esc(t('mapPenDone'))}" aria-label="${esc(t('mapPenDone'))}">${icon('x')}</button></div>`
 }
 
+// pickPen puts up a pen (or puts it down when it is the one up).
+function pickPen(mode) {
+  const was = squadMode()
+  if (pen.on && pen.mode === mode) pen.on = false
+  else Object.assign(pen, { on: true, mode })
+  if (was && !squadMode()) squad.cursorOff()
+  if (pen.on) void load()
+}
 clickHandlers.push(async (type, id) => {
+  if (type === 'mapSquadPen') {
+    if (squadMode() || squad.canDraw()) pickPen('squad')
+    render()
+    return true
+  }
   if (!type.startsWith('mapPen')) return false
-  if (type === 'mapPen') {
-    pen.on = !pen.on
-    if (pen.on) void load()
-  } else if (type === 'mapPenTool') pen.tool = id === 'eraser' ? 'eraser' : 'pen'
+  if (type === 'mapPen') pickPen('mine')
+  else if (type === 'mapPenClearAll') {
+    if (squad.canDraw()) squad.clearAll(at.key)
+  } else if (type === 'mapPenUnclear') squad.undoClear()
+  else if (type === 'mapPenTool') pen.tool = id === 'eraser' ? 'eraser' : 'pen'
   else if (type === 'mapPenColor') {
     pen.color = id
     pen.tool = 'pen'
@@ -175,20 +234,51 @@ export function drawLines(L, map, key, floor, alpha) {
     pane.style.pointerEvents = 'none'
     drawn.map = map
     drawn.layer = L.layerGroup().addTo(map)
+    drawn.live = L.layerGroup().addTo(map)
     drawn.key = ''
+    drawn.liveKey = ''
   }
-  const drawKey = [revision, key, floor, pen.hidden, alpha].join('|')
-  if (drawn.key === drawKey) return
-  drawn.key = drawKey
-  drawn.layer.clearLayers()
-  if (pen.hidden) return
-  for (const l of lines) {
-    if (l.map !== key) continue
-    const opacity = l.floor === floor ? 1 : alpha
-    if (!opacity) continue
-    shape(L, l, opacity).addTo(drawn.layer)
+  const drawKey = [revision, squad.sq.revision, key, floor, pen.hidden, alpha].join('|')
+  if (drawn.key !== drawKey) {
+    drawn.key = drawKey
+    drawn.layer.clearLayers()
+    const add = (l) => {
+      const opacity = l.floor === floor ? 1 : alpha
+      if (opacity) shape(L, l, opacity).addTo(drawn.layer)
+    }
+    if (!pen.hidden) for (const l of lines) if (l.map === key) add(l)
+    for (const l of squad.shownLines(key)) add(l)
   }
+  drawLive(L, key, floor, alpha)
 }
+// drawLive draws what the others are drawing now, and where their squad
+// pens are.
+function drawLive(L, key, floor, alpha) {
+  const liveKey = [squad.sq.liveRevision, key, floor, alpha].join('|')
+  if (drawn.liveKey === liveKey) return
+  drawn.liveKey = liveKey
+  drawn.live.clearLayers()
+  for (const l of squad.liveLines(key)) {
+    const opacity = l.floor === floor ? 1 : alpha
+    if (opacity) shape(L, l, opacity).addTo(drawn.live)
+  }
+  for (const c of squad.cursorsOn(key))
+    L.marker([c.z, c.x], {
+      pane: 'mapDraw',
+      interactive: false,
+      keyboard: false,
+      opacity: c.floor === floor ? 1 : Math.max(alpha, 0.3),
+      icon: L.divIcon({
+        className: 'squad-pen-cursor-icon',
+        html: `<span class="squad-pen-cursor" style="--c:${esc(c.c)}">${icon('pencil')}<span>${esc(c.name)}</span></span>`,
+        iconSize: [0, 0],
+      }),
+    }).addTo(drawn.live)
+}
+// The lines change without a render when the squad's do.
+squad.onLines(() => {
+  if (at.map && drawn.map === at.map) drawLines(at.L, at.map, at.key, at.floor, at.alpha)
+})
 function shape(L, l, opacity) {
   const points = l.p.map(([x, z]) => [z, x])
   return points.length === 1
@@ -215,7 +305,7 @@ function shape(L, l, opacity) {
 // The pointer while the pen is up. attach runs once per map element (the
 // element outlives the maps drawn in it; signal ends its listeners).
 let space = false
-let stroke = null // {line, live, last: [x, y]} while drawing
+let stroke = null // {line, live, last: [x, y], sent, timer} while drawing
 let erased = null // the lines erased by this drag
 let panning = null // {x, y} while the right or middle button moves the map
 export function attach(el, signal) {
@@ -237,6 +327,7 @@ export function attach(el, signal) {
       e.preventDefault()
       el.setPointerCapture(e.pointerId)
       const p = spot(e)
+      if (squadMode() && !squad.canDraw()) return
       if (pen.tool === 'eraser') {
         erased = []
         eraseAt(p)
@@ -244,8 +335,18 @@ export function attach(el, signal) {
       }
       const ll = at.map.containerPointToLatLng(p)
       const w = widths.find(([k]) => k === pen.size)?.[1] || 5
-      const line = { id: newID(), map: at.key, floor: at.floor, c: pen.color, w, p: [[round(ll.lng), round(ll.lat)]] }
-      stroke = { line, live: shape(at.L, line, 1).addTo(at.map), last: [p.x, p.y] }
+      const first = [[round(ll.lng), round(ll.lat)]]
+      const line = squadMode()
+        ? { id: newID(), by: squad.myKeyOf(), ...squad.myStyle(), map: at.key, floor: at.floor, w, p: first, gen: squad.genOf(at.key) }
+        : { id: newID(), map: at.key, floor: at.floor, c: pen.color, w, p: first }
+      stroke = { line, live: shape(at.L, line, 1).addTo(at.map), last: [p.x, p.y], sent: 0, timer: 0 }
+      // The squad sees the line as it is drawn: its start, then its new
+      // points every eighth of a second.
+      if (squadMode()) {
+        squad.begin(line)
+        const s = stroke
+        s.timer = setInterval(() => flush(s), 125)
+      }
     },
     { signal },
   )
@@ -258,7 +359,15 @@ export function attach(el, signal) {
         return
       }
       if (erased) return eraseAt(spot(e))
-      if (!stroke) return
+      if (!stroke) {
+        const p = spot(e)
+        if (squadMode() && squad.canDraw() && at.map) {
+          const ll = at.map.containerPointToLatLng(p)
+          squad.cursor(at.key, at.floor, ll.lng, ll.lat)
+        }
+        nameTip(el, p)
+        return
+      }
       const p = spot(e)
       if (Math.hypot(p.x - stroke.last[0], p.y - stroke.last[1]) < 2) return
       stroke.last = [p.x, p.y]
@@ -275,37 +384,87 @@ export function attach(el, signal) {
   const end = () => {
     panning = null
     if (erased) {
-      if (erased.length) record({ remove: erased })
+      if (erased.length) record({ mode: pen.mode, remove: erased })
       erased = null
       render()
     }
     if (!stroke) return
-    stroke.live.remove()
-    lines = [...lines, stroke.line]
-    record({ add: [stroke.line] })
+    const s = stroke
     stroke = null
+    s.live.remove()
+    if (s.timer) {
+      clearInterval(s.timer)
+      squad.add([s.line])
+      record({ mode: 'squad', add: [s.line] })
+      render()
+      return
+    }
+    lines = [...lines, s.line]
+    record({ mode: 'mine', add: [s.line] })
     changed()
   }
   el.addEventListener('pointerup', end, { signal })
   el.addEventListener('pointercancel', end, { signal })
   el.addEventListener('contextmenu', (e) => pen.on && e.preventDefault(), { signal })
+  el.addEventListener(
+    'pointerleave',
+    () => {
+      if (squadMode()) squad.cursorOff()
+      nameTip(el, null)
+    },
+    { signal },
+  )
+}
+function flush(s) {
+  const list = s.line.p.slice(s.sent)
+  s.sent = s.line.p.length
+  squad.points(s.line.id, list)
+}
+const onScreen = (l) =>
+  l.p.map(([x, z]) => {
+    const q = at.map.latLngToContainerPoint([z, x])
+    return [q.x, q.y]
+  })
+// nameTip names the drawer of the squad line under the pointer (p), next to
+// it; your own pen's lines have no name.
+let tipFrame = 0
+function nameTip(el, p) {
+  cancelAnimationFrame(tipFrame)
+  tipFrame = requestAnimationFrame(() => {
+    let tip = el.querySelector('.map-line-name')
+    const line =
+      p && at.map
+        ? squad
+            .shownLines(at.key)
+            .filter((l) => l.floor === at.floor)
+            .reverse()
+            .find((l) => hits(onScreen(l), l.w, [p.x, p.y], 4))
+        : null
+    if (!line) {
+      tip?.remove()
+      return
+    }
+    if (!tip) {
+      tip = document.createElement('div')
+      tip.className = 'map-line-name'
+      el.appendChild(tip)
+    }
+    tip.textContent = line.name || '?'
+    tip.style.setProperty('--c', line.c)
+    tip.style.left = p.x + 14 + 'px'
+    tip.style.top = p.y + 14 + 'px'
+  })
 }
 function eraseAt(p) {
+  if (squadMode()) {
+    const hit = squadHere().filter((l) => hits(onScreen(l), l.w, [p.x, p.y], 6))
+    if (!hit.length) return
+    squad.erase(hit)
+    erased.push(...hit)
+    return
+  }
   if (pen.hidden) return
-  const map = at.map
-  const hit = lines.filter(
-    (l) =>
-      here(l) &&
-      hits(
-        l.p.map(([x, z]) => {
-          const q = map.latLngToContainerPoint([z, x])
-          return [q.x, q.y]
-        }),
-        l.w,
-        [p.x, p.y],
-        6,
-      ),
-  )
+  const hit = lines.filter((l) => here(l) && hits(onScreen(l), l.w, [p.x, p.y], 6))
   if (!hit.length) return
   const ids = new Set(hit.map((l) => l.id))
   lines = lines.filter((l) => !ids.has(l.id))
@@ -313,22 +472,17 @@ function eraseAt(p) {
   changed()
 }
 
-// snapStrokes is your lines of the floor shown as a snap note's strokes, in
+// snapStrokes is the lines of the floor shown as a snap note's strokes, in
 // the pixels of the picture taken of the map (scale: its pixels per screen
-// pixel), for the note's first layer.
-export function snapStrokes(scale) {
-  if (pen.hidden || !at.map) return []
-  const map = at.map
+// pixel): your own pen's for the note's first layer, the squad's for its
+// second.
+function toStrokes(list, scale) {
   const px = (v) => Math.round(v * scale * 10) / 10
-  return lines.filter(here).map((l) => ({
-    c: l.c,
-    w: px(l.w),
-    p: l.p.map(([x, z]) => {
-      const q = map.latLngToContainerPoint([z, x])
-      return [px(q.x), px(q.y)]
-    }),
-  }))
+  return list.map((l) => ({ c: l.c, w: px(l.w), p: onScreen(l).map(([x, y]) => [px(x), px(y)]) }))
 }
+export const snapStrokes = (scale) => (pen.hidden || !at.map ? [] : toStrokes(lines.filter(here), scale))
+export const squadSnapStrokes = (scale) =>
+  at.map ? toStrokes(squad.shownLines(at.key).filter((l) => l.floor === at.floor), scale) : []
 
 // Keys while the map shows with the pen up: Ctrl+Z / Ctrl+Y (Ctrl+Shift+Z)
 // undo and redo, Escape puts the pen down, Space held moves the map.
@@ -342,6 +496,7 @@ document.addEventListener('keydown', (event) => {
     else undo()
     render()
   } else if (event.key === 'Escape') {
+    if (squadMode()) squad.cursorOff()
     pen.on = false
     render()
   } else if (event.key === ' ' && !space) {

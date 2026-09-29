@@ -8,7 +8,9 @@
 // 64 hex digits) and encrypts every message with a key derived from it as
 // well, so the relay never sees the code, the names, the positions or what
 // is recognized: it forwards opaque strings between the members of a room
-// (a squad room keeps each member's last one for whoever joins later).
+// (a squad room keeps each member's last one for whoever joins later, but
+// not one marked ephemeral with a leading "~": the squad pen's lines and its
+// position, which would push the member's position out).
 // Nothing is written to storage; a room is gone once its last member leaves.
 //
 // The room uses the WebSocket Hibernation API: while nobody sends anything
@@ -17,8 +19,12 @@
 
 // A member may send so many messages per window before it is dropped.
 const RATE_WINDOW_MS = 10_000;
-// A squad: ten players' positions, small and seldom.
-const SQUAD = { members: 10, message: 4096, rate: 30, replay: true };
+// A squad: ten players' positions, small and seldom, and the squad pen's
+// lines as they are drawn (the app keeps under 100 in 10 s).
+const SQUAD = { members: 10, message: 4096, rate: 120, replay: true };
+// The relay's version, told in the welcome: 2 takes the squad pen's
+// ephemeral messages at the rate above (the app draws only with it).
+const VERSION = 2;
 // A link: the Host and its Clients (a few, and room for a dropped socket the
 // relay has not noticed yet); an item's details can be large, and a burst of
 // recognitions comes quickly.
@@ -69,7 +75,7 @@ class Room {
     this.state.acceptWebSocket(server);
     server.serializeAttachment(member);
     const others = this.members(server).map(({ member: m }) => ({ id: m.id, last: this.limits.replay ? m.last : '' }));
-    server.send(JSON.stringify({ t: 'welcome', id: member.id, members: others }));
+    server.send(JSON.stringify({ t: 'welcome', id: member.id, members: others, v: VERSION }));
     this.broadcast(server, { t: 'join', id: member.id });
     return new Response(null, { status: 101, webSocket: client });
   }
@@ -91,7 +97,7 @@ class Room {
       ws.close(1008, 'too many messages');
       return;
     }
-    if (this.limits.replay) member.last = message;
+    if (this.limits.replay && !message.startsWith('~')) member.last = message;
     ws.serializeAttachment(member);
     this.broadcast(ws, { t: 'msg', from: member.id, data: message });
   }

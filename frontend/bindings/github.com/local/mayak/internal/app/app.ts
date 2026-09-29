@@ -680,6 +680,29 @@ export function SquadLeave(): $CancellablePromise<void> {
 }
 
 /**
+ * SquadLinesLoad returns what the shell kept for the squad of code (its own
+ * lines there), or "" for none or when older than a day.
+ */
+export function SquadLinesLoad(code: string): $CancellablePromise<string> {
+    return $Call.ByID(4017940415, code);
+}
+
+/**
+ * SquadLinesSave keeps what the shell hands over for the squad of code
+ * (JSON), under the squad's room ID rather than its code.
+ */
+export function SquadLinesSave(code: string, data: string): $CancellablePromise<void> {
+    return $Call.ByID(263800498, code, data);
+}
+
+/**
+ * SquadMemberKey returns this PC's member key ("" when it could not be kept).
+ */
+export function SquadMemberKey(): $CancellablePromise<string> {
+    return $Call.ByID(1486890693);
+}
+
+/**
  * SquadNewCode returns a fresh squad code ("ABCD-1234") to create a squad
  * with.
  */
@@ -692,6 +715,14 @@ export function SquadNewCode(): $CancellablePromise<string> {
  */
 export function SquadRename(name: string): $CancellablePromise<void> {
     return $Call.ByID(2878794830, name);
+}
+
+/**
+ * SquadSend sends a message of the shell's (JSON; map-draw.js) to the
+ * squad; see squad.Client.Send. It tells whether it went.
+ */
+export function SquadSend(data: string, droppable: boolean): $CancellablePromise<boolean> {
+    return $Call.ByID(2315541618, data, droppable);
 }
 
 /**

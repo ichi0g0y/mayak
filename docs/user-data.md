@@ -28,6 +28,8 @@ MAYAK が `%AppData%\Mayak`（`internal/appdir`）に保存するデータの置
 | `browser-preferences.json` | ユーザーデータ | ブラウザシェルの好み（テーマ、時計、レイアウト、ツールの並び、ブックマークの版 `bookmarkRevision`、マップの設定など。`app_browser.go` の `browserPreferenceKeys`）。`Keyed`。マップの分は下の表 |
 | `bookmarks.json` | ユーザーデータ | ブックマーク。`Records`（値はシェルのブックマーク `{id, name, url, group, sidebar}`） |
 | `map-drawings.json` | ユーザーデータ | マップに自分のペンで描いた線（[browser-shell.md](browser-shell.md#自分のペン)）。`Records`（値は `{id, map, floor, c: 色, w: 太さ（画面の px）, p: [[x, z], …]（ゲーム座標）}`） |
+| `squad-key.txt` | この PC | 分隊でのメンバー鍵（32 桁の 16 進。分隊ペンの線の持ち主。[分隊ルーム](settings-and-integrations.md#分隊ルーム)） |
+| `squad-lines.json` | この PC | 分隊ペンで自分が描いた線を、分隊ごと（分隊コードでなく room の ID）に最後の変更から 24 時間だけ（`{<room>: {savedAt, data: {gens, lines}}}`）。落ちたり再起動したりしたあと、分隊に送り直すため |
 | `browser.json` | この PC | ブラウザシェルのそれ以外（タブ、パネルの大きさ、アイテム欄、接続 `connection`、ファビコンの対応表、分隊のコード `squadCode` と最近の分隊 `squadRecent`）。`browserPreferenceKeys` に無いキーはすべてここ |
 | `snapnotes/<id>/` | ユーザーデータ | スナップノート。`note.json`（`createdAt`・`updatedAt`・`changedAt`、削除すると `deleted` の記録だけ残る）、`base.png`、`thumb.jpg` |
 | `sounds/<hash>-<名前>` | ユーザーデータ | 通知のカスタム音声。選んだファイルを取り込んだもの。設定はこの名前（`sounds/…`）で指す |

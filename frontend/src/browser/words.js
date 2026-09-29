@@ -13,6 +13,16 @@ export const words = {
     mapPenShow: '自分の線を表示',
     mapPenClear: 'この階の自分の線をすべて消す（元に戻せます）',
     mapPenDone: 'ペンを終える（Esc）',
+    mapSquadPen: '分隊ペン（分隊の全員に見える線を、自分の分隊カラーで描く）',
+    mapSquadPenJoin: '分隊ペン：分隊に入ると使えます',
+    mapSquadPenRelay: '分隊ペン：中継サーバーの更新を待っています',
+    mapSquadPenHint: '左ドラッグで描く（描いている途中から分隊の全員に見えます）・右ドラッグかスペース + ドラッグで地図を動かす・Esc で終わる',
+    mapSquadPenColor: 'あなたの分隊カラー（分隊ページで変えられます）',
+    mapPenClearAll: 'このマップの分隊の線を全員分消す（数秒だけ元に戻せます）',
+    mapPenClearAllShort: '全員分消す',
+    mapClearedBy: '{name} がこのマップの分隊の線を消しました',
+    mapClearedMine: 'このマップの分隊の線を消しました',
+    mapClearedUndo: '元に戻す',
     mapPick: '表示するマップ',
     mapFloor: '階',
     mapAuto: '自動',
@@ -118,7 +128,7 @@ export const words = {
     squadViewer:
       'この PC は Client なので、見るだけの参加です（位置は Host から送ります）。分隊の作成・参加・退出は Host と同期します。',
     squadPrivacy:
-      '共有するのは表示名と分隊カラー、レイド中にスクリーンショットを撮った位置だけです。内容は分隊コードで暗号化され、中継サーバーには読めません。',
+      '共有するのは表示名と分隊カラー、レイド中にスクリーンショットを撮った位置、分隊ペンの線とペンの位置だけです。内容は分隊コードで暗号化され、中継サーバーには読めません。',
     squadInvalidCode: '分隊コードは 8 文字です（例: ABCD-1234）',
     squadNeedName: '表示名を入力してください',
     // Toolbar, sidebar, welcome page, settings
@@ -633,6 +643,16 @@ export const words = {
     mapPenShow: 'Show your lines',
     mapPenClear: 'Remove all your lines on this floor (can be undone)',
     mapPenDone: 'Put the pen down (Esc)',
+    mapSquadPen: 'Squad pen (lines the whole squad sees, in your squad colour)',
+    mapSquadPenJoin: 'Squad pen: join a squad to use it',
+    mapSquadPenRelay: 'Squad pen: waiting for the relay to be updated',
+    mapSquadPenHint: 'Drag to draw (the squad sees it as you draw); right-drag or Space + drag moves the map; Esc puts the pen down',
+    mapSquadPenColor: 'Your squad colour (changed on the squad page)',
+    mapPenClearAll: "Remove everyone's squad lines on this map (can be undone for a few seconds)",
+    mapPenClearAllShort: 'Clear all',
+    mapClearedBy: "{name} removed the squad's lines on this map",
+    mapClearedMine: "You removed the squad's lines on this map",
+    mapClearedUndo: 'Undo',
     mapPick: 'Map shown',
     mapFloor: 'Floor',
     mapAuto: 'Auto',
@@ -739,7 +759,7 @@ export const words = {
     squadViewer:
       'This PC is a client, so it only watches (the Host sends the position). Creating, joining and leaving a squad follow the Host.',
     squadPrivacy:
-      'Only your display name, your squad colour and where you take screenshots in a raid are shared. They are encrypted with the squad code; the relay cannot read them.',
+      'Only your display name, your squad colour, where you take screenshots in a raid and the squad pen’s lines and position are shared. They are encrypted with the squad code; the relay cannot read them.',
     squadInvalidCode: 'A squad code has 8 characters (e.g. ABCD-1234)',
     squadNeedName: 'Enter a display name',
     // Toolbar, sidebar, welcome page, settings

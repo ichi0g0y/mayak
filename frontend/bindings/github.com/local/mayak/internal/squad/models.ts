@@ -32,6 +32,12 @@ export class Member {
      */
     "color"?: string;
 
+    /**
+     * Key is this PC's member key (32 hex digits), the same across
+     * reconnections, which the squad's lines are owned by (map-draw.js).
+     */
+    "key"?: string;
+
     /** Creates a new Member instance. */
     constructor($$source: Partial<Member> = {}) {
         if (!("id" in $$source)) {
@@ -105,6 +111,12 @@ export class State {
     "phase": string;
     "members": Member[];
 
+    /**
+     * Drawing is whether the relay takes the squad pen's messages (it
+     * said so in its welcome); an older relay would drop this PC for them.
+     */
+    "drawing": boolean;
+
     /** Creates a new State instance. */
     constructor($$source: Partial<State> = {}) {
         if (!("code" in $$source)) {
@@ -115,6 +127,9 @@ export class State {
         }
         if (!("members" in $$source)) {
             this["members"] = [];
+        }
+        if (!("drawing" in $$source)) {
+            this["drawing"] = false;
         }
 
         Object.assign(this, $$source);

@@ -116,7 +116,7 @@ func (f *fakeRelay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		others = append(others, map[string]string{"id": m.id, "last": m.last})
 	}
 	f.members[conn] = me
-	f.send(conn, map[string]any{"t": "welcome", "id": me.id, "members": others})
+	f.send(conn, map[string]any{"t": "welcome", "id": me.id, "members": others, "v": 2})
 	for c := range f.members {
 		if c != conn {
 			f.send(c, map[string]string{"t": "join", "id": me.id})
@@ -134,10 +134,12 @@ func (f *fakeRelay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			_ = conn.WriteMessage(websocket.TextMessage, []byte("pong"))
 			f.members[conn].wmu.Unlock()
 		} else {
-			me.last = string(body)
+			if !strings.HasPrefix(string(body), Ephemeral) {
+				me.last = string(body)
+			}
 			for c := range f.members {
 				if c != conn {
-					f.send(c, map[string]string{"t": "msg", "from": me.id, "data": me.last})
+					f.send(c, map[string]string{"t": "msg", "from": me.id, "data": string(body)})
 				}
 			}
 		}
@@ -183,7 +185,7 @@ func TestMembersSeeEachOthersReports(t *testing.T) {
 	endpoint := "ws" + strings.TrimPrefix(srv.URL, "http") + "/squad/"
 
 	aStates := make(chan State, 64)
-	a, err := Join("ABCD1234", endpoint, "test", Report{Name: "Alice"}, func(s State) { aStates <- s })
+	a, err := Join("ABCD1234", endpoint, "test", Report{Name: "Alice"}, func(s State) { aStates <- s }, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -194,7 +196,7 @@ func TestMembersSeeEachOthersReports(t *testing.T) {
 	a.Report(Report{Name: "Alice", Map: "customs", Pos: &Position{X: 1, Y: 2, Z: 3, Rot: 90}, At: at})
 
 	bStates := make(chan State, 64)
-	b, err := Join("ABCD1234", endpoint, "test", Report{Name: "Bob"}, func(s State) { bStates <- s })
+	b, err := Join("ABCD1234", endpoint, "test", Report{Name: "Bob"}, func(s State) { bStates <- s }, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -208,7 +210,7 @@ func TestMembersSeeEachOthersReports(t *testing.T) {
 
 	// A different code in the same room cannot be read.
 	cStates := make(chan State, 64)
-	c, _ := Join("ZZZZ9999", endpoint, "test", Report{Name: "Eve"}, func(s State) { cStates <- s })
+	c, _ := Join("ZZZZ9999", endpoint, "test", Report{Name: "Eve"}, func(s State) { cStates <- s }, nil)
 	s = waitFor(t, cStates, func(s State) bool { return s.Phase == PhaseConnected })
 	if len(s.Members) != 1 {
 		t.Fatalf("another code's client read the room: %+v", s.Members)
@@ -234,7 +236,7 @@ func TestReportsAreSealedOnTheWire(t *testing.T) {
 		}
 	}))
 	defer srv.Close()
-	c, _ := Join("ABCD1234", "ws"+strings.TrimPrefix(srv.URL, "http")+"/squad/", "test", Report{Name: "Alice", Map: "customs", Pos: &Position{X: 1}}, nil)
+	c, _ := Join("ABCD1234", "ws"+strings.TrimPrefix(srv.URL, "http")+"/squad/", "test", Report{Name: "Alice", Map: "customs", Pos: &Position{X: 1}}, nil, nil)
 	defer c.Close()
 	select {
 	case body := <-seen:
@@ -243,5 +245,64 @@ func TestReportsAreSealedOnTheWire(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("nothing was sent")
+	}
+}
+
+func TestShellMessagesPassAndAreNotReplayed(t *testing.T) {
+	relay := &fakeRelay{members: map[*websocket.Conn]*fakeMember{}}
+	srv := httptest.NewServer(relay)
+	defer srv.Close()
+	endpoint := "ws" + strings.TrimPrefix(srv.URL, "http") + "/squad/"
+
+	aStates := make(chan State, 64)
+	a, _ := Join("ABCD1234", endpoint, "test", Report{Name: "Alice", Key: strings.Repeat("a", 32)}, func(s State) { aStates <- s }, nil)
+	defer a.Close()
+	waitFor(t, aStates, func(s State) bool { return s.Phase == PhaseConnected && s.Drawing })
+
+	got := make(chan string, 8)
+	bStates := make(chan State, 64)
+	b, _ := Join("ABCD1234", endpoint, "test", Report{Name: "Bob"}, func(s State) { bStates <- s }, func(from string, d json.RawMessage) { got <- string(d) })
+	defer b.Close()
+	waitFor(t, bStates, func(s State) bool { return member(s, "Alice") != nil })
+	waitFor(t, aStates, func(s State) bool { return member(s, "Bob") != nil })
+	if !a.Send(json.RawMessage(`{"t":"l","id":"x"}`), false) {
+		t.Fatal("the message was not sent")
+	}
+	select {
+	case d := <-got:
+		if d != `{"t":"l","id":"x"}` {
+			t.Fatalf("got %s", d)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("the message did not arrive")
+	}
+
+	// Carol, joining after, still gets Alice's report (the message is not
+	// kept as Alice's last), with her key.
+	cStates := make(chan State, 64)
+	c, _ := Join("ABCD1234", endpoint, "test", Report{Name: "Carol"}, func(s State) { cStates <- s }, nil)
+	defer c.Close()
+	s := waitFor(t, cStates, func(s State) bool { return member(s, "Alice") != nil })
+	if m := member(s, "Alice"); m.Key != strings.Repeat("a", 32) {
+		t.Fatalf("Alice as Carol sees her: %+v", m)
+	}
+	if a.Send(json.RawMessage(strings.Repeat("1", MaxMessage)), false) {
+		t.Fatal("a message over the relay's limit was sent")
+	}
+}
+
+func TestSendKeepsUnderTheRelaysLimit(t *testing.T) {
+	c := &Client{done: make(chan struct{})}
+	for i := 0; i < sendLimit; i++ {
+		if !c.take(true) {
+			t.Fatalf("message %d refused", i)
+		}
+	}
+	if c.take(true) {
+		t.Fatal("a droppable message over the limit was taken")
+	}
+	close(c.done)
+	if c.take(false) {
+		t.Fatal("a message waiting for room went after Close")
 	}
 }

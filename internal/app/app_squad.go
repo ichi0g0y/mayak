@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -112,6 +113,13 @@ func (a *App) SquadJoin(code, name string) (string, error) {
 			}
 		}
 		a.emitEvent("squad:state", s)
+	}, func(from string, data json.RawMessage) {
+		squadMu.Lock()
+		current := client != nil && squadClient == client
+		squadMu.Unlock()
+		if current {
+			a.emitEvent("squad:message", squadMessage{From: from, Data: data})
+		}
 	})
 	if err != nil {
 		return "", err
@@ -173,6 +181,25 @@ func (a *App) SquadSetColor(color string) {
 	}
 }
 
+// squadMessage is a message of another member's shell (the squad pen),
+// from the member with the relay ID From.
+type squadMessage struct {
+	From string          `json:"from"`
+	Data json.RawMessage `json:"data"`
+}
+
+// SquadSend sends a message of the shell's (JSON; map-draw.js) to the
+// squad; see squad.Client.Send. It tells whether it went.
+func (a *App) SquadSend(data string, droppable bool) bool {
+	if !json.Valid([]byte(data)) {
+		return false
+	}
+	squadMu.Lock()
+	client := squadClient
+	squadMu.Unlock()
+	return client != nil && client.Send(json.RawMessage(data), droppable)
+}
+
 // SquadState returns the squad joined, or nil.
 func (a *App) SquadState() *squad.State {
 	squadMu.Lock()
@@ -192,7 +219,7 @@ func (a *App) squadReport(name string) squad.Report {
 	squadMu.Lock()
 	color := squadColor
 	squadMu.Unlock()
-	r := squad.Report{Name: strings.TrimSpace(name), Viewer: a.browserClient.Load(), Color: color}
+	r := squad.Report{Name: strings.TrimSpace(name), Viewer: a.browserClient.Load(), Color: color, Key: squadMemberKey()}
 	a.mu.RLock()
 	status := a.status
 	a.mu.RUnlock()

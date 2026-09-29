@@ -47,12 +47,37 @@ type Report struct {
 	// Color is the squad colour chosen ("#rrggbb"), or empty for one given
 	// by the others (map-geo.js assignColors). Older builds leave it out.
 	Color string `json:"color,omitempty"`
+	// Key is this PC's member key (32 hex digits), the same across
+	// reconnections, which the squad's lines are owned by (map-draw.js).
+	Key string `json:"key,omitempty"`
 }
 
 type sealedReport struct {
 	V int `json:"v"`
 	Report
 }
+
+// sealedMessage is a message of the shell's (the squad pen's lines, its
+// position; version 2), passed on as it is. Builds before it drop it.
+type sealedMessage struct {
+	V int             `json:"v"`
+	D json.RawMessage `json:"d"`
+}
+
+// MaxMessage is the longest message the relay takes, in characters.
+const MaxMessage = 4096
+
+// Ephemeral marks a message the relay passes on without keeping it as the
+// member's last one (which it hands to those who join after): only reports
+// are kept.
+const Ephemeral = "~"
+
+// The relay closes a member that sends more than 120 messages in 10 s; this
+// PC keeps under sendLimit in any 10 s.
+const (
+	sendLimit  = 100
+	sendWindow = 10 * time.Second
+)
 
 // Member is one player in the room, as last reported.
 type Member struct {
@@ -74,15 +99,19 @@ type State struct {
 	Code    string   `json:"code"`
 	Phase   string   `json:"phase"`
 	Members []Member `json:"members"`
+	// Drawing is whether the relay takes the squad pen's messages (it
+	// said so in its welcome); an older relay would drop this PC for them.
+	Drawing bool `json:"drawing"`
 }
 
 // Client is this PC in a squad room. It reconnects on its own until Close.
 type Client struct {
-	code     string
-	url      string
-	agent    string
-	seal     sealer
-	onChange func(State)
+	code      string
+	url       string
+	agent     string
+	seal      sealer
+	onChange  func(State)
+	onMessage func(from string, data json.RawMessage)
 
 	mu      sync.Mutex
 	writeMu sync.Mutex
@@ -91,27 +120,34 @@ type Client struct {
 	myID    string
 	mine    Report
 	members map[string]Report
+	drawing bool
 	done    chan struct{}
 	closed  bool
+
+	// When the messages of the last sendWindow were sent, oldest first.
+	sentMu sync.Mutex
+	sent   []time.Time
 }
 
 // Join starts a client for code (canonical, see Normalize) against the
-// rooms at endpoint, reporting every change of the room to onChange.
-func Join(code, endpoint, userAgent string, mine Report, onChange func(State)) (*Client, error) {
+// rooms at endpoint, reporting every change of the room to onChange and
+// every message of the shell's (Send) from another member to onMessage.
+func Join(code, endpoint, userAgent string, mine Report, onChange func(State), onMessage func(from string, data json.RawMessage)) (*Client, error) {
 	seal, err := newSealer(code)
 	if err != nil {
 		return nil, err
 	}
 	c := &Client{
-		code:     code,
-		url:      endpoint + RoomID(code),
-		agent:    userAgent,
-		seal:     seal,
-		onChange: onChange,
-		phase:    PhaseConnecting,
-		mine:     clean(mine),
-		members:  map[string]Report{},
-		done:     make(chan struct{}),
+		code:      code,
+		url:       endpoint + RoomID(code),
+		agent:     userAgent,
+		seal:      seal,
+		onChange:  onChange,
+		onMessage: onMessage,
+		phase:     PhaseConnecting,
+		mine:      clean(mine),
+		members:   map[string]Report{},
+		done:      make(chan struct{}),
 	}
 	go c.run()
 	return c, nil
@@ -171,7 +207,7 @@ func (c *Client) State() State {
 }
 
 func (c *Client) stateLocked() State {
-	s := State{Code: c.code, Phase: c.phase, Members: []Member{{ID: c.myID, Me: true, Report: c.mine}}}
+	s := State{Code: c.code, Phase: c.phase, Drawing: c.drawing, Members: []Member{{ID: c.myID, Me: true, Report: c.mine}}}
 	for id, r := range c.members {
 		s.Members = append(s.Members, Member{ID: id, Report: r})
 	}
@@ -228,10 +264,12 @@ func (c *Client) run() {
 // relayMessage is what the relay sends: welcome (with the members already
 // there and their last messages), join, leave, and msg (a member's message).
 type relayMessage struct {
-	T       string `json:"t"`
-	ID      string `json:"id"`
-	From    string `json:"from"`
-	Data    string `json:"data"`
+	T    string `json:"t"`
+	ID   string `json:"id"`
+	From string `json:"from"`
+	Data string `json:"data"`
+	// V is the relay's version (2 takes the squad pen's messages).
+	V       int `json:"v"`
 	Members []struct {
 		ID   string `json:"id"`
 		Last string `json:"last"`
@@ -279,6 +317,7 @@ func (c *Client) serve(conn *websocket.Conn) {
 			c.mu.Lock()
 			c.myID = m.ID
 			c.phase = PhaseConnected
+			c.drawing = m.V >= 2
 			c.members = map[string]Report{}
 			for _, other := range m.Members {
 				if r, ok := c.openReport(other.Last); ok {
@@ -294,6 +333,8 @@ func (c *Client) serve(conn *websocket.Conn) {
 				c.members[m.From] = r
 				c.mu.Unlock()
 				c.changed()
+			} else if d, ok := c.openMessage(m.Data); ok && c.onMessage != nil {
+				c.onMessage(m.From, d)
 			}
 		case "leave":
 			c.mu.Lock()
@@ -330,8 +371,63 @@ func (c *Client) send(conn *websocket.Conn) {
 	if err != nil {
 		return
 	}
+	c.take(false)
 	if c.write(conn, []byte(c.seal.seal(body))) != nil {
 		_ = conn.Close()
+	}
+}
+
+// Send seals data (JSON) as a message of the shell's and sends it to the
+// others, ephemeral (not kept by the relay for those who join after). A
+// droppable one (the pen's position, the points of a line being drawn) is
+// dropped when this PC has sent its fill lately; any other waits for room.
+// It tells whether the message went.
+func (c *Client) Send(data json.RawMessage, droppable bool) bool {
+	body, err := json.Marshal(sealedMessage{V: 2, D: data})
+	if err != nil {
+		return false
+	}
+	text := Ephemeral + c.seal.seal(body)
+	if len(text) > MaxMessage {
+		return false
+	}
+	c.mu.Lock()
+	conn, drawing := c.conn, c.drawing
+	c.mu.Unlock()
+	if conn == nil || !drawing || !c.take(droppable) {
+		return false
+	}
+	if c.write(conn, []byte(text)) != nil {
+		_ = conn.Close()
+		return false
+	}
+	return true
+}
+
+// take counts a message about to be sent against sendLimit: it tells false
+// for a droppable one over the limit, and waits for room for any other.
+func (c *Client) take(droppable bool) bool {
+	for {
+		c.sentMu.Lock()
+		now := time.Now()
+		for len(c.sent) > 0 && now.Sub(c.sent[0]) >= sendWindow {
+			c.sent = c.sent[1:]
+		}
+		if len(c.sent) < sendLimit {
+			c.sent = append(c.sent, now)
+			c.sentMu.Unlock()
+			return true
+		}
+		wait := sendWindow - now.Sub(c.sent[0])
+		c.sentMu.Unlock()
+		if droppable {
+			return false
+		}
+		select {
+		case <-c.done:
+			return false
+		case <-time.After(wait):
+		}
 	}
 }
 
@@ -343,7 +439,7 @@ func (c *Client) write(conn *websocket.Conn, data []byte) error {
 }
 
 func (c *Client) openReport(text string) (Report, bool) {
-	if text == "" {
+	if text == "" || strings.HasPrefix(text, Ephemeral) {
 		return Report{}, false
 	}
 	plain, err := c.seal.open(text)
@@ -357,6 +453,19 @@ func (c *Client) openReport(text string) (Report, bool) {
 	return clean(r.Report), true
 }
 
+// openMessage opens a message of the shell's (version 2).
+func (c *Client) openMessage(text string) (json.RawMessage, bool) {
+	plain, err := c.seal.open(strings.TrimPrefix(text, Ephemeral))
+	if err != nil {
+		return nil, false
+	}
+	var m sealedMessage
+	if json.Unmarshal(plain, &m) != nil || m.V != 2 || len(m.D) == 0 {
+		return nil, false
+	}
+	return m.D, true
+}
+
 // clean bounds what a report may hold, from this PC or another.
 func clean(r Report) Report {
 	r.Name = strings.TrimSpace(r.Name)
@@ -368,6 +477,9 @@ func clean(r Report) Report {
 	}
 	if !ValidColor(r.Color) {
 		r.Color = ""
+	}
+	if !ValidKey(r.Key) {
+		r.Key = ""
 	}
 	if r.Map == "" {
 		r.Pos = nil
@@ -383,6 +495,19 @@ func ValidColor(c string) bool {
 		return false
 	}
 	for _, r := range c[1:] {
+		if !(r >= '0' && r <= '9' || r >= 'a' && r <= 'f') {
+			return false
+		}
+	}
+	return true
+}
+
+// ValidKey tells whether k is a member key: 32 hex digits in lower case.
+func ValidKey(k string) bool {
+	if len(k) != 32 {
+		return false
+	}
+	for _, r := range k {
 		if !(r >= '0' && r <= '9' || r >= 'a' && r <= 'f') {
 			return false
 		}
