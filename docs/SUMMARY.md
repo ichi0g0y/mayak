@@ -12,6 +12,7 @@
 - [設定と連携](settings-and-integrations.md)
 - [ユーザーデータの保存](user-data.md)
 - [多言語対応](languages.md)
+- [分隊の共有（計画）](squad-sharing.md)
 
 # 開発
 
