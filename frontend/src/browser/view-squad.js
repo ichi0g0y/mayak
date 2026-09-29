@@ -43,13 +43,18 @@ const squadColorMap = () => {
 export const colorOf = (m) =>
   squadColorMap().get(squadKey(m)) || (m.me && state.squadColor) || memberColor(m.name)
 
-function memberLine(m) {
+// whereOf is where a member is, as text: their map and how long ago, or
+// out of a raid.
+function whereOf(m) {
   const maps = state.squad?.maps || []
-  const where = m.map
+  return m.map
     ? m.pos
-      ? `${esc(mapName(findMap(maps, m.map)?.key || m.map))} · ${esc(age(m.at, state.language))}`
-      : esc(mapName(m.map))
-    : esc(t('squadOutOfRaid'))
+      ? `${mapName(findMap(maps, m.map)?.key || m.map)} · ${age(m.at, state.language)}`
+      : mapName(m.map)
+    : t('squadOutOfRaid')
+}
+function memberLine(m) {
+  const where = esc(whereOf(m))
   const fade = m.map && m.pos ? freshness(m.at) : 'gone'
   const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-member-name">${esc(m.name || '?')}${m.me ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span><span class="squad-member-where">${where}</span>`
   // A member with a position is a button that shows them on the map (on
@@ -58,6 +63,17 @@ function memberLine(m) {
     ? `<li class="squad-member ${fade}"><button class="squad-member-focus" data-action="squadFocus" data-id="${esc(squadKey(m))}" title="${esc(t('squadFocus'))}">${line}</button></li>`
     : `<li class="squad-member ${fade}">${line}</li>`
 }
+// The sidebar's members: a colour dot and a name each, where they are in
+// the title; one with a position shows them on the map when pressed.
+function memberChip(m) {
+  const fade = m.map && m.pos ? freshness(m.at) : 'gone'
+  const title = `${m.name || '?'} — ${whereOf(m)}`
+  const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-chip-name">${esc(m.name || '?')}${m.me ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span>`
+  return m.map && m.pos
+    ? `<li class="squad-chip ${fade}"><button data-action="squadFocus" data-id="${esc(squadKey(m))}" title="${esc(title)}">${line}</button></li>`
+    : `<li class="squad-chip ${fade}" title="${esc(title)}">${line}</li>`
+}
+
 // The members, the PCs that only watch left out.
 export const memberList = (members, cls = '') =>
   `<ul class="squad-members ${cls}">${players(members).map(memberLine).join('')}</ul>`
@@ -77,7 +93,7 @@ export function squadSection() {
   const head = `<div class="section-label squad-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSquadSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('squad'))}${count}${icon('chevron', 'section-chevron')}</button><button class="new-tab squad-open" data-action="squadPage" title="${esc(t('squadOpen'))}" aria-label="${esc(t('squadOpen'))}" aria-pressed="${open}">${icon('squad')}</button></div>`
   if (folded) return head
   const body = s
-    ? memberList(s.members, 'squad-section')
+    ? `<ul class="squad-chips squad-section">${players(s.members).map(memberChip).join('')}</ul>`
     : `<div class="squad-section"><button class="squad-start" data-action="squadPage">${esc(t('squadStart'))}</button></div>`
   return head + body
 }
