@@ -1,6 +1,6 @@
 # ユーザーデータの保存
 
-MAYAK が `%AppData%\Mayak`（`internal/appdir`。`task dev` の開発ビルドは `%AppData%Mayak-dev`、[development.md](development.md#入れてある-mayak-と同時に動かす)）に保存するデータの置き場所と形式です。将来クラウド同期（有料になる可能性あり）を入れても困らないよう、データを次の 3 つに分けて持ちます。
+MAYAK が `%AppData%\Mayak`（`internal/appdir`。`task dev` の開発ビルドは `%AppData%\Mayak-dev`、[development.md](development.md#入れてある-mayak-と同時に動かす)）に保存するデータの置き場所と形式です。将来クラウド同期（有料になる可能性あり）を入れても困らないよう、データを次の 3 つに分けて持ちます。
 
 - **ユーザーデータ**: 別の PC でも同じであってほしいもの。同期の対象です。
 - **この PC のデータ**: フォルダの場所、ウィンドウの位置、接続の ID など、PC ごとに違うもの。同期しません。
