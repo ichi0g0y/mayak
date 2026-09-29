@@ -781,6 +781,14 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .panel .update-channel .hint{margin:0}
 .panel.about-update .about-links+.hint{margin-top:10px}
 @media(max-width:720px){.channel-options{grid-template-columns:1fr}}
+/* A code hidden behind dots until its eye button is pressed (shell-core.js
+   revealButton); a field typed into hides its text with .masked. */
+.masked{-webkit-text-security:disc}
+.field>.secret-field,.secret-field{display:flex;align-items:flex-start;gap:6px;font-size:inherit;color:inherit}
+.secret-field>input,.secret-field>textarea{flex:1;min-width:0}
+.reveal{width:30px;height:30px;padding:0;flex:none;border-color:transparent;color:var(--muted)}
+.reveal[aria-pressed=true]{color:var(--text)}
+.secret-field>.reveal{height:34px}
 /* The 8-digit pairing code. */
 .pair-code{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
 .pair-code output{font:600 30px/1.2 ui-monospace,"Cascadia Code",Consolas,monospace;letter-spacing:.14em;color:var(--text)}
@@ -1075,6 +1083,10 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .squad-code{display:flex;align-items:center;gap:10px}
 .squad-code output{font:600 20px/1.2 ui-monospace,"Cascadia Code",Consolas,monospace;letter-spacing:.1em;color:var(--text)}
 .squad-code button{display:inline-flex;align-items:center;gap:6px;margin-left:auto}
+.squad-code .reveal{margin-left:0}
+.squad-join .secret-field{flex:1;min-width:0}
+.squad-join>button{flex:none;white-space:nowrap}
+.squad-recent h3{display:flex;align-items:center;gap:6px}
 .squad-phase{margin:4px 0 8px;font-size:12.5px;color:var(--muted)}
 .squad-phase[data-phase=connected]{color:var(--success)}
 .squad-phase[data-phase=offline],.squad-phase[data-phase=full]{color:var(--warn)}

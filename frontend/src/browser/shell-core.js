@@ -57,6 +57,26 @@ export async function loadVersion() {
 export const SUPPORT_URL = 'https://buymeacoffee.com/ichi0g0y'
 export const t = (key) => words[state?.language || 'ja'][key] || key
 export { esc, icon }
+
+// Codes that let someone in (a squad, a pairing) show as dots until their eye
+// button is pressed, so a stream or a screenshot does not give them away. A
+// code stays shown until pressed again or the app restarts. Fields typed into
+// hide theirs with the masked class (-webkit-text-security).
+const revealed = new Set()
+export const isRevealed = (key) => revealed.has(key)
+export const secretText = (key, text) => (revealed.has(key) ? String(text) : String(text).replace(/[^\s-]/g, '•'))
+export const maskedClass = (key) => (revealed.has(key) ? '' : 'masked')
+export function revealButton(key) {
+  const shown = revealed.has(key)
+  const label = esc(t(shown ? 'hideCode' : 'showCode'))
+  return `<button type="button" class="reveal" data-action="reveal" data-id="${esc(key)}" title="${label}" aria-label="${label}" aria-pressed="${shown}">${icon(shown ? 'eyeOff' : 'eye')}</button>`
+}
+clickHandlers.push(async (type, id) => {
+  if (type !== 'reveal') return false
+  if (!revealed.delete(id)) revealed.add(id)
+  render()
+  return true
+})
 export const option = (value, label, current) =>
   `<option value="${esc(value)}" ${current === value ? 'selected' : ''}>${esc(label)}</option>`
 export function select(key, label, choices, value, scope = 'preferences') {

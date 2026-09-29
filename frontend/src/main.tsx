@@ -6,6 +6,8 @@ import {
   Check,
   CircleX,
   ExternalLink,
+  Eye,
+  EyeOff,
   FolderOpen,
   MapPinned,
   MonitorCog,
@@ -88,6 +90,8 @@ function App() {
   const [notice, setNotice] = useState('')
   const [noticeError, setNoticeError] = useState(false)
   const [remoteTestResult, setRemoteTestResult] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
+  // The Remote IDs shown instead of dots (by row; -1 is the in-app browser's).
+  const [shownRemoteIds, setShownRemoteIds] = useState<Set<number>>(() => new Set())
   const [busy, setBusy] = useState(false)
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [logLevel, setLogLevel] = useState('all')
@@ -390,8 +394,35 @@ function App() {
         { id: '', name: `Remote ${settings.remoteTargets.length + 1}`, map: true, tasks: true },
       ],
     })
-  const removeRemoteTarget = (index: number) =>
+  const removeRemoteTarget = (index: number) => {
+    setShownRemoteIds(new Set())
     patch({ remoteTargets: settings.remoteTargets.filter((_, i) => i !== index) })
+  }
+  const toggleRemoteId = (index: number) =>
+    setShownRemoteIds((shown) => {
+      const next = new Set(shown)
+      if (!next.delete(index)) next.add(index)
+      return next
+    })
+  // The eye button that shows or hides a Remote ID, like the shell's codes.
+  const revealRemoteId = (index: number) => {
+    const shown = shownRemoteIds.has(index)
+    const label = t(shown ? 'hideRemoteId' : 'showRemoteId')
+    return (
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        className="reveal"
+        aria-label={label}
+        title={label}
+        aria-pressed={shown}
+        onClick={() => toggleRemoteId(index)}
+      >
+        {shown ? <EyeOff /> : <Eye />}
+      </Button>
+    )
+  }
   const autoDetect = () =>
     run(async () => {
       const detected = await AutoDetectEFTDirectories()
@@ -863,16 +894,21 @@ function App() {
                             onChange={(e) => updateRemoteTarget(index, { name: e.target.value })}
                             placeholder={t('remoteName')}
                           />
-                          <Input
-                            aria-label={t('tarkovRemoteId')}
-                            value={target.id}
-                            onChange={(e) => {
-                              setRemoteTestResult('idle')
-                              updateRemoteTarget(index, { id: e.target.value })
-                            }}
-                            placeholder={t('remotePlaceholder')}
-                            autoComplete="off"
-                          />
+                          <div className="secret-field">
+                            <Input
+                              aria-label={t('tarkovRemoteId')}
+                              className={shownRemoteIds.has(index) ? '' : 'masked'}
+                              value={target.id}
+                              onChange={(e) => {
+                                setRemoteTestResult('idle')
+                                updateRemoteTarget(index, { id: e.target.value })
+                              }}
+                              placeholder={t('remotePlaceholder')}
+                              autoComplete="off"
+                              spellCheck={false}
+                            />
+                            {revealRemoteId(index)}
+                          </div>
                           <Button
                             type="button"
                             size="sm"
@@ -904,7 +940,13 @@ function App() {
                   )}
                 </div>
                 {settings.browserRemoteId && (
-                  <p className="help">{t('browserRemote').replace('{id}', settings.browserRemoteId)}</p>
+                  <p className="help secret-help">
+                    {t('browserRemote').replace(
+                      '{id}',
+                      shownRemoteIds.has(-1) ? settings.browserRemoteId : settings.browserRemoteId.replace(/S/g, '•'),
+                    )}
+                    {revealRemoteId(-1)}
+                  </p>
                 )}
                 <p className="help remote-help">
                   <span>{t('remoteHelp')}</span>

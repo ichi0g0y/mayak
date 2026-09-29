@@ -41,6 +41,9 @@ import {
   loadVersion,
   setRender,
   afterRenderHooks,
+  secretText,
+  revealButton,
+  maskedClass,
 } from './shell-core.js'
 import { goonFresh, bossSection, bossesPage } from './view-bosses.js'
 import { shotBadges, screenshotsPage } from './view-screenshots.js'
@@ -637,7 +640,7 @@ function peerPanel() {
   const pairCode = p.pairCode ? `${p.pairCode.slice(0, 4)} ${p.pairCode.slice(4)}` : ''
   const hostCode =
     !receive && p.code
-      ? `${pairCode ? `<div class="pair-code"><output>${esc(pairCode)}</output><button data-action="peerCopyPair">${t(copied ? 'copied' : 'copyCode')}</button></div><p class="hint">${t('pairCodeHelp')}</p>` : ''}${p.relayError ? `<p class="hint peer-error">${t('relayFailed')}</p>` : ''}<details class="peer-manual" ${p.relayError ? 'open' : ''}><summary>${t('manualExchange')}</summary><p class="hint">${t('manualExchangeHelp')}</p><div class="code-output"><label class="field"><span>${t('inviteCode')}</span><textarea readonly rows="2" spellcheck="false">${esc(p.code)}</textarea></label><button data-action="peerCopy">${t(copied ? 'copied' : 'copyCode')}</button></div></details><button data-action="peerCancel" ${disabled}>${t('cancelPairing')}</button>`
+      ? `${pairCode ? `<div class="pair-code"><output>${esc(secretText('pair', pairCode))}</output>${revealButton('pair')}<button data-action="peerCopyPair">${t(copied ? 'copied' : 'copyCode')}</button></div><p class="hint">${t('pairCodeHelp')}</p>` : ''}${p.relayError ? `<p class="hint peer-error">${t('relayFailed')}</p>` : ''}<details class="peer-manual" ${p.relayError ? 'open' : ''}><summary>${t('manualExchange')}</summary><p class="hint">${t('manualExchangeHelp')}</p><div class="code-output"><label class="field"><span>${t('inviteCode')}</span><span class="secret-field"><textarea class="${maskedClass('invite')}" readonly rows="2" spellcheck="false">${esc(p.code)}</textarea>${revealButton('invite')}</span></label><button data-action="peerCopy">${t(copied ? 'copied' : 'copyCode')}</button></div></details><button data-action="peerCancel" ${disabled}>${t('cancelPairing')}</button>`
       : ''
   const invite =
     !receive && !p.code
@@ -645,7 +648,7 @@ function peerPanel() {
       : ''
   const clientForms =
     receive && !p.paired && !joining
-      ? `<form id="peer-join-form"><label class="field"><span>${t('enterPairCode')}</span><input name="pairCode" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="1234 5678" value="${esc(peerDrafts.pairCode || '')}" required></label><button class="primary" type="submit" ${disabled}>${t('joinPair')}</button></form><details class="peer-manual"><summary>${t('manualExchange')}</summary><form id="peer-offer-form"><label class="field"><span>${t('enterOffer')}</span><textarea name="peerOffer" required spellcheck="false" maxlength="4096" rows="3">${esc(peerDrafts.offer)}</textarea></label><button type="submit" ${disabled}>${t('acceptInvite')}</button></form></details>`
+      ? `<form id="peer-join-form"><label class="field"><span>${t('enterPairCode')}</span><span class="secret-field"><input name="pairCode" class="${maskedClass('pairInput')}" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="1234 5678" value="${esc(peerDrafts.pairCode || '')}" required>${revealButton('pairInput')}</span></label><button class="primary" type="submit" ${disabled}>${t('joinPair')}</button></form><details class="peer-manual"><summary>${t('manualExchange')}</summary><form id="peer-offer-form"><label class="field"><span>${t('enterOffer')}</span><span class="secret-field"><textarea name="peerOffer" class="${maskedClass('offerInput')}" required spellcheck="false" maxlength="4096" rows="3">${esc(peerDrafts.offer)}</textarea>${revealButton('offerInput')}</span></label><button type="submit" ${disabled}>${t('acceptInvite')}</button></form></details>`
       : ''
   // What this Client takes from its Host (the others choose their own).
   const takes = receive

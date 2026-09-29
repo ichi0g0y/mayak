@@ -25,7 +25,19 @@ import {
   tarkovTime,
   textScale,
 } from './map-geo.js'
-import { state, esc, t, icon, action, clickHandlers, afterRenderHooks, render } from './shell-core.js'
+import {
+  state,
+  esc,
+  t,
+  icon,
+  action,
+  clickHandlers,
+  afterRenderHooks,
+  render,
+  secretText,
+  revealButton,
+  maskedClass,
+} from './shell-core.js'
 
 // The map view: tarkov.dev's interactive map redrawn by MAYAK (Leaflet over
 // its SVG maps; internal/mapdata makes the picture of each floor and the
@@ -267,10 +279,10 @@ function memberLine(m, maps) {
 function recentSquads() {
   const list = (state.squadRecent || []).map(
     (r) =>
-      `<li><button class="squad-recent-join" data-action="squadRejoin" data-id="${esc(r.code)}" title="${esc(t('squadJoin'))}"><span class="squad-recent-code">${esc(r.code)}</span><span class="squad-recent-when">${esc(age(new Date(r.at).toISOString(), state.language))}</span></button></li>`,
+      `<li><button class="squad-recent-join" data-action="squadRejoin" data-id="${esc(r.code)}" title="${esc(t('squadJoin'))}"><span class="squad-recent-code">${esc(secretText('squadRecent', r.code))}</span><span class="squad-recent-when">${esc(age(new Date(r.at).toISOString(), state.language))}</span></button></li>`,
   )
   return list.length
-    ? `<div class="squad-recent"><h3>${esc(t('squadRecent'))}</h3><ul>${list.join('')}</ul><p class="hint">${esc(t('squadRecentHint'))}</p></div>`
+    ? `<div class="squad-recent"><h3>${esc(t('squadRecent'))}${revealButton('squadRecent')}</h3><ul>${list.join('')}</ul><p class="hint">${esc(t('squadRecentHint'))}</p></div>`
     : ''
 }
 
@@ -279,12 +291,12 @@ function squadPanel() {
   const name = drafts.name ?? ownName()
   const head = panelHead(t('squad'))
   if (!s)
-    return `<aside class="map-panel map-squad">${head}<form id="squad-form" class="squad-form"><p class="hint">${esc(t('squadIntro'))}</p><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" placeholder="${esc(t('squadNamePlaceholder'))}" value="${esc(name)}"></label><button class="primary" type="submit" value="create">${esc(t('squadCreate'))}</button><div class="squad-join"><input name="squadCode" maxlength="12" autocomplete="off" spellcheck="false" placeholder="ABCD-1234" aria-label="${esc(t('squadCode'))}" value="${esc(drafts.code)}"><button type="submit" value="join">${esc(t('squadJoin'))}</button></div>${recentSquads()}${drafts.notice && drafts.notice !== 'squadCopied' ? `<p class="squad-notice" role="alert">${esc(t(drafts.notice))}</p>` : ''}<p class="hint">${esc(t('squadPrivacy'))}</p></form></aside>`
+    return `<aside class="map-panel map-squad">${head}<form id="squad-form" class="squad-form"><p class="hint">${esc(t('squadIntro'))}</p><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" placeholder="${esc(t('squadNamePlaceholder'))}" value="${esc(name)}"></label><button class="primary" type="submit" value="create">${esc(t('squadCreate'))}</button><div class="squad-join"><span class="secret-field"><input name="squadCode" class="${maskedClass('squadInput')}" maxlength="12" autocomplete="off" spellcheck="false" placeholder="ABCD-1234" aria-label="${esc(t('squadCode'))}" value="${esc(drafts.code)}">${revealButton('squadInput')}</span><button type="submit" value="join">${esc(t('squadJoin'))}</button></div>${recentSquads()}${drafts.notice && drafts.notice !== 'squadCopied' ? `<p class="squad-notice" role="alert">${esc(t(drafts.notice))}</p>` : ''}<p class="hint">${esc(t('squadPrivacy'))}</p></form></aside>`
   const list = players(s.members)
     .map((m) => memberLine(m, state.squad.maps || []))
     .join('')
   const viewer = s.members.find((m) => m.me)?.viewer ? `<p class="hint">${esc(t('squadViewer'))}</p>` : ''
-  return `<aside class="map-panel map-squad">${head}<div class="squad-code"><output>${esc(state.squadCode || s.code)}</output><button data-action="squadCopy" title="${esc(t('squadCopy'))}">${icon('copy')}<span>${esc(t(drafts.notice === 'squadCopied' ? 'squadCopied' : 'squadCopy'))}</span></button></div><p class="squad-phase" data-phase="${esc(s.phase)}">${esc(t('squadPhase_' + s.phase))}</p><ul class="squad-members">${list}</ul>${viewer}<form id="squad-name-form" class="squad-name"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" value="${esc(name)}"></label></form><button class="squad-leave" data-action="squadLeave">${esc(t('squadLeave'))}</button></aside>`
+  return `<aside class="map-panel map-squad">${head}<div class="squad-code"><output>${esc(secretText('squad', state.squadCode || s.code))}</output>${revealButton('squad')}<button data-action="squadCopy" title="${esc(t('squadCopy'))}">${icon('copy')}<span>${esc(t(drafts.notice === 'squadCopied' ? 'squadCopied' : 'squadCopy'))}</span></button></div><p class="squad-phase" data-phase="${esc(s.phase)}">${esc(t('squadPhase_' + s.phase))}</p><ul class="squad-members">${list}</ul>${viewer}<form id="squad-name-form" class="squad-name"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" value="${esc(name)}"></label></form><button class="squad-leave" data-action="squadLeave">${esc(t('squadLeave'))}</button></aside>`
 }
 
 // The raid's facts at the top right: the two clocks (as tarkov.dev keeps

@@ -125,7 +125,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 |---|---|---|
 | `folders` | `screenshotDirectory`, `logsDirectory`, `screenshotCleanup`（オンのとき `screenshotRetainCount` と `screenshotRetainHours` を表示） | 自動検出（`AutoDetectEFTDirectories`）、フォルダ選択 |
 | `recognition` | `gameMode`, `gameLanguage`（選択肢は「自動」と Go の `GameLanguages()` が返す言語。表示名は `main.tsx` の `languageNames`）, `ocrEngine`, `tesseractPath`（`tesseract` のときのみ表示） | — |
-| `remote` | `remoteTargets`（名前、ID、役割「マップ」「タスク」）, `map`, `openMapOnRaidStart`, `navigateMapOnPositionScreenshot` | 追加、ブラウザからの ID 自動検出（`AutoDetectRemoteID`）、接続テスト（`TestRemote`） |
+| `remote` | `remoteTargets`（名前、ID（伏せ字。目のボタンで表示）、役割「マップ」「タスク」）, `map`, `openMapOnRaidStart`, `navigateMapOnPositionScreenshot` | 追加、ブラウザからの ID 自動検出（`AutoDetectRemoteID`）、接続テスト（`TestRemote`） |
 | `tracker` | `tarkovTrackerEnabled`、トークンの取り込み、保存済みキー、既知プロフィールへのキーの割り当て、過去ログの同期 | ログからプロフィールを探す、tarkovtracker.org の API 設定を開く |
 | `sounds` | `soundsEnabled`。オンのとき、各通知（Hideout エラー、クエスト認識成功、認識・接続エラー、マッチ成立、レイド開始、ランスルー終了、タスクアイテム確認、失敗タスクの再開確認）の ON/OFF・音声ファイル・リセット・試聴、ランスルー時間（分・秒。ランスルー終了の通知がオンのときだけ表示）、`soundVolume` | `ChooseSoundFile`, `PreviewSound` |
 | `startup` | `launchAtStartup`, `startMinimized`, `autoStartMonitoring`, `minimizeToTray`, `closeToTray`, `autoUpdate` | — |
@@ -321,6 +321,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 
 - **期限**: 招待は 10 分で失効します。それまでに会えなければ、作りかけのペアリングも捨てます（`expireIn`）。「キャンセル」でも捨てます（`cancelCode`）。
 - **中継サーバー**: 招待の文字列だけを、接続コードごとに 10 分間保持します（`MAYAK1.` で始まる 100000 文字以内のものだけ受け付けます）。招待には鍵が入っているので、10 分のあいだに 8 桁を当てて招待を取った人は、そのあともリンクに入れます。8 桁は総当たりに強くはないので、10 分の有効期限以上の保護はありません。
+- **伏せ字**: 8 桁の接続コード、長い招待コード、Client の入力欄は「•」で出し、横の目のボタンで表示します（[browser-shell.md](browser-shell.md#マップ) の分隊コードと同じ `revealButton`）。コピーのボタンは伏せ字のままでも本当のコードをコピーします。
 - **別の PC を追加**: ペアリング済みの Host は、同じ鍵で新しい接続コードを出せます。初めて会った Client（接続コードで入った PC）が来た時点でそのコードは消し、すでにペアリング済みの Client がつなぎ直しただけでは消しません。
 - **解除**: Host で「すべての PC とのペアリングを解除」を押すと、つながっている Client すべてに伝わり、どの Client もペアを忘れます。Client で解除すると、その Client だけが抜けます。全員が同じ鍵を持つので、Host から 1 台だけを外すことはできません（外すときは全部を解除してつなぎ直す）。モードを切り替えると、作りかけのペアリングは捨て、保存したペアリングはそのモードが自分の役割（Host なら `local`、Client なら `client`）のときだけつなぎます。
 

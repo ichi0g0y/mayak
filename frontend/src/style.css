@@ -140,6 +140,13 @@ button, input, select { font: inherit; }
 .remote-targets { display: grid; gap: 9px; margin-bottom: 10px; }
 .remote-target { display: grid; gap: 9px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); }
 .remote-target-inputs { display: grid; grid-template-columns: minmax(100px, .7fr) minmax(160px, 1.3fr) auto; gap: 8px; align-items: center; }
+/* A Remote ID shows as dots until its eye button is pressed, like the shell's codes. */
+.masked { -webkit-text-security: disc; }
+.secret-field { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.secret-field > .input { flex: 1; min-width: 0; }
+.secret-help { display: flex; align-items: center; gap: 4px; }
+.reveal { flex: none; color: var(--muted); }
+.reveal[aria-pressed='true'] { color: var(--text); }
 .remote-target-roles { display: flex; flex-wrap: wrap; gap: 14px; }
 .remote-target-roles label { display: inline-flex; align-items: center; gap: 7px; color: var(--muted-foreground); font-size: 11px; }
 .card-header { padding: 22px 22px 7px; }
