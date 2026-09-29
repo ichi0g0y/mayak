@@ -192,7 +192,8 @@ body[data-update-bar=on] .error-bar{bottom:32px}
 
 .peer-panel form,.code-output{margin:18px 0}
 .peer-panel>button{margin:0 8px 16px 0}
-.peer-status{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--text);margin:14px 0;padding:6px 12px;border-radius:999px;background:var(--surface-2)}
+/* The link's state on a line of its own, the buttons under it. */
+.peer-status{display:flex;width:fit-content;align-items:center;gap:8px;font-size:13px;color:var(--text);margin:14px 0 18px;padding:6px 12px;border-radius:999px;background:var(--surface-2)}
 .link-receive{margin:16px 0;padding:0;border:0;display:flex;flex-wrap:wrap;gap:6px 18px}
 .link-receive legend{padding:0;margin-bottom:8px;font-size:13px;font-weight:600;color:var(--text)}
 .link-receive .hint{flex-basis:100%;margin:2px 0 0}
