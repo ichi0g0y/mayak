@@ -1039,7 +1039,7 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-rail-pen-dot{position:absolute;right:5px;bottom:5px;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 0 1.5px var(--surface)}
 .map-draw-own-color{display:inline-flex;align-items:center;gap:6px;padding:0 6px;font-size:12.5px;white-space:nowrap;color:var(--text-2)}
 .map-draw-bar button.map-draw-clear-all{width:auto;padding:0 9px;font-size:12px;font-weight:500;color:var(--danger,#e06c75)}
-.squad-pen-cursor-icon{background:none;border:0;transition:transform .1s linear}
+.squad-pen-cursor-icon{background:none;border:0;transition:transform 50ms linear}
 .leaflet-zoom-anim .squad-pen-cursor-icon{transition:none}
 .squad-pen-cursor{position:absolute;left:-2px;top:-16px;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;color:var(--c);font:600 11px/1 system-ui,sans-serif;text-shadow:0 0 2px #000,0 0 2px #000;pointer-events:none}
 .squad-pen-cursor .icon{width:15px;height:15px;filter:drop-shadow(0 0 1px #000)}

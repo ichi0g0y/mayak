@@ -391,11 +391,11 @@ export function attach(el, signal) {
         : { id: newID(), map: at.key, floor: at.floor, c: pen.color, w, z, p: first }
       stroke = { line, live: shape(at.L, line, 1).addTo(at.map), last: [p.x, p.y], sent: 0, timer: 0 }
       // The squad sees the line as it is drawn: its start, then its new
-      // points every tenth of a second.
+      // points every twentieth of a second.
       if (squadMode()) {
         squad.begin(line)
         const s = stroke
-        s.timer = setInterval(() => flush(s), 100)
+        s.timer = setInterval(() => flush(s), 50)
       }
     },
     { signal },

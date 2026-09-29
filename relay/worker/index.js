@@ -20,10 +20,10 @@
 // A member may send so many messages per window before it is dropped.
 const RATE_WINDOW_MS = 10_000;
 // A squad: ten players' positions, small and seldom, and the squad pen's
-// lines as they are drawn and its position ten times a second, as
+// lines as they are drawn and its position twenty times a second, as
 // multiplayer tools send a cursor (the app keeps to five sixths of the rate
 // told in the welcome).
-const SQUAD = { members: 10, message: 4096, rate: 240, replay: true };
+const SQUAD = { members: 10, message: 4096, rate: 480, replay: true };
 // The relay's version, told in the welcome: 2 takes the squad pen's
 // ephemeral messages at the rate above (the app draws only with it).
 const VERSION = 2;

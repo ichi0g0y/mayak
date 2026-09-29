@@ -12,7 +12,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - Pages and snap notes can be shared with the squad (nightly build only): a page with the squad button in the toolbar, a snap note with "Share with the squad" in its share menu. What was shared, and who drew on which map, is listed in the sidebar's squad section and on the squad page; pressing one opens it (a snap note is kept as a note of your own).
 - Cut off from the squad relay, MAYAK waits at most 15 seconds (not a minute) before connecting again, and a squad colour two members chose stays with the same one across reconnections.
 - A page or snap note shared by the squad shows as a notice at the bottom of the sidebar that stays until opened or closed (three at most), and when a squadmate draws on the map a dot shows beside "Map" in the sidebar.
-- The map pens' lines grow and shrink with the map's zoom, so writing drawn close up keeps its shape for a squadmate seeing it from afar; the squad pen's position goes ten times a second and glides, and the squad pen is put down after three minutes unused.
+- The map pens' lines grow and shrink with the map's zoom, so writing drawn close up keeps its shape for a squadmate seeing it from afar; the squad pen's position goes twenty times a second and glides, and the squad pen is put down after three minutes unused.
 
 ### Improved
 

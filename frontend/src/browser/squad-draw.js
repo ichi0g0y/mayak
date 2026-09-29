@@ -404,7 +404,7 @@ export function undoClear() {
 let cursorAt = 0
 export function cursor(map, floor, x, z) {
   const now = Date.now()
-  if (now - cursorAt < 100) return
+  if (now - cursorAt < 50) return
   cursorAt = now
   const { c, name } = myStyle()
   send({ t: 'c', map, floor, x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100, c, name }, true)
