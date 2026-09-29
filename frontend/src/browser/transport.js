@@ -69,10 +69,12 @@ class MayakLink {
     onMessage = /** @type {(message:any)=>void} */ (() => {}),
     onSquad = /** @type {(squad:{code:string,name:string,initial:boolean,color?:string})=>void} */ (() => {}),
     onUnpair = () => {},
+    onHost = /** @type {(host:{mode:string})=>void} */ (() => {}),
     relay = LINK_RELAY,
   } = {}) {
     this.onState = onState
     this.onMessage = onMessage
+    this.onHost = onHost
     this.onSquad = onSquad
     this.onUnpair = onUnpair
     this.relay = relay
@@ -229,6 +231,12 @@ class MayakLink {
         })
       return
     }
+    // What the Host is (its game mode), for its Clients to follow.
+    if (message.event === 'host:info' && this.role === 'client' && message.r === 'host') {
+      const h = message.args?.[0]
+      if (h && typeof h.mode === 'string') this.onHost({ mode: h.mode.slice(0, 20) })
+      return
+    }
     if (
       this.role === 'client' &&
       message.r === 'host' &&
@@ -267,6 +275,12 @@ class MayakLink {
   async unpair() {
     if (this.connected) await this.say(this.ws, { t: 'unpair' }).catch(() => {})
     this.stop()
+  }
+  // sendHost tells the Clients what the Host is (its game mode).
+  sendHost(info) {
+    if (this.role !== 'host' || !this.connected) return false
+    void this.say(this.ws, { event: 'host:info', args: [info] }).catch(() => {})
+    return true
   }
   // sendSquad tells the other PC the squad joined here (code "" for none),
   // in either direction; initial marks the Host's word when they connect.

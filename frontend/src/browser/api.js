@@ -711,11 +711,13 @@ const peer = new /** @type {any} */ (globalThis).MayakLink({
       // not answers with its own (receiveSquad).
       if (state.connection.mode === 'local' && squad.available)
         peer.sendSquad({ code: state.squadCode, name: state.squadName, color: state.squadColor, initial: true })
+      if (state.connection.mode === 'local') void shareHostInfo()
     }
     update()
   },
   onMessage: (message) => void display(message, true),
   onSquad: (s) => void enqueue(() => receiveSquad(s)),
+  onHost: (h) => void enqueue(() => receiveHost(h)),
   // The Host ended the pairing: this Client forgets it too.
   onUnpair: () => void enqueue(() => unpair(false)),
 })
@@ -730,6 +732,26 @@ function startLink() {
   }
   peerState = { ...peerState, phase: 'connecting', role: link.role, reason: '' }
   void peer.start(link.key, link.role, link === pending && link.role === 'client').catch(messageError)
+}
+// The Host's game mode: the Host tells its Clients when they meet and when
+// it changes (a Client has no game of its own to read); a Client's Go side
+// then reads the boss details, the Goons, the map's markers and the item
+// search in it.
+async function shareHostInfo() {
+  if (state.connection.mode !== 'local') return
+  try {
+    peer.sendHost({ mode: String((await go.BrowserCatalogMode()) || '') })
+  } catch {}
+}
+let hostMode = ''
+async function receiveHost({ mode }) {
+  if (state.connection.mode !== 'client' || mode === hostMode) return
+  hostMode = mode
+  await go.BrowserSetHostMode(mode)
+  // What was read in the mode before is read again.
+  squad.markers = {}
+  void loadBosses()
+  update()
 }
 // receiveSquad follows the squad the other PC joined or left, without
 // telling it back. On connecting, a client already in a squad keeps it and
@@ -971,6 +993,7 @@ const ready = (async () => {
         identity = host?.identity
       host = { ...host, ...hostStatus(next) }
       if (host.tracker !== tracker || host.mode !== mode) void loadBosses()
+      if (host.mode !== mode) void shareHostInfo()
       if (identity !== undefined && host.identity !== identity) void reloadItem()
       update()
     })

@@ -45,9 +45,12 @@ type App struct {
 	trayShow, trayCheck, trayQuit *application.MenuItem
 	popup                         itemPopup
 	// menu is the window the shell's menus open in, above the page (app_menu.go).
-	menu                  shellMenu
-	adblock               *adblock.Blocker
-	browserClient         atomic.Bool
+	menu          shellMenu
+	adblock       *adblock.Blocker
+	browserClient atomic.Bool
+	// hostMode is the Host's game mode as its link told this Client
+	// (BrowserSetHostMode); guarded by mu.
+	hostMode              string
 	browserBackgroundOnce sync.Once
 	hideoutProgressToken  string
 	// catalogRefreshes counts the catalog refreshes started (app_catalog.go).

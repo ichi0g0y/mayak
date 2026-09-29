@@ -11,6 +11,14 @@ import (
 )
 
 func (a *App) effectiveCatalogMode(configured string) string {
+	// A Client follows its Host, which reads the game (the Host is the one
+	// kept up to date; docs/settings-and-integrations.md).
+	a.mu.RLock()
+	host := a.hostMode
+	a.mu.RUnlock()
+	if a.browserClient.Load() && host != "" && host != "auto" {
+		return host
+	}
 	if configured != "" && configured != "auto" {
 		return configured
 	}
@@ -201,4 +209,27 @@ func (a *App) watchCatalog() {
 			}
 		}
 	}
+}
+
+// BrowserCatalogMode is the game mode this Host plays now ("regular", "pve",
+// "pvp-season", or "auto" when it cannot tell), which it tells its Clients.
+func (a *App) BrowserCatalogMode() string {
+	a.mu.RLock()
+	configured := a.settings.GameMode
+	a.mu.RUnlock()
+	return a.effectiveCatalogMode(configured)
+}
+
+// BrowserSetHostMode keeps the game mode the Host's link told this Client
+// (BrowserCatalogMode there); the boss details, the map's markers and the
+// item search follow it.
+func (a *App) BrowserSetHostMode(mode string) {
+	switch mode {
+	case "regular", "pve", "pvp-season", "auto", "":
+	default:
+		return
+	}
+	a.mu.Lock()
+	a.hostMode = mode
+	a.mu.Unlock()
 }

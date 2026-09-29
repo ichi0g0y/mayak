@@ -66,6 +66,14 @@ export function BrowserBosses(mode: string, lang: string): $CancellablePromise<b
 }
 
 /**
+ * BrowserCatalogMode is the game mode this Host plays now ("regular", "pve",
+ * "pvp-season", or "auto" when it cannot tell), which it tells its Clients.
+ */
+export function BrowserCatalogMode(): $CancellablePromise<string> {
+    return $Call.ByID(4206505346);
+}
+
+/**
  * BrowserFavicon returns the icon at rawURL as a data URL, from the cache
  * unless refresh asks for a current copy.
  */
@@ -268,6 +276,15 @@ export function BrowserScreenshots(limit: number): $CancellablePromise<$models.S
  */
 export function BrowserSetAdblock(enabled: boolean): $CancellablePromise<void> {
     return $Call.ByID(1219344332, enabled);
+}
+
+/**
+ * BrowserSetHostMode keeps the game mode the Host's link told this Client
+ * (BrowserCatalogMode there); the boss details, the map's markers and the
+ * item search follow it.
+ */
+export function BrowserSetHostMode(mode: string): $CancellablePromise<void> {
+    return $Call.ByID(891030051, mode);
 }
 
 export function BrowserSetMode(mode: string): $CancellablePromise<void> {
