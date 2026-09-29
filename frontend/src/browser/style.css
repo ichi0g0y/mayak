@@ -104,9 +104,11 @@ body[data-nav=left][data-item=right] .titlebar-grip{display:none}
    row). Whatever starts at the top left moves right by --lights: the
    sidebar's top row, the toolbar (sidebar on the right), the item panel's
    title row (item panel on the left with the sidebar on the right) or the tab
-   strip (horizontal layout). The collapsed sidebar is as wide as the buttons,
-   with its toggle under them. In full screen the buttons are hidden. */
-body[data-frame=mac]{--lights:80px}
+   strip (horizontal layout). --lights has the same space at the buttons'
+   right as at their left (macOS 26: three 14px buttons 23px apart from
+   15px, so 15px on each side). In full screen the
+   buttons are hidden. */
+body[data-frame=mac]{--lights:90px}
 body[data-frame=mac][data-fullscreen=true]{--lights:0px}
 body[data-frame=mac] .toolbar{padding-right:12px}
 body[data-frame=mac] .titlebar-grip{display:none}
@@ -115,9 +117,17 @@ body[data-frame=mac] .titlebar-grip{display:none}
 [data-frame=mac][data-layout=vertical][data-nav=left] .app-menu-anchor{padding-left:var(--lights)}
 [data-frame=mac][data-layout=vertical][data-nav=right]:not([data-item=left]) .toolbar{padding-left:var(--lights)}
 [data-frame=mac][data-layout=vertical][data-nav=right][data-item=left] .item-titlebar{padding-left:var(--lights)}
-body[data-frame=mac][data-nav=left][data-sidebar=collapsed]:not([data-fullscreen=true]){--sidebar-width:var(--lights)}
-body[data-frame=mac][data-nav=left][data-sidebar=collapsed]:not([data-fullscreen=true]) .app-menu-anchor{height:88px;padding:48px 0 0}
-body[data-frame=mac][data-nav=left][data-sidebar=collapsed]:not([data-fullscreen=true]) .tab-strip{top:88px}
+/* Collapsed on the left, the rail stays 52px as elsewhere and the buttons
+   reach over what is right of it, as in Finder or Safari: the toolbar takes
+   the whole top row and starts after them, or with the item panel open on
+   the left (the same colour as the rail) its title row does. There the two
+   share one title row, with no line between them under the buttons but one
+   along its bottom, where the line between the rail and the panel starts. */
+body[data-frame=mac][data-nav=left][data-sidebar=collapsed]:not([data-item=left]):not([data-fullscreen=true]) .app-menu-anchor{display:none}
+body[data-frame=mac][data-nav=left][data-sidebar=collapsed]:not([data-item=left]):not([data-fullscreen=true]) .toolbar{left:0;padding-left:var(--lights)}
+body[data-frame=mac][data-nav=left][data-sidebar=collapsed][data-item=left]:not([data-fullscreen=true]) .app-menu-anchor{box-shadow:inset 0 -1px var(--border)}
+body[data-frame=mac][data-nav=left][data-sidebar=collapsed][data-item=left]:not([data-fullscreen=true]) .item-titlebar{padding-left:calc(var(--lights) - var(--sidebar-width));box-shadow:inset 0 -1px var(--border)}
+body[data-frame=mac][data-nav=left][data-sidebar=collapsed][data-item=left]:not([data-fullscreen=true]) .item-body{padding-top:12px}
 
 /* Toolbar */
 /* Read-only address of a fixed view. */
@@ -201,10 +211,17 @@ body[data-nav=right] .sidebar-resizer::after{right:auto;left:0}
 body[data-sidebar=collapsed]{--sidebar-width:52px}
 body[data-sidebar=collapsed] .app-menu-anchor{justify-content:center;padding:0}
 body[data-sidebar=collapsed] .app-menu-anchor .mode-status{display:none}
-body[data-sidebar=collapsed] .tab-strip{padding:4px 6px 12px;scrollbar-width:none;bottom:calc(116px + var(--status-bar))}
+body[data-sidebar=collapsed] .tab-strip{padding:4px 6px 12px;scrollbar-width:none;bottom:calc(150px + var(--status-bar))}
 body[data-sidebar=collapsed] .tab-name,body[data-sidebar=collapsed] .tab-actions,body[data-sidebar=collapsed] .drop-hint,body[data-sidebar=collapsed] .section-label>span,body[data-sidebar=collapsed] .bookmark-section-label .section-link{display:none}
 body[data-sidebar=collapsed] .bookmark-section-label{border-top:0;margin:4px 0 0;padding-top:0}
 body[data-sidebar=collapsed] .bookmarks-open{width:40px;height:32px}
+/* The tabs heading: an icon in the rail (as the bookmarks one), with the new
+   tab button under it. */
+.tabs-open{display:none}
+body[data-sidebar=collapsed] .tabs-section-label{flex-direction:column;gap:2px}
+body[data-sidebar=collapsed] .tabs-section-label .section-link{display:none}
+body[data-sidebar=collapsed] .tabs-open{display:grid;place-items:center;width:40px;height:32px}
+.tabs-section-label.active .tabs-open{background:var(--selected);color:var(--text)}
 body[data-sidebar=collapsed] .tab-select{justify-content:center;padding:0}
 body[data-sidebar=collapsed] .tab-icon{width:16px;height:16px}
 body[data-sidebar=collapsed] .section-label{justify-content:center;margin:8px 0 4px;padding-top:8px;border-top:1px solid var(--border)}
@@ -213,7 +230,7 @@ body[data-sidebar=collapsed] .sidebar-bookmarks.empty{display:none}
 body.bookmark-dragging[data-sidebar=collapsed] .sidebar-bookmarks.empty{display:flex;min-height:36px}
 body[data-sidebar=collapsed] .sidebar-bookmarks{margin-top:6px;justify-content:center;padding:2px 0}
 body[data-sidebar=collapsed] .tab.pinned+.tab:not(.pinned)::before{left:6px;right:6px}
-body[data-sidebar=collapsed] .layout-dock{flex-direction:column;justify-content:flex-end;height:116px;padding:6px 0 8px;gap:2px}
+body[data-sidebar=collapsed] .layout-dock{flex-direction:column;justify-content:flex-end;height:150px;padding:6px 0 8px;gap:2px}
 
 /* Sidebar bookmark section */
 .section-link{padding:0;border:0;background:transparent!important;color:inherit;font:inherit;font-weight:600}
@@ -338,7 +355,7 @@ body[data-sidebar=collapsed] .layout-dock{flex-direction:column;justify-content:
 .item-titlebar .item-button{align-self:center;width:30px;height:30px}
 .item-titlebar .item-button.selected{background:var(--selected);color:var(--text)}
 /* The thin scrollbar takes 11px of the right side; the padding keeps both text edges 16px in. */
-.item-body{flex:1;min-height:0;overflow:auto;padding:4px 5px 20px 16px;scrollbar-width:thin;scrollbar-gutter:stable;scrollbar-color:var(--border-strong) transparent}
+.item-body{flex:1;min-height:0;overflow:auto;padding:4px max(0px,calc(16px - var(--item-gutter,11px))) 20px 16px;scrollbar-width:thin;scrollbar-gutter:stable;scrollbar-color:var(--border-strong) transparent}
 [data-layout=horizontal] .item-panel{top:48px}
 body[data-nav=right][data-item=right] .item-panel{top:48px;right:var(--sidebar-width)}
 body[data-item=left] .item-panel{right:auto;left:var(--nav-left);box-shadow:inset -1px 0 var(--border)}
@@ -557,6 +574,9 @@ body[data-nav=right] .app-menu-anchor{left:auto;right:0;top:48px;box-shadow:inse
 body[data-nav=right] .tab-strip{left:auto;right:0;top:96px;box-shadow:inset 1px 0 var(--border)}
 body[data-nav=right] .layout-dock{left:auto;right:0;box-shadow:inset 1px 0 var(--border)}
 body[data-nav=right] .status-tooltip{right:auto;left:0}
+/* Collapsed on the right, its top row has nothing to show. */
+body[data-nav=right][data-sidebar=collapsed] .app-menu-anchor{display:none}
+body[data-nav=right][data-sidebar=collapsed] .tab-strip{top:48px}
 /* The item panel at the bottom: as wide as the page area, its buttons in a
    column at the left and its sections flowing into as many columns as fit. */
 body[data-item=bottom] .item-panel{top:auto;left:var(--nav-left);right:var(--nav-right);width:auto;height:var(--item-height);flex-direction:row;box-shadow:inset 0 1px var(--border)}

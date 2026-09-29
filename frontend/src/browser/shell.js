@@ -179,11 +179,11 @@ function connectionLabel() {
     ? `${t('hostMode')} · ${t('local')}${phase !== 'idle' ? ' · ' + t(status) : ''}`
     : `${t('clientMode')} · ${t(status)}`
 }
-// The top of the sidebar: collapse button and the status indicators; the rest
-// of the row is title bar, so the window can be dragged from it. In the
-// horizontal layout the indicators sit at the right end of the top strip.
+// The top of the sidebar: the status indicators; the rest of the row is title
+// bar, so the window can be dragged from it. In the horizontal layout the
+// indicators sit at the right end of the top strip.
 function brandBar() {
-  return state.layout === 'vertical' ? `<div class="app-menu-anchor">${sidebarToggle()}${indicators()}</div>` : ''
+  return state.layout === 'vertical' ? `<div class="app-menu-anchor">${indicators()}</div>` : ''
 }
 // Host (or connection) status and the monitoring switch.
 function indicators() {
@@ -193,9 +193,11 @@ function indicators() {
     mode === 'local' ? 'host' : mode === 'off' ? 'off' : state.peer?.phase === 'connected' ? 'linked' : 'unlinked'
   return `<span class="mode-status ${status}" tabindex="0" role="img" aria-label="${esc(label)}">${icon(status)}<span class="status-tooltip" role="tooltip">${esc(label)}</span></span>${monitorButton()}`
 }
+// The collapse button is the first of the sidebar's bottom buttons, away from
+// the window buttons at the top.
 function sidebarToggle() {
   const label = t(state.sidebarCollapsed ? 'expandSidebar' : 'collapseSidebar')
-  return `<button class="dock-button sidebar-toggle" data-action="toggleSidebar" title="${esc(label)}" aria-label="${esc(label)}" aria-expanded="${!state.sidebarCollapsed}">${icon(state.sidebarSide === 'right' ? 'panelRight' : 'panelLeft')}</button>`
+  return `<button class="dock-button sidebar-toggle" data-action="toggleSidebar" title="${esc(label)}" aria-label="${esc(label)}" aria-expanded="${!state.sidebarCollapsed}">${icon((state.sidebarSide === 'right' ? 'panelRight' : 'panelLeft') + (state.sidebarCollapsed ? 'Open' : 'Close'))}</button>`
 }
 // On Windows and Linux the window is frameless: the shell draws the caption
 // buttons. They sit at the right of the toolbar, or of the tab strip in the
@@ -735,7 +737,7 @@ function render() {
       })
       .filter(Boolean)
   )
-  const html = `<div class="sidebar-resizer" role="separator" aria-orientation="vertical" aria-valuemin="${sidebarWidths.min}" aria-valuemax="${sidebarWidths.max}" aria-valuenow="${state.sidebarWidth}" title="${esc(t('resizeSidebar'))}"></div>${brandBar()}<nav class="tab-strip ${tab?.kind === 'settings' ? 'settings-strip' : ''}" aria-label="${esc(t(tab?.kind === 'settings' ? 'settings' : 'tabHelp'))}">${tab?.kind === 'settings' ? settingsSidebar() : `${mapEntry()}${bookmarkSection()}${screenshotSection()}${snapSection()}${bossSection()}<div class="section-label ${tab?.kind === 'tabs' ? 'active' : ''}"><button class="section-link" data-action="tabsPage" title="${esc(t('allTabs'))}">${esc(t('tabs'))}</button><button class="new-tab" data-action="newTab" title="${esc(t('newTab'))}" aria-label="${esc(t('newTab'))}">${icon('plus')}</button></div><div class="tabs" role="tablist" style="--n:${tabCount()}">${tabs()}</div>`}</nav><div class="layout-dock">${layoutToggle()}${itemToggle()}<button class="dock-button dock-settings ${tab?.kind === 'settings' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'settings'}" data-action="settings" title="${esc(t('settings'))}" aria-label="${esc(t('settings'))}">${icon('settings')}</button>${state.layout === 'horizontal' ? `<span class="dock-indicators">${indicators()}</span>` : ''}</div>${windowControls()}<div class="toolbar">${
+  const html = `<div class="sidebar-resizer" role="separator" aria-orientation="vertical" aria-valuemin="${sidebarWidths.min}" aria-valuemax="${sidebarWidths.max}" aria-valuenow="${state.sidebarWidth}" title="${esc(t('resizeSidebar'))}"></div>${brandBar()}<nav class="tab-strip ${tab?.kind === 'settings' ? 'settings-strip' : ''}" aria-label="${esc(t(tab?.kind === 'settings' ? 'settings' : 'tabHelp'))}">${tab?.kind === 'settings' ? settingsSidebar() : `${mapEntry()}${bookmarkSection()}${screenshotSection()}${snapSection()}${bossSection()}<div class="section-label tabs-section-label ${tab?.kind === 'tabs' ? 'active' : ''}"><button class="section-link" data-action="tabsPage" title="${esc(t('allTabs'))}">${esc(t('tabs'))}</button><button class="new-tab tabs-open" data-action="tabsPage" title="${esc(t('allTabs'))}" aria-label="${esc(t('allTabs'))}" aria-pressed="${tab?.kind === 'tabs'}">${icon('tabs')}</button><button class="new-tab" data-action="newTab" title="${esc(t('newTab'))}" aria-label="${esc(t('newTab'))}">${icon('plus')}</button></div><div class="tabs" role="tablist" style="--n:${tabCount()}">${tabs()}</div>`}</nav><div class="layout-dock">${state.layout === 'vertical' ? sidebarToggle() : ''}${layoutToggle()}${itemToggle()}<button class="dock-button dock-settings ${tab?.kind === 'settings' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'settings'}" data-action="settings" title="${esc(t('settings'))}" aria-label="${esc(t('settings'))}">${icon('settings')}</button>${state.layout === 'horizontal' ? `<span class="dock-indicators">${indicators()}</span>` : ''}</div>${windowControls()}<div class="toolbar">${
     tab?.fixed
       ? `<button data-action="back" aria-label="${t('back')}" title="${t('back')}" ${!tab.canBack ? 'disabled' : ''}>${icon('back')}</button><button data-action="forward" aria-label="${t('forward')}" title="${t('forward')}" ${!tab.canForward ? 'disabled' : ''}>${icon('forward')}</button><button data-action="reload" aria-label="${t('reload')}" title="${t('reload')}">${icon('reload')}</button><button data-action="home" aria-label="${esc(t('home'))}" title="${esc(t('homeHelp'))}" ${tab.url === tab.home ? 'disabled' : ''}>${icon('home')}</button><form id="address-form" class="readonly">${icon('globe', 'address-icon')}<input id="address" readonly aria-readonly="true" aria-label="${esc(tabName(tab))}" title="${esc(t('fixedAddress'))}" value="${esc(tab.url)}">${loadBar(tab)}</form>`
       : tab?.kind === 'snapnotes'
@@ -992,6 +994,17 @@ document.addEventListener('submit', (event) => {
     void action('bookmark', data)
   }
 })
+// The item panel keeps 16px on both sides of its content: the right padding is
+// what the scroll bar's space leaves of it (style.css, --item-gutter). macOS
+// shows its scroll bars over the content, with no space of their own.
+{
+  const probe = document.createElement('div')
+  probe.className = 'item-body'
+  probe.style.cssText = 'position:absolute;visibility:hidden;width:100px;height:100px;overflow:scroll'
+  document.body.append(probe)
+  document.documentElement.style.setProperty('--item-gutter', probe.offsetWidth - probe.clientWidth + 'px')
+  probe.remove()
+}
 installToolDrag({
   drop: (shown) => {
     renderDeferred = false
