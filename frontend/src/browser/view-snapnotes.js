@@ -783,7 +783,9 @@ function openShareMenu(button) {
     { id: 'share:copy', icon: 'copy', title: t('snapCopyImage'), hint: t('snapCopyImageHint') },
     { id: 'share:save', icon: 'download', title: t('snapSaveAs'), hint: t('snapSaveAsHint') },
     { id: 'share:x', icon: 'send', title: t('snapPostX'), hint: t('snapPostXHint') },
-    ...(canShare() ? [{ id: 'share:squad', icon: 'squad', title: t('squadShareSnap'), hint: t('squadShareSnapHint') }] : []),
+    ...(canShare()
+      ? [{ id: 'share:squad', icon: 'squad', title: t('squadShareSnap'), hint: t('squadShareSnapHint') }]
+      : []),
   ]
   const left = Math.round(Math.max(4, Math.min(r.left, innerWidth - menuWidth - 4)))
   void request('menuShow', { id: 'snapShare', x: left, y: Math.round(r.bottom + 6), width: menuWidth, items }).catch(
@@ -802,9 +804,16 @@ async function share(kind) {
     // side, as a JPEG (it goes through the squad's room in pieces).
     if (kind === 'squad') {
       const k = Math.min(1, 1600 / Math.max(target.note.width, target.note.height))
-      let jpeg = composite(target, Math.round(target.note.width * k), Math.round(target.note.height * k)).toDataURL('image/jpeg', 0.8)
+      let jpeg = composite(target, Math.round(target.note.width * k), Math.round(target.note.height * k)).toDataURL(
+        'image/jpeg',
+        0.8,
+      )
       if (jpeg.length > 1_400_000)
-        jpeg = composite(target, Math.round(target.note.width * k * 0.7), Math.round(target.note.height * k * 0.7)).toDataURL('image/jpeg', 0.7)
+        jpeg = composite(
+          target,
+          Math.round(target.note.width * k * 0.7),
+          Math.round(target.note.height * k * 0.7),
+        ).toDataURL('image/jpeg', 0.7)
       shareDone(t('squadShareSending').replace('{n}', '0'), 60000)
       const ok = await shareSnap(target.title, jpeg, (done) => {
         shareMessage = t('squadShareSending').replace('{n}', String(Math.round(done * 100)))

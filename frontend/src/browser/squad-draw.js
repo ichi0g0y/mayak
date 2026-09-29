@@ -107,7 +107,8 @@ async function sendParts(text, onProgress = (_done) => {}) {
   const id = Math.random().toString(36).slice(2, 10)
   const n = pieces.length
   for (let i = 0; i < n; i++) {
-    if (!(await go.SquadSend(JSON.stringify({ t: 'part', id, i, n, s: pieces[i] }), false).catch(() => false))) return false
+    if (!(await go.SquadSend(JSON.stringify({ t: 'part', id, i, n, s: pieces[i] }), false).catch(() => false)))
+      return false
     onProgress((i + 1) / n)
   }
   return true
@@ -117,7 +118,10 @@ async function sendParts(text, onProgress = (_done) => {}) {
 export async function sendShell(obj, onProgress) {
   const text = JSON.stringify(obj)
   if (!canDraw()) return false
-  if (text.length <= LIMIT) return !!(await backend()?.SquadSend(text, false).catch(() => false))
+  if (text.length <= LIMIT)
+    return !!(await backend()
+      ?.SquadSend(text, false)
+      .catch(() => false))
   return sendParts(text, onProgress)
 }
 const handlers = {}
@@ -131,7 +135,8 @@ function sendLines(list, fresh = false) {
   let batch = []
   let size = 0
   const flush = () => {
-    if (batch.length) send(fresh ? { t: 'l', gens: sq.gens, lines: batch, new: 1 } : { t: 'l', gens: sq.gens, lines: batch })
+    if (batch.length)
+      send(fresh ? { t: 'l', gens: sq.gens, lines: batch, new: 1 } : { t: 'l', gens: sq.gens, lines: batch })
     batch = []
     size = 0
   }
@@ -153,7 +158,10 @@ function saveOwn() {
   clearTimeout(saveTimer)
   const squadCode = code
   saveTimer = setTimeout(
-    () => void backend()?.SquadLinesSave?.(squadCode, JSON.stringify({ gens: sq.gens, lines: own() })).catch(() => {}),
+    () =>
+      void backend()
+        ?.SquadLinesSave?.(squadCode, JSON.stringify({ gens: sq.gens, lines: own() }))
+        .catch(() => {}),
     500,
   )
 }
@@ -292,7 +300,17 @@ function receive(from, data) {
   switch (data.t) {
     case 'b': {
       if (!by || typeof data.id !== 'string') return
-      const line = { id: data.id, by, name: String(data.name || ''), c: String(data.c || ''), map: String(data.map || ''), floor: String(data.floor || ''), w: Number(data.w) || 5, p: [], gen: 0 }
+      const line = {
+        id: data.id,
+        by,
+        name: String(data.name || ''),
+        c: String(data.c || ''),
+        map: String(data.map || ''),
+        floor: String(data.floor || ''),
+        w: Number(data.w) || 5,
+        p: [],
+        gen: 0,
+      }
       if (Number.isFinite(data.z)) line.z = data.z
       sq.live.set(data.id, { line, at: Date.now() })
       return notify(true)
@@ -300,17 +318,35 @@ function receive(from, data) {
     case 'p': {
       const live = sq.live.get(data.id)
       if (!live || live.line.by !== by || !Array.isArray(data.p)) return
-      for (const q of data.p) if (Array.isArray(q) && Number.isFinite(q[0]) && Number.isFinite(q[1])) live.line.p.push([q[0], q[1]])
+      for (const q of data.p)
+        if (Array.isArray(q) && Number.isFinite(q[0]) && Number.isFinite(q[1])) live.line.p.push([q[0], q[1]])
       live.at = Date.now()
       const last = live.line.p[live.line.p.length - 1]
-      if (last) sq.cursors.set(by, { name: live.line.name, c: live.line.c, map: live.line.map, floor: live.line.floor, x: last[0], z: last[1], at: Date.now() })
+      if (last)
+        sq.cursors.set(by, {
+          name: live.line.name,
+          c: live.line.c,
+          map: live.line.map,
+          floor: live.line.floor,
+          x: last[0],
+          z: last[1],
+          at: Date.now(),
+        })
       return notify(true)
     }
     case 'c': {
       if (!by) return
       if (data.off) sq.cursors.delete(by)
       else if (Number.isFinite(data.x) && Number.isFinite(data.z))
-        sq.cursors.set(by, { name: String(data.name || ''), c: String(data.c || ''), map: String(data.map || ''), floor: String(data.floor || ''), x: data.x, z: data.z, at: Date.now() })
+        sq.cursors.set(by, {
+          name: String(data.name || ''),
+          c: String(data.c || ''),
+          map: String(data.map || ''),
+          floor: String(data.floor || ''),
+          x: data.x,
+          z: data.z,
+          at: Date.now(),
+        })
       return notify(true)
     }
     case 'l': {
@@ -342,7 +378,14 @@ function receive(from, data) {
     }
     case 'x': {
       if (typeof data.map !== 'string' || !Number.isInteger(data.gen) || data.gen <= genOf(data.map)) return
-      sq.cleared = { map: data.map, gen: data.gen, prev: genOf(data.map), name: String(data.name || ''), at: Date.now(), mine: false }
+      sq.cleared = {
+        map: data.map,
+        gen: data.gen,
+        prev: genOf(data.map),
+        name: String(data.name || ''),
+        at: Date.now(),
+        mine: false,
+      }
       sq.gens[data.map] = data.gen
       saveOwn()
       notify()

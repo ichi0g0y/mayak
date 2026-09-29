@@ -3,6 +3,47 @@
 #import "browser_view_darwin.h"
 extern void mayakBrowserEvent(uintptr_t, char *, char *, int, int, int);
 static BOOL validURL(NSURL *url){return url.host.length>0 && ([url.scheme isEqualToString:@"https"]||[url.scheme isEqualToString:@"http"]) && ![url.host.lowercaseString isEqualToString:@"wails.localhost"] && !url.user && !url.password;}
+// A window.open with a size or position is a dialog that reports back to its
+// opener (Google sign-in posts its result to window.opener and closes), as on
+// Windows (go-webview2 browser_tabs.go): it opens in a small window of its own
+// with the web view WebKit asks for, made with the configuration it gives, so
+// that the two can talk; the page closing it closes the window. A link to a
+// new window (target=_blank, no size) opens in a tab instead. WebKit already
+// drops a window.open a page makes without a click.
+@interface MayakPopup : NSObject <WKUIDelegate,NSWindowDelegate>
+@property(retain) NSWindow *window;
+@property(retain) WKWebView *view;
+@end
+static NSMutableArray *mayakPopups;
+static BOOL mayakDialog(WKWindowFeatures *features){return features.width||features.height||features.x||features.y;}
+static WKWebView *mayakOpenPopup(WKWebViewConfiguration *configuration,WKWindowFeatures *features,NSWindow *parent);
+@implementation MayakPopup
+-(WKWebView*)webView:(WKWebView*)view createWebViewWithConfiguration:(WKWebViewConfiguration*)configuration forNavigationAction:(WKNavigationAction*)action windowFeatures:(WKWindowFeatures*)features{
+ return mayakDialog(features)?mayakOpenPopup(configuration,features,self.window):nil;
+}
+-(void)webViewDidClose:(WKWebView*)view{[self.window close];}
+-(void)windowWillClose:(NSNotification*)note{
+ self.view.UIDelegate=nil;self.window.delegate=nil;[self.view stopLoading];
+ // Let go once AppKit is done closing the window.
+ MayakPopup *popup=self;dispatch_async(dispatch_get_main_queue(),^{[mayakPopups removeObject:popup];});
+}
+-(void)dealloc{[_view release];[_window release];[super dealloc];}
+@end
+static WKWebView *mayakOpenPopup(WKWebViewConfiguration *configuration,WKWindowFeatures *features,NSWindow *parent){
+ CGFloat width=features.width?features.width.doubleValue:520,height=features.height?features.height.doubleValue:680;
+ width=MAX(360,MIN(width,1400));height=MAX(420,MIN(height,1000));
+ NSRect frame=NSMakeRect(0,0,width,height);
+ NSWindow *window=[[NSWindow alloc]initWithContentRect:frame styleMask:NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable|NSWindowStyleMaskResizable backing:NSBackingStoreBuffered defer:NO];
+ window.releasedWhenClosed=NO;window.title=@"MAYAK";
+ WKWebView *view=[[WKWebView alloc]initWithFrame:frame configuration:configuration];
+ MayakPopup *popup=[[MayakPopup alloc]init];popup.window=window;popup.view=view;
+ view.UIDelegate=popup;window.delegate=popup;window.contentView=view;
+ if(parent){NSRect p=parent.frame;[window setFrameOrigin:NSMakePoint(NSMidX(p)-width/2,NSMidY(p)-height/2)];}else [window center];
+ [window makeKeyAndOrderFront:nil];
+ if(!mayakPopups)mayakPopups=[[NSMutableArray alloc]init];
+ [mayakPopups addObject:popup];[popup release];[view release];[window release];
+ return view;
+}
 @interface MayakBrowserTab : NSObject <WKNavigationDelegate,WKUIDelegate>
 @property(retain) WKWebView *view;
 @property(retain) NSArray *constraints;
@@ -17,7 +58,9 @@ static BOOL validURL(NSURL *url){return url.host.length>0 && ([url.scheme isEqua
  handler(validURL(action.request.URL)?WKNavigationActionPolicyAllow:WKNavigationActionPolicyCancel);
 }
 -(WKWebView*)webView:(WKWebView*)view createWebViewWithConfiguration:(WKWebViewConfiguration*)configuration forNavigationAction:(WKNavigationAction*)action windowFeatures:(WKWindowFeatures*)features{
- if(validURL(action.request.URL)&&action.navigationType==WKNavigationTypeLinkActivated)[self notify:YES url:action.request.URL];return nil;
+ if(mayakDialog(features))return mayakOpenPopup(configuration,features,view.window);
+ if(validURL(action.request.URL))[self notify:YES url:action.request.URL];
+ return nil;
 }
 -(void)webView:(WKWebView*)view requestMediaCapturePermissionForOrigin:(WKSecurityOrigin*)origin initiatedByFrame:(WKFrameInfo*)frame type:(WKMediaCaptureType)type decisionHandler:(void (^)(WKPermissionDecision))handler API_AVAILABLE(macos(12.0)){handler(WKPermissionDecisionDeny);}
 -(void)dealloc{[_constraints release];[_view release];[super dealloc];}

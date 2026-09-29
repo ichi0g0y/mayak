@@ -47,22 +47,68 @@ const text = (v, max) => String(v || '').slice(0, max)
 squad.onShell('share', (by, d) => {
   if (typeof d.id !== 'string' || !valid(d.url)) return
   if (shares.some((s) => s.id === d.id)) return
-  keep({ id: d.id, kind: 'tab', by, name: text(d.name, 24), c: text(d.c, 7), title: text(d.title, 160), url: d.url, at: Date.now(), mine: false, seen: false })
+  keep({
+    id: d.id,
+    kind: 'tab',
+    by,
+    name: text(d.name, 24),
+    c: text(d.c, 7),
+    title: text(d.title, 160),
+    url: d.url,
+    at: Date.now(),
+    mine: false,
+    seen: false,
+  })
 })
 squad.onShell('snap', (by, d) => {
   if (typeof d.id !== 'string' || typeof d.image !== 'string' || d.image.length > MAX_IMAGE) return
   if (!/^data:image\/(jpeg|png);base64,/.test(d.image)) return
-  keep({ id: d.id, kind: 'snap', by, name: text(d.name, 24), c: text(d.c, 7), title: text(d.title, 160), image: d.image, at: Date.now(), mine: false, seen: false })
+  keep({
+    id: d.id,
+    kind: 'snap',
+    by,
+    name: text(d.name, 24),
+    c: text(d.c, 7),
+    title: text(d.title, 160),
+    image: d.image,
+    at: Date.now(),
+    mine: false,
+    seen: false,
+  })
 })
 squad.onShell('view', (by, d) => {
   if (typeof d.id !== 'string' || typeof d.map !== 'string' || shares.some((s) => s.id === d.id)) return
   if (![d.x, d.z, d.zoom].every(Number.isFinite)) return
-  keep({ id: d.id, kind: 'view', by, name: text(d.name, 24), c: text(d.c, 7), map: text(d.map, 60), floor: text(d.floor, 60), x: d.x, z: d.z, zoom: d.zoom, at: Date.now(), mine: false, seen: false })
+  keep({
+    id: d.id,
+    kind: 'view',
+    by,
+    name: text(d.name, 24),
+    c: text(d.c, 7),
+    map: text(d.map, 60),
+    floor: text(d.floor, 60),
+    x: d.x,
+    z: d.z,
+    zoom: d.zoom,
+    at: Date.now(),
+    mine: false,
+    seen: false,
+  })
 })
 // Someone drew a line on a map: one item per member and map, moved up.
 squad.onShell('drew', (by, d) => {
   if (!d.map) return
-  keep({ id: `draw:${by}:${d.map}`, kind: 'draw', by, name: text(d.name, 24), c: text(d.c, 7), map: text(d.map, 60), at: Date.now(), mine: false, seen: true })
+  keep({
+    id: `draw:${by}:${d.map}`,
+    kind: 'draw',
+    by,
+    name: text(d.name, 24),
+    c: text(d.c, 7),
+    map: text(d.map, 60),
+    at: Date.now(),
+    mine: false,
+    seen: true,
+  })
   if (!onMap() && !mapFresh) {
     mapFresh = true
     render()
@@ -79,7 +125,11 @@ afterRenderHooks.push(() => {
 export const waiting = () => shares.filter((s) => !s.seen && s.kind !== 'draw')
 // Those who join get the pages shared here lately.
 squad.onJoin(() => {
-  for (const s of shares.filter((s) => s.mine && s.kind === 'tab').slice(0, 20).reverse()) void sendTab(s)
+  for (const s of shares
+    .filter((s) => s.mine && s.kind === 'tab')
+    .slice(0, 20)
+    .reverse())
+    void sendTab(s)
 })
 
 const sendTab = (s) => squad.sendShell({ t: 'share', id: s.id, url: s.url, title: s.title, ...squad.myStyle() })
@@ -90,7 +140,17 @@ export const canShare = () => squad.canDraw()
 // shareTab shares a web page (its address and title). It tells whether it went.
 export async function shareTab(url, title) {
   if (!canShare() || !valid(url)) return false
-  const item = { id: Math.random().toString(36).slice(2, 12), kind: 'tab', by: squad.myKeyOf(), ...squad.myStyle(), title: text(title, 160), url, at: Date.now(), mine: true, seen: true }
+  const item = {
+    id: Math.random().toString(36).slice(2, 12),
+    kind: 'tab',
+    by: squad.myKeyOf(),
+    ...squad.myStyle(),
+    title: text(title, 160),
+    url,
+    at: Date.now(),
+    mine: true,
+    seen: true,
+  }
   const ok = await sendTab(item)
   if (ok) keep(item)
   return ok
@@ -103,7 +163,18 @@ export async function shareSnap(title, image, onProgress) {
   const style = squad.myStyle()
   const id = Math.random().toString(36).slice(2, 12)
   const ok = await squad.sendShell({ t: 'snap', id, title: text(title, 160), image, ...style }, onProgress)
-  if (ok) keep({ id, kind: 'snap', by: squad.myKeyOf(), ...style, title: text(title, 160), image, at: Date.now(), mine: true, seen: true })
+  if (ok)
+    keep({
+      id,
+      kind: 'snap',
+      by: squad.myKeyOf(),
+      ...style,
+      title: text(title, 160),
+      image,
+      at: Date.now(),
+      mine: true,
+      seen: true,
+    })
   return ok
 }
 

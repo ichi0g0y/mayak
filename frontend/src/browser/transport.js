@@ -49,7 +49,9 @@ async function linkSecrets(key) {
 }
 async function seal(aes, value) {
   const iv = crypto.getRandomValues(new Uint8Array(12))
-  const sealed = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aes, utf8.encode(JSON.stringify(value))))
+  const sealed = new Uint8Array(
+    await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aes, utf8.encode(JSON.stringify(value))),
+  )
   const out = new Uint8Array(iv.length + sealed.length)
   out.set(iv)
   out.set(sealed, iv.length)
@@ -194,7 +196,13 @@ class MayakLink {
       if (!known) {
         // A Client met once is paired: the next start is not its first.
         if (this.role === 'client') this.fresh = false
-        this.onState({ phase: 'connected', peers: this.peers.size, names: this.names(), joined: true, newcomer: message.fresh === true })
+        this.onState({
+          phase: 'connected',
+          peers: this.peers.size,
+          names: this.names(),
+          joined: true,
+          newcomer: message.fresh === true,
+        })
       }
       return
     }

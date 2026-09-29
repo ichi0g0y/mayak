@@ -23,16 +23,7 @@ import {
   tarkovTime,
   textScale,
 } from './map-geo.js'
-import {
-  state,
-  esc,
-  t,
-  icon,
-  action,
-  clickHandlers,
-  afterRenderHooks,
-  render,
-} from './shell-core.js'
+import { state, esc, t, icon, action, clickHandlers, afterRenderHooks, render } from './shell-core.js'
 import { attach, clearNotice, drawLines, penBar, penButton, snapStrokes, squadSnapStrokes } from './map-draw.js'
 import { mapName, memberList, ownName } from './view-squad.js'
 import { colorOf } from './squad-colors.js'
@@ -739,7 +730,9 @@ function drawMap() {
   if (view.focus?.map === map.key) {
     const { x, z, zoom, pulse } = view.focus
     view.focus = null
-    const near = Number.isFinite(zoom) ? zoom : Math.max(lm.map.getZoom(), ((map.minZoom || 2) + Math.max(7, map.maxZoom || 6)) / 2)
+    const near = Number.isFinite(zoom)
+      ? zoom
+      : Math.max(lm.map.getZoom(), ((map.minZoom || 2) + Math.max(7, map.maxZoom || 6)) / 2)
     lm.map.setView(L.latLng(z, x), near)
     // A view shared: a ring in the sharer's colour where they looked.
     if (pulse) {
@@ -747,7 +740,11 @@ function drawMap() {
         interactive: false,
         keyboard: false,
         zIndexOffset: 3000,
-        icon: L.divIcon({ className: 'map-look-icon', html: `<span class="map-look" style="--c:${esc(pulse)}"></span>`, iconSize: [0, 0] }),
+        icon: L.divIcon({
+          className: 'map-look-icon',
+          html: `<span class="map-look" style="--c:${esc(pulse)}"></span>`,
+          iconSize: [0, 0],
+        }),
       }).addTo(lm.map)
       setTimeout(() => ring.remove(), 3200)
     }
@@ -836,7 +833,11 @@ async function snapMap() {
       .filter(Boolean)
       .join(' · ')
     const layer = (strokes) => ({ visible: true, strokes })
-    const drawing = { v: 2, base: { visible: true }, layers: [layer([...squadSnapStrokes(scale), ...snapStrokes(scale)]), layer([]), layer([])] }
+    const drawing = {
+      v: 2,
+      base: { visible: true },
+      layers: [layer([...squadSnapStrokes(scale), ...snapStrokes(scale)]), layer([]), layer([])],
+    }
     await action('snapNew', { image, title, drawing })
   } catch (e) {
     await action('mapSnapFailed', String(e?.message || e))

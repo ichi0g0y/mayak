@@ -131,11 +131,11 @@ const tabName = (tab) =>
                   ? t('liveMap')
                   : tab.kind === 'squad'
                     ? t('squad')
-                  : tab.kind === 'bookmarks'
-                    ? t('bookmarks')
-                    : tab.kind === 'tabs'
-                      ? t('allTabs')
-                      : tab.title || tab.url
+                    : tab.kind === 'bookmarks'
+                      ? t('bookmarks')
+                      : tab.kind === 'tabs'
+                        ? t('allTabs')
+                        : tab.title || tab.url
 // Tabs listed in the tab section (the strip sizes itself by their number).
 const listedTabs = () =>
   state.tabs.filter(
@@ -618,7 +618,20 @@ function browserSettings(key) {
       return `<section class="panel"><label class="check"><input type="checkbox" data-action="adblock" ${state.adblock ? 'checked' : ''}>${t('adblockEnable')}</label><p class="hint">${t('adblockHelp')}</p></section>`
     default:
       // Host or Client (a PC that cannot be a Host, not Windows, is a Client).
-      return `<section class="panel"><h2>${t('connection')}</h2>${state.localHost ? select('mode', t('mode'), [['local', t('local')], ['client', t('clientConnection')]], state.connection.mode, 'connection') : `<p class="connection-only">${esc(t('clientConnection'))}</p>`}${state.connection.mode === 'local' ? `<p class="hint">${t('localHelp')}</p>` : state.connection.mode === 'client' ? `<p class="hint">${t('clientHelp')}</p>` : ''}</section>${peerPanel()}`
+      return `<section class="panel"><h2>${t('connection')}</h2>${
+        state.localHost
+          ? select(
+              'mode',
+              t('mode'),
+              [
+                ['local', t('local')],
+                ['client', t('clientConnection')],
+              ],
+              state.connection.mode,
+              'connection',
+            )
+          : `<p class="connection-only">${esc(t('clientConnection'))}</p>`
+      }${state.connection.mode === 'local' ? `<p class="hint">${t('localHelp')}</p>` : state.connection.mode === 'client' ? `<p class="hint">${t('clientHelp')}</p>` : ''}</section>${peerPanel()}`
   }
 }
 // The pairing code a Client types: eight boxes of one digit (code-boxes.js),
@@ -653,7 +666,9 @@ function linkStatus(p, receive) {
 function peerNames(p, receive) {
   const others = p.phase === 'connected' ? p.names || [] : []
   const row = (label, names) =>
-    names.length ? `<div><dt>${esc(t(label))}</dt><dd>${names.map((n) => `<span class="peer-name">${icon('monitor')}${esc(n)}</span>`).join('')}</dd></div>` : ''
+    names.length
+      ? `<div><dt>${esc(t(label))}</dt><dd>${names.map((n) => `<span class="peer-name">${icon('monitor')}${esc(n)}</span>`).join('')}</dd></div>`
+      : ''
   const html = row(receive ? 'peerHostName' : 'peerClientNames', others) + row('peerSelfName', p.self ? [p.self] : [])
   return html ? `<dl class="peer-names">${html}</dl>` : ''
 }
@@ -831,7 +846,11 @@ function render() {
       ? `<button data-action="back" aria-label="${t('back')}" title="${t('back')}" ${!tab.canBack ? 'disabled' : ''}>${icon('back')}</button><button data-action="forward" aria-label="${t('forward')}" title="${t('forward')}" ${!tab.canForward ? 'disabled' : ''}>${icon('forward')}</button><button data-action="reload" aria-label="${t('reload')}" title="${t('reload')}">${icon('reload')}</button><button data-action="home" aria-label="${esc(t('home'))}" title="${esc(t('homeHelp'))}" ${tab.url === tab.home ? 'disabled' : ''}>${icon('home')}</button><form id="address-form" class="readonly">${icon('globe', 'address-icon')}<input id="address" readonly aria-readonly="true" aria-label="${esc(tabName(tab))}" title="${esc(t('fixedAddress'))}" value="${esc(tab.url)}">${loadBar(tab)}</form>`
       : tab?.kind === 'snapnotes'
         ? snapToolbar()
-        : tab?.kind === 'bookmarks' || tab?.kind === 'screenshots' || tab?.kind === 'bosses' || tab?.kind === 'livemap' || tab?.kind === 'squad'
+        : tab?.kind === 'bookmarks' ||
+            tab?.kind === 'screenshots' ||
+            tab?.kind === 'bosses' ||
+            tab?.kind === 'livemap' ||
+            tab?.kind === 'squad'
           ? ''
           : tab?.kind === 'settings'
             ? ''

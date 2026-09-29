@@ -462,7 +462,9 @@ function hostStatus(s) {
     out.trackerError = String(s.tracker.lastError || '')
     out.mode = String(s.tracker.mode || '')
     // The player's name, the map view's default name for a squad.
-    out.player = String(s.tracker.displayName || '').trim().slice(0, 24)
+    out.player = String(s.tracker.displayName || '')
+      .trim()
+      .slice(0, 24)
     out.identity = [s.tracker.accountId, s.tracker.profileId, s.tracker.mode].map((v) => String(v || '')).join('|')
   }
   return out

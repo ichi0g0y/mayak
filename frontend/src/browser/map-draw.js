@@ -76,7 +76,14 @@ function load() {
 function changed(draw = true) {
   if (draw) revision++
   clearTimeout(saveTimer)
-  if (loaded) saveTimer = setTimeout(() => void backend()?.MapDrawingSave(JSON.stringify(lines)).catch(() => {}), 400)
+  if (loaded)
+    saveTimer = setTimeout(
+      () =>
+        void backend()
+          ?.MapDrawingSave(JSON.stringify(lines))
+          .catch(() => {}),
+      400,
+    )
   if (draw) render()
 }
 
@@ -167,11 +174,11 @@ export function penBar() {
   const colors = squadMode()
     ? `<span class="map-draw-own-color" title="${esc(t('mapSquadPenColor'))}"><span class="squad-dot" style="--c:${squad.myStyle().c}"></span>${esc(squad.myStyle().name)}</span>`
     : palette
-    .map(
-      (c) =>
-        `<button class="map-draw-color ${pen.color === c && pen.tool === 'pen' ? 'on' : ''}" data-action="mapPenColor" data-id="${c}" title="${esc(t('snapColor'))} ${c}" style="--swatch:${c}"></button>`,
-    )
-    .join('')
+        .map(
+          (c) =>
+            `<button class="map-draw-color ${pen.color === c && pen.tool === 'pen' ? 'on' : ''}" data-action="mapPenColor" data-id="${c}" title="${esc(t('snapColor'))} ${c}" style="--swatch:${c}"></button>`,
+        )
+        .join('')
   const sizes = widths
     .map(
       ([k, w]) =>
@@ -387,7 +394,17 @@ export function attach(el, signal) {
       const first = [[round(ll.lng), round(ll.lat)]]
       const z = Math.round(at.map.getZoom() * 10) / 10
       const line = squadMode()
-        ? { id: newID(), by: squad.myKeyOf(), ...squad.myStyle(), map: at.key, floor: at.floor, w, z, p: first, gen: squad.genOf(at.key) }
+        ? {
+            id: newID(),
+            by: squad.myKeyOf(),
+            ...squad.myStyle(),
+            map: at.key,
+            floor: at.floor,
+            w,
+            z,
+            p: first,
+            gen: squad.genOf(at.key),
+          }
         : { id: newID(), map: at.key, floor: at.floor, c: pen.color, w, z, p: first }
       stroke = { line, live: shape(at.L, line, 1).addTo(at.map), last: [p.x, p.y], sent: 0, timer: 0 }
       // The squad sees the line as it is drawn: its start, then its new
@@ -532,7 +549,12 @@ function toStrokes(list, scale) {
 }
 export const snapStrokes = (scale) => (pen.hidden || !at.map ? [] : toStrokes(lines.filter(here), scale))
 export const squadSnapStrokes = (scale) =>
-  at.map ? toStrokes(squad.shownLines(at.key).filter((l) => l.floor === at.floor), scale) : []
+  at.map
+    ? toStrokes(
+        squad.shownLines(at.key).filter((l) => l.floor === at.floor),
+        scale,
+      )
+    : []
 
 // Keys while the map shows with the pen up: Ctrl+Z / Ctrl+Y (Ctrl+Shift+Z)
 // undo and redo, Escape puts the pen down, Space held moves the map.

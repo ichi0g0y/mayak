@@ -29,7 +29,11 @@ export function codeBoxes(name, value = '', { cls = '', label = '', numeric = fa
 
 const boxesOf = (name) =>
   /** @type {HTMLInputElement[]} */ ([...document.querySelectorAll(`[data-code-box="${CSS.escape(name)}"]`)])
-const valueOf = (boxes) => boxes.map((b) => b.value || ' ').join('').replace(/\s+$/, '')
+const valueOf = (boxes) =>
+  boxes
+    .map((b) => b.value || ' ')
+    .join('')
+    .replace(/\s+$/, '')
 
 function typed(el, text) {
   const name = el.dataset.codeBox

@@ -16,5 +16,4 @@ export const squadColorMap = () => {
 }
 // colorOf is a member's colour: the squad's for them, else (outside a squad,
 // or a PC that only watches) the one chosen here or their name's.
-export const colorOf = (m) =>
-  squadColorMap().get(squadKey(m)) || (m.me && state.squadColor) || memberColor(m.name)
+export const colorOf = (m) => squadColorMap().get(squadKey(m)) || (m.me && state.squadColor) || memberColor(m.name)

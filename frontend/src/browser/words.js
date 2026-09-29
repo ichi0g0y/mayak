@@ -16,7 +16,8 @@ export const words = {
     mapSquadPen: '分隊ペン（分隊の全員に見える線を、自分の分隊カラーで描く）',
     mapSquadPenJoin: '分隊ペン：分隊に入ると使えます',
     mapSquadPenRelay: '分隊ペン：中継サーバーが対応していません（押すと確かめ直します）',
-    mapSquadPenHint: '左ドラッグで描く（描いている途中から分隊の全員に見えます）・右ドラッグかスペース + ドラッグで地図を動かす・Esc で終わる',
+    mapSquadPenHint:
+      '左ドラッグで描く（描いている途中から分隊の全員に見えます）・右ドラッグかスペース + ドラッグで地図を動かす・Esc で終わる',
     mapSquadPenColor: 'あなたの分隊カラー（分隊ページで変えられます）',
     mapPenClearAll: 'このマップの分隊の線を全員分消す（数秒だけ元に戻せます）',
     mapPenClearAllShort: '全員分消す',
@@ -117,8 +118,10 @@ export const words = {
     squadSharesAll: 'すべて',
     squadSharesTabs: 'ページ',
     squadSharesDraw: '分隊ペン',
-    squadSharesHint: 'ページは、あとから入った人にも届きます。スナップノートは、送ったときにいた人だけに届きます。押すと開きます（スナップノートは自分のノートとして保存されます）。',
-    squadSharesEmpty: 'まだ何も共有されていません。ページはツールバーの分隊のボタン、スナップノートは共有のメニューから送れます。',
+    squadSharesHint:
+      'ページは、あとから入った人にも届きます。スナップノートは、送ったときにいた人だけに届きます。押すと開きます（スナップノートは自分のノートとして保存されます）。',
+    squadSharesEmpty:
+      'まだ何も共有されていません。ページはツールバーの分隊のボタン、スナップノートは共有のメニューから送れます。',
     squadDrew: '{map} に描きました',
     squadShareTab: 'このページを分隊に共有',
     squadShareDone: '分隊に共有しました',
@@ -134,7 +137,8 @@ export const words = {
     squadColor: '分隊カラー',
     squadColorAuto: '自動',
     squadColorTaken: '{name} が使っています',
-    squadColorHelp: '地図の自分の印の色です。ほかの人が使っている色は選べません。自動にすると、空いている色になります。',
+    squadColorHelp:
+      '地図の自分の印の色です。ほかの人が使っている色は選べません。自動にすると、空いている色になります。',
     squadColorBusy: '選んだ色はほかの人が使っているので、今は自動の色です。',
     squadCreate: '分隊を作る',
     squadJoin: '参加',
@@ -282,7 +286,8 @@ export const words = {
     p2pReceive: 'Host とつなぐ',
     p2pHelp:
       'Host と相手の PC で MAYAK を開き、Host に出る 8 桁の接続コードを相手の PC で入力します。Host には何台でもつなげます（1 台ずつコードを発行）。一度つないだ PC はペアを覚えていて、次からは起動するだけで自動でつながります。やりとりはペアの PC だけが持つ鍵で暗号化して中継サーバー（mayak-relay.ich.sh）を通すので、中継サーバーには中身が読めません。',
-    pairCodeHelp: '相手の PC の MAYAK で 設定 → 接続 を開き、Client にしてこの番号を入力してください。10 分で失効します。',
+    pairCodeHelp:
+      '相手の PC の MAYAK で 設定 → 接続 を開き、Client にしてこの番号を入力してください。10 分で失効します。',
     enterPairCode: 'Host に表示された 8 桁の接続コード',
     joinPair: '接続する',
     manualExchange: 'コードを手で渡す（mayak.ich.sh を使わない）',
@@ -315,7 +320,8 @@ export const words = {
     linkReceive_task: 'タスク',
     linkReceive_map: 'マップと位置',
     linkReceive_item: 'アイテム',
-    linkReceiveHelp: 'Host が検出したもののうち、この PC で開くものを選びます（1 台はマップ、もう 1 台はタスク、のように分けられます）。',
+    linkReceiveHelp:
+      'Host が検出したもののうち、この PC で開くものを選びます（1 台はマップ、もう 1 台はタスク、のように分けられます）。',
     linkOffline: '中継サーバーに届きません。自動でつなぎ直します…',
     linkFailed: '接続できませんでした。',
     p2pExpired: '接続コードの有効期限が切れました。',
@@ -671,7 +677,8 @@ export const words = {
     mapSquadPen: 'Squad pen (lines the whole squad sees, in your squad colour)',
     mapSquadPenJoin: 'Squad pen: join a squad to use it',
     mapSquadPenRelay: 'Squad pen: the relay does not take it (press to ask again)',
-    mapSquadPenHint: 'Drag to draw (the squad sees it as you draw); right-drag or Space + drag moves the map; Esc puts the pen down',
+    mapSquadPenHint:
+      'Drag to draw (the squad sees it as you draw); right-drag or Space + drag moves the map; Esc puts the pen down',
     mapSquadPenColor: 'Your squad colour (changed on the squad page)',
     mapPenClearAll: "Remove everyone's squad lines on this map (can be undone for a few seconds)",
     mapPenClearAllShort: 'Clear all',
@@ -773,8 +780,10 @@ export const words = {
     squadSharesAll: 'All',
     squadSharesTabs: 'Pages',
     squadSharesDraw: 'Squad pen',
-    squadSharesHint: 'A page also reaches those who join later; a snap note only those there when it was sent. Press one to open it (a snap note is kept as a note of your own).',
-    squadSharesEmpty: 'Nothing shared yet. Share a page with the squad button in the toolbar, a snap note from its share menu.',
+    squadSharesHint:
+      'A page also reaches those who join later; a snap note only those there when it was sent. Press one to open it (a snap note is kept as a note of your own).',
+    squadSharesEmpty:
+      'Nothing shared yet. Share a page with the squad button in the toolbar, a snap note from its share menu.',
     squadDrew: 'drew on {map}',
     squadShareTab: 'Share this page with the squad',
     squadShareDone: 'Shared with the squad',
@@ -790,7 +799,8 @@ export const words = {
     squadColor: 'Squad colour',
     squadColorAuto: 'Automatic',
     squadColorTaken: '{name} has it',
-    squadColorHelp: 'The colour of your marker on the map. A colour someone else has cannot be chosen; Automatic takes a free one.',
+    squadColorHelp:
+      'The colour of your marker on the map. A colour someone else has cannot be chosen; Automatic takes a free one.',
     squadColorBusy: 'Someone else has the colour chosen, so you have an automatic one for now.',
     squadCreate: 'Create a squad',
     squadJoin: 'Join',
@@ -938,7 +948,8 @@ export const words = {
     p2pReceive: 'Connect to a Host',
     p2pHelp:
       'Open MAYAK on the Host and the other PC and enter the 8-digit code shown on the Host into the other one. A Host takes any number of PCs (a code for each). Paired PCs remember each other and connect again on their own at every start. What they say goes through a relay (mayak-relay.ich.sh), encrypted with a key only the paired PCs have, so the relay cannot read it.',
-    pairCodeHelp: 'On the other PC, open MAYAK → Settings → Connection, choose the Client mode and enter this number. It expires in 10 minutes.',
+    pairCodeHelp:
+      'On the other PC, open MAYAK → Settings → Connection, choose the Client mode and enter this number. It expires in 10 minutes.',
     enterPairCode: 'The 8-digit code shown on the Host',
     joinPair: 'Connect',
     manualExchange: 'Hand the code over yourself (no mayak.ich.sh)',

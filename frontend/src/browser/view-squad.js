@@ -275,7 +275,11 @@ clickHandlers.push(async (type, id) => {
     if (s.kind === 'tab') void action('open', s.url)
     else if (s.kind === 'snap') void action('snapNew', { image: s.image, title: s.title })
     else if (s.kind === 'view')
-      window.dispatchEvent(new CustomEvent('mayak:map-show', { detail: { map: s.map, floor: s.floor, x: s.x, z: s.z, zoom: s.zoom, c: s.c } }))
+      window.dispatchEvent(
+        new CustomEvent('mayak:map-show', {
+          detail: { map: s.map, floor: s.floor, x: s.x, z: s.z, zoom: s.zoom, c: s.c },
+        }),
+      )
     else window.dispatchEvent(new CustomEvent('mayak:map-show', { detail: { map: s.map } }))
     return true
   }

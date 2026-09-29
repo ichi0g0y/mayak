@@ -246,7 +246,11 @@ export function TrackerSection({
                         <ExternalLink />
                         {t('trackerOpenSettings')}
                       </button>
-                      <button type="button" className="inline-link" onClick={() => BrowserOpenURL('https://tarkovtracker.org/')}>
+                      <button
+                        type="button"
+                        className="inline-link"
+                        onClick={() => BrowserOpenURL('https://tarkovtracker.org/')}
+                      >
                         <ExternalLink />
                         {t('trackerOpenSite')}
                       </button>
@@ -355,7 +359,11 @@ export function TrackerSection({
               reachable from here. */}
           {!settings.tarkovTrackerEnabled && (
             <p className="help tracker-links">
-              <button type="button" className="inline-link" onClick={() => BrowserOpenURL('https://tarkovtracker.org/')}>
+              <button
+                type="button"
+                className="inline-link"
+                onClick={() => BrowserOpenURL('https://tarkovtracker.org/')}
+              >
                 <ExternalLink />
                 {t('trackerOpenSite')}
               </button>

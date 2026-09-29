@@ -309,8 +309,7 @@ function restore(raw = {}) {
   state.mapCollapsed = hiddenOf(raw.mapCollapsed)
   state.squadName = typeof raw.squadName === 'string' ? raw.squadName.trim().slice(0, 24) : ''
   state.squadColor = squadColors.includes(raw.squadColor) ? raw.squadColor : ''
-  state.squadCode =
-    typeof raw.squadCode === 'string' && squadCodePattern.test(raw.squadCode) ? raw.squadCode : ''
+  state.squadCode = typeof raw.squadCode === 'string' && squadCodePattern.test(raw.squadCode) ? raw.squadCode : ''
   state.squadRecent = recentSquadsOf(raw.squadRecent)
   // The LAN receiving mode ("remote") is gone; a browser saved in it starts
   // off. The Client mode was "webrtc" while the PCs talked over WebRTC.

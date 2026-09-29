@@ -615,8 +615,20 @@ test('a detected task opens the official wiki translated when asked', () => {
 import { toolKeys, toolOrderOf, mergeToolOrder } from './state.js'
 test('toolbar icons keep a whole order: snap left of the wiki search by default', () => {
   assert.deepEqual(restore({}).toolOrder, ['translate', 'snap', 'squadShare', 'wikiSearch', 'external'])
-  assert.deepEqual(toolOrderOf(['external', 'translate']), ['external', 'translate', 'snap', 'squadShare', 'wikiSearch'])
-  assert.deepEqual(toolOrderOf(['bogus', 'snap', 'snap', 'external']), ['translate', 'snap', 'squadShare', 'wikiSearch', 'external'])
+  assert.deepEqual(toolOrderOf(['external', 'translate']), [
+    'external',
+    'translate',
+    'snap',
+    'squadShare',
+    'wikiSearch',
+  ])
+  assert.deepEqual(toolOrderOf(['bogus', 'snap', 'snap', 'external']), [
+    'translate',
+    'snap',
+    'squadShare',
+    'wikiSearch',
+    'external',
+  ])
   // An order saved before the squad share button takes it after the snap note's.
   assert.deepEqual(restore({ toolOrder: ['wikiSearch', 'snap', 'translate', 'external'] }).toolOrder, [
     'wikiSearch',
@@ -660,13 +672,17 @@ test('recent squads keep the last five, newest first, for a month', () => {
     ['AAAA-0006', 'AAAA-0005', 'AAAA-0004', 'AAAA-0003', 'AAAA-0002'],
   )
   list = rememberSquad(list, 'AAAA-0003', now + 1)
-  assert.deepEqual(list.slice(0, 2).map((r) => r.code), ['AAAA-0003', 'AAAA-0006'])
+  assert.deepEqual(
+    list.slice(0, 2).map((r) => r.code),
+    ['AAAA-0003', 'AAAA-0006'],
+  )
   assert.equal(new Set(list.map((r) => r.code)).size, list.length)
   assert.deepEqual(recentSquadsOf([{ code: 'AAAA-0001', at: now - 31 * day }], now), [])
   assert.deepEqual(recentSquadsOf([{ code: 'bad', at: now }, null, 'x'], now), [])
-  assert.deepEqual(restore({ squadRecent: [{ code: 'ABCD-1234', at: Date.now() }] }).squadRecent.map((r) => r.code), [
-    'ABCD-1234',
-  ])
+  assert.deepEqual(
+    restore({ squadRecent: [{ code: 'ABCD-1234', at: Date.now() }] }).squadRecent.map((r) => r.code),
+    ['ABCD-1234'],
+  )
 })
 
 test('a Client takes all of its Host detections unless it turns some off', () => {

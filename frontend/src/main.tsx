@@ -1079,16 +1079,16 @@ function App() {
         <TabsContent value="tracker">
           <div className="settings-stack">
             <TrackerSection
-            settings={settings}
-            status={status}
-            t={t}
-            busy={busy}
-            run={run}
-            patch={patch}
-            setBusy={setBusy}
-            setNotice={setNotice}
-            setNoticeError={setNoticeError}
-            trackerModeLabel={trackerModeLabel}
+              settings={settings}
+              status={status}
+              t={t}
+              busy={busy}
+              run={run}
+              patch={patch}
+              setBusy={setBusy}
+              setNotice={setNotice}
+              setNoticeError={setNoticeError}
+              trackerModeLabel={trackerModeLabel}
               trackerToken={trackerToken}
               setTrackerToken={setTrackerToken}
             />

@@ -86,7 +86,9 @@ export const squadKey = (m) => (m.me ? 'me' : m.id)
 // reports; a squad has at most as many players as colours.
 export function assignColors(members) {
   const order = (m) => m.key || m.id || ''
-  const list = (members || []).filter((m) => !m.viewer).sort((a, b) => (order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0))
+  const list = (members || [])
+    .filter((m) => !m.viewer)
+    .sort((a, b) => (order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0))
   const out = new Map()
   const used = new Set()
   for (const m of list)
