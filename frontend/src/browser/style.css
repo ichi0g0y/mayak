@@ -1031,7 +1031,7 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-panel-host{position:absolute;top:12px;left:56px;z-index:800}
 /* Your pen (map-draw.js): its tools over the top of the map, and the map
    while it is up: markers let the pointer through to the pen. */
-.map-draw-bar{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:800;display:flex;align-items:center;gap:2px;padding:4px;border:2px solid rgba(0,0,0,.2);border-radius:8px;background:var(--surface);background-clip:padding-box;max-width:calc(100% - 140px);overflow-x:auto}
+.map-draw-bar{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:max-content;z-index:800;display:flex;align-items:center;gap:2px;padding:4px;border:2px solid rgba(0,0,0,.2);border-radius:8px;background:var(--surface);background-clip:padding-box;max-width:calc(100% - 140px);overflow-x:auto}
 .map-draw-bar button{width:30px;height:30px;padding:0;border:0;border-radius:6px;flex:none}
 .map-draw-bar button.on{background:var(--selected);color:var(--accent)}
 .map-draw-bar .icon{width:16px;height:16px}
@@ -1044,9 +1044,15 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 /* The squad pen: its button (a dot in your squad colour), its colour in the
    tools, the clear-all, the others' pens, the drawer's name under the
    pointer and the notice of a clear-all. */
-.map-rail-pen-dot{position:absolute;right:5px;bottom:5px;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 0 1.5px var(--surface)}
+/* The squad pen: its pencil moves up and left for the squad's icon on the member's colour. */
+.map-rail-squad-pen>.icon{transform:translate(-3px,-3px)}
+.map-rail-pen-badge,.map-draw-squad-badge{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--c);color:#16181d;flex:none}
+.map-rail-pen-badge{position:absolute;right:3px;bottom:3px;box-shadow:0 0 0 1.5px var(--surface)}
+.map-rail-pen-badge .icon,.map-draw-squad-badge .icon{width:10px;height:10px;stroke-width:2.6}
+.map-rail-button:disabled .map-rail-pen-badge{opacity:.45}
+.map-draw-bar.squad{border-color:var(--c)}
 .map-draw-own-color{display:inline-flex;align-items:center;gap:6px;padding:0 6px;font-size:12.5px;white-space:nowrap;color:var(--text-2)}
-.map-draw-bar button.map-draw-clear-all{width:auto;padding:0 9px;font-size:12px;font-weight:500;color:var(--danger,#e06c75)}
+.map-draw-bar button.map-draw-clear-all{width:auto;padding:0 9px;white-space:nowrap;font-size:12px;font-weight:500;color:var(--danger,#e06c75)}
 .squad-pen-cursor-icon{background:none;border:0;transition:transform 50ms linear}
 .leaflet-zoom-anim .squad-pen-cursor-icon{transition:none}
 .squad-pen-cursor{position:absolute;left:-2px;top:-16px;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;color:var(--c);font:600 11px/1 system-ui,sans-serif;text-shadow:0 0 2px #000,0 0 2px #000;pointer-events:none}

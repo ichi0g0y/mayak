@@ -143,6 +143,10 @@ function clearHere() {
 }
 const linesHere = () => (squadMode() ? squadHere().length > 0 : lines.some(here))
 
+// The squad pen's mark: the squad's icon on this member's squad colour, over
+// the pencil in the column of buttons and at the head of its tools.
+const squadBadge = (cls) => `<span class="${cls}" style="--c:${squad.myStyle().c}">${icon('squad')}</span>`
+
 // The pens' buttons in the map's column of buttons: yours, and the squad's
 // (in a squad, through a relay that takes it).
 export function penButton(disabled) {
@@ -156,7 +160,7 @@ export function penButton(disabled) {
   // Connected to a relay that did not take the pen, a press asks it again.
   const stale = !!s && s.phase === 'connected' && !s.drawing
   const off = disabled || (!squad.canDraw() && !stale)
-  return `${button}<button class="map-rail-button map-rail-squad-pen ${on ? 'selected' : ''}" data-action="mapSquadPen" aria-pressed="${on}" title="${esc(t(why))}" aria-label="${esc(t('mapSquadPen'))}" ${off && !on ? 'disabled' : ''}>${icon('pencil')}<span class="map-rail-pen-dot" style="--c:${squad.myStyle().c}"></span></button>`
+  return `${button}<button class="map-rail-button map-rail-squad-pen ${on ? 'selected' : ''}" data-action="mapSquadPen" aria-pressed="${on}" title="${esc(t(why))}" aria-label="${esc(t('mapSquadPen'))}" ${off && !on ? 'disabled' : ''}>${icon('pencil')}${squadBadge('map-rail-pen-badge')}</button>`
 }
 
 // The notice of a squad clear-all while it can be undone.
@@ -172,7 +176,7 @@ export function penBar() {
   const tool = (id, iconName, label) =>
     `<button class="map-draw-tool ${pen.tool === id ? 'on' : ''}" data-action="mapPenTool" data-id="${id}" aria-pressed="${pen.tool === id}" title="${esc(t(label))}" aria-label="${esc(t(label))}">${icon(iconName)}</button>`
   const colors = squadMode()
-    ? `<span class="map-draw-own-color" title="${esc(t('mapSquadPenColor'))}"><span class="squad-dot" style="--c:${squad.myStyle().c}"></span>${esc(squad.myStyle().name)}</span>`
+    ? `<span class="map-draw-own-color" title="${esc(t('mapSquadPenColor'))}">${squadBadge('map-draw-squad-badge')}${esc(squad.myStyle().name)}</span>`
     : palette
         .map(
           (c) =>
@@ -191,7 +195,7 @@ export function penBar() {
     ? `<button class="map-draw-clear-all" data-action="mapPenClearAll" title="${esc(t('mapPenClearAll'))}" ${squad.shownLines(at.key).length ? '' : 'disabled'}>${esc(t('mapPenClearAllShort'))}</button>`
     : `<button class="${pen.hidden ? 'on' : ''}" data-action="mapPenEye" aria-pressed="${pen.hidden}" title="${esc(t(eye))}" aria-label="${esc(t(eye))}">${icon(pen.hidden ? 'eyeOff' : 'eye')}</button>`
   const name = squadMode() ? 'mapSquadPen' : 'mapPen'
-  return `<div class="map-draw-bar ${squadMode() ? 'squad' : ''}" role="toolbar" aria-label="${esc(t(name))}" title="${esc(t(squadMode() ? 'mapSquadPenHint' : 'mapPenHint'))}">${tool('pen', 'pencil', 'snapPen')}${tool('eraser', 'eraser', 'snapEraser')}${sep}${colors}${sep}${sizes}${sep}<button data-action="mapPenUndo" title="${esc(t('snapUndo'))}" aria-label="${esc(t('snapUndo'))}" ${undoStack.length ? '' : 'disabled'}>${icon('undo')}</button><button data-action="mapPenRedo" title="${esc(t('snapRedo'))}" aria-label="${esc(t('snapRedo'))}" ${redoStack.length ? '' : 'disabled'}>${icon('redo')}</button>${sep}<button data-action="mapPenClear" title="${esc(t('mapPenClear'))}" aria-label="${esc(t('mapPenClear'))}" ${linesHere() ? '' : 'disabled'}>${icon('trash')}</button>${hide}${sep}<button data-action="${squadMode() ? 'mapSquadPen' : 'mapPen'}" title="${esc(t('mapPenDone'))}" aria-label="${esc(t('mapPenDone'))}">${icon('x')}</button></div>`
+  return `<div class="map-draw-bar ${squadMode() ? 'squad' : ''}" ${squadMode() ? `style="--c:${squad.myStyle().c}"` : ''} role="toolbar" aria-label="${esc(t(name))}" title="${esc(t(squadMode() ? 'mapSquadPenHint' : 'mapPenHint'))}">${tool('pen', 'pencil', 'snapPen')}${tool('eraser', 'eraser', 'snapEraser')}${sep}${colors}${sep}${sizes}${sep}<button data-action="mapPenUndo" title="${esc(t('snapUndo'))}" aria-label="${esc(t('snapUndo'))}" ${undoStack.length ? '' : 'disabled'}>${icon('undo')}</button><button data-action="mapPenRedo" title="${esc(t('snapRedo'))}" aria-label="${esc(t('snapRedo'))}" ${redoStack.length ? '' : 'disabled'}>${icon('redo')}</button>${sep}<button data-action="mapPenClear" title="${esc(t('mapPenClear'))}" aria-label="${esc(t('mapPenClear'))}" ${linesHere() ? '' : 'disabled'}>${icon('trash')}</button>${hide}${sep}<button data-action="${squadMode() ? 'mapSquadPen' : 'mapPen'}" title="${esc(t('mapPenDone'))}" aria-label="${esc(t('mapPenDone'))}">${icon('x')}</button></div>`
 }
 
 // pickPen puts up a pen (or puts it down when it is the one up).
