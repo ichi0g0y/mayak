@@ -348,7 +348,7 @@ function screenshotSection() {
   const preview = latest
     ? `<button class="shot-latest" data-action="screenshotOpen" data-id="${esc(latest.name)}" title="${esc(latest.name)}">${thumb ? `<img src="${thumb}" alt="">` : `<span class="shot-placeholder">${icon('image')}</span>`}<span class="shot-age">${esc(age(latest.time, state.language))}</span>${shotBadges(latest.meta)}</button>`
     : `<p class="shot-empty">${esc(t('noScreenshots'))}</p>`
-  return `<div class="section-label screenshot-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleScreenshotSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('screenshots'))}${icon('chevron', 'section-chevron')}</button><button class="new-tab shots-open" data-action="screenshots" title="${esc(t('allScreenshots'))}" aria-label="${esc(t('allScreenshots'))}" aria-pressed="${open}">${icon('image')}</button></div>${folded ? '' : `<div class="shot-section">${preview}</div>`}`
+  return `<div class="section-label screenshot-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleScreenshotSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('screenshots'))}${icon('chevron', 'section-chevron')}</button><button class="new-tab shots-open" data-action="screenshots" title="${esc(t('allScreenshots'))}" aria-label="${esc(t('allScreenshots'))}" aria-pressed="${open}">${icon('camera')}</button></div>${folded ? '' : `<div class="shot-section">${preview}</div>`}`
 }
 // Favicons load without a referrer; a broken one falls back to the globe icon.
 // Icons come from the icon cache when it has them.

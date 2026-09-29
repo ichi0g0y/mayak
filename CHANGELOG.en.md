@@ -22,7 +22,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - On a Mac the window's close, minimize and zoom buttons are macOS's own red, yellow and green ones at the top left, instead of Windows-style ones at the top right: the green one goes full screen, zooms with Option held and shows the tiling menu when held down. The sidebar and the toolbar move right for them (not in full screen).
 - The sidebar's collapse button moved from the top of the sidebar to the buttons at its bottom, with an arrow that shows which way it opens or closes, so it is easy to tell from the placement button. In the collapsed sidebar the "Tabs" heading is an icon too (it opens the list of tabs).
 - Squad codes, the codes pairing other PCs and tarkov.dev Remote IDs show as dots, and the eye button beside one shows it; what is typed into those fields shows as dots too. A stream or a screenshot no longer gives a code away.
-- Snap notes have a note with a folded corner for their icon instead of a brush, to tell them from the map's pens (a pencil) and the screenshots.
+- Snap notes have a note with a folded corner for their icon instead of a brush, and screenshots a camera instead of a picture, to tell them from the map's pens (a pencil).
 
 ### Fixed
 
