@@ -278,9 +278,13 @@ export function TrackerSection({
                   </Button>
                 </div>
                 {status.tracker.keys.length > 0 && (
-                  <section className="tracker-manage">
-                    <Label>{t('trackerKeysList')}</Label>
-                    <p className="help">{t('trackerKeyNamesHelp')}</p>
+                  <section className="tracker-mode-group tracker-manage">
+                    <header className="tracker-group-heading">
+                      <KeyRound />
+                      <strong>{t('trackerKeysList')}</strong>
+                      <small>{t('trackerKeysCount').replace('{n}', String(status.tracker.keys.length))}</small>
+                    </header>
+                    <p className="help tracker-manage-help">{t('trackerKeyNamesHelp')}</p>
                     <div className="tracker-manage-list">
                       {status.tracker.keys.map((key) => (
                         <div className={`tracker-manage-key ${key.bound ? '' : 'unbound'}`} key={key.id}>

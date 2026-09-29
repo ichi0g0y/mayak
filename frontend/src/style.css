@@ -488,17 +488,19 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .tracker-key-chip code { color: var(--muted-foreground); font-size: 11px; }
 .tracker-key-select { min-width: 150px; }
 .tracker-no-key { color: var(--muted-foreground); font-size: 11px; }
-/* The keys added, always listed: the name TarkovTracker gives a key first,
-   its mode and masked token, the profile it is on, and a trash can. */
-.tracker-manage { display: grid; gap: 4px; padding-top: 12px; border-top: 1px solid var(--border); }
-.tracker-step .tracker-manage { padding-top: 10px; }
-.tracker-manage-list { display: grid; gap: 6px; margin-top: 6px; }
-.tracker-manage-key { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 10px; row-gap: 2px; padding: 8px 8px 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); }
-.tracker-manage-key.unbound { border-style: dashed; background: var(--surface-2); }
+/* The keys added, always listed in a panel like a mode's: the name
+   TarkovTracker gives a key first, its mode and masked token, the profile it
+   is on (an unassigned one tinted), and a trash can. */
+.tracker-manage { margin-top: 4px; }
+.tracker-manage .tracker-group-heading > svg { width: 15px; height: 15px; color: var(--muted-foreground); }
+.tracker-manage-help { margin: 0; padding: 8px 12px 6px; }
+.tracker-manage-list { display: grid; }
+.tracker-manage-key { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 10px; row-gap: 2px; padding: 8px 8px 8px 12px; border-top: 1px solid var(--border); }
 .tracker-key-main { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
 .tracker-key-main strong { font-size: 13px; overflow-wrap: anywhere; }
 .tracker-key-main code { color: var(--muted-foreground); font-size: 11px; }
 .tracker-manage-key > small { grid-column: 1; color: var(--muted-foreground); font-size: 11.5px; }
+.tracker-manage-key.unbound > small { color: var(--warn); }
 .tracker-manage-key .button { grid-column: 2; grid-row: 1 / span 2; flex: none; padding: 4px; height: 28px; width: 28px; }
 .tracker-manage-key .button svg { width: 15px; height: 15px; }
 .badge.warn { color: var(--danger, #e06c75); border-color: var(--border-strong); background: var(--bg); }
@@ -519,15 +521,17 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 
 /* Each mode is a panel: a heading, column names, then a row per profile
    (account and id, the key, the past-log button) on one grid. */
-.tracker-mode-group { display: grid; gap: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); overflow: hidden; }
+.tracker-mode-group { display: grid; gap: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); overflow: hidden; }
 .tracker-mode-group + .tracker-mode-group { margin-top: 10px; }
 .tracker-group-heading { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card); border-bottom: 1px solid var(--border); }
 .tracker-group-heading strong { font-size: 13px; }
 .tracker-group-columns, .tracker-profile { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(240px, 1.2fr) auto; align-items: center; gap: 14px; }
 .tracker-group-columns { padding: 6px 12px 4px; font-size: 10px; color: var(--muted-foreground); }
 .tracker-profile { padding: 10px 12px; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
-/* Every row alike, told apart by the rules between them. */
-.tracker-profile.current { border-color: var(--border); background: transparent; }
+/* Rows alternate between the card and a slightly different shade (profiles
+   and keys alike), so a row reads across. */
+.tracker-profile.current { border-color: var(--border); }
+.tracker-profile:nth-child(even of .tracker-profile), .tracker-manage-key:nth-child(even) { background: var(--surface-2); }
 .tracker-profile-info > span:empty { display: none; }
 .tracker-profile-key { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-items: start; }
 .tracker-profile-key .tracker-profile-actions { grid-template-columns: auto; }
