@@ -22,7 +22,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 - A position found in a screenshot with coordinates did not reach the Client.
 - The corners of an item's picture in the item panel looked faint.
-- Settings → TarkovTracker: an unassigned key's remove button sat out of place and broke the layout; it is a trash can now. The page is as wide as the other settings, and adding a key has links to open TarkovTracker and to create API tokens.
+- Settings → TarkovTracker: an unassigned key's remove button sat out of place and broke the layout; it is a trash can now. The page is as wide as the other settings, and adding a key has links to open TarkovTracker and to create API tokens. The "keys waiting to be assigned" box is gone: the keys added are always listed (no longer folded), each led by its name on TarkovTracker, and a key is assigned on a profile below.
 
 ## v0.1.18 (2026-09-29)
 

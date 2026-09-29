@@ -1,4 +1,4 @@
-import { Check, CloudSync, ExternalLink, History, KeyRound, RefreshCw, Trash2 } from 'lucide-react'
+import { CloudSync, ExternalLink, History, KeyRound, RefreshCw, Trash2 } from 'lucide-react'
 import {
   BrowserOpenURL,
   DiscoverTrackerProfiles,
@@ -87,8 +87,6 @@ export function TrackerSection({
       return { mode, latest, older }
     })
     .filter((group) => group.latest.length > 0)
-  const latestProfiles = profileGroups.flatMap((group) => group.latest)
-  const unassignedKeys = status.tracker.keys.filter((key) => !key.bound)
   const profileRow = (profile: TrackerProfile, latest: boolean) => {
     const key = status.tracker.keys.find((k) => k.id === profile.boundKeyId)
     const choices = status.tracker.keys.filter(
@@ -112,7 +110,6 @@ export function TrackerSection({
         <div className="tracker-profile-key">
           {key ? (
             <span className="tracker-key-chip">
-              <KeyRound />
               <strong>{key.name || trackerModeLabel(key.mode)}</strong>
               <code>{key.maskedToken}</code>
             </span>
@@ -175,15 +172,7 @@ export function TrackerSection({
     `${p.accountId}/${p.profileId}/${p.mode}`
   const profileLabel = (p: TrackerProfile) =>
     `${t('trackerAccount')} ${p.accountId} · ${p.profileId.slice(0, 6)}…${p.profileId.slice(-4)}${p.current ? ` · ${t('trackerCurrent')}` : ''}`
-  const assignKeyToProfile = (key: TrackerKey, value: string) => {
-    if (value === '__none') {
-      if (key.bound)
-        return run(() => SetTrackerProfileKey(key.accountId, key.profileId, key.mode, ''), t('trackerAssignmentSaved'))
-      return
-    }
-    const profile = status.tracker.profiles.find((p) => profileKey(p) === value)
-    if (profile) return assignTrackerKey(profile, key.id)
-  }
+
   const removeTrackerKey = (keyId: string) => run(() => RemoveTrackerKey(keyId), t('trackerTokenRemoved'))
   // Sends what the profile's EFT logs recorded to its key, from the first
   // session on (SyncTrackerProfileHistory).
@@ -288,90 +277,22 @@ export function TrackerSection({
                     {t('trackerImportToken')}
                   </Button>
                 </div>
-                {unassignedKeys.length > 0 && (
-                  <section className="tracker-unassigned">
-                    <div>
-                      <Label>{t('trackerUnassignedKeys')}</Label>
-                      <p className="help">{t('trackerUnassignedKeysHelp')}</p>
-                    </div>
-                    {unassignedKeys.map((key) => {
-                      const latestFree = latestProfiles.filter((p) => p.mode === key.mode && !p.boundKeyId)
-                      const targets = [
-                        ...latestFree,
-                        ...(profileGroups.find((g) => g.mode === key.mode)?.older.filter((p) => !p.boundKeyId) ?? []),
-                      ]
-                      const current = latestFree.length === 1 ? latestFree[0] : latestFree.find((p) => p.current)
-                      return (
-                        <div className="tracker-unassigned-key" key={key.id}>
-                          <span className="tracker-key-chip">
-                            <KeyRound />
-                            <strong>{key.name || trackerModeLabel(key.mode)}</strong>
-                            <code>{key.maskedToken}</code>
-                            <Badge>{trackerModeLabel(key.mode)}</Badge>
-                          </span>
-                          <div className="tracker-profile-actions">
-                            {current && (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="secondary"
-                                disabled={busy}
-                                onClick={() => void assignTrackerKey(current, key.id)}
-                              >
-                                <Check />
-                                {t('trackerAssignToLatest')}
-                              </Button>
-                            )}
-                            {targets.length > 0 ? (
-                              <Select value="__none" onValueChange={(value) => void assignKeyToProfile(key, value)}>
-                                <SelectTrigger aria-label={t('trackerAssignTo')} className="tracker-key-select">
-                                  <SelectValue placeholder={t('trackerChooseProfile')} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {targets.map((p) => (
-                                    <SelectItem key={profileKey(p)} value={profileKey(p)}>
-                                      {profileLabel(p)}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <small className="tracker-no-key">{t('trackerNoProfileForMode')}</small>
-                            )}
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              className="tracker-key-remove"
-                              disabled={busy}
-                              aria-label={t('trackerRemoveToken')}
-                              title={t('trackerRemoveToken')}
-                              onClick={() => void removeTrackerKey(key.id)}
-                            >
-                              <Trash2 />
-                            </Button>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </section>
-                )}
                 {status.tracker.keys.length > 0 && (
-                  <details className="tracker-manage">
-                    <summary>{t('trackerManageKeys')}</summary>
+                  <section className="tracker-manage">
+                    <Label>{t('trackerKeysList')}</Label>
                     <p className="help">{t('trackerKeyNamesHelp')}</p>
                     <div className="tracker-manage-list">
                       {status.tracker.keys.map((key) => (
-                        <div className="tracker-manage-key" key={key.id}>
-                          <span className="tracker-key-chip">
-                            <KeyRound />
+                        <div className={`tracker-manage-key ${key.bound ? '' : 'unbound'}`} key={key.id}>
+                          <div className="tracker-key-main">
                             <strong>{key.name || trackerModeLabel(key.mode)}</strong>
-                            <code>{key.maskedToken}</code>
                             <Badge>{trackerModeLabel(key.mode)}</Badge>
-                          </span>
+                            <code>{key.maskedToken}</code>
+                          </div>
                           <small>
                             {key.bound
                               ? `${t('trackerAccount')} ${key.accountId} · ${t('trackerProfile')} ${shortProfile(key.profileId)}`
-                              : t('trackerUnassigned')}
+                              : t('trackerUnassignedHint')}
                           </small>
                           <Button
                             type="button"
@@ -386,7 +307,7 @@ export function TrackerSection({
                         </div>
                       ))}
                     </div>
-                  </details>
+                  </section>
                 )}
               </section>
               <section className="tracker-step">
