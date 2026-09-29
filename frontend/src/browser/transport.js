@@ -63,7 +63,7 @@ class MayakLink {
   constructor({
     onState = /** @type {(state:any)=>void} */ (() => {}),
     onMessage = /** @type {(message:any)=>void} */ (() => {}),
-    onSquad = /** @type {(squad:{code:string,name:string,initial:boolean})=>void} */ (() => {}),
+    onSquad = /** @type {(squad:{code:string,name:string,initial:boolean,color?:string})=>void} */ (() => {}),
     onUnpair = () => {},
     relay = LINK_RELAY,
   } = {}) {
@@ -210,6 +210,9 @@ class MayakLink {
           code: s.code,
           name: typeof s.name === 'string' ? s.name.slice(0, 24) : '',
           initial: s.initial === true,
+          // The squad colour chosen (checked where it is used); a build
+          // before squad colours sends none.
+          color: typeof s.color === 'string' ? s.color.slice(0, 7) : undefined,
         })
       return
     }

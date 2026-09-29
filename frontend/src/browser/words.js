@@ -96,6 +96,14 @@ export const words = {
     squadName: '表示名',
     squadNamePlaceholder: '仲間に表示される名前',
     squadCode: '分隊コード',
+    squadOpen: '分隊のページを開く',
+    squadStart: '分隊を作る・参加する',
+    squadMembers: 'メンバー',
+    squadColor: '分隊カラー',
+    squadColorAuto: '自動',
+    squadColorTaken: '{name} が使っています',
+    squadColorHelp: '地図の自分の印の色です。ほかの人が使っている色は選べません。自動にすると、空いている色になります。',
+    squadColorBusy: '選んだ色はほかの人が使っているので、今は自動の色です。',
     squadCreate: '分隊を作る',
     squadJoin: '参加',
     squadLeave: '分隊を抜ける',
@@ -110,7 +118,7 @@ export const words = {
     squadViewer:
       'この PC は Client なので、見るだけの参加です（位置は Host から送ります）。分隊の作成・参加・退出は Host と同期します。',
     squadPrivacy:
-      '共有するのは表示名と、レイド中にスクリーンショットを撮った位置だけです。内容は分隊コードで暗号化され、中継サーバーには読めません。',
+      '共有するのは表示名と分隊カラー、レイド中にスクリーンショットを撮った位置だけです。内容は分隊コードで暗号化され、中継サーバーには読めません。',
     squadInvalidCode: '分隊コードは 8 文字です（例: ABCD-1234）',
     squadNeedName: '表示名を入力してください',
     // Toolbar, sidebar, welcome page, settings
@@ -709,6 +717,14 @@ export const words = {
     squadName: 'Display name',
     squadNamePlaceholder: 'The name your squad sees',
     squadCode: 'Squad code',
+    squadOpen: 'Open the squad page',
+    squadStart: 'Create or join a squad',
+    squadMembers: 'Members',
+    squadColor: 'Squad colour',
+    squadColorAuto: 'Automatic',
+    squadColorTaken: '{name} has it',
+    squadColorHelp: 'The colour of your marker on the map. A colour someone else has cannot be chosen; Automatic takes a free one.',
+    squadColorBusy: 'Someone else has the colour chosen, so you have an automatic one for now.',
     squadCreate: 'Create a squad',
     squadJoin: 'Join',
     squadLeave: 'Leave the squad',
@@ -723,7 +739,7 @@ export const words = {
     squadViewer:
       'This PC is a client, so it only watches (the Host sends the position). Creating, joining and leaving a squad follow the Host.',
     squadPrivacy:
-      'Only your display name and where you take screenshots in a raid are shared. They are encrypted with the squad code; the relay cannot read them.',
+      'Only your display name, your squad colour and where you take screenshots in a raid are shared. They are encrypted with the squad code; the relay cannot read them.',
     squadInvalidCode: 'A squad code has 8 characters (e.g. ABCD-1234)',
     squadNeedName: 'Enter a display name',
     // Toolbar, sidebar, welcome page, settings

@@ -1,6 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  assignColors,
+  squadColors,
   autoMap,
   hits,
   segmentDistance,
@@ -235,4 +237,25 @@ test('validLine keeps whole lines only', () => {
   assert.equal(validLine({ ...line, w: 'wide' }), false)
   assert.equal(validLine({ ...line, floor: undefined }), false)
   assert.equal(validLine(null), false)
+})
+
+test('assignColors gives every player a colour of their own', () => {
+  const [a, b, c] = squadColors
+  const members = [
+    { id: 'm2', name: 'Bob', color: a },
+    { id: 'm1', me: true, name: 'Ann', color: a },
+    { id: 'm3', name: 'Cid', color: 'not a colour' },
+    { id: 'm4', name: 'Viewer', viewer: true, color: b },
+  ]
+  const got = assignColors(members)
+  // The lower ID keeps the colour both chose; the other gets a free one.
+  assert.equal(got.get('me'), a)
+  assert.notEqual(got.get('m2'), a)
+  assert.equal(got.has('m4'), false)
+  assert.equal(new Set(got.values()).size, 3)
+  // The same reports give the same colours, in any order.
+  assert.deepEqual([...assignColors([...members].reverse())].sort(), [...got].sort())
+  // Ten players take the ten colours.
+  const ten = Array.from({ length: 10 }, (_, i) => ({ id: 'id' + i, name: 'same', color: c }))
+  assert.equal(new Set(assignColors(ten).values()).size, 10)
 })

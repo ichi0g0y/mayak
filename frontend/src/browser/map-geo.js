@@ -52,8 +52,8 @@ export function markerRotation(rot, mapRotation = 0) {
   return ((((rot || 0) + add) % 360) + 360) % 360
 }
 
-// A member's colour follows their name, so it stays when they reconnect.
-const colors = [
+// The squad colours, to choose from (view-squad.js) and to give out.
+export const squadColors = [
   '#4cc9f0',
   '#f72585',
   '#ffd166',
@@ -65,10 +65,39 @@ const colors = [
   '#43aa8b',
   '#e9c46a',
 ]
+// memberColor is the colour a name gives, so that it stays when its member
+// reconnects (assignColors takes it when no one else has it).
 export function memberColor(name) {
   let h = 0
   for (const ch of String(name || '')) h = (h * 31 + ch.codePointAt(0)) >>> 0
-  return colors[h % colors.length]
+  return squadColors[h % squadColors.length]
+}
+
+// squadKey is how the map and the lists name a member: 'me', or their ID.
+export const squadKey = (m) => (m.me ? 'me' : m.id)
+
+// assignColors gives each player of a squad (not the PCs that only watch) a
+// colour of their own, keyed by squadKey: the one they chose while no one
+// before them (by ID) has it, else the one their name gives when it is free,
+// else the first free one. Every member works it out the same from the same
+// reports; a squad has at most as many players as colours.
+export function assignColors(members) {
+  const list = (members || []).filter((m) => !m.viewer).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+  const out = new Map()
+  const used = new Set()
+  for (const m of list)
+    if (squadColors.includes(m.color) && !used.has(m.color)) {
+      out.set(squadKey(m), m.color)
+      used.add(m.color)
+    }
+  for (const m of list) {
+    if (out.has(squadKey(m))) continue
+    let c = memberColor(m.name)
+    if (used.has(c)) c = squadColors.find((x) => !used.has(x)) || c
+    out.set(squadKey(m), c)
+    used.add(c)
+  }
+  return out
 }
 
 // A position older than this is shown faded, and one older than gone not at

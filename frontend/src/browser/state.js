@@ -6,7 +6,7 @@ function randomUUID() {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`
 }
 import { clampItemPanel, clampItemPanelHeight } from './item.js'
-import { defaultMapSettings, hiddenOf, mapSettingsOf } from './map-geo.js'
+import { defaultMapSettings, hiddenOf, mapSettingsOf, squadColors } from './map-geo.js'
 const sites = ['tarkov-dev', 'official-wiki', 'japanese-wiki']
 function webURL(value) {
   try {
@@ -224,6 +224,7 @@ function defaults() {
     bookmarksCollapsed: false,
     screenshotsCollapsed: false,
     snapNotesCollapsed: false,
+    squadCollapsed: false,
     toolOrder: toolKeys.slice(),
     bossesView: 'full',
     bossMap: '',
@@ -248,6 +249,8 @@ function defaults() {
     mapSettings: { ...defaultMapSettings },
     mapCollapsed: [],
     squadName: '',
+    // The squad colour chosen ('' lets the squad give one; map-geo.js).
+    squadColor: '',
     squadCode: '',
     squadRecent: [],
     // The mode, the pairing kept (transport.js): its key and which side this
@@ -283,6 +286,7 @@ function restore(raw = {}) {
   state.bookmarksCollapsed = raw.bookmarksCollapsed === true
   state.screenshotsCollapsed = raw.screenshotsCollapsed === true
   state.snapNotesCollapsed = raw.snapNotesCollapsed === true
+  state.squadCollapsed = raw.squadCollapsed === true
   state.toolOrder = toolOrderOf(raw.toolOrder)
   state.bossesView = ['full', 'goons', 'closed'].includes(raw.bossesView)
     ? raw.bossesView
@@ -304,6 +308,7 @@ function restore(raw = {}) {
   state.mapSettings = mapSettingsOf(raw.mapSettings)
   state.mapCollapsed = hiddenOf(raw.mapCollapsed)
   state.squadName = typeof raw.squadName === 'string' ? raw.squadName.trim().slice(0, 24) : ''
+  state.squadColor = squadColors.includes(raw.squadColor) ? raw.squadColor : ''
   state.squadCode =
     typeof raw.squadCode === 'string' && squadCodePattern.test(raw.squadCode) ? raw.squadCode : ''
   state.squadRecent = recentSquadsOf(raw.squadRecent)
@@ -349,6 +354,7 @@ function restore(raw = {}) {
       screenshotsPage = false,
       snapNotesPage = false,
       liveMapPage = false,
+      squadPage = false,
       bossesPage = false,
       tabsPage = false
     state.tabs = raw.tabs
@@ -376,6 +382,9 @@ function restore(raw = {}) {
         } else if (t.kind === 'livemap') {
           if (liveMapPage) return false
           liveMapPage = true
+        } else if (t.kind === 'squad') {
+          if (squadPage) return false
+          squadPage = true
         } else if (t.kind === 'bosses') {
           if (bossesPage) return false
           bossesPage = true

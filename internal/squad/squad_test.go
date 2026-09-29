@@ -72,6 +72,14 @@ func TestCleanBoundsReports(t *testing.T) {
 	if r := clean(Report{Map: "ground-zero-21", Pos: &Position{X: 1}}); r.Map != "ground-zero-21" || r.Pos == nil {
 		t.Fatalf("a valid map was dropped: %+v", r)
 	}
+	if r := clean(Report{Color: "#4cc9f0"}); r.Color != "#4cc9f0" {
+		t.Fatalf("a valid colour was dropped: %+v", r)
+	}
+	for _, bad := range []string{"#4CC9F0", "4cc9f0", "#4cc9f", "red", "#4cc9f0;"} {
+		if r := clean(Report{Color: bad}); r.Color != "" {
+			t.Fatalf("colour %q kept: %+v", bad, r)
+		}
+	}
 }
 
 // fakeRelay behaves like relay/worker/index.js for one room.

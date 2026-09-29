@@ -1,0 +1,210 @@
+import { age } from './item.js'
+import { assignColors, findMap, freshness, memberColor, players, squadColors, squadKey } from './map-geo.js'
+import {
+  state,
+  esc,
+  t,
+  icon,
+  action,
+  clickHandlers,
+  render,
+  secretText,
+  revealButton,
+  maskedClass,
+} from './shell-core.js'
+
+// The squad (app_squad.go, docs/squad-sharing.md): its section in the
+// sidebar (who is in it, where), its page (the code, the name, the squad
+// colour, the squads joined lately, leaving) and the list of members the
+// map's squad panel shows too. The map draws the members (view-map.js).
+
+// What is typed in the squad's forms, kept across renders.
+const drafts = { code: '', name: null, notice: '' }
+// The name this PC shows: the one given for the squad, else the player's
+// own (TarkovTracker's display name, from the Host).
+export const ownName = () => state.squadName || state.host?.player || ''
+
+export const mapName = (key) =>
+  state.bosses?.maps?.find((m) => m.key === key)?.name ||
+  String(key || '')
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+
+// The squad's colours (assignColors), worked out again when its members change.
+let colors = { members: null, map: new Map() }
+const squadColorMap = () => {
+  const members = state.squad?.state?.members || null
+  if (colors.members !== members) colors = { members, map: assignColors(members) }
+  return colors.map
+}
+// colorOf is a member's colour: the squad's for them, else (outside a squad,
+// or a PC that only watches) the one chosen here or their name's.
+export const colorOf = (m) =>
+  squadColorMap().get(squadKey(m)) || (m.me && state.squadColor) || memberColor(m.name)
+
+function memberLine(m) {
+  const maps = state.squad?.maps || []
+  const where = m.map
+    ? m.pos
+      ? `${esc(mapName(findMap(maps, m.map)?.key || m.map))} · ${esc(age(m.at, state.language))}`
+      : esc(mapName(m.map))
+    : esc(t('squadOutOfRaid'))
+  const fade = m.map && m.pos ? freshness(m.at) : 'gone'
+  const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-member-name">${esc(m.name || '?')}${m.me ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span><span class="squad-member-where">${where}</span>`
+  // A member with a position is a button that shows them on the map (on
+  // their map and floor; view-map.js squadFocus).
+  return m.map && m.pos
+    ? `<li class="squad-member ${fade}"><button class="squad-member-focus" data-action="squadFocus" data-id="${esc(squadKey(m))}" title="${esc(t('squadFocus'))}">${line}</button></li>`
+    : `<li class="squad-member ${fade}">${line}</li>`
+}
+// The members, the PCs that only watch left out.
+export const memberList = (members, cls = '') =>
+  `<ul class="squad-members ${cls}">${players(members).map(memberLine).join('')}</ul>`
+
+const activeKind = () => state.tabs.find((tab) => tab.id === state.active)?.kind
+
+// The sidebar's section: the heading (with how many are in the squad and
+// whether it is connected) folds it; the button at its end opens the page.
+export function squadSection() {
+  if (!state.squad) return ''
+  const s = state.squad.state
+  const open = activeKind() === 'squad'
+  const folded = state.squadCollapsed
+  const count = s
+    ? `<span class="squad-section-count" data-phase="${esc(s.phase)}" title="${esc(t('squadPhase_' + s.phase))}">${players(s.members).length}</span>`
+    : ''
+  const head = `<div class="section-label squad-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSquadSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('squad'))}${count}${icon('chevron', 'section-chevron')}</button><button class="new-tab squad-open" data-action="squadPage" title="${esc(t('squadOpen'))}" aria-label="${esc(t('squadOpen'))}" aria-pressed="${open}">${icon('squad')}</button></div>`
+  if (folded) return head
+  const body = s
+    ? memberList(s.members, 'squad-section')
+    : `<div class="squad-section"><button class="squad-start" data-action="squadPage">${esc(t('squadStart'))}</button></div>`
+  return head + body
+}
+
+// The squads joined lately, to join again with a click.
+function recentSquads() {
+  const list = (state.squadRecent || []).map(
+    (r) =>
+      `<li><button class="squad-recent-join" data-action="squadRejoin" data-id="${esc(r.code)}" title="${esc(t('squadJoin'))}"><span class="squad-recent-code">${esc(secretText('squadRecent', r.code))}</span><span class="squad-recent-when">${esc(age(new Date(r.at).toISOString(), state.language))}</span></button></li>`,
+  )
+  return list.length
+    ? `<div class="squad-recent"><h3>${esc(t('squadRecent'))}${revealButton('squadRecent')}</h3><ul>${list.join('')}</ul><p class="hint">${esc(t('squadRecentHint'))}</p></div>`
+    : ''
+}
+
+// The squad colours to choose from: automatic (the squad gives one), or one
+// no one else in the squad has.
+function colorPicker() {
+  const s = state.squad.state
+  const given = squadColorMap()
+  const me = s?.members.find((m) => m.me)
+  // A PC that only watches is its Host's player: the Host's colour is its own.
+  const holders = new Map()
+  if (s && !me?.viewer)
+    for (const m of players(s.members)) if (!m.me) holders.set(given.get(squadKey(m)), m.name || '?')
+  const chosen = state.squadColor
+  const swatch = (c) => {
+    const holder = holders.get(c)
+    const label = holder ? t('squadColorTaken').replace('{name}', holder) : c
+    return `<button type="button" class="squad-color ${chosen === c ? 'on' : ''}" data-action="squadColorPick" data-id="${c}" style="--swatch:${c}" title="${esc(label)}" aria-label="${esc(label)}" aria-pressed="${chosen === c}" ${holder && chosen !== c ? 'disabled' : ''}></button>`
+  }
+  const busy = s && chosen && !me?.viewer && given.get('me') && given.get('me') !== chosen
+  return `<div class="squad-colors"><span class="squad-colors-label">${esc(t('squadColor'))}</span><div class="squad-color-row"><button type="button" class="squad-color-auto ${chosen ? '' : 'on'}" data-action="squadColorPick" data-id="" aria-pressed="${!chosen}">${esc(t('squadColorAuto'))}</button>${squadColors.map(swatch).join('')}</div><p class="hint">${esc(t(busy ? 'squadColorBusy' : 'squadColorHelp'))}</p></div>`
+}
+
+export function squadPage() {
+  if (!state.squad) return `<div class="page"><p class="empty-tabs">${esc(t('squadUnavailable'))}</p></div>`
+  const s = state.squad.state
+  const name = drafts.name ?? ownName()
+  const notice =
+    drafts.notice && drafts.notice !== 'squadCopied'
+      ? `<p class="squad-notice" role="alert">${esc(t(drafts.notice))}</p>`
+      : ''
+  const head = `<div class="bookmarks-head"><h1>${esc(t('squad'))}</h1></div>`
+  if (!s)
+    return `<div class="page squad-page">${head}<section class="panel squad-forms"><p class="hint">${esc(t('squadIntro'))}</p><form id="squad-form" class="squad-form"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" placeholder="${esc(t('squadNamePlaceholder'))}" value="${esc(name)}"></label>${colorPicker()}<button class="primary" type="submit" value="create">${esc(t('squadCreate'))}</button><div class="squad-join"><span class="secret-field"><input name="squadCode" class="${maskedClass('squadInput')}" maxlength="12" autocomplete="off" spellcheck="false" placeholder="ABCD-1234" aria-label="${esc(t('squadCode'))}" value="${esc(drafts.code)}">${revealButton('squadInput')}</span><button type="submit" value="join">${esc(t('squadJoin'))}</button></div>${notice}</form>${recentSquads()}<p class="hint">${esc(t('squadPrivacy'))}</p></section></div>`
+  const viewer = s.members.find((m) => m.me)?.viewer ? `<p class="hint">${esc(t('squadViewer'))}</p>` : ''
+  const code = `<div class="squad-code"><output>${esc(secretText('squad', state.squadCode || s.code))}</output>${revealButton('squad')}<button data-action="squadCopy" title="${esc(t('squadCopy'))}">${icon('copy')}<span>${esc(t(drafts.notice === 'squadCopied' ? 'squadCopied' : 'squadCopy'))}</span></button></div><p class="squad-phase" data-phase="${esc(s.phase)}">${esc(t('squadPhase_' + s.phase))}</p>`
+  return `<div class="page squad-page">${head}<section class="panel squad-forms"><h2>${esc(t('squadCode'))}</h2>${code}<h2>${esc(t('squadMembers'))}</h2>${memberList(s.members)}${viewer}<form id="squad-name-form" class="squad-name"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" value="${esc(name)}"></label></form>${colorPicker()}${notice}<button class="squad-leave" data-action="squadLeave">${esc(t('squadLeave'))}</button><p class="hint">${esc(t('squadPrivacy'))}</p></section></div>`
+}
+
+const inForms = (el) => !!el.closest?.('.squad-forms')
+document.addEventListener('input', (event) => {
+  const el = /** @type {HTMLInputElement} */ (event.target)
+  if (!inForms(el)) return
+  if (el.name === 'squadName') drafts.name = el.value
+  if (el.name === 'squadCode') drafts.code = el.value
+})
+document.addEventListener('submit', (event) => {
+  const form = /** @type {HTMLFormElement} */ (event.target)
+  if (form.id === 'squad-name-form') {
+    event.preventDefault()
+    const name = String(drafts.name ?? '').trim()
+    if (name) void action('squadRename', name).then(() => (drafts.name = null))
+    return
+  }
+  if (form.id !== 'squad-form') return
+  event.preventDefault()
+  const name = String(drafts.name ?? ownName()).trim()
+  const join = /** @type {SubmitEvent} */ (event).submitter?.getAttribute('value') === 'join'
+  const code = drafts.code.toUpperCase().replace(/[\s-]/g, '')
+  drafts.notice = !name ? 'squadNeedName' : join && code.length !== 8 ? 'squadInvalidCode' : ''
+  if (drafts.notice) {
+    render()
+    return
+  }
+  void action(join ? 'squadJoin' : 'squadCreate', { code: drafts.code, name }).then((next) => {
+    if (next?.squad?.state) Object.assign(drafts, { code: '', name: null, notice: '' })
+  })
+})
+// A name changed and left without Enter is kept too.
+document.addEventListener(
+  'blur',
+  (event) => {
+    const el = /** @type {HTMLInputElement} */ (event.target)
+    if (el?.name === 'squadName' && el.closest?.('#squad-name-form') && drafts.name != null) {
+      const name = drafts.name.trim()
+      if (name && name !== state.squadName) void action('squadRename', name).then(() => (drafts.name = null))
+    }
+  },
+  true,
+)
+
+clickHandlers.push(async (type, id) => {
+  if (type === 'toggleSquadSection') {
+    void action('preferences', { squadCollapsed: !state.squadCollapsed })
+    return true
+  }
+  if (type === 'squadColorPick') {
+    void action('squadColor', id || '')
+    return true
+  }
+  if (type === 'squadRejoin') {
+    const name = String(drafts.name ?? ownName()).trim()
+    drafts.notice = name ? '' : 'squadNeedName'
+    if (!name) render()
+    else
+      void action('squadJoin', { code: id, name }).then((next) => {
+        if (next?.squad?.state) Object.assign(drafts, { code: '', name: null, notice: '' })
+      })
+    return true
+  }
+  if (type === 'squadCopy') {
+    drafts.notice = 'squadCopied'
+    await action('squadCopy')
+    setTimeout(() => {
+      if (drafts.notice === 'squadCopied') {
+        drafts.notice = ''
+        render()
+      }
+    }, 2000)
+    return true
+  }
+  if (type === 'squadLeave') {
+    Object.assign(drafts, { code: '', name: null, notice: '' })
+    void action('squadLeave')
+    return true
+  }
+  return false
+})

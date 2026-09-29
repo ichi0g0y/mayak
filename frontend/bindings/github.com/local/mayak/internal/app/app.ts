@@ -695,6 +695,14 @@ export function SquadRename(name: string): $CancellablePromise<void> {
 }
 
 /**
+ * SquadSetColor sets the squad colour this PC's reports carry ("#rrggbb", or
+ * empty to take one the others give), and tells the squad joined.
+ */
+export function SquadSetColor(color: string): $CancellablePromise<void> {
+    return $Call.ByID(2482357739, color);
+}
+
+/**
  * SquadState returns the squad joined, or nil.
  */
 export function SquadState(): $CancellablePromise<squad$0.State | null> {

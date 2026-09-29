@@ -50,6 +50,8 @@ MAYAK が `%AppData%\Mayak`（`internal/appdir`）に保存するデータの置
 | `squadCode` | `browser.json` | 参加中の分隊コード（`ABCD-1234`）。起動時に入り直す |
 | `squadRecent` | `browser.json` | 最近の分隊 `[{code, at}]`（新しい順に最大 5 件、30 日より古いものは捨てる） |
 | `squadName` | `browser-preferences.json` | 分隊での表示名（24 文字まで） |
+| `squadColor` | `browser-preferences.json` | 分隊カラー（`squadColors` のどれか、`""` は自動） |
+| `squadCollapsed` | `browser-preferences.json` | サイドバーの分隊セクションを畳んだか |
 | `mapHidden` | `browser-preferences.json` | マップのフィルターで隠した層のキー（最大 400 件） |
 | `mapCollapsed` | `browser-preferences.json` | フィルターで畳んだまとまり |
 | `mapSettings` | `browser-preferences.json` | マップの設定 `{snipers, extracts, activeTasks, subtleLabels, extractText, labelText, fade, style, mode}`。既定は `snipers: true`、ほかの真偽値は `false`、`extractText` / `labelText` は 100（50〜200%）、`fade` は 20（別の階の濃さ、0〜60%）、`style` は `svg`（`tile` で Satellite）、`mode` は `auto`（`regular` / `pve` / `pvp-season`: 地点のデータのゲームモード） |

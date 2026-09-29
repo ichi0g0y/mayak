@@ -151,7 +151,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `taskMode` | `"new"` | 検出したタスクの開き方。`new`（新しいタブを追加）/ `reuse`（固定していないタスクタブを更新） |
 | `questSite` | `"host"` | `host`（Host の設定に従う）/ `tarkov-dev` / `official-wiki` / `japanese-wiki` |
 | `connection` | `{mode:"local", link:null, receive:{task:true, map:true, item:true}}` | 接続方法、ペアリングの鍵と役割、Client で出すもの（[Host / Client モード](#host--client-モード)） |
-| `mapHidden` / `mapSettings` / `mapCollapsed` / `squadName` / `squadCode` / `squadRecent` | `[]` / 下記 / `[]` / `""` / `""` / `[]` | マップと分隊（[browser-shell.md](browser-shell.md#マップ)、[ユーザーデータの保存](user-data.md)）。`mapSettings` の既定は `{snipers:true, extracts:false, activeTasks:false, subtleLabels:false, extractText:100, labelText:100, fade:20, style:"svg", mode:"auto"}` |
+| `mapHidden` / `mapSettings` / `mapCollapsed` / `squadName` / `squadColor` / `squadCollapsed` / `squadCode` / `squadRecent` | `[]` / 下記 / `[]` / `""` / `""` / `false` / `""` / `[]` | マップと分隊（[browser-shell.md](browser-shell.md#マップ)、[ユーザーデータの保存](user-data.md)）。`mapSettings` の既定は `{snipers:true, extracts:false, activeTasks:false, subtleLabels:false, extractText:100, labelText:100, fade:20, style:"svg", mode:"auto"}` |
 | `bookmarks` / `bookmarkRevision` | 既定のブックマーク / `3` | 最大 100 件。revision 1 でブックマークを追加し、revision 2 で TarkovTracker を `.org` に移行、revision 3 で tarkov.dev と TarkovTracker をサイドバーにピン留めしたブックマークにする（以前の固定タブの代わり） |
 | `favicons` | `{}` | ホスト名ごとのアイコン URL（最大 200 件） |
 | `tabs` / `active` | マップ（`livemap`）、設定 / マップ | 以前の固定タブ `map`・`tracker` は復元時に捨てる。タブは最大 80 個 |
@@ -343,7 +343,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 
 - **部屋**: `wss://mayak-relay.ich.sh/squad/<room>`。room は分隊コードの SHA-256（`squad.RoomID`）で、部屋ごとに Durable Object `SquadRoom` が 1 つあります。WebSocket Hibernation API を使うので、誰も送らないあいだは眠っています。`ping` にはランタイムが `pong` を返すので、DO は起きません。
 - **中継の動き**: 接続ごとに乱数の ID を付け、`welcome`（自分の ID と、部屋にいる人の ID と最後のメッセージ）、`join`、`leave`、`msg`（誰かのメッセージ）を送ります。メッセージは 4 KB まで、1 人 10 秒に 30 件まで、部屋は 10 人まで（11 人目は HTTP 409）です。何も保存せず、全員が抜けると部屋は消えます（分隊は残らないので、同じコードでまた集まれます）。リンクの部屋も同じ仕組みで、上限と、最後のメッセージを送り直さないところだけが違います。
-- **暗号化**: メッセージはすべて、分隊コードから HKDF-SHA256 で作った鍵を使い、AES-256-GCM で封じます（`internal/squad/seal.go`）。中継が見るのは room の ID と暗号文だけで、コード・名前・位置は読めません。コードは 8 文字（約 40 bit）なので、総当たりへの強さはその程度です。
+- **暗号化**: メッセージはすべて、分隊コードから HKDF-SHA256 で作った鍵を使い、AES-256-GCM で封じます（`internal/squad/seal.go`）。中継が見るのは room の ID と暗号文だけで、コード・名前・分隊カラー・位置は読めません。コードは 8 文字（約 40 bit）なので、総当たりへの強さはその程度です。
 - **クライアント**（`internal/squad/client.go`）: 切れたら、5 秒から 1 分まで間隔を延ばしながらつなぎ直し、つながるたびに自分の最新の報告を送り直します。30 秒ごとに `ping` を送り、75 秒何も届かなければ切れたとみなします。部屋が変わるたびに `squad:state` をシェルへ送ります。
 - **開発**: `task relay:dev` で中継（分隊とリンクの両方）をローカル（`ws://127.0.0.1:8787/squad/`、`ws://127.0.0.1:8787/link/`）に立て、開発版の MAYAK を環境変数 `MAYAK_SQUAD_RELAY=ws://127.0.0.1:8787/squad/`（分隊）や `MAYAK_LINK_RELAY=ws://127.0.0.1:8787/link/`（リンク。`BrowserLinkRelay`）付きで起動すると、そちらにつなぎます。どちらの変数も nightly 版と開発版（`version.IsPrerelease`）でだけ効きます。公開は `task relay:deploy` です（`wrangler login` が必要）。
 

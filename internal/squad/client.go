@@ -44,6 +44,9 @@ type Report struct {
 	Pos    *Position `json:"pos,omitempty"`
 	// At is when the position was taken.
 	At time.Time `json:"at,omitzero"`
+	// Color is the squad colour chosen ("#rrggbb"), or empty for one given
+	// by the others (map-geo.js assignColors). Older builds leave it out.
+	Color string `json:"color,omitempty"`
 }
 
 type sealedReport struct {
@@ -363,11 +366,28 @@ func clean(r Report) Report {
 	if !validMap(r.Map) {
 		r.Map = ""
 	}
+	if !ValidColor(r.Color) {
+		r.Color = ""
+	}
 	if r.Map == "" {
 		r.Pos = nil
 		r.At = time.Time{}
 	}
 	return r
+}
+
+// ValidColor tells whether c is a colour as a report carries one: "#rrggbb"
+// in lower case.
+func ValidColor(c string) bool {
+	if len(c) != 7 || c[0] != '#' {
+		return false
+	}
+	for _, r := range c[1:] {
+		if !(r >= '0' && r <= '9' || r >= 'a' && r <= 'f') {
+			return false
+		}
+	}
+	return true
 }
 
 func validMap(name string) bool {

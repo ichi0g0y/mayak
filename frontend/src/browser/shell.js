@@ -51,6 +51,7 @@ import { itemToggle, itemPanel } from './view-item.js'
 import { tutorialOpen, tutorialHTML, handleTutorial, openTutorial } from './view-tutorial.js'
 import { snapButton, snapSection, snapNotesPage, snapMenuHTML, snapToolbar } from './view-snapnotes.js'
 import { liveMapEntry, liveMapPage } from './view-map.js'
+import { squadPage, squadSection } from './view-squad.js'
 setRender(render)
 
 // The changelog page, rendered from CHANGELOG.md in the repository.
@@ -125,6 +126,8 @@ const tabName = (tab) =>
                 ? t('snapNotes')
                 : tab.kind === 'livemap'
                   ? t('liveMap')
+                  : tab.kind === 'squad'
+                    ? t('squad')
                   : tab.kind === 'bookmarks'
                     ? t('bookmarks')
                     : tab.kind === 'tabs'
@@ -140,6 +143,7 @@ const listedTabs = () =>
       tab.kind !== 'screenshots' &&
       tab.kind !== 'snapnotes' &&
       tab.kind !== 'livemap' &&
+      tab.kind !== 'squad' &&
       tab.kind !== 'bosses' &&
       tab.kind !== 'tabs',
   )
@@ -795,12 +799,12 @@ function render() {
       })
       .filter(Boolean)
   )
-  const html = `<div class="sidebar-resizer" role="separator" aria-orientation="vertical" aria-valuemin="${sidebarWidths.min}" aria-valuemax="${sidebarWidths.max}" aria-valuenow="${state.sidebarWidth}" title="${esc(t('resizeSidebar'))}"></div>${brandBar()}<nav class="tab-strip ${tab?.kind === 'settings' ? 'settings-strip' : ''}" aria-label="${esc(t(tab?.kind === 'settings' ? 'settings' : 'tabHelp'))}">${tab?.kind === 'settings' ? settingsSidebar() : `${mapEntry()}${bookmarkSection()}${screenshotSection()}${snapSection()}${bossSection()}<div class="section-label tabs-section-label ${tab?.kind === 'tabs' ? 'active' : ''}"><button class="section-link" data-action="tabsPage" title="${esc(t('allTabs'))}">${esc(t('tabs'))}</button><button class="new-tab tabs-open" data-action="tabsPage" title="${esc(t('allTabs'))}" aria-label="${esc(t('allTabs'))}" aria-pressed="${tab?.kind === 'tabs'}">${icon('tabs')}</button><button class="new-tab" data-action="newTab" title="${esc(t('newTab'))}" aria-label="${esc(t('newTab'))}">${icon('plus')}</button></div><div class="tabs" role="tablist" style="--n:${tabCount()}">${tabs()}</div>`}</nav><div class="layout-dock">${state.layout === 'vertical' ? sidebarToggle() : ''}${layoutToggle()}${itemToggle()}<button class="dock-button dock-settings ${tab?.kind === 'settings' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'settings'}" data-action="settings" title="${esc(t('settings'))}" aria-label="${esc(t('settings'))}">${icon('settings')}</button>${state.layout === 'horizontal' ? `<span class="dock-indicators">${indicators()}</span>` : ''}</div>${windowControls()}<div class="toolbar">${
+  const html = `<div class="sidebar-resizer" role="separator" aria-orientation="vertical" aria-valuemin="${sidebarWidths.min}" aria-valuemax="${sidebarWidths.max}" aria-valuenow="${state.sidebarWidth}" title="${esc(t('resizeSidebar'))}"></div>${brandBar()}<nav class="tab-strip ${tab?.kind === 'settings' ? 'settings-strip' : ''}" aria-label="${esc(t(tab?.kind === 'settings' ? 'settings' : 'tabHelp'))}">${tab?.kind === 'settings' ? settingsSidebar() : `${mapEntry()}${squadSection()}${bookmarkSection()}${screenshotSection()}${snapSection()}${bossSection()}<div class="section-label tabs-section-label ${tab?.kind === 'tabs' ? 'active' : ''}"><button class="section-link" data-action="tabsPage" title="${esc(t('allTabs'))}">${esc(t('tabs'))}</button><button class="new-tab tabs-open" data-action="tabsPage" title="${esc(t('allTabs'))}" aria-label="${esc(t('allTabs'))}" aria-pressed="${tab?.kind === 'tabs'}">${icon('tabs')}</button><button class="new-tab" data-action="newTab" title="${esc(t('newTab'))}" aria-label="${esc(t('newTab'))}">${icon('plus')}</button></div><div class="tabs" role="tablist" style="--n:${tabCount()}">${tabs()}</div>`}</nav><div class="layout-dock">${state.layout === 'vertical' ? sidebarToggle() : ''}${layoutToggle()}${itemToggle()}<button class="dock-button dock-settings ${tab?.kind === 'settings' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'settings'}" data-action="settings" title="${esc(t('settings'))}" aria-label="${esc(t('settings'))}">${icon('settings')}</button>${state.layout === 'horizontal' ? `<span class="dock-indicators">${indicators()}</span>` : ''}</div>${windowControls()}<div class="toolbar">${
     tab?.fixed
       ? `<button data-action="back" aria-label="${t('back')}" title="${t('back')}" ${!tab.canBack ? 'disabled' : ''}>${icon('back')}</button><button data-action="forward" aria-label="${t('forward')}" title="${t('forward')}" ${!tab.canForward ? 'disabled' : ''}>${icon('forward')}</button><button data-action="reload" aria-label="${t('reload')}" title="${t('reload')}">${icon('reload')}</button><button data-action="home" aria-label="${esc(t('home'))}" title="${esc(t('homeHelp'))}" ${tab.url === tab.home ? 'disabled' : ''}>${icon('home')}</button><form id="address-form" class="readonly">${icon('globe', 'address-icon')}<input id="address" readonly aria-readonly="true" aria-label="${esc(tabName(tab))}" title="${esc(t('fixedAddress'))}" value="${esc(tab.url)}">${loadBar(tab)}</form>`
       : tab?.kind === 'snapnotes'
         ? snapToolbar()
-        : tab?.kind === 'bookmarks' || tab?.kind === 'screenshots' || tab?.kind === 'bosses' || tab?.kind === 'livemap'
+        : tab?.kind === 'bookmarks' || tab?.kind === 'screenshots' || tab?.kind === 'bosses' || tab?.kind === 'livemap' || tab?.kind === 'squad'
           ? ''
           : tab?.kind === 'settings'
             ? ''
@@ -811,7 +815,7 @@ function render() {
                       .join('')}</select>`
                   : ''
               }`
-  }${toolIcons(tab)}${state.layout === 'vertical' ? '<div class="titlebar-grip"></div>' : ''}</div><main>${tab?.kind === 'settings' ? settings() : tab?.kind === 'bookmarks' ? bookmarksPage() : tab?.kind === 'tabs' ? tabsPage() : tab?.kind === 'screenshots' ? screenshotsPage() : tab?.kind === 'snapnotes' ? snapNotesPage() : tab?.kind === 'bosses' ? bossesPage() : tab?.kind === 'livemap' ? liveMapPage() : !tab ? `<p class="empty-tabs">${t('noTabs')}</p>` : ''}</main>${tab?.kind === 'settings' ? `<button class="page-close" data-action="closeSettings" title="${esc(t('closeSettings'))}" aria-label="${esc(t('closeSettings'))}">${icon('x')}</button>` : ''}${itemPanel()}${contextMenuHTML()}${placeMenuHTML()}${snapMenuHTML()}${state.error ? `<aside class="error-bar" role="alert"><span title="${esc(state.error)}">${esc(state.error)}</span><button data-action="dismiss" title="${esc(t('dismiss'))}" aria-label="${esc(t('dismiss'))}">${icon('x')}</button></aside>` : ''}${updateBarHTML()}${tutorialOpen ? tutorialHTML() : ''}`
+  }${toolIcons(tab)}${state.layout === 'vertical' ? '<div class="titlebar-grip"></div>' : ''}</div><main>${tab?.kind === 'settings' ? settings() : tab?.kind === 'bookmarks' ? bookmarksPage() : tab?.kind === 'tabs' ? tabsPage() : tab?.kind === 'screenshots' ? screenshotsPage() : tab?.kind === 'snapnotes' ? snapNotesPage() : tab?.kind === 'bosses' ? bossesPage() : tab?.kind === 'livemap' ? liveMapPage() : tab?.kind === 'squad' ? squadPage() : !tab ? `<p class="empty-tabs">${t('noTabs')}</p>` : ''}</main>${tab?.kind === 'settings' ? `<button class="page-close" data-action="closeSettings" title="${esc(t('closeSettings'))}" aria-label="${esc(t('closeSettings'))}">${icon('x')}</button>` : ''}${itemPanel()}${contextMenuHTML()}${placeMenuHTML()}${snapMenuHTML()}${state.error ? `<aside class="error-bar" role="alert"><span title="${esc(state.error)}">${esc(state.error)}</span><button data-action="dismiss" title="${esc(t('dismiss'))}" aria-label="${esc(t('dismiss'))}">${icon('x')}</button></aside>` : ''}${updateBarHTML()}${tutorialOpen ? tutorialHTML() : ''}`
   // The DOM is morphed to the new markup rather than rebuilt: elements that
   // stay keep their node, so hover, focus, a press in flight and scroll
   // positions survive a render, and a render costs only its differences.

@@ -11,7 +11,7 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 | `frontend/src/browser/shell.js` | DOM の描画（`render`）、タブ・ブックマーク・設定ページ、クリック・ドラッグ・キー操作、サイドバーのリサイズ、テーマ適用 |
 | `frontend/src/browser/shell-core.js` | シェルの各部が共有するもの: `window.mayak`、現在の状態 `state`、`action`、`render` の入口、`t` と HTML の部品（`esc`、`icon`、`select`）。ビューはここから import し、`shell.js` からは import しない |
 | `frontend/src/browser/view-snapnotes.js` | スナップノート: ツールバーのボタンとメニュー、サイドバーの欄、一覧と書き込み画面（[スナップノート](#スナップノート)） |
-| `frontend/src/browser/view-map.js`, `map-geo.js` | マップ: Leaflet の地図、フィルターで出し分ける地点、分隊のパネルと仲間の印（[マップ](#マップ)）。`map-geo.js` は、地図と階の選び方、地点の種類と色、印の向きなど、Leaflet を使わない計算 |
+| `frontend/src/browser/view-map.js`, `map-geo.js`, `map-draw.js`, `view-squad.js` | マップ: Leaflet の地図、フィルターで出し分ける地点、分隊のパネルと仲間の印（[マップ](#マップ)）。`map-draw.js` は自分のペン、`view-squad.js` はサイドバーの分隊セクションと分隊ページ（[分隊](#分隊)）。`map-geo.js` は、地図と階の選び方、地点の種類と色、印の向きなど、Leaflet を使わない計算 |
 | `frontend/src/browser/view-bosses.js`, `view-screenshots.js`, `view-item.js`, `view-tutorial.js` | サイドバーのボス、スクリーンショットページ、アイテム欄、チュートリアル。それぞれ描画関数と自分のイベント処理を持ち、クリックは `clickHandlers` に登録した関数で受けます |
 | `frontend/src/browser/api.js` | 状態の保持と操作（`window.mayak.action`）、ネイティブビューへの命令、永続化、ナビゲーションイベントの受信 |
 | `frontend/src/browser/state.js` | 既定値、`browser.json` の復元と検証、タブ・ブックマークの並べ替え規則、URL 検証 |
@@ -132,7 +132,7 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 | `questSite` | `host`（既定）/ `tarkov-dev` / `official-wiki` / `japanese-wiki` |
 | `bookmarks` | 最大 100 件 |
 | `tabs`, `active` | タブ一覧とアクティブなタブ |
-| `mapHidden`, `mapSettings`, `mapCollapsed`, `squadName`, `squadCode`, `squadRecent` | マップの隠した層・設定・畳んだまとまり、分隊の表示名・参加中のコード・最近の分隊（[マップ](#マップ)、[user-data.md](user-data.md)） |
+| `mapHidden`, `mapSettings`, `mapCollapsed`, `squadName`, `squadColor`, `squadCollapsed`, `squadCode`, `squadRecent` | マップの隠した層・設定・畳んだまとまり、分隊の表示名・分隊カラー・サイドバーのセクションを畳んだか・参加中のコード・最近の分隊（[マップ](#マップ)、[user-data.md](user-data.md)） |
 | `connection` | `{mode, link, receive}`。接続モード（`local` / `client` / `off`）、ペアリングの鍵と役割（`link: {key, role}`、なければ `null`）、Client で出すもの（`receive: {task, map, item}`）。接続コードは保存しません（[settings-and-integrations.md](settings-and-integrations.md#host--client-モード)） |
 
 ウインドウの位置とサイズは `browser.json` には保存しません（`window.json`）。以前のファイルにある `window` は読み込まず、次の保存で消えます。
@@ -200,7 +200,7 @@ Host がスクリーンショットを解析するたびに、何と判定した
 
 MAYAK が自分で描く tarkov.dev の地図です。tarkov.dev のマップと同じ地点をフィルターで出し分け、分隊コードを共有した仲間の位置も同じ地図に出します（`view-map.js`、`map-geo.js`、`internal/app/app_squad.go`、`internal/squad`、`internal/mapdata`）。今は **nightly 版と開発版だけ**の機能です（`version.IsPrerelease`）。リリース版では `SquadAvailable` が false になり、サイドバーの入口を出さず、保存されたタブ（種類 `livemap`）も外します。
 
-- **入口**: サイドバーのいちばん上（状態表示の下）にある「マップ」の行です。タブと同じ形で、行全体が押せ、表示中は選択中の色になり、右端に地図のアイコンがあります。分隊に 2 人以上（見るだけの PC を除く）いると人数が付きます。マップの検出（`browser:map`、`browser:position`）でもこのビューが開くか前面に出て（`receiveMap` / `receivePosition`）、手で選んだマップと階は「自動」に戻ります（`mayak:map-follow`）。
+- **入口**: サイドバーのいちばん上（状態表示の下）にある「マップ」の行です。タブと同じ形で、行全体が押せ、表示中は選択中の色になり、右端に地図のアイコンがあります。マップの検出（`browser:map`、`browser:position`）でもこのビューが開くか前面に出て（`receiveMap` / `receivePosition`）、手で選んだマップと階は「自動」に戻ります（`mayak:map-follow`）。
 - **画面**: ページ全体が地図です。ツールバーの行は空なので、地図はその下まで広がります（`body[data-page=livemap]`）。左上にズームのボタン、その下にアイコンの縦の列があり、押すとその内容のパネルが列の横に開きます（もう一度押すか、×・Esc・地図を押すと閉じる）。右上にはレイドの時計 2 つ（tarkov.dev と同じく、モスクワ時間から実時間の 7 倍で進み、2 つは 12 時間ずれる。Factory は固定、The Lab は出さない）、レイドの長さと人数、地図の作者の帰属表示、右下にはポインタの位置のゲーム座標を出します。
 - **アイコンの列**:
   - **マップ**: ゲームモード（自動・PvP・PvE・Season。地点のデータのモードで、ボスの出現率などが変わる。自動はプレイ中のモード）、マップの一覧（「自動」と各マップ）、階（「自動」・地上・各階）、表示の形（SVG とタイルの両方がある地図だけ。Abstract / Satellite）。今の階が、その地図を開いたときの階と違うときは、ボタンの横に階の名前を出します。
@@ -216,15 +216,30 @@ MAYAK が自分で描く tarkov.dev の地図です。tarkov.dev のマップと
   - 階を出しているとき、別の階のもの（地上の絵とタイル、別の階の地点、別の階の地名）は設定 `fade` の濃さで薄く出します。高さの無い地名は地上のものとして扱います（`Label.Ground`）。`show` の階では地上を薄くしません。
   - SVG の階は、SVG のその階のグループを薄くした地上の上に描きます。SVG に無くタイルだけの階は、そのタイルを地上の絵の上に重ねます。Satellite では、SVG にしか無い階は何も重ねません（地点で分かる。tarkov.dev の Satellite と同じ）。
 - **地点**: tarkov.dev のカタログ（選んだゲームモード、自動ならプレイ中のモード）から `BrowserMapMarkers(name, language, mode)`（`mapdata.Markers`）が tarkov.dev の地図と同じ作り方で作り、Go がマップ・言語・モードごとに 10 分間覚えます。アイテムとタスクの名前は表示言語です。脱出は色付きの名前で、それ以外はアイコンで描き、押すと詳細のポップアップ（タスク、ボスと出現率、鍵の種類と電源、スイッチが動かすもの、必要なアイテム、物資の中身など）を開きます。脱出や危険地帯の範囲は、ポインタを乗せると多角形で出し、押すと出たままになります。タスクの地点のポップアップからは、認識したタスクと同じ規則（タスクのサイトとタブの開き方の設定）でタスクのページを開けます（`mapTask`）。
-- **分隊**: パネルで表示名（既定は TarkovTracker の表示名）を入れ、「分隊を作る」（`SquadNewCode` で新しいコードを作って参加）か、仲間から聞いたコードを入れて「参加」（`SquadJoin`）を押します。コードは Crockford base32 の 8 文字（`ABCD-1234`。小文字・空白・O/I/L も受け付けます）です。表示名は 24 文字まで、分隊は 10 人までです。
-  - 「最近の分隊」（最大 5 件、30 日使わなければ消える。`squadRecent`）は押すだけで入り直せます。コードは伏せ字で、見出しの目のボタンで表示します。中継は分隊を何も残さず、誰もいなくなった部屋は消えますが、同じコードでまた集まれます。
-  - 参加中は、コード（伏せ字。目のボタンで表示、コピーのボタン付き）、接続の状態（「接続しています…」「接続済み」、届かないときと満員のときはその旨）、仲間の一覧（マップと何分前か、またはレイド外）、表示名の変更、「分隊を抜ける」を出します。一覧の仲間を押すと、その人のマップと階に切り替えて中心に出します。
-  - Host と Client のあいだでは、分隊の参加・退出を両方向に揃えます（`squad:sync`。[settings-and-integrations.md](settings-and-integrations.md#host--client-モード)）。Host は Client から届いた変更をほかの Client にも伝えます。つながったとき Host がどの分隊にも入っておらず Client が入っていれば、Host が Client の分隊に入ります。Client は見るだけの PC（Host と同じプレイヤー）として参加し（`Report.Viewer`）、ほかの人の一覧と地図にはプレイヤーとして出ません。
-- **伏せ字**: 分隊コード、参加の入力欄、最近の分隊のコードは、配信やスクリーンショットで漏れないよう「•」で出し、横の目のボタン（`shell-core.js` の `revealButton`、`data-action="reveal"`）で表示します。入力欄は `.masked`（`-webkit-text-security: disc`）で伏せます。表示したものは、もう一度押すかアプリを再起動するまで表示のままです（保存しません）。接続コードと Remote ID も同じです（[settings-and-integrations.md](settings-and-integrations.md)）。
-- **保存**: 表示名 `squadName`、隠した層 `mapHidden`、設定 `mapSettings`、畳んだまとまり `mapCollapsed` はブラウザの好み（`browser-preferences.json`）、分隊コード `squadCode` と最近の分隊 `squadRecent` はこの PC（`browser.json`）です（[user-data.md](user-data.md)）。起動時に、保存されたコードの分隊へ入り直します。「分隊を抜ける」でコードを消します。
-- **共有する内容**: 表示名と、レイド中に位置のスクリーンショットを撮ったときのマップ・座標・向き・撮った時刻だけです（[settings-and-integrations.md](settings-and-integrations.md#分隊ルーム)）。レイドが終わると「レイド外」を送ります。位置を送るのは Host（`local`）だけです。Host では、分隊に入っていなくても自分の最後の位置を地図に出します。
+- **分隊**: マップのパネルには、接続の状態と仲間の一覧、分隊ページを開くボタンだけを出します（分隊に入っていなければ説明と「分隊を作る・参加する」）。分隊の作成・参加・表示名・分隊カラー・退出は [分隊](#分隊) のページです。
+- **伏せ字**: 分隊ページの分隊コード、参加の入力欄、最近の分隊のコードは、配信やスクリーンショットで漏れないよう「•」で出し、横の目のボタン（`shell-core.js` の `revealButton`、`data-action="reveal"`）で表示します。入力欄は `.masked`（`-webkit-text-security: disc`）で伏せます。表示したものは、もう一度押すかアプリを再起動するまで表示のままです（保存しません）。接続コードと Remote ID も同じです（[settings-and-integrations.md](settings-and-integrations.md)）。
+- **保存**: 表示名 `squadName`、分隊カラー `squadColor`、分隊セクションを畳んだか `squadCollapsed`、隠した層 `mapHidden`、設定 `mapSettings`、畳んだまとまり `mapCollapsed` はブラウザの好み（`browser-preferences.json`）、分隊コード `squadCode` と最近の分隊 `squadRecent` はこの PC（`browser.json`）です（[user-data.md](user-data.md)）。起動時に、保存されたコードの分隊へ入り直します。「分隊を抜ける」でコードを消します。
+- **共有する内容**: 表示名と分隊カラー、レイド中に位置のスクリーンショットを撮ったときのマップ・座標・向き・撮った時刻だけです（[settings-and-integrations.md](settings-and-integrations.md#分隊ルーム)）。レイドが終わると「レイド外」を送ります。位置を送るのは Host（`local`）だけです。Host では、分隊に入っていなくても自分の最後の位置を地図に出します。
 - **印**: 仲間ごとに、名前から決まる色、名前、向きの矢印を出します。自分の印は白い縁取りです。5 分より古い位置と別の階にいる仲間は薄く、30 分より古い位置は出しません。表示中は 30 秒ごとに描き直します。
 - **帰属表示**: 右上に「By: 作者」（maps.json の `author`、無ければ Shebuka。押すと作者のページ）と「CC BY-NC-SA 4.0 · tarkov.dev」を出します。地図の絵には非営利・チート目的禁止の条件があるので、有料の機能の中では使いません。
+
+### 分隊
+
+分隊コードで集まった仲間（[分隊ルーム](settings-and-integrations.md#分隊ルーム)、`app_squad.go`、`internal/squad`）の、サイドバーのセクションとページです（`view-squad.js`）。マップと同じく nightly 版と開発版だけで、リリース版ではセクションを出さず、保存されたタブ（種類 `squad`）も外します。
+
+- **サイドバーのセクション**: 「マップ」の行のすぐ下です。見出しの「分隊」の横に人数（見るだけの PC を除く）を、接続の色（接続済みは緑、届かないときと満員のときは黄）で出し、見出しを押すと畳めます（`squadCollapsed`、ブラウザの好み）。右端のボタンで分隊ページを開きます。
+  - 分隊に入っているときは仲間の一覧（分隊カラーの点、名前、マップと何分前か、またはレイド外）です。位置のある仲間を押すと、マップを前に出して、その人のマップと階に切り替えて中心に出します（`squadFocus`）。
+  - 入っていないときは「分隊を作る・参加する」のボタンだけです（分隊ページを開く）。
+  - 畳んだサイドバーと横のタブ欄では、ほかのセクションと同じくボタンだけになります。
+- **分隊ページ**（種類 `squad`、`squadPage`）:
+  - 入っていないとき: 説明、表示名（既定は TarkovTracker の表示名）、分隊カラー、「分隊を作る」（`SquadNewCode` で新しいコードを作って参加）、仲間から聞いたコードの「参加」（`SquadJoin`）、最近の分隊、共有する内容です。コードは Crockford base32 の 8 文字（`ABCD-1234`。小文字・空白・O/I/L も受け付けます）です。表示名は 24 文字まで、分隊は 10 人までです。作ったり入ったりしても、ページはそのままです（共有するコードが見える）。
+  - 入っているとき: コード（伏せ字、コピー）、接続の状態（「接続しています…」「接続済み」、届かないときと満員のときはその旨）、メンバーの一覧、表示名の変更（Enter か、欄を離れたとき）、分隊カラー、「分隊を抜ける」、共有する内容です。
+  - 「最近の分隊」（最大 5 件、30 日使わなければ消える。`squadRecent`）は押すだけで入り直せます。コードは伏せ字で、見出しの目のボタンで表示します。中継は分隊を何も残さず、誰もいなくなった部屋は消えますが、同じコードでまた集まれます。
+- **分隊カラー**: 地図の印・一覧の点に使う、分隊の中での自分の色です。候補は 10 色（`map-geo.js` の `squadColors`）で、「自動」かどれか 1 色を選びます（`squadColor`、ブラウザの好みなのでほかの PC にも付いていく）。選んだ色は Go の `SquadSetColor` で報告（`Report.Color`）に入れて送ります。
+  - 色は全員が同じ規則で決めます（`assignColors`）。中継の ID の順に、選んだ色をまだ誰も取っていなければその色、次に選んでいない人（と取れなかった人）が、名前から決まる色（`memberColor`）が空いていればその色、空いていなければ空いている最初の色です。同時に同じ色を選んでも、ID の小さい人がその色になり、どの画面でも同じ結果になります。
+  - ほかの人の色は選べません（押せず、誰が使っているかを出す）。選んだ色が取れなかったときは「今は自動の色」と出します。見るだけの PC（Client）は Host の色を選ぶので、使用中の印を付けません。
+  - 色を選ぶ前のアプリ（報告に色がない）は、名前から色を決めるので、そのアプリの画面でだけ色が違うことがあります。
+- **Host と Client**: 分隊の参加・退出と分隊カラーを両方向に揃えます（`squad:sync`。[settings-and-integrations.md](settings-and-integrations.md#host--client-モード)）。Host は Client から届いた変更をほかの Client にも伝えます。つながったとき Host がどの分隊にも入っておらず Client が入っていれば、Host が Client の分隊に入ります。Client は見るだけの PC（Host と同じプレイヤー）として参加し（`Report.Viewer`）、ほかの人の一覧と地図にはプレイヤーとして出ません。
 
 ### 自分のペン
 

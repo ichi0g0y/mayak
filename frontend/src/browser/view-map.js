@@ -1,4 +1,3 @@
-import { age } from './item.js'
 import {
   autoMap,
   findMap,
@@ -15,7 +14,6 @@ import {
   floorOrder,
   markerGroups,
   markerRotation,
-  memberColor,
   nameColors,
   outlineColor,
   placed,
@@ -34,11 +32,9 @@ import {
   clickHandlers,
   afterRenderHooks,
   render,
-  secretText,
-  revealButton,
-  maskedClass,
 } from './shell-core.js'
 import { attach, drawLines, penBar, penButton, snapStrokes } from './map-draw.js'
+import { colorOf, mapName, memberList, ownName } from './view-squad.js'
 
 // The map view: tarkov.dev's interactive map redrawn by MAYAK (Leaflet over
 // its SVG maps; internal/mapdata makes the picture of each floor and the
@@ -52,15 +48,10 @@ import { attach, drawLines, penBar, penButton, snapStrokes } from './map-draw.js
 // the view first shows, and the map lives in an element the render leaves
 // alone (data-keep); after each render, drawMap brings it up to date.
 
-// What is typed in the squad forms, kept across renders.
-const drafts = { code: '', name: null, notice: '' }
 // The map and floor chosen ('auto' follows the players), the open panel and
 // the search; focus is a member to centre the map on once their map shows
 // ({map, x, z}).
 const view = { map: 'auto', floor: 'auto', panel: '', search: '', focus: null }
-// The name this PC shows: the one given for the squad, else the player's
-// own (TarkovTracker's display name, from the Host).
-const ownName = () => state.squadName || state.host?.player || ''
 
 // word is a shell word, or '' when there is none for key.
 const word = (key) => {
@@ -72,18 +63,10 @@ const word = (key) => {
 export function liveMapEntry() {
   if (!state.squad) return ''
   const active = state.tabs.find((t) => t.id === state.active)?.kind === 'livemap'
-  const count = players(state.squad.state?.members).length
   // A row like a tab (the whole of it opens the map, and shows it open), with
   // the name first and the map icon at its end as the sections have theirs.
-  return `<div class="tab map-entry live-map-entry ${active ? 'active' : ''}"><button data-action="livemap" class="tab-select" title="${esc(t('liveMapHelp'))}" aria-pressed="${active}"><span class="tab-name">${esc(t('liveMap'))}</span>${count > 1 ? `<span class="squad-count" title="${esc(t('squad'))}">${icon('squad')}${count}</span>` : ''}${icon('map', 'tab-icon live-map-icon')}</button></div>`
+  return `<div class="tab map-entry live-map-entry ${active ? 'active' : ''}"><button data-action="livemap" class="tab-select" title="${esc(t('liveMapHelp'))}" aria-pressed="${active}"><span class="tab-name">${esc(t('liveMap'))}</span>${icon('map', 'tab-icon live-map-icon')}</button></div>`
 }
-
-const mapName = (key) =>
-  state.bosses?.maps?.find((m) => m.key === key)?.name ||
-  String(key || '')
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ')
 
 // shown is the map and floor to draw now.
 function shown() {
@@ -262,43 +245,14 @@ function applyTextScale(settings = state.mapSettings || {}) {
   el.classList.toggle('subtle-labels', !!settings.subtleLabels)
 }
 
-function memberLine(m, maps) {
-  const where = m.map
-    ? m.pos
-      ? `${esc(mapName(findMap(maps, m.map)?.key || m.map))} · ${esc(age(m.at, state.language))}`
-      : esc(mapName(m.map))
-    : esc(t('squadOutOfRaid'))
-  const fade = m.map && m.pos ? freshness(m.at) : 'gone'
-  const line = `<span class="squad-dot" style="--c:${memberColor(m.name)}"></span><span class="squad-member-name">${esc(m.name || '?')}${m.me ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span><span class="squad-member-where">${where}</span>`
-  // A member with a position is a button that shows them on the map (on
-  // their map and floor).
-  return m.map && m.pos
-    ? `<li class="squad-member ${fade}"><button class="squad-member-focus" data-action="squadFocus" data-id="${esc(m.me ? 'me' : m.id)}" title="${esc(t('squadFocus'))}">${line}</button></li>`
-    : `<li class="squad-member ${fade}">${line}</li>`
-}
-
-// The squads joined lately, to join again with a click.
-function recentSquads() {
-  const list = (state.squadRecent || []).map(
-    (r) =>
-      `<li><button class="squad-recent-join" data-action="squadRejoin" data-id="${esc(r.code)}" title="${esc(t('squadJoin'))}"><span class="squad-recent-code">${esc(secretText('squadRecent', r.code))}</span><span class="squad-recent-when">${esc(age(new Date(r.at).toISOString(), state.language))}</span></button></li>`,
-  )
-  return list.length
-    ? `<div class="squad-recent"><h3>${esc(t('squadRecent'))}${revealButton('squadRecent')}</h3><ul>${list.join('')}</ul><p class="hint">${esc(t('squadRecentHint'))}</p></div>`
-    : ''
-}
-
+// The squad's panel: who is in it; the squad's page (view-squad.js) has the
+// rest (the code, the name and colour, joining and leaving).
 function squadPanel() {
   const s = state.squad.state
-  const name = drafts.name ?? ownName()
   const head = panelHead(t('squad'))
-  if (!s)
-    return `<aside class="map-panel map-squad">${head}<form id="squad-form" class="squad-form"><p class="hint">${esc(t('squadIntro'))}</p><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" placeholder="${esc(t('squadNamePlaceholder'))}" value="${esc(name)}"></label><button class="primary" type="submit" value="create">${esc(t('squadCreate'))}</button><div class="squad-join"><span class="secret-field"><input name="squadCode" class="${maskedClass('squadInput')}" maxlength="12" autocomplete="off" spellcheck="false" placeholder="ABCD-1234" aria-label="${esc(t('squadCode'))}" value="${esc(drafts.code)}">${revealButton('squadInput')}</span><button type="submit" value="join">${esc(t('squadJoin'))}</button></div>${recentSquads()}${drafts.notice && drafts.notice !== 'squadCopied' ? `<p class="squad-notice" role="alert">${esc(t(drafts.notice))}</p>` : ''}<p class="hint">${esc(t('squadPrivacy'))}</p></form></aside>`
-  const list = players(s.members)
-    .map((m) => memberLine(m, state.squad.maps || []))
-    .join('')
-  const viewer = s.members.find((m) => m.me)?.viewer ? `<p class="hint">${esc(t('squadViewer'))}</p>` : ''
-  return `<aside class="map-panel map-squad">${head}<div class="squad-code"><output>${esc(secretText('squad', state.squadCode || s.code))}</output>${revealButton('squad')}<button data-action="squadCopy" title="${esc(t('squadCopy'))}">${icon('copy')}<span>${esc(t(drafts.notice === 'squadCopied' ? 'squadCopied' : 'squadCopy'))}</span></button></div><p class="squad-phase" data-phase="${esc(s.phase)}">${esc(t('squadPhase_' + s.phase))}</p><ul class="squad-members">${list}</ul>${viewer}<form id="squad-name-form" class="squad-name"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" value="${esc(name)}"></label></form><button class="squad-leave" data-action="squadLeave">${esc(t('squadLeave'))}</button></aside>`
+  const open = `<button class="squad-page-open" data-action="squadPage">${icon('squad')}<span>${esc(t(s ? 'squadOpen' : 'squadStart'))}</span></button>`
+  if (!s) return `<aside class="map-panel map-squad">${head}<p class="hint">${esc(t('squadIntro'))}</p>${open}</aside>`
+  return `<aside class="map-panel map-squad">${head}<p class="squad-phase" data-phase="${esc(s.phase)}">${esc(t('squadPhase_' + s.phase))}</p>${memberList(s.members)}${open}</aside>`
 }
 
 // The raid's facts at the top right: the two clocks (as tarkov.dev keeps
@@ -643,7 +597,7 @@ function drawThings(map, floor, data) {
 
 function squadHTML(m) {
   const rot = markerRotation(m.pos.rot, shown().map?.rotation)
-  return `<span class="squad-marker ${m.me ? 'me' : ''}" style="--c:${memberColor(m.name)}"><svg viewBox="0 0 24 24" style="transform:rotate(${rot}deg)"><path d="M12 2 19 21 12 16.5 5 21z"/></svg><span class="squad-label">${esc(m.name || '?')}</span></span>`
+  return `<span class="squad-marker ${m.me ? 'me' : ''}" style="--c:${colorOf(m)}"><svg viewBox="0 0 24 24" style="transform:rotate(${rot}deg)"><path d="M12 2 19 21 12 16.5 5 21z"/></svg><span class="squad-label">${esc(m.name || '?')}</span></span>`
 }
 
 function drawSquad(map, floor, members) {
@@ -813,8 +767,6 @@ document.addEventListener('change', (event) => {
 let searchTimer = 0
 document.addEventListener('input', (event) => {
   const el = /** @type {HTMLInputElement} */ (event.target)
-  if (el.name === 'squadName' && el.closest('.map-squad')) drafts.name = el.value
-  if (el.name === 'squadCode' && el.closest('.map-squad')) drafts.code = el.value
   // The search waits for a pause in typing, as tarkov.dev's does.
   // A text size follows the slider at once; it is kept when let go (change).
   if (el.dataset?.mapScale) {
@@ -829,40 +781,6 @@ document.addEventListener('input', (event) => {
     searchTimer = setTimeout(render, 300)
   }
 })
-document.addEventListener('submit', (event) => {
-  const form = /** @type {HTMLFormElement} */ (event.target)
-  if (form.id === 'squad-name-form') {
-    event.preventDefault()
-    const name = String(drafts.name ?? '').trim()
-    if (name) void action('squadRename', name).then(() => (drafts.name = null))
-    return
-  }
-  if (form.id !== 'squad-form') return
-  event.preventDefault()
-  const name = String(drafts.name ?? ownName()).trim()
-  const join = /** @type {SubmitEvent} */ (event).submitter?.getAttribute('value') === 'join'
-  const code = drafts.code.toUpperCase().replace(/[\s-]/g, '')
-  drafts.notice = !name ? 'squadNeedName' : join && code.length !== 8 ? 'squadInvalidCode' : ''
-  if (drafts.notice) {
-    render()
-    return
-  }
-  void action(join ? 'squadJoin' : 'squadCreate', { code: drafts.code, name }).then((next) => {
-    if (next?.squad?.state) Object.assign(drafts, { code: '', name: null, notice: '' })
-  })
-})
-// A name changed and left without Enter is kept too.
-document.addEventListener(
-  'blur',
-  (event) => {
-    const el = /** @type {HTMLInputElement} */ (event.target)
-    if (el?.name === 'squadName' && el.closest?.('#squad-name-form') && drafts.name != null) {
-      const name = drafts.name.trim()
-      if (name && name !== state.squadName) void action('squadRename', name).then(() => (drafts.name = null))
-    }
-  },
-  true,
-)
 // Esc closes an open panel, then clears the search.
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape' || !document.getElementById('live-map')) return
@@ -920,16 +838,6 @@ clickHandlers.push(async (type, id, button) => {
     if (view.panel === 'search') /** @type {HTMLInputElement} */ (document.getElementById('map-search'))?.focus()
     return true
   }
-  if (type === 'squadRejoin') {
-    const name = String(drafts.name ?? ownName()).trim()
-    drafts.notice = name ? '' : 'squadNeedName'
-    if (!name) render()
-    else
-      void action('squadJoin', { code: id, name }).then((next) => {
-        if (next?.squad?.state) Object.assign(drafts, { code: '', name: null, notice: '' })
-      })
-    return true
-  }
   // A member clicked in the list: their map and floor, centred on them.
   if (type === 'squadFocus') {
     const { members } = shown()
@@ -939,7 +847,9 @@ clickHandlers.push(async (type, id, button) => {
     view.map = map.key
     view.floor = floorFor(map, m.pos)
     view.focus = { map: map.key, x: m.pos.x, z: m.pos.z }
-    render()
+    // From the sidebar or the squad's page, the map comes forward.
+    if (state.tabs.find((tab) => tab.id === state.active)?.kind !== 'livemap') await action('livemap')
+    else render()
     return true
   }
   if (type === 'mapSnap') {
@@ -974,22 +884,6 @@ clickHandlers.push(async (type, id, button) => {
     if (folded.has(id)) folded.delete(id)
     else folded.add(id)
     void action('mapCollapsed', [...folded])
-    return true
-  }
-  if (type === 'squadCopy') {
-    drafts.notice = 'squadCopied'
-    await action('squadCopy')
-    setTimeout(() => {
-      if (drafts.notice === 'squadCopied') {
-        drafts.notice = ''
-        render()
-      }
-    }, 2000)
-    return true
-  }
-  if (type === 'squadLeave') {
-    Object.assign(drafts, { code: '', name: null, notice: '' })
-    void action('squadLeave')
     return true
   }
   return false

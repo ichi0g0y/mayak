@@ -33,6 +33,9 @@ var (
 	squadJoinMu sync.Mutex
 	squadMu     sync.Mutex
 	squadClient *squad.Client
+	// squadColor is the squad colour chosen in the shell (SquadSetColor),
+	// sent with this PC's reports; guarded by squadMu.
+	squadColor string
 
 	squadMapsOnce sync.Once
 	squadMaps     *mapdata.Source
@@ -153,6 +156,23 @@ func (a *App) SquadRename(name string) {
 	}
 }
 
+// SquadSetColor sets the squad colour this PC's reports carry ("#rrggbb", or
+// empty to take one the others give), and tells the squad joined.
+func (a *App) SquadSetColor(color string) {
+	if !squad.ValidColor(color) {
+		color = ""
+	}
+	squadMu.Lock()
+	squadColor = color
+	client := squadClient
+	squadMu.Unlock()
+	if client != nil {
+		r := client.Mine()
+		r.Color = color
+		client.Report(r)
+	}
+}
+
 // SquadState returns the squad joined, or nil.
 func (a *App) SquadState() *squad.State {
 	squadMu.Lock()
@@ -169,7 +189,10 @@ func (a *App) SquadState() *squad.State {
 // raid and has one from this raid's map.
 func (a *App) squadReport(name string) squad.Report {
 	// A client only watches: its Host, the same player, reports the position.
-	r := squad.Report{Name: strings.TrimSpace(name), Viewer: a.browserClient.Load()}
+	squadMu.Lock()
+	color := squadColor
+	squadMu.Unlock()
+	r := squad.Report{Name: strings.TrimSpace(name), Viewer: a.browserClient.Load(), Color: color}
 	a.mu.RLock()
 	status := a.status
 	a.mu.RUnlock()

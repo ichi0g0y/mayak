@@ -32,7 +32,7 @@ import {
   cycleTab,
 } from './state.js'
 import { encode, decode, MAX_AGE, PAIR_RELAY } from './peer-code.js'
-import { hiddenOf, mapSettingsOf } from './map-geo.js'
+import { hiddenOf, mapSettingsOf, squadColors } from './map-geo.js'
 import { t } from './words.js'
 import './transport.js'
 
@@ -132,20 +132,18 @@ async function loadSquadMaps() {
   update()
 }
 // squadJoin joins a squad as name; here (not for the other PC's word) it
-// also brings the map forward and tells the other PC.
+// also tells the other PC. The squad's page stays, with the code to share.
 async function squadJoin(code, name, here = true) {
   name = String(name || '')
     .trim()
     .slice(0, 24)
   if (!name && here) throw new Error(t(state.language, 'squadNeedName'))
   if (name) state.squadName = name
+  await go.SquadSetColor(state.squadColor)
   state.squadCode = await go.SquadJoin(String(code || ''), name || host?.player || 'Player')
   state.squadRecent = rememberSquad(state.squadRecent, state.squadCode)
   squad.state = await go.SquadState()
-  if (here) {
-    openLocal(state, 'livemap')
-    shareSquad()
-  }
+  if (here) shareSquad()
   void loadSquadMaps()
 }
 
@@ -325,6 +323,7 @@ async function persist() {
     bookmarksCollapsed,
     screenshotsCollapsed,
     snapNotesCollapsed,
+    squadCollapsed,
     toolOrder,
     bossesView,
     bossMap,
@@ -344,6 +343,7 @@ async function persist() {
     mapSettings,
     mapCollapsed,
     squadName,
+    squadColor,
     squadCode,
     squadRecent,
     bookmarks,
@@ -363,6 +363,7 @@ async function persist() {
       bookmarksCollapsed,
       screenshotsCollapsed,
       snapNotesCollapsed,
+      squadCollapsed,
       toolOrder,
       bossesView,
       bossMap,
@@ -383,6 +384,7 @@ async function persist() {
       mapSettings,
       mapCollapsed,
       squadName,
+      squadColor,
       squadCode,
       squadRecent,
       bookmarks,
@@ -704,7 +706,7 @@ const peer = new /** @type {any} */ (globalThis).MayakLink({
       // The Host says which squad it is in; a client in one the Host is
       // not answers with its own (receiveSquad).
       if (state.connection.mode === 'local' && squad.available)
-        peer.sendSquad({ code: state.squadCode, name: state.squadName, initial: true })
+        peer.sendSquad({ code: state.squadCode, name: state.squadName, color: state.squadColor, initial: true })
     }
     update()
   },
@@ -728,11 +730,17 @@ function startLink() {
 // receiveSquad follows the squad the other PC joined or left, without
 // telling it back. On connecting, a client already in a squad keeps it and
 // brings the Host in instead when the Host is in none.
-async function receiveSquad({ code, name, initial }) {
+async function receiveSquad({ code, name, initial, color }) {
   if (!squad.available) return
+  // The squad colour follows the other PC's too (the Host reports it).
+  const recolor = color !== undefined && color !== state.squadColor && (color === '' || squadColors.includes(color))
+  if (recolor) {
+    state.squadColor = color
+    await go.SquadSetColor(color)
+  }
   if (!code) {
     if (initial && state.squadCode) {
-      peer.sendSquad({ code: state.squadCode, name: state.squadName })
+      peer.sendSquad({ code: state.squadCode, name: state.squadName, color: state.squadColor })
       return
     }
     if (!state.squadCode) return
@@ -741,13 +749,13 @@ async function receiveSquad({ code, name, initial }) {
     state.squadCode = ''
   } else if (code !== state.squadCode) {
     await squadJoin(code, state.squadName || name, false)
-  } else return
+  } else if (!recolor) return
   // The Host passes a Client's word on to its other Clients.
   if (state.connection.mode === 'local') shareSquad()
   await changed()
 }
 // shareSquad tells the other PC of a squad joined or left here.
-const shareSquad = () => peer.sendSquad({ code: state.squadCode, name: state.squadName })
+const shareSquad = () => peer.sendSquad({ code: state.squadCode, name: state.squadName, color: state.squadColor })
 // unpair ends the pairing (or the one being made), telling the other PC
 // unless it told this one.
 async function unpair(tell = true) {
@@ -1017,11 +1025,12 @@ const ready = (async () => {
   try {
     squad.available = !!(await go.SquadAvailable())
   } catch {}
-  if (!squad.available) state.tabs = state.tabs.filter((t) => t.kind !== 'livemap')
+  if (!squad.available) state.tabs = state.tabs.filter((t) => t.kind !== 'livemap' && t.kind !== 'squad')
   else {
     if (state.tabs.find((t) => t.id === state.active)?.kind === 'livemap') void loadSquadMaps()
     if (state.squadCode && state.squadName)
-      go.SquadJoin(state.squadCode, state.squadName)
+      go.SquadSetColor(state.squadColor)
+        .then(() => go.SquadJoin(state.squadCode, state.squadName))
         .then(() => go.SquadState())
         .then((s) => {
           squad.state = s || null
@@ -1344,6 +1353,17 @@ async function perform(type, data) {
       openLocal(state, 'livemap')
       void loadSquadMaps()
       break
+    // The squad's page (view-squad.js): its code, name, colour, members.
+    case 'squadPage':
+      if (!squad.available) return snapshot()
+      openLocal(state, 'squad')
+      void loadSquadMaps()
+      break
+    case 'squadColor':
+      state.squadColor = squadColors.includes(data) ? data : ''
+      await go.SquadSetColor(state.squadColor)
+      shareSquad()
+      break
     case 'squadCreate':
       await squadJoin(await go.SquadNewCode(), data?.name)
       break
@@ -1543,6 +1563,7 @@ async function perform(type, data) {
       state.bookmarksCollapsed = next.bookmarksCollapsed
       state.screenshotsCollapsed = next.screenshotsCollapsed
       state.snapNotesCollapsed = next.snapNotesCollapsed
+      state.squadCollapsed = next.squadCollapsed
       state.toolOrder = next.toolOrder
       state.bossesView = next.bossesView
       state.bossMap = next.bossMap

@@ -26,6 +26,12 @@ export class Member {
      */
     "at"?: string;
 
+    /**
+     * Color is the squad colour chosen ("#rrggbb"), or empty for one given
+     * by the others (map-geo.js assignColors). Older builds leave it out.
+     */
+    "color"?: string;
+
     /** Creates a new Member instance. */
     constructor($$source: Partial<Member> = {}) {
         if (!("id" in $$source)) {

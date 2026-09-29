@@ -109,7 +109,7 @@ var browserPreferenceKeys = map[string]bool{
 	"sidebarSide": true, "sidebarCollapsed": true, "bookmarksCollapsed": true,
 	"screenshotsCollapsed": true, "snapNotesCollapsed": true, "toolOrder": true,
 	"bossesView": true, "bookmarkView": true, "adblock": true, "taskMode": true,
-	"questSite": true, "translateWiki": true, "bookmarkRevision": true, "squadName": true, "mapHidden": true, "mapSettings": true, "mapCollapsed": true,
+	"questSite": true, "translateWiki": true, "bookmarkRevision": true, "squadName": true, "squadColor": true, "squadCollapsed": true, "mapHidden": true, "mapSettings": true, "mapCollapsed": true,
 }
 
 func browserFile(name string) (string, error) { return appdir.Path(name) }
