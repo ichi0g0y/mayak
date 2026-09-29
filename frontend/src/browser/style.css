@@ -1126,8 +1126,10 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .squad-member-where{grid-column:2;color:var(--text-2);font-size:12px}
 .squad-leave{width:100%}
 /* The squad's page (view-squad.js). */
-.squad-page .panel h2{margin:18px 0 8px;font-size:13px;font-weight:600;color:var(--text-2)}
-.squad-page .panel h2:first-child{margin-top:0}
+.squad-page .panel h2{margin:0 0 10px;font-size:15px;font-weight:600}
+.squad-page .panel h3{margin:16px 0 8px;font-size:12.5px;font-weight:600;color:var(--text-2)}
+.squad-page .panel h2+h3{margin-top:4px}
+.squad-page .squad-profile .squad-name{max-width:420px;margin-top:0}
 .squad-page .squad-code output{font-size:24px}
 .squad-page .squad-name{margin-top:14px}
 .squad-page .squad-leave{width:auto;margin-top:6px}
@@ -1153,7 +1155,7 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .squad-section-count[data-phase=offline],.squad-section-count[data-phase=full]{background:var(--warn)}
 .squad-chips{list-style:none;margin:0;padding:0 6px 8px 10px;display:flex;flex-direction:column;gap:1px}
 .squad-chip{display:flex;align-items:center;gap:8px;height:26px;padding:0 6px;font-size:13px}
-.squad-chip>button{display:flex;align-items:center;gap:8px;width:calc(100% + 12px);height:26px;margin:0 -6px;padding:0 6px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;font-weight:400;text-align:left}
+.squad-chip>button{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:calc(100% + 12px);height:26px;margin:0 -6px;padding:0 6px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;font-weight:400;text-align:left}
 .squad-chip>button:hover{background:var(--hover)}
 .squad-chip.stale,.squad-chip.gone{color:var(--text-2)}
 .squad-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

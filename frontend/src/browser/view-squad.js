@@ -129,6 +129,9 @@ function colorPicker() {
   return `<div class="squad-colors"><span class="squad-colors-label">${esc(t('squadColor'))}</span><div class="squad-color-row"><button type="button" class="squad-color-auto ${chosen ? '' : 'on'}" data-action="squadColorPick" data-id="" aria-pressed="${!chosen}">${esc(t('squadColorAuto'))}</button>${squadColors.map(swatch).join('')}</div><p class="hint">${esc(t(busy ? 'squadColorBusy' : 'squadColorHelp'))}</p></div>`
 }
 
+// The squad's page: your profile (the name and colour the squad sees, kept
+// whether in a squad or not), then the squad: creating or joining one, or
+// the one joined (its code, members, leaving).
 export function squadPage() {
   if (!state.squad) return `<div class="page"><p class="empty-tabs">${esc(t('squadUnavailable'))}</p></div>`
   const s = state.squad.state
@@ -138,11 +141,13 @@ export function squadPage() {
       ? `<p class="squad-notice" role="alert">${esc(t(drafts.notice))}</p>`
       : ''
   const head = `<div class="bookmarks-head"><h1>${esc(t('squad'))}</h1></div>`
+  const profile = `<section class="panel squad-forms squad-profile"><h2>${esc(t('squadProfile'))}</h2><p class="hint">${esc(t('squadProfileHelp'))}</p><form id="squad-name-form" class="squad-name"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" placeholder="${esc(t('squadNamePlaceholder'))}" value="${esc(name)}"></label></form>${colorPicker()}</section>`
+  const privacy = `<p class="hint">${esc(t('squadPrivacy'))}</p>`
   if (!s)
-    return `<div class="page squad-page">${head}<section class="panel squad-forms"><p class="hint">${esc(t('squadIntro'))}</p><form id="squad-form" class="squad-form"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" placeholder="${esc(t('squadNamePlaceholder'))}" value="${esc(name)}"></label>${colorPicker()}<button class="primary" type="submit" value="create">${esc(t('squadCreate'))}</button><div class="squad-join"><span class="secret-field"><input name="squadCode" class="${maskedClass('squadInput')}" maxlength="12" autocomplete="off" spellcheck="false" placeholder="ABCD-1234" aria-label="${esc(t('squadCode'))}" value="${esc(drafts.code)}">${revealButton('squadInput')}</span><button type="submit" value="join">${esc(t('squadJoin'))}</button></div>${notice}</form>${recentSquads()}<p class="hint">${esc(t('squadPrivacy'))}</p></section></div>`
+    return `<div class="page squad-page">${head}${profile}<section class="panel squad-forms"><h2>${esc(t('squadJoinTitle'))}</h2><p class="hint">${esc(t('squadIntro'))}</p><form id="squad-form" class="squad-form"><button class="primary" type="submit" value="create">${esc(t('squadCreate'))}</button><div class="squad-join"><span class="secret-field"><input name="squadCode" class="${maskedClass('squadInput')}" maxlength="12" autocomplete="off" spellcheck="false" placeholder="ABCD-1234" aria-label="${esc(t('squadCode'))}" value="${esc(drafts.code)}">${revealButton('squadInput')}</span><button type="submit" value="join">${esc(t('squadJoin'))}</button></div>${notice}</form>${recentSquads()}${privacy}</section></div>`
   const viewer = s.members.find((m) => m.me)?.viewer ? `<p class="hint">${esc(t('squadViewer'))}</p>` : ''
   const code = `<div class="squad-code"><output>${esc(secretText('squad', state.squadCode || s.code))}</output>${revealButton('squad')}<button data-action="squadCopy" title="${esc(t('squadCopy'))}">${icon('copy')}<span>${esc(t(drafts.notice === 'squadCopied' ? 'squadCopied' : 'squadCopy'))}</span></button></div><p class="squad-phase" data-phase="${esc(s.phase)}">${esc(t('squadPhase_' + s.phase))}</p>`
-  return `<div class="page squad-page">${head}<section class="panel squad-forms"><h2>${esc(t('squadCode'))}</h2>${code}<h2>${esc(t('squadMembers'))}</h2>${memberList(s.members)}${viewer}<form id="squad-name-form" class="squad-name"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" value="${esc(name)}"></label></form>${colorPicker()}${notice}<button class="squad-leave" data-action="squadLeave">${esc(t('squadLeave'))}</button><p class="hint">${esc(t('squadPrivacy'))}</p></section></div>`
+  return `<div class="page squad-page">${head}${profile}<section class="panel squad-forms"><h2>${esc(t('squadJoined'))}</h2><h3>${esc(t('squadCode'))}</h3>${code}<h3>${esc(t('squadMembers'))}</h3>${memberList(s.members)}${viewer}${notice}<button class="squad-leave" data-action="squadLeave">${esc(t('squadLeave'))}</button>${privacy}</section></div>`
 }
 
 const inForms = (el) => !!el.closest?.('.squad-forms')
