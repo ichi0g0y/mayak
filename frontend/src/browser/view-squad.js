@@ -76,7 +76,7 @@ function memberChip(m) {
   if (open && !m.me) {
     const focus =
       m.map && m.pos
-        ? `<li><button class="squad-member-map" data-action="squadFocus" data-id="${esc(squadKey(m))}">${icon('map')}<span>${esc(t('squadFocus'))}</span><small>${esc(whereOf(m))}</small></button></li>`
+        ? `<li><button class="squad-member-map" data-action="squadFocus" data-id="${esc(squadKey(m))}">${icon('map')}<span>${esc(t('squadFocus'))}</span></button></li>`
         : `<li class="squad-member-where-note">${esc(whereOf(m))}</li>`
     body = `<ul class="squad-member-shares">${focus}${theirs.length ? theirs.map((x) => shareRow(x, true)).join('') : `<li class="squad-member-none">${esc(t('squadMemberNone'))}</li>`}</ul>`
   }
