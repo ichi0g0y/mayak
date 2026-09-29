@@ -362,7 +362,48 @@ function shape(L, l, opacity) {
 let space = false
 let stroke = null // {line, live, last: [x, y], sent, timer} while drawing
 let erased = null // the lines erased by this drag
-let panning = null // {x, y} while the right or middle button moves the map
+// While the right or middle button moves the map: where the pointer was, and
+// how far it went since the map last moved (applied once a frame).
+let panning = null // {x, y, dx, dy, frame}
+// startPan and panTo move the map the way Leaflet's own dragging does: the
+// map's pane shifts ("move") as the pointer goes, and the map settles once
+// ("moveend": tiles, markers) when the button is let go. A panBy per pointer
+// event settled it every time, which grew slow with more on the map (zoomed
+// in) and stuttered.
+function startPan(x, y) {
+  const map = at.map
+  if (!map) return
+  // A pan or zoom still animating ends where it was going (stop() alone
+  // would settle the map once more).
+  if (map._panAnim?._inProgress) map.stop()
+  if (map._animatingZoom) map._onZoomTransitionEnd?.()
+  panning = { x, y, dx: 0, dy: 0, frame: 0 }
+  map.fire('movestart')
+}
+function panTo(x, y) {
+  panning.dx += panning.x - x
+  panning.dy += panning.y - y
+  panning.x = x
+  panning.y = y
+  if (panning.frame) return
+  const p = panning
+  p.frame = requestAnimationFrame(() => {
+    p.frame = 0
+    if (!at.map || (!p.dx && !p.dy)) return
+    at.map._rawPanBy(at.L.point(Math.round(p.dx), Math.round(p.dy)))
+    p.dx -= Math.round(p.dx)
+    p.dy -= Math.round(p.dy)
+    at.map.fire('move')
+  })
+}
+function endPan() {
+  if (!panning) return
+  const p = panning
+  panning = null
+  cancelAnimationFrame(p.frame)
+  if (at.map && (Math.round(p.dx) || Math.round(p.dy))) at.map._rawPanBy(at.L.point(Math.round(p.dx), Math.round(p.dy)))
+  at.map?.fire('move').fire('moveend')
+}
 export function attach(el, signal) {
   const spot = (e) => {
     const box = el.getBoundingClientRect()
@@ -373,7 +414,7 @@ export function attach(el, signal) {
     (e) => {
       if (!pen.on || space || !at.map || e.target.closest?.('.leaflet-control-container')) return
       if (e.button === 1 || e.button === 2) {
-        panning = { x: e.clientX, y: e.clientY }
+        startPan(e.clientX, e.clientY)
         e.preventDefault()
         return
       }
@@ -423,16 +464,12 @@ export function attach(el, signal) {
     'pointermove',
     (e) => {
       if (!panning) return
-      if (!(e.buttons & 6)) {
-        panning = null
-        return
-      }
-      at.map?.panBy([panning.x - e.clientX, panning.y - e.clientY], { animate: false })
-      panning = { x: e.clientX, y: e.clientY }
+      if (!(e.buttons & 6)) return endPan()
+      panTo(e.clientX, e.clientY)
     },
     { signal },
   )
-  window.addEventListener('pointerup', () => (panning = null), { signal })
+  window.addEventListener('pointerup', endPan, { signal })
   // A middle press would start the browser's autoscroll instead.
   el.addEventListener('mousedown', (e) => pen.on && e.button === 1 && e.preventDefault(), { signal })
   el.addEventListener(

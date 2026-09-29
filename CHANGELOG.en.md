@@ -36,7 +36,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - Closing settings did nothing when there was no tab to go back to; a new tab opens instead.
 - On a Mac, a sign-in popup ("Sign in with Google" on Fandom) did not open; it opens in a small window, as on Windows.
 - A Client (another PC) could show the bosses, the Goons and the map's markers of another game mode than its Host's; it follows the Host's game mode.
-- With a map pen up, right-drag sometimes stopped moving the map (after switching windows with Space held, for one); your own squad lines no longer show your name under the pointer.
+- With a map pen up, right-drag stuttered (more so zoomed in) or sometimes stopped moving the map (after switching windows with Space held, for one); your own squad lines no longer show your name under the pointer.
 
 - A position found in a screenshot with coordinates did not reach the Client.
 - The corners of an item's picture in the item panel looked faint.
