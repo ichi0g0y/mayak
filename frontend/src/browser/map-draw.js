@@ -194,7 +194,20 @@ function pickPen(mode) {
   else Object.assign(pen, { on: true, mode })
   if (was && !squadMode()) squad.cursorOff()
   if (pen.on) void load()
+  penUsed = Date.now()
 }
+// The squad pen is put down after IDLE_MS without use (no drawing, no
+// pointer over the map): its position stops going, and the squad's room on
+// the relay can sleep (a free service: the relay is paid for by the time its
+// rooms are awake).
+const IDLE_MS = 3 * 60 * 1000
+let penUsed = 0
+setInterval(() => {
+  if (!squadMode() || stroke || Date.now() - penUsed < IDLE_MS) return
+  squad.cursorOff()
+  pen.on = false
+  render()
+}, 15000)
 clickHandlers.push(async (type, id) => {
   if (type === 'mapSquadPen') {
     if (squadMode() || squad.canDraw()) pickPen('squad')
@@ -361,6 +374,7 @@ export function attach(el, signal) {
       if (e.button !== 0) return
       e.preventDefault()
       el.setPointerCapture(e.pointerId)
+      penUsed = Date.now()
       const p = spot(e)
       if (squadMode() && !squad.canDraw()) return
       if (pen.tool === 'eraser') {
@@ -398,6 +412,7 @@ export function attach(el, signal) {
       if (!stroke) {
         const p = spot(e)
         if (squadMode() && squad.canDraw() && at.map) {
+          penUsed = Date.now()
           const ll = at.map.containerPointToLatLng(p)
           squad.cursor(at.key, at.floor, ll.lng, ll.lat)
         }
