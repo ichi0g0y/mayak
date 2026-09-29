@@ -21,7 +21,7 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 
 ### ルートの `main.go` とアプリ本体（`internal/app`）
 
-プロジェクト直下の Go ファイルは `main.go`（`package main`）だけです。`go:embed` は自分より上の階層を埋め込めないので、`frontend/dist` とトレイアイコン（`build/appicon.png`）を埋め込むこのファイルは直下に置き、`app.Run` に渡します。Windows リソース（`mayak_windows_*.syso`）も main パッケージと同じ直下で `go build` にリンクされます。
+プロジェクト直下の Go ファイルは `main.go`（`package main`）だけです。`go:embed` は自分より上の階層を埋め込めないので、`frontend/dist` とトレイアイコン（`build/appicon.png`、Mac のメニューバーは `build/darwin/trayicon.png`）を埋め込むこのファイルは直下に置き、`app.Run` に渡します。Windows リソース（`mayak_windows_*.syso`）も main パッケージと同じ直下で `go build` にリンクされます。
 
 アプリ本体は `internal/app`（`package app`）です。`App` 型は Wails のサービスとして 1 つだけ登録され、公開メソッドがフロントエンドのバインディング（`frontend/bindings/github.com/local/mayak/internal/app`）になります。ファイルは責務ごとに分かれています。
 
@@ -107,7 +107,7 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `cmd/ocreval` | 認識デバッグデータ（`Mayak-Debug`）で OCR エンジンを比較評価 |
 | `cmd/ocrharvest` | スクリーンショットから、複数エンジンの読みが一致したタイトル画像をラベル付きで収集 |
 | `tools/tessbundle` | UB Mannheim 版から同梱用 Tesseract ランタイムを作る（必要な DLL だけコピーし、デバッグ情報を除去） |
-| `tools/icon` | 原画 `tools/icon/mark.png`（六角形と M、1024px）を塗り替えて、`build/appicon.png`（トレイと macOS の ICNS の元）、`build/windows/icon.ico`（16〜256px）、`frontend/public/favicon-32.png` と `favicon-256.png`（About のロゴ）、サイトの `mayak-mark.png` と白抜きの `mayak-mark-white.png` を作る。形は原画のまま、装いだけ `go run ./tools/icon`（公式ランチャー風: 角丸の濃いグレーのグラデーション地に、白〜シルバーのグラデーションのマーク。色と角丸は `-bg-top` `-bg-bottom` `-fg-top` `-fg-bottom` `-corner` で変更）。 |
+| `tools/icon` | 原画 `tools/icon/mark.png`（六角形と M、1024px）を塗り替えて、`build/appicon.png`（トレイと macOS の ICNS の元）、`build/windows/icon.ico`（16〜256px）、`frontend/public/favicon-32.png` と `favicon-256.png`（About のロゴ）、サイトの `mayak-mark.png` と白抜きの `mayak-mark-white.png`、Mac のメニューバーのアイコン `build/darwin/trayicon.png`（マークだけを黒・透明地で 64px。テンプレート画像なので macOS がメニューバーに合わせて黒か白で描く）を作る。形は原画のまま、装いだけ `go run ./tools/icon`（公式ランチャー風: 角丸の濃いグレーのグラデーション地に、白〜シルバーのグラデーションのマーク。色と角丸は `-bg-top` `-bg-bottom` `-fg-top` `-fg-bottom` `-corner` で変更）。 |
 | `tools/release` | `build/bin` をリリース用アーカイブ（`build/dist/Mayak-<os>-<arch>.zip` / `.tar.gz`）に固め、SHA-256 を書く。`build/dist` にインストーラーがあればその SHA-256 も書く（[リリース](#リリース)） |
 | `tools/nsis` | Windows のインストーラー（`build/windows/nsis/mayak.nsi`）を `build/dist/Mayak-Setup-<version>-windows-amd64.exe` に組む。`makensis` が無ければ NSIS の配布 zip をチェックサム検証付きで `build/nsis-cache` に一度だけ取得する |
 | `tools/ocrtrain` | Tesseract LSTM 学習データの生成（手順は `tools/ocrtrain/README.md` と [ocr-training.md](ocr-training.md)） |
@@ -175,7 +175,7 @@ Wails 本体はフォークせず公式モジュールを使います。
 | パス | Git | 内容 |
 | --- | --- | --- |
 | `config.yml` | 管理 | Wails v3 のアプリ情報と `dev_mode` 設定 |
-| `appicon.png`、`windows/`（`icon.ico`、`info.json`、`wails.exe.manifest`） | 管理 | アイコンと Windows リソース |
+| `appicon.png`、`darwin/trayicon.png`、`windows/`（`icon.ico`、`info.json`、`wails.exe.manifest`） | 管理 | アイコン（Mac のメニューバー用を含む）と Windows リソース |
 | `tessdata/eft.traineddata`、`tessdata/eftjpn.traineddata` | 管理 | MAYAK 独自の OCR モデル（英語・日本語） |
 | `bin/` | 無視 | ビルド成果物（`Mayak.exe`、`Mayak-dev.exe`、`tesseract/`） |
 | `tesseract-cache/` | 無視 | `tessbundle -fetch` のダウンロードと展開先 |

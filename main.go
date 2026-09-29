@@ -1,6 +1,6 @@
 // Command mayak is the MAYAK desktop app. The app itself is internal/app;
 // this package only embeds the files that must sit beside it (the built
-// frontend and the tray icon) and links the Windows resources
+// frontend and the tray icons) and links the Windows resources
 // (mayak_windows_*.syso).
 package main
 
@@ -17,8 +17,14 @@ var assets embed.FS
 //go:embed build/appicon.png
 var trayIcon []byte
 
+// The Mac's menu bar icon: the logo alone, in black on clear, which macOS
+// draws in the menu bar's own colour (a template image).
+//
+//go:embed build/darwin/trayicon.png
+var trayTemplate []byte
+
 func main() {
-	if err := app.Run(assets, trayIcon); err != nil {
+	if err := app.Run(assets, trayIcon, trayTemplate); err != nil {
 		log.Fatal(err)
 	}
 }

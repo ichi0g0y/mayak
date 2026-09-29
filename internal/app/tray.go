@@ -1,11 +1,15 @@
 package app
 
 import (
+	goruntime "runtime"
+
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-// trayIcon is build/appicon.png, embedded by package main (see Run).
-var trayIcon []byte
+// trayIcon is build/appicon.png, embedded by package main (see Run). The Mac
+// takes trayTemplate instead (build/darwin/trayicon.png): the logo alone,
+// which macOS draws black or white to suit the menu bar.
+var trayIcon, trayTemplate []byte
 
 // trayLabels are the tray menu's items in language.
 func trayLabels(language string) (show, check, quit string) {
@@ -18,7 +22,11 @@ func trayLabels(language string) (show, check, quit string) {
 func startTray(a *App) {
 	show, check, quit := trayLabels(a.settings.Language)
 	tray := a.desktop.SystemTray.New()
-	tray.SetIcon(trayIcon)
+	if goruntime.GOOS == "darwin" && len(trayTemplate) > 0 {
+		tray.SetTemplateIcon(trayTemplate)
+	} else {
+		tray.SetIcon(trayIcon)
+	}
 	tray.SetTooltip("MAYAK")
 	tray.OnClick(a.showWindow).OnDoubleClick(a.showWindow)
 	menu := a.desktop.Menu.New()

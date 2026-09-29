@@ -19,9 +19,10 @@ import (
 
 // Run starts MAYAK and returns when it quits. Package main embeds the files
 // it needs: assets holds the built frontend (all:frontend/dist, as embedded)
-// and icon is the tray icon (build/appicon.png).
-func Run(assets fs.FS, icon []byte) error {
-	trayIcon = icon
+// and icon is the tray icon (build/appicon.png), template the Mac's
+// (build/darwin/trayicon.png).
+func Run(assets fs.FS, icon, template []byte) error {
+	trayIcon, trayTemplate = icon, template
 	raisePriority()
 	// MAYAK_CPUPROFILE=<file> writes a CPU profile of the first 30 seconds
 	// (the start-up work), for `go tool pprof`; a development aid only.

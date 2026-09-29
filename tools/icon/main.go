@@ -4,7 +4,9 @@
 // build/windows/icon.ico (16 to 256px, PNG entries), frontend/public/
 // favicon-32.png and favicon-256.png (the About logo), and the site's mark
 // (site/public/assets/mayak-mark.png) plus its bare white version for the
-// header (mayak-mark-white.png, transparent).
+// header (mayak-mark-white.png, transparent), and the Mac's menu bar icon
+// (build/darwin/trayicon.png: the mark alone in black on clear, a template
+// image macOS draws black or white to suit the menu bar).
 //
 //	go run ./tools/icon
 //
@@ -197,6 +199,33 @@ func render(master *image.NRGBA, s style, bare bool) *image.NRGBA {
 	return out
 }
 
+// templateMark is the mark alone, black on clear, cropped to it and centred
+// on a square where it takes markShare of the height: the menu bar draws the
+// image as tall as the bar, so the rest is the space around it.
+func templateMark(master *image.NRGBA, size int, markShare float64) *image.NRGBA {
+	t, side := field(master)
+	minX, minY, maxX, maxY := side, side, -1, -1
+	for i, v := range t {
+		if v > 0.02 {
+			x, y := i%side, i/side
+			minX, minY, maxX, maxY = min(minX, x), min(minY, y), max(maxX, x), max(maxY, y)
+		}
+	}
+	if maxX < 0 {
+		log.Fatal("the master has no mark")
+	}
+	w, h := maxX-minX+1, maxY-minY+1
+	canvas := int(math.Ceil(float64(max(w, h)) / markShare))
+	out := image.NewNRGBA(image.Rect(0, 0, canvas, canvas))
+	ox, oy := (canvas-w)/2, (canvas-h)/2
+	for y := minY; y <= maxY; y++ {
+		for x := minX; x <= maxX; x++ {
+			out.SetNRGBA(ox+x-minX, oy+y-minY, color.NRGBA{0, 0, 0, uint8(math.Round(255 * t[y*side+x]))})
+		}
+	}
+	return resize(out, size)
+}
+
 func resize(src *image.NRGBA, size int) *image.NRGBA {
 	if src.Bounds().Dx() == size {
 		return src
@@ -282,5 +311,6 @@ func main() {
 	must(os.WriteFile("frontend/public/favicon-256.png", encodePNG(resize(full, 256)), 0o644))
 	must(os.WriteFile("site/public/assets/mayak-mark.png", encodePNG(full), 0o644))
 	must(os.WriteFile("site/public/assets/mayak-mark-white.png", encodePNG(resize(white, 512)), 0o644))
-	fmt.Println("wrote build/appicon.png, build/windows/icon.ico, frontend/public/favicon-32.png, favicon-256.png, site/public/assets/mayak-mark.png, mayak-mark-white.png")
+	must(os.WriteFile("build/darwin/trayicon.png", encodePNG(templateMark(master, 64, 0.76)), 0o644))
+	fmt.Println("wrote build/appicon.png, build/windows/icon.ico, frontend/public/favicon-32.png, favicon-256.png, site/public/assets/mayak-mark.png, mayak-mark-white.png, build/darwin/trayicon.png")
 }

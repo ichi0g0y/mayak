@@ -19,6 +19,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### Improved
 
+- On a Mac, the menu bar icon is the logo alone (the hexagon and M) in black or white, to suit a light or dark menu bar.
 - The connection to other PCs (from the Host to Clients) goes through a relay (mayak-relay.ich.sh): no network keeps it from connecting any more, and paired PCs connect again on their own at every start (and after a drop). What they say is encrypted with a key only the paired PCs have; the relay cannot read it. The 8-digit code from the Host, entered on the other PC, is all it takes (no response code any more), and a Host takes any number of PCs. Each Client chooses what it shows: tasks, maps and positions, items. The STUN setting is gone.
 - The TARKOV.DEV and TarkovTracker fixed tabs are gone; they are bookmarks pinned to the sidebar. Map detections show on "Map".
 - The connection status and the game mode (PvP, PvE, Season) at the top of the sidebar open the setting they come from when pressed. The game mode is bold, without a frame.
