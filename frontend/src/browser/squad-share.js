@@ -12,8 +12,8 @@ import * as squad from './squad-draw.js'
 //
 // A pin ("look here", as on Google Maps) is a point on a map a member
 // pressed: it shows on everyone's map in its member's colour, one per
-// member (a new one takes the old one's place), until its member takes it
-// out or PIN_MS passes. It also lists as kind 'view'; opening it brings its
+// member (a new one takes the old one's place; its member can put it again
+// or drag it, and it moves), until its member takes it out or PIN_MS passes. It also lists as kind 'view'; opening it brings its
 // map and floor up around it, at the zoom its member had.
 //
 // An item: {id, kind: 'tab' | 'snap' | 'draw' | 'view', by (member key), name, c
@@ -80,7 +80,8 @@ squad.onShell('snap', (by, d) => {
   })
 })
 // The pins on the maps: member key → {id, by, name, c, map, floor, x, z,
-// zoom, at, mine}.
+// zoom, at, mine, dropAt (when it last came down: it drops in then; a pin
+// dragged just moves)}.
 export const pins = new Map()
 const PIN_MS = 10 * 60 * 1000
 function pinIn(by, d) {
@@ -101,10 +102,17 @@ function pinIn(by, d) {
     zoom: d.zoom,
     at: Date.now() - age,
     mine: false,
+    dropAt: Date.now(),
   }
+  const old = pins.get(by)
+  if (d.drag && old?.id === d.id) pin.dropAt = old.dropAt
   pins.set(by, pin)
-  if (shares.some((s) => s.id === d.id)) render()
-  else keep({ ...pin, kind: 'view', seen: false })
+  // A pin moved moves its row too (read or not as it was).
+  const row = shares.find((s) => s.id === d.id)
+  if (row) {
+    Object.assign(row, { map: pin.map, floor: pin.floor, x: pin.x, z: pin.z, zoom: pin.zoom })
+    render()
+  } else keep({ ...pin, kind: 'view', seen: false })
 }
 squad.onShell('pin', pinIn)
 // A build before pins shared the view it showed: its centre is the pin.
@@ -161,7 +169,7 @@ squad.onJoin(() => {
 })
 
 const sendTab = (s) => squad.sendShell({ t: 'share', id: s.id, url: s.url, title: s.title, ...squad.myStyle() })
-const sendPin = (p) =>
+const sendPin = (p, drag = false) =>
   squad.sendShell({
     t: 'pin',
     id: p.id,
@@ -171,6 +179,7 @@ const sendPin = (p) =>
     z: p.z,
     zoom: p.zoom,
     age: Date.now() - p.at,
+    ...(drag ? { drag: 1 } : {}),
     ...squad.myStyle(),
   })
 
@@ -219,13 +228,15 @@ export async function shareSnap(title, image, onProgress) {
 }
 
 // dropPin puts this member's pin at a point of a map (map, floor, x, z),
-// with the zoom it was put at, in place of its last one. It tells whether it
-// went.
-export async function dropPin(v) {
+// with the zoom it was put at, in place of its last one: a new pin, or with
+// move the same one moved (put again, or with drag dragged: it does not drop
+// in again). It tells whether it went.
+export async function dropPin(v, { move = false, drag = false } = {}) {
   if (!canShare()) return false
   const round = (n) => Math.round(n * 100) / 100
+  const old = pins.get(squad.myKeyOf())
   const pin = {
-    id: Math.random().toString(36).slice(2, 12),
+    id: move && old ? old.id : Math.random().toString(36).slice(2, 12),
     by: squad.myKeyOf(),
     ...squad.myStyle(),
     map: text(v.map, 60),
@@ -235,10 +246,15 @@ export async function dropPin(v) {
     zoom: round(v.zoom),
     at: Date.now(),
     mine: true,
+    dropAt: drag && old ? old.dropAt : Date.now(),
   }
   pins.set(pin.by, pin)
-  keep({ ...pin, kind: 'view', seen: true })
-  const ok = await sendPin(pin)
+  const row = shares.find((s) => s.id === pin.id)
+  if (row) {
+    Object.assign(row, { map: pin.map, floor: pin.floor, x: pin.x, z: pin.z, zoom: pin.zoom })
+    render()
+  } else keep({ ...pin, kind: 'view', seen: true })
+  const ok = await sendPin(pin, drag)
   if (!ok && pins.get(pin.by)?.id === pin.id) {
     pins.delete(pin.by)
     render()

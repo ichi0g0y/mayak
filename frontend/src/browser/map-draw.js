@@ -147,20 +147,23 @@ const linesHere = () => (squadMode() ? squadHere().length > 0 : lines.some(here)
 // the pencil in the column of buttons and at the head of its tools.
 const squadBadge = (cls) => `<span class="${cls}" style="--c:${squad.myStyle().c}">${icon('squad')}</span>`
 
-// The pens' buttons in the map's column of buttons: yours, and the squad's
-// (in a squad, through a relay that takes it).
+// The pens' buttons in the map's columns of buttons: yours, and the
+// squad's (in the squad's column; usable in a squad, through a relay that
+// takes it).
 export function penButton(disabled) {
   const mine = pen.on && pen.mode === 'mine'
   const label = esc(t('mapPen'))
-  const button = `<button class="map-rail-button ${mine ? 'selected' : ''}" data-action="mapPen" aria-pressed="${mine}" title="${label}" aria-label="${label}" ${disabled ? 'disabled' : ''}>${icon('pencil')}</button>`
-  if (!state.squad) return button
+  return `<button class="map-rail-button ${mine ? 'selected' : ''}" data-action="mapPen" aria-pressed="${mine}" title="${label}" aria-label="${label}" ${disabled ? 'disabled' : ''}>${icon('pencil')}</button>`
+}
+export function squadPenButton(disabled) {
+  if (!state.squad) return ''
   const s = state.squad.state
   const on = squadMode()
   const why = !s ? 'mapSquadPenJoin' : !s.drawing && s.phase === 'connected' ? 'mapSquadPenRelay' : 'mapSquadPen'
   // Connected to a relay that did not take the pen, a press asks it again.
   const stale = !!s && s.phase === 'connected' && !s.drawing
   const off = disabled || (!squad.canDraw() && !stale)
-  return `${button}<button class="map-rail-button map-rail-squad-pen ${on ? 'selected' : ''}" data-action="mapSquadPen" aria-pressed="${on}" title="${esc(t(why))}" aria-label="${esc(t('mapSquadPen'))}" ${off && !on ? 'disabled' : ''}>${icon('pencil')}${squadBadge('map-rail-pen-badge')}</button>`
+  return `<button class="map-rail-button map-rail-squad-pen ${on ? 'selected' : ''}" data-action="mapSquadPen" aria-pressed="${on}" title="${esc(t(why))}" aria-label="${esc(t('mapSquadPen'))}" ${off && !on ? 'disabled' : ''}>${icon('pencil')}${squadBadge('map-rail-pen-badge')}</button>`
 }
 
 // The notice of a squad clear-all while it can be undone.
@@ -207,6 +210,10 @@ function pickPen(mode) {
   if (pen.on) void load()
   penUsed = Date.now()
 }
+// While a pin is being put (view-map.js), the right and middle buttons move
+// the map as with a pen up.
+let pinUp = false
+export const setPinning = (on) => (pinUp = on)
 // putPenDown puts up pen down (as a pin is being put).
 export function putPenDown() {
   if (!pen.on) return
@@ -422,13 +429,13 @@ export function attach(el, signal) {
   el.addEventListener(
     'pointerdown',
     (e) => {
-      if (!pen.on || space || !at.map || e.target.closest?.('.leaflet-control-container')) return
+      if (!(pen.on || pinUp) || space || !at.map || e.target.closest?.('.leaflet-control-container')) return
       if (e.button === 1 || e.button === 2) {
         startPan(e.clientX, e.clientY)
         e.preventDefault()
         return
       }
-      if (e.button !== 0) return
+      if (!pen.on || e.button !== 0) return
       e.preventDefault()
       el.setPointerCapture(e.pointerId)
       penUsed = Date.now()
@@ -481,7 +488,7 @@ export function attach(el, signal) {
   )
   window.addEventListener('pointerup', endPan, { signal })
   // A middle press would start the browser's autoscroll instead.
-  el.addEventListener('mousedown', (e) => pen.on && e.button === 1 && e.preventDefault(), { signal })
+  el.addEventListener('mousedown', (e) => (pen.on || pinUp) && e.button === 1 && e.preventDefault(), { signal })
   el.addEventListener(
     'pointermove',
     (e) => {
@@ -535,7 +542,7 @@ export function attach(el, signal) {
   }
   el.addEventListener('pointerup', end, { signal })
   el.addEventListener('pointercancel', end, { signal })
-  el.addEventListener('contextmenu', (e) => pen.on && e.preventDefault(), { signal })
+  el.addEventListener('contextmenu', (e) => (pen.on || pinUp) && e.preventDefault(), { signal })
   el.addEventListener(
     'pointerleave',
     () => {

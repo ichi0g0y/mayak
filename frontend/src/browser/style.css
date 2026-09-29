@@ -1017,7 +1017,12 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
    translucent black edge): the zoom buttons (below), the button column, the
    panels, the raid box and the coordinates. */
 .map-rail,.map-raid,.map-coords,.map-panel{border:2px solid rgba(0,0,0,.2);border-radius:8px;background:var(--surface);background-clip:padding-box;box-shadow:none}
-.map-rail{position:absolute;top:96px;left:12px;z-index:800;display:flex;flex-direction:column;overflow:visible}
+/* The columns of buttons under the zoom buttons: the map's, and while in a squad the squad's under it. */
+.map-rails{position:absolute;top:96px;left:12px;z-index:800;display:flex;flex-direction:column;gap:8px}
+.map-rail{position:relative;display:flex;flex-direction:column;overflow:visible}
+.map-rail-squad{border-color:var(--c)}
+.map-rail-head{display:flex;align-items:center;justify-content:center;height:16px;background:var(--c);color:#16181d;border-radius:5px 5px 0 0}
+.map-rail-head .icon{width:12px;height:12px;stroke-width:2.6}
 .map-rail-button{position:relative;width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border:0;border-bottom:1px solid rgba(0,0,0,.2);border-radius:0;background:var(--surface);color:var(--text)}
 .map-rail-button:first-child{border-radius:8px 8px 0 0}
 .map-rail-button:last-child{border-bottom:0;border-radius:0 0 8px 8px}
@@ -1246,14 +1251,33 @@ body[data-sidebar=collapsed] .live-map-entry .live-map-icon,[data-layout=horizon
 .map-extract-name{position:absolute;left:27px;top:50%;transform:translateY(-50%);white-space:nowrap;font:800 calc(15px * var(--extract-text, 1))/1.2 Arial,system-ui,sans-serif;color:var(--c);-webkit-text-stroke:.6px #000;text-shadow:0 0 3px #000}
 .leaflet-container{font:inherit;background:var(--sidebar)}
 .squad-marker-icon{background:none;border:0}
-/* The squad's pins: a map pin in the member's colour, the name under it; yours can be pressed (to take it out). */
-.map-pinning,.map-pinning .leaflet-interactive{cursor:crosshair}
+/* The squad's pins: a map pin in the member's colour standing on its point
+   (a shadow at its foot), the name beside its head. A pin just put drops in,
+   squashes as it goes in and sends a ring out; yours can be dragged, and
+   its × takes it out. While a pin is being put the pointer is a hand. */
+.leaflet-container.map-pinning,.map-pinning .leaflet-interactive{cursor:pointer}
+.leaflet-container.map-pinning.leaflet-drag-target{cursor:grabbing}
 .map-pin-icon{background:none;border:0}
-.map-pin{position:relative;display:block;width:30px;height:30px}
-.map-pin svg{width:30px;height:30px;display:block;fill:var(--c);stroke:#000a;stroke-width:1.3;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
-.map-pin svg circle{fill:#16181d;stroke:none}
-.map-pin.mine svg{stroke:#fff;stroke-width:1.6}
-.map-pin-name{position:absolute;top:31px;left:50%;transform:translateX(-50%);padding:0 5px;border-radius:4px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;line-height:16px;white-space:nowrap;pointer-events:none}
+.map-pin{position:relative;display:block;width:26px;height:34px}
+.map-pin svg{position:relative;z-index:1;width:26px;height:34px;display:block;overflow:visible;transform-origin:50% 100%;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))}
+.map-pin-body{fill:var(--c);stroke:#fff;stroke-width:1.6}
+.map-pin-dot{fill:#fff}
+.map-pin::after{content:'';position:absolute;left:50%;bottom:-2px;width:12px;height:4px;margin-left:-6px;border-radius:50%;background:rgba(0,0,0,.5);filter:blur(1px)}
+.map-pin::before{content:'';position:absolute;left:50%;bottom:0;width:0;height:0;border-radius:50%;border:2px solid var(--c);opacity:0;transform:translate(-50%,50%)}
+.map-pin-name{position:absolute;z-index:1;left:24px;top:3px;display:flex;align-items:center;gap:2px;height:18px;padding:0 7px;border-radius:9px;background:rgba(16,18,22,.8);color:#fff;font-size:11px;font-weight:600;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.4);pointer-events:none}
+.map-pin.mine{cursor:grab}
+.map-pin-remove{pointer-events:auto;width:16px;height:16px;margin-right:-5px;padding:0;display:flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:none;color:#fffa;cursor:pointer}
+.map-pin-remove:hover{background:rgba(255,255,255,.18);color:#fff}
+.map-pin-remove .icon{width:11px;height:11px;stroke-width:2.6}
+.map-pin.drop svg{animation:map-pin-drop .5s cubic-bezier(.45,0,.9,.6) both}
+.map-pin.drop::after{animation:map-pin-shadow .5s ease-out both}
+.map-pin.drop::before{animation:map-pin-ring .6s ease-out .32s forwards}
+.map-pin.drop .map-pin-name{animation:map-pin-name .25s ease-out .4s both}
+@keyframes map-pin-drop{0%{transform:translateY(-34px);opacity:0}15%{opacity:1}62%{transform:translateY(0) scale(1,1)}76%{transform:scale(1.12,.84)}88%{transform:scale(.96,1.05)}100%{transform:scale(1,1)}}
+@keyframes map-pin-shadow{0%{transform:scale(.3);opacity:.2}62%{transform:scale(1);opacity:1}100%{transform:scale(1)}}
+@keyframes map-pin-ring{0%{width:0;height:0;opacity:.9}100%{width:36px;height:14px;opacity:0}}
+@keyframes map-pin-name{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.map-pin.drop svg,.map-pin.drop::after,.map-pin.drop::before,.map-pin.drop .map-pin-name{animation:none}}
 .squad-marker{position:relative;display:block;width:28px;height:28px;color:var(--c)}
 .squad-marker svg{width:28px;height:28px;fill:var(--c);stroke:#000a;stroke-width:1.5;display:block}
 .squad-marker.me svg{stroke:#fff;stroke-width:2}
