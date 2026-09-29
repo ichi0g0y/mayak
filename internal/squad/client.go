@@ -72,12 +72,25 @@ const MaxMessage = 4096
 // are kept.
 const Ephemeral = "~"
 
-// The relay closes a member that sends more than 120 messages in 10 s; this
-// PC keeps under sendLimit in any 10 s.
+// The relay closes a member that sends more than its rate (told in its
+// welcome; 120 before it did) in 10 s. This PC keeps to five sixths of it in
+// any 10 s, and keeps a sixth of that for what must go (lines, erasing,
+// shares): what may be dropped (the pen's position, the points of a line
+// being drawn) stops short of it.
 const (
-	sendLimit  = 100
+	relayRate  = 120
 	sendWindow = 10 * time.Second
 )
+
+// limits are the most messages sent in sendWindow, and the most of them
+// droppable, for a relay taking rate.
+func limits(rate int) (all, droppable int) {
+	if rate <= 0 {
+		rate = relayRate
+	}
+	all = rate * 5 / 6
+	return all, all - all/6
+}
 
 // A relay deployed while this PC stays connected keeps the connection (the
 // room hibernates), so its welcome, which tells the relay's version, is not
@@ -127,6 +140,8 @@ type Client struct {
 	mine    Report
 	members map[string]Report
 	drawing bool
+	// rate is the relay's (its welcome's), 0 for one that did not say.
+	rate int
 	// recheck makes the next connection at once, without the pause.
 	recheck bool
 	done    chan struct{}
@@ -286,7 +301,9 @@ type relayMessage struct {
 	From string `json:"from"`
 	Data string `json:"data"`
 	// V is the relay's version (2 takes the squad pen's messages).
-	V       int `json:"v"`
+	V int `json:"v"`
+	// Rate is how many messages a member may send in 10 s (0: 120).
+	Rate    int `json:"rate"`
 	Members []struct {
 		ID   string `json:"id"`
 		Last string `json:"last"`
@@ -335,6 +352,7 @@ func (c *Client) serve(conn *websocket.Conn) {
 			c.myID = m.ID
 			c.phase = PhaseConnected
 			c.drawing = m.V >= 2
+			c.rate = m.Rate
 			c.members = map[string]Report{}
 			for _, other := range m.Members {
 				if r, ok := c.openReport(other.Last); ok {
@@ -447,16 +465,23 @@ func (c *Client) Send(data json.RawMessage, droppable bool) bool {
 	return true
 }
 
-// take counts a message about to be sent against sendLimit: it tells false
-// for a droppable one over the limit, and waits for room for any other.
+// take counts a message about to be sent against the limits: it tells
+// false for a droppable one over its limit, and waits for room for any other.
 func (c *Client) take(droppable bool) bool {
+	c.mu.Lock()
+	all, few := limits(c.rate)
+	c.mu.Unlock()
+	limit := all
+	if droppable {
+		limit = few
+	}
 	for {
 		c.sentMu.Lock()
 		now := time.Now()
 		for len(c.sent) > 0 && now.Sub(c.sent[0]) >= sendWindow {
 			c.sent = c.sent[1:]
 		}
-		if len(c.sent) < sendLimit {
+		if len(c.sent) < limit {
 			c.sent = append(c.sent, now)
 			c.sentMu.Unlock()
 			return true

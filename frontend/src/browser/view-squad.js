@@ -1,6 +1,7 @@
 import { age } from './item.js'
-import { assignColors, findMap, freshness, memberColor, players, squadColors, squadKey } from './map-geo.js'
-import { shares, markSeen } from './squad-share.js'
+import { findMap, freshness, players, squadColors, squadKey } from './map-geo.js'
+import { colorOf, squadColorMap } from './squad-colors.js'
+import { shares, markSeen, waiting } from './squad-share.js'
 import {
   state,
   esc,
@@ -33,18 +34,6 @@ export const mapName = (key) =>
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ')
 
-// The squad's colours (assignColors), worked out again when its members change.
-let colors = { members: null, map: new Map() }
-const squadColorMap = () => {
-  const members = state.squad?.state?.members || null
-  if (colors.members !== members) colors = { members, map: assignColors(members) }
-  return colors.map
-}
-// colorOf is a member's colour: the squad's for them, else (outside a squad,
-// or a PC that only watches) the one chosen here or their name's.
-export const colorOf = (m) =>
-  squadColorMap().get(squadKey(m)) || (m.me && state.squadColor) || memberColor(m.name)
-
 // whereOf is where a member is, as text: their map and how long ago, or
 // out of a raid.
 function whereOf(m) {
@@ -76,6 +65,8 @@ function memberChip(m) {
     : `<li class="squad-chip ${fade}" title="${esc(title)}">${line}</li>`
 }
 
+export { colorOf }
+
 // The members, the PCs that only watch left out.
 export const memberList = (members, cls = '') =>
   `<ul class="squad-members ${cls}">${players(members).map(memberLine).join('')}</ul>`
@@ -93,6 +84,22 @@ function shareRow(s, full) {
   const title = s.kind === 'tab' ? `${shareTitle(s)}\n${s.url}` : shareTitle(s)
   return `<li class="squad-share ${s.seen ? '' : 'unseen'}"><button data-action="squadShareOpen" data-id="${esc(s.id)}" title="${esc(title)}">${icon(shareIcons[s.kind] || 'globe')}<span class="squad-share-text"><span class="squad-share-title">${esc(shareTitle(s))}</span>${from}</span>${s.seen ? '' : '<span class="squad-share-dot"></span>'}</button></li>`
 }
+// Notices of what the squad shared, at the bottom of the sidebar: they
+// stay until opened (pressed), put away (×) or seen on the squad's page;
+// three at most show, the rest counted on a button to the page. The page
+// views are native windows over the page area, so the notices keep to the
+// sidebar (not on the collapsed one, nor in the horizontal layout, where the
+// squad's button counts them).
+const TOASTS = 3
+export function shareToasts() {
+  const list = waiting()
+  if (!list.length || state.layout !== 'vertical' || state.sidebarCollapsed) return ''
+  const toast = (s) =>
+    `<div class="squad-toast" style="--c:${esc(s.c)}"><button class="squad-toast-open" data-action="squadShareOpen" data-id="${esc(s.id)}" title="${esc(s.kind === 'tab' ? `${shareTitle(s)}\n${s.url}` : shareTitle(s))}">${icon(shareIcons[s.kind] || 'globe')}<span class="squad-share-text"><span class="squad-share-title">${esc(shareTitle(s))}</span><span class="squad-share-from"><span class="squad-dot" style="--c:${esc(s.c)}"></span>${esc(t(s.kind === 'snap' ? 'squadToastSnap' : 'squadToastTab').replace('{name}', s.name || '?'))}</span></span></button><button class="squad-toast-close" data-action="squadShareDismiss" data-id="${esc(s.id)}" title="${esc(t('squadToastDismiss'))}" aria-label="${esc(t('squadToastDismiss'))}">${icon('x')}</button></div>`
+  const more = list.length > TOASTS ? `<button class="squad-toast-more" data-action="squadPage">${esc(t('squadToastMore').replace('{n}', String(list.length - TOASTS)))}</button>` : ''
+  return `<div class="squad-toasts" role="status">${list.slice(0, TOASTS).map(toast).join('')}${more}</div>`
+}
+
 let shareFilter = 'all'
 function sharesCard() {
   const chip = (id, label) =>
@@ -111,11 +118,10 @@ export function squadSection() {
   const count = s
     ? `<span class="squad-section-count" data-phase="${esc(s.phase)}" title="${esc(t('squadPhase_' + s.phase))}">${players(s.members).length}</span>`
     : ''
-  const head = `<div class="section-label squad-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSquadSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('squad'))}${count}${icon('chevron', 'section-chevron')}</button><button class="new-tab squad-open" data-action="squadPage" title="${esc(t('squadOpen'))}" aria-label="${esc(t('squadOpen'))}" aria-pressed="${open}">${icon('squad')}</button></div>`
+  const head = `<div class="section-label squad-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSquadSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('squad'))}${count}${icon('chevron', 'section-chevron')}</button><button class="new-tab squad-open" data-action="squadPage" title="${esc(t('squadOpen'))}" aria-label="${esc(t('squadOpen'))}" aria-pressed="${open}">${icon('squad')}${waiting().length ? `<span class="squad-open-count">${waiting().length}</span>` : ''}</button></div>`
   if (folded) return head
-  const recent = shares.slice(0, 4)
   const body = s
-    ? `<ul class="squad-chips squad-section">${players(s.members).map(memberChip).join('')}</ul>${recent.length ? `<ul class="squad-shares squad-section">${recent.map((x) => shareRow(x, false)).join('')}</ul>` : ''}`
+    ? `<ul class="squad-chips squad-section">${players(s.members).map(memberChip).join('')}</ul>`
     : `<div class="squad-section"><button class="squad-start" data-action="squadPage">${esc(t('squadStart'))}</button></div>`
   return head + body
 }
@@ -223,6 +229,10 @@ clickHandlers.push(async (type, id) => {
   if (type === 'squadShareFilter') {
     shareFilter = id || 'all'
     render()
+    return true
+  }
+  if (type === 'squadShareDismiss') {
+    markSeen(id)
     return true
   }
   if (type === 'squadShareOpen') {

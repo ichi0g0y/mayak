@@ -1,6 +1,6 @@
 import { state, render, afterRenderHooks } from './shell-core.js'
 import { validLine } from './map-geo.js'
-import { colorOf } from './view-squad.js'
+import { colorOf } from './squad-colors.js'
 
 // The squad pen's lines (docs/squad-sharing.md): what every member of the
 // squad draws on the map, sent through the squad's room as messages of the
@@ -172,6 +172,7 @@ const valid = (l) =>
   typeof l.by === 'string' &&
   typeof l.name === 'string' &&
   Number.isInteger(l.gen ?? 0) &&
+  (l.z === undefined || Number.isFinite(l.z)) &&
   l.p.length <= 20000 &&
   l.p.every((q) => Array.isArray(q) && Number.isFinite(q[0]) && Number.isFinite(q[1]))
 function mergeGens(gens) {
@@ -292,6 +293,7 @@ function receive(from, data) {
     case 'b': {
       if (!by || typeof data.id !== 'string') return
       const line = { id: data.id, by, name: String(data.name || ''), c: String(data.c || ''), map: String(data.map || ''), floor: String(data.floor || ''), w: Number(data.w) || 5, p: [], gen: 0 }
+      if (Number.isFinite(data.z)) line.z = data.z
       sq.live.set(data.id, { line, at: Date.now() })
       return notify(true)
     }
@@ -363,7 +365,7 @@ function receive(from, data) {
 
 // What this member does with the pen.
 export function begin(line) {
-  send({ t: 'b', id: line.id, map: line.map, floor: line.floor, w: line.w, c: line.c, name: line.name })
+  send({ t: 'b', id: line.id, map: line.map, floor: line.floor, w: line.w, z: line.z, c: line.c, name: line.name })
 }
 export function points(id, list) {
   if (list.length) send({ t: 'p', id, p: list }, true)
@@ -402,7 +404,7 @@ export function undoClear() {
 let cursorAt = 0
 export function cursor(map, floor, x, z) {
   const now = Date.now()
-  if (now - cursorAt < 200) return
+  if (now - cursorAt < 100) return
   cursorAt = now
   const { c, name } = myStyle()
   send({ t: 'c', map, floor, x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100, c, name }, true)

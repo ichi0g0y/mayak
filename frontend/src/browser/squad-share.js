@@ -15,6 +15,10 @@ import * as squad from './squad-draw.js'
 // for the squad joined, and goes with it.
 
 export const shares = []
+// Someone drew on the map since it last showed: a dot beside "Map" in the
+// sidebar (view-map.js liveMapEntry) until it shows.
+export let mapFresh = false
+const onMap = () => state.tabs.find((tab) => tab.id === state.active)?.kind === 'livemap'
 const MAX = 50
 // The longest picture taken in (a data URL), and a page's address and title.
 const MAX_IMAGE = 1_500_000
@@ -51,7 +55,20 @@ squad.onShell('snap', (by, d) => {
 squad.onShell('drew', (by, d) => {
   if (!d.map) return
   keep({ id: `draw:${by}:${d.map}`, kind: 'draw', by, name: text(d.name, 24), c: text(d.c, 7), map: text(d.map, 60), at: Date.now(), mine: false, seen: true })
+  if (!onMap() && !mapFresh) {
+    mapFresh = true
+    render()
+  }
 })
+afterRenderHooks.push(() => {
+  if (mapFresh && onMap()) {
+    mapFresh = false
+    setTimeout(render)
+  }
+})
+// The shares waiting to be seen (pages and snap notes, not drawings), the
+// newest first: the sidebar's notices (view-squad.js shareToasts).
+export const waiting = () => shares.filter((s) => !s.seen && s.kind !== 'draw')
 // Those who join get the pages shared here lately.
 squad.onJoin(() => {
   for (const s of shares.filter((s) => s.mine && s.kind === 'tab').slice(0, 20).reverse()) void sendTab(s)

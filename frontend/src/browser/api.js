@@ -1122,6 +1122,13 @@ async function perform(type, data) {
         state.tabs.find((t) => t.kind === 'livemap') ||
         state.tabs.find((t) => t.kind !== 'settings')
       if (back) state.active = back.id
+      else {
+        // Nothing to go back to (a first start with no page open, a build
+        // without the map): a new tab, as a browser opens one.
+        const item = { id: randomUUID(), kind: 'blank' }
+        state.tabs.push(item)
+        state.active = item.id
+      }
       break
     }
     case 'bookmarks':

@@ -20,8 +20,10 @@
 // A member may send so many messages per window before it is dropped.
 const RATE_WINDOW_MS = 10_000;
 // A squad: ten players' positions, small and seldom, and the squad pen's
-// lines as they are drawn (the app keeps under 100 in 10 s).
-const SQUAD = { members: 10, message: 4096, rate: 120, replay: true };
+// lines as they are drawn and its position ten times a second, as
+// multiplayer tools send a cursor (the app keeps to five sixths of the rate
+// told in the welcome).
+const SQUAD = { members: 10, message: 4096, rate: 240, replay: true };
 // The relay's version, told in the welcome: 2 takes the squad pen's
 // ephemeral messages at the rate above (the app draws only with it).
 const VERSION = 2;
@@ -75,7 +77,7 @@ class Room {
     this.state.acceptWebSocket(server);
     server.serializeAttachment(member);
     const others = this.members(server).map(({ member: m }) => ({ id: m.id, last: this.limits.replay ? m.last : '' }));
-    server.send(JSON.stringify({ t: 'welcome', id: member.id, members: others, v: VERSION }));
+    server.send(JSON.stringify({ t: 'welcome', id: member.id, members: others, v: VERSION, rate: this.limits.rate }));
     this.broadcast(server, { t: 'join', id: member.id });
     return new Response(null, { status: 101, webSocket: client });
   }

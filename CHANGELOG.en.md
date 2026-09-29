@@ -11,6 +11,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - A "Squad pen" on the map (nightly build only): the whole squad draws on the same map at once, each in their squad colour, seeing lines as they are drawn and where the others' pens are. Only your own lines can be erased; "Clear all" removes the map's squad lines for everyone (undoable for a few seconds). Pointing at a line names who drew it. Those who join later, or come back after a drop, get the lines too. A snap note of the map carries the squad's lines in its first layer, with your own.
 - Pages and snap notes can be shared with the squad (nightly build only): a page with the squad button in the toolbar, a snap note with "Share with the squad" in its share menu. What was shared, and who drew on which map, is listed in the sidebar's squad section and on the squad page; pressing one opens it (a snap note is kept as a note of your own).
 - Cut off from the squad relay, MAYAK waits at most 15 seconds (not a minute) before connecting again, and a squad colour two members chose stays with the same one across reconnections.
+- A page or snap note shared by the squad shows as a notice at the bottom of the sidebar that stays until opened or closed (three at most), and when a squadmate draws on the map a dot shows beside "Map" in the sidebar.
+- The map pens' lines grow and shrink with the map's zoom, so writing drawn close up keeps its shape for a squadmate seeing it from afar; the squad pen's position goes ten times a second and glides.
 
 ### Improved
 
@@ -28,6 +30,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - Pairing with another PC: a Client types the code into eight boxes of one digit (the typing moves on, a paste fills them, the eighth digit connects), and once linked each PC shows the other's computer name under Settings → Connection.
 
 ### Fixed
+- Closing settings did nothing when there was no tab to go back to; a new tab opens instead.
 
 - A position found in a screenshot with coordinates did not reach the Client.
 - The corners of an item's picture in the item panel looked faint.

@@ -17,7 +17,10 @@ import * as squad from './squad-draw.js'
 // pen's place shows to the others; pointing at a squad line names its drawer.
 
 export const palette = ['#ff3b30', '#ffd60a', '#34c759', '#32ade6', '#ffffff', '#111111']
-// Widths in screen pixels: a line keeps its width at every zoom.
+// Widths in screen pixels at the zoom a line is drawn at (its z): at
+// another zoom it is as much wider or thinner as the map is bigger or
+// smaller (widthAt), so that writing drawn close up keeps its shape seen
+// from afar. A line kept before z has its width at every zoom.
 export const widths = /** @type {[string, number][]} */ ([
   ['s', 3],
   ['m', 5],
@@ -44,7 +47,7 @@ const redoStack = []
 // What shows now (drawLines): the Leaflet module, map, the map's key and the
 // floor, and how strong other floors show.
 const at = { L: null, map: null, key: '', floor: '', alpha: 0.2 }
-const drawn = { map: null, layer: null, key: '', live: null, liveKey: '' }
+const drawn = { map: null, layer: null, key: '', live: null, liveKey: '', cursors: new Map() }
 
 const backend = () => window.mayakDesktop?.backend
 
@@ -240,8 +243,13 @@ export function drawLines(L, map, key, floor, alpha) {
     drawn.live = L.layerGroup().addTo(map)
     drawn.key = ''
     drawn.liveKey = ''
+    drawn.cursors = new Map()
+    // The widths follow the zoom (widthAt): drawn again once it settles.
+    map.on('zoomend', () => {
+      if (at.map === map) drawLines(at.L, map, at.key, at.floor, at.alpha)
+    })
   }
-  const drawKey = [revision, squad.sq.revision, key, floor, pen.hidden, alpha].join('|')
+  const drawKey = [revision, squad.sq.revision, key, floor, pen.hidden, alpha, zoomKey()].join('|')
   if (drawn.key !== drawKey) {
     drawn.key = drawKey
     drawn.layer.clearLayers()
@@ -257,7 +265,7 @@ export function drawLines(L, map, key, floor, alpha) {
 // drawLive draws what the others are drawing now, and where their squad
 // pens are.
 function drawLive(L, key, floor, alpha) {
-  const liveKey = [squad.sq.liveRevision, key, floor, alpha].join('|')
+  const liveKey = [squad.sq.liveRevision, key, floor, alpha, zoomKey()].join('|')
   if (drawn.liveKey === liveKey) return
   drawn.liveKey = liveKey
   drawn.live.clearLayers()
@@ -265,29 +273,53 @@ function drawLive(L, key, floor, alpha) {
     const opacity = l.floor === floor ? 1 : alpha
     if (opacity) shape(L, l, opacity).addTo(drawn.live)
   }
-  for (const c of squad.cursorsOn(key))
-    L.marker([c.z, c.x], {
-      pane: 'mapDraw',
-      interactive: false,
-      keyboard: false,
-      opacity: c.floor === floor ? 1 : Math.max(alpha, 0.3),
-      icon: L.divIcon({
-        className: 'squad-pen-cursor-icon',
-        html: `<span class="squad-pen-cursor" style="--c:${esc(c.c)}">${icon('pencil')}<span>${esc(c.name)}</span></span>`,
-        iconSize: [0, 0],
-      }),
-    }).addTo(drawn.live)
+  // The others' pens stay as markers that move (and glide, style.css) to
+  // each new place rather than being drawn again.
+  const seen = new Set()
+  for (const c of squad.cursorsOn(key)) {
+    const id = c.name + '|' + c.c
+    seen.add(id)
+    let marker = drawn.cursors.get(id)
+    if (!marker) {
+      marker = L.marker([c.z, c.x], {
+        pane: 'mapDraw',
+        interactive: false,
+        keyboard: false,
+        icon: L.divIcon({
+          className: 'squad-pen-cursor-icon',
+          html: `<span class="squad-pen-cursor" style="--c:${esc(c.c)}">${icon('pencil')}<span>${esc(c.name)}</span></span>`,
+          iconSize: [0, 0],
+        }),
+      }).addTo(drawn.map)
+      drawn.cursors.set(id, marker)
+    } else marker.setLatLng([c.z, c.x])
+    marker.setOpacity(c.floor === floor ? 1 : Math.max(alpha, 0.3))
+  }
+  for (const [id, marker] of drawn.cursors)
+    if (!seen.has(id)) {
+      marker.remove()
+      drawn.cursors.delete(id)
+    }
 }
 // The lines change without a render when the squad's do.
 squad.onLines(() => {
   if (at.map && drawn.map === at.map) drawLines(at.L, at.map, at.key, at.floor, at.alpha)
 })
+// widthAt is a line's width on screen at the map's zoom now: its width
+// scaled with the map from its zoom, a pixel at least and eight times its
+// width at most.
+const zoomKey = () => (at.map ? Math.round(at.map.getZoom() * 10) : 0)
+function widthAt(l) {
+  if (!Number.isFinite(l.z) || !at.map) return l.w
+  return Math.min(l.w * 8, Math.max(1, l.w * 2 ** (at.map.getZoom() - l.z)))
+}
 function shape(L, l, opacity) {
   const points = l.p.map(([x, z]) => [z, x])
+  const w = widthAt(l)
   return points.length === 1
     ? L.circleMarker(points[0], {
         pane: 'mapDraw',
-        radius: l.w / 2,
+        radius: w / 2,
         stroke: false,
         fillColor: l.c,
         fillOpacity: opacity,
@@ -296,7 +328,7 @@ function shape(L, l, opacity) {
     : L.polyline(points, {
         pane: 'mapDraw',
         color: l.c,
-        weight: l.w,
+        weight: w,
         opacity,
         lineCap: 'round',
         lineJoin: 'round',
@@ -339,16 +371,17 @@ export function attach(el, signal) {
       const ll = at.map.containerPointToLatLng(p)
       const w = widths.find(([k]) => k === pen.size)?.[1] || 5
       const first = [[round(ll.lng), round(ll.lat)]]
+      const z = Math.round(at.map.getZoom() * 10) / 10
       const line = squadMode()
-        ? { id: newID(), by: squad.myKeyOf(), ...squad.myStyle(), map: at.key, floor: at.floor, w, p: first, gen: squad.genOf(at.key) }
-        : { id: newID(), map: at.key, floor: at.floor, c: pen.color, w, p: first }
+        ? { id: newID(), by: squad.myKeyOf(), ...squad.myStyle(), map: at.key, floor: at.floor, w, z, p: first, gen: squad.genOf(at.key) }
+        : { id: newID(), map: at.key, floor: at.floor, c: pen.color, w, z, p: first }
       stroke = { line, live: shape(at.L, line, 1).addTo(at.map), last: [p.x, p.y], sent: 0, timer: 0 }
       // The squad sees the line as it is drawn: its start, then its new
-      // points every eighth of a second.
+      // points every tenth of a second.
       if (squadMode()) {
         squad.begin(line)
         const s = stroke
-        s.timer = setInterval(() => flush(s), 125)
+        s.timer = setInterval(() => flush(s), 100)
       }
     },
     { signal },
@@ -441,7 +474,7 @@ function nameTip(el, p) {
             .shownLines(at.key)
             .filter((l) => l.floor === at.floor)
             .reverse()
-            .find((l) => hits(onScreen(l), l.w, [p.x, p.y], 4))
+            .find((l) => hits(onScreen(l), widthAt(l), [p.x, p.y], 4))
         : null
     if (!line) {
       tip?.remove()
@@ -460,14 +493,14 @@ function nameTip(el, p) {
 }
 function eraseAt(p) {
   if (squadMode()) {
-    const hit = squadHere().filter((l) => hits(onScreen(l), l.w, [p.x, p.y], 6))
+    const hit = squadHere().filter((l) => hits(onScreen(l), widthAt(l), [p.x, p.y], 6))
     if (!hit.length) return
     squad.erase(hit)
     erased.push(...hit)
     return
   }
   if (pen.hidden) return
-  const hit = lines.filter((l) => here(l) && hits(onScreen(l), l.w, [p.x, p.y], 6))
+  const hit = lines.filter((l) => here(l) && hits(onScreen(l), widthAt(l), [p.x, p.y], 6))
   if (!hit.length) return
   const ids = new Set(hit.map((l) => l.id))
   lines = lines.filter((l) => !ids.has(l.id))
@@ -480,7 +513,7 @@ function eraseAt(p) {
 // pixel), your own pen's and the squad's, for the note's first layer.
 function toStrokes(list, scale) {
   const px = (v) => Math.round(v * scale * 10) / 10
-  return list.map((l) => ({ c: l.c, w: px(l.w), p: onScreen(l).map(([x, y]) => [px(x), px(y)]) }))
+  return list.map((l) => ({ c: l.c, w: px(widthAt(l)), p: onScreen(l).map(([x, y]) => [px(x), px(y)]) }))
 }
 export const snapStrokes = (scale) => (pen.hidden || !at.map ? [] : toStrokes(lines.filter(here), scale))
 export const squadSnapStrokes = (scale) =>

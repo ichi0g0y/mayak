@@ -34,7 +34,9 @@ import {
   render,
 } from './shell-core.js'
 import { attach, clearNotice, drawLines, penBar, penButton, snapStrokes, squadSnapStrokes } from './map-draw.js'
-import { colorOf, mapName, memberList, ownName } from './view-squad.js'
+import { mapName, memberList, ownName } from './view-squad.js'
+import { colorOf } from './squad-colors.js'
+import { mapFresh } from './squad-share.js'
 
 // The map view: tarkov.dev's interactive map redrawn by MAYAK (Leaflet over
 // its SVG maps; internal/mapdata makes the picture of each floor and the
@@ -65,7 +67,7 @@ export function liveMapEntry() {
   const active = state.tabs.find((t) => t.id === state.active)?.kind === 'livemap'
   // A row like a tab (the whole of it opens the map, and shows it open), with
   // the name first and the map icon at its end as the sections have theirs.
-  return `<div class="tab map-entry live-map-entry ${active ? 'active' : ''}"><button data-action="livemap" class="tab-select" title="${esc(t('liveMapHelp'))}" aria-pressed="${active}"><span class="tab-name">${esc(t('liveMap'))}</span>${icon('map', 'tab-icon live-map-icon')}</button></div>`
+  return `<div class="tab map-entry live-map-entry ${active ? 'active' : ''}"><button data-action="livemap" class="tab-select" title="${esc(t('liveMapHelp'))}" aria-pressed="${active}"><span class="tab-name">${esc(t('liveMap'))}</span>${mapFresh ? `<span class="map-fresh" title="${esc(t('mapFresh'))}"></span>` : ''}${icon('map', 'tab-icon live-map-icon')}</button></div>`
 }
 
 // shown is the map and floor to draw now.

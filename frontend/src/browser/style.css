@@ -1039,7 +1039,8 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-rail-pen-dot{position:absolute;right:5px;bottom:5px;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 0 1.5px var(--surface)}
 .map-draw-own-color{display:inline-flex;align-items:center;gap:6px;padding:0 6px;font-size:12.5px;white-space:nowrap;color:var(--text-2)}
 .map-draw-bar button.map-draw-clear-all{width:auto;padding:0 9px;font-size:12px;font-weight:500;color:var(--danger,#e06c75)}
-.squad-pen-cursor-icon{background:none;border:0}
+.squad-pen-cursor-icon{background:none;border:0;transition:transform .1s linear}
+.leaflet-zoom-anim .squad-pen-cursor-icon{transition:none}
 .squad-pen-cursor{position:absolute;left:-2px;top:-16px;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;color:var(--c);font:600 11px/1 system-ui,sans-serif;text-shadow:0 0 2px #000,0 0 2px #000;pointer-events:none}
 .squad-pen-cursor .icon{width:15px;height:15px;filter:drop-shadow(0 0 1px #000)}
 .map-line-name{position:absolute;z-index:900;padding:2px 7px;border-radius:6px;border-left:3px solid var(--c);background:var(--surface);color:var(--text);font:500 12px/1.4 system-ui,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:none;white-space:nowrap}
@@ -1190,6 +1191,21 @@ div.squad-section{padding:2px 10px 8px}
 .squad-shares-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .squad-shares-card .squad-shares{margin-top:6px}
 .squad-shares-card .squad-share-title{font-size:13px}
+/* The notices of what was shared, at the bottom of the sidebar. */
+.squad-toasts{position:fixed;left:0;bottom:calc(48px + var(--status-bar));z-index:13;width:var(--sidebar-width);padding:0 8px 8px;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+body[data-nav=right] .squad-toasts{left:auto;right:0}
+.squad-toast{pointer-events:auto;display:flex;align-items:stretch;border:1px solid var(--border-strong);border-left:3px solid var(--c,var(--accent));border-radius:8px;background:var(--surface);box-shadow:0 4px 14px var(--shadow);animation:squad-toast-in .18s ease-out}
+.squad-toast-open{flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:7px 4px 7px 9px;border:0;border-radius:6px 0 0 6px;background:transparent;font-weight:400;text-align:left}
+.squad-toast-open .icon{flex:none;width:16px;height:16px;color:var(--muted)}
+.squad-toast-close{flex:none;width:28px;padding:0;border:0;border-radius:0 6px 6px 0;background:transparent;color:var(--muted)}
+.squad-toast-close .icon{width:14px;height:14px}
+.squad-toast .squad-share-title{font-weight:600}
+.squad-toast-more{pointer-events:auto;height:28px;font-size:12px;background:var(--surface)}
+@keyframes squad-toast-in{from{opacity:0;transform:translateY(6px)}}
+.squad-open{position:relative}
+.squad-open-count{position:absolute;top:-3px;right:-4px;min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:var(--accent);color:var(--bg);font:700 10px/15px system-ui,sans-serif}
+/* Someone drew on the map since it last showed. */
+.map-fresh{flex:none;width:7px;height:7px;margin-left:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
 .squad-start{width:100%;height:30px;font-size:12.5px;font-weight:500}
 .squad-section-label.active .squad-open{background:var(--selected);color:var(--text)}
 body[data-sidebar=collapsed] .squad-section-label .section-link,body[data-sidebar=collapsed] .squad-section{display:none}

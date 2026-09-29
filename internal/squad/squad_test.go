@@ -293,13 +293,26 @@ func TestShellMessagesPassAndAreNotReplayed(t *testing.T) {
 
 func TestSendKeepsUnderTheRelaysLimit(t *testing.T) {
 	c := &Client{done: make(chan struct{})}
-	for i := 0; i < sendLimit; i++ {
+	all, few := limits(0)
+	if all != 100 || few != 84 {
+		t.Fatalf("limits for an old relay = %d, %d", all, few)
+	}
+	for i := 0; i < few; i++ {
 		if !c.take(true) {
 			t.Fatalf("message %d refused", i)
 		}
 	}
 	if c.take(true) {
-		t.Fatal("a droppable message over the limit was taken")
+		t.Fatal("a droppable message over its limit was taken")
+	}
+	// What must go still has room.
+	for i := few; i < all; i++ {
+		if !c.take(false) {
+			t.Fatalf("message %d refused", i)
+		}
+	}
+	if all, few := limits(240); all != 200 || few != 167 {
+		t.Fatalf("limits for 240 = %d, %d", all, few)
 	}
 	close(c.done)
 	if c.take(false) {
