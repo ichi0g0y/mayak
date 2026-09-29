@@ -301,6 +301,16 @@ export function BrowserSetWindowTheme(caption: string, text: string, border: str
 }
 
 /**
+ * BrowserSiteIcon finds the icon of the page at pageURL without showing the
+ * page (a bookmark whose site was never opened): the icon its HTML names
+ * (<link rel="icon">, else apple-touch-icon), else /favicon.ico. The icon
+ * found is cached as BrowserFavicon caches; its URL is returned.
+ */
+export function BrowserSiteIcon(pageURL: string): $CancellablePromise<string> {
+    return $Call.ByID(2629560728, pageURL);
+}
+
+/**
  * BrowserSquadMapImage returns the picture of map (a key or an alias) at a
  * floor (a layer's svgLayer, or "" for the ground level), the ground faded
  * to fade percent under a floor, as a data URL.

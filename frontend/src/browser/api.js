@@ -115,6 +115,40 @@ function loadFavicon(url, refresh = false) {
     })
     .catch(() => {})
 }
+// preloadIcons looks up the icons of bookmarks whose site shows none yet
+// (never opened in a tab): the Go side reads the page for its icon and
+// caches it (BrowserSiteIcon). One site at a time, in the background, each
+// tried once a run: the pinned bookmarks at start and when pinned, all of
+// them when the bookmarks page opens.
+const iconTried = new Set()
+const iconQueue = []
+let iconBusy = false
+function preloadIcons(bookmarks) {
+  for (const b of bookmarks) {
+    const host = hostname(b.url)
+    if (!host || !webURL(b.url) || state.favicons[host] || iconTried.has(host)) continue
+    iconTried.add(host)
+    iconQueue.push(b.url)
+  }
+  void nextIcon()
+}
+async function nextIcon() {
+  if (iconBusy || !go.BrowserSiteIcon) return
+  iconBusy = true
+  while (iconQueue.length) {
+    const url = iconQueue.shift()
+    try {
+      const icon = await go.BrowserSiteIcon(url)
+      if (webURL(icon) && !state.favicons[hostname(url)]) {
+        rememberFavicon(state, url, icon)
+        loadFavicon(icon)
+        update()
+        void enqueue(persist).catch(() => {})
+      }
+    } catch {}
+  }
+  iconBusy = false
+}
 
 // The map view and its squad (app_squad.go, view-map.js): whether this build
 // offers it, the squad as the Go side last reported it, the maps' geometry,
@@ -1115,6 +1149,7 @@ const ready = (async () => {
     void enqueue(persist)
   })
   for (const url of new Set([...Object.values(state.favicons), ...state.tabs.map((t) => t.favicon)])) loadFavicon(url)
+  preloadIcons(state.bookmarks.filter((b) => b.sidebar))
   void show().catch(messageError)
   return snapshot()
 })()
@@ -1159,6 +1194,7 @@ async function perform(type, data) {
     }
     case 'bookmarks':
       openLocal(state, 'bookmarks')
+      preloadIcons([...state.bookmarks.filter((b) => b.sidebar), ...state.bookmarks])
       break
     case 'tabsPage':
       openLocal(state, 'tabs')
@@ -1506,6 +1542,7 @@ async function perform(type, data) {
     case 'bookmarkPin': {
       const item = state.bookmarks.find((b) => b.id === (data?.id ?? data))
       if (item) pinBookmark(state, item.id, data?.pin ?? !item.sidebar, data?.before)
+      preloadIcons(state.bookmarks.filter((b) => b.sidebar))
       break
     }
     case 'settingsSection':
@@ -1659,6 +1696,7 @@ async function perform(type, data) {
         if (state.bookmarks[index].sidebar) item.sidebar = true
         state.bookmarks[index] = item
       } else if (state.bookmarks.length < 100) state.bookmarks.push(item)
+      preloadIcons([item])
       break
     }
     case 'deleteBookmark':

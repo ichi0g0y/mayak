@@ -14,9 +14,12 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/net/html"
 )
 
 // faviconCache keeps site icons on disk, so the browser sidebar shows them at
@@ -151,4 +154,139 @@ func faviconURLAllowed(rawURL string) bool {
 		return false
 	}
 	return true
+}
+
+// BrowserSiteIcon finds the icon of the page at pageURL without showing the
+// page (a bookmark whose site was never opened): the icon its HTML names
+// (<link rel="icon">, else apple-touch-icon), else /favicon.ico. The icon
+// found is cached as BrowserFavicon caches; its URL is returned.
+func (a *App) BrowserSiteIcon(pageURL string) (string, error) {
+	a.faviconOnce.Do(func() { a.favicons = newFaviconCache() })
+	parent := a.ctx
+	if parent == nil {
+		parent = context.Background()
+	}
+	return a.favicons.siteIcon(parent, pageURL)
+}
+
+const siteIconPageBytes = 512 << 10
+
+func (c *faviconCache) siteIcon(ctx context.Context, pageURL string) (string, error) {
+	if !c.allow(pageURL) {
+		return "", errors.New("invalid page URL")
+	}
+	var candidates []string
+	if final, links, err := c.pageIcons(ctx, pageURL); err == nil {
+		candidates = append(candidates, links...)
+		candidates = append(candidates, faviconAt(final))
+	}
+	candidates = append(candidates, faviconAt(pageURL))
+	seen := map[string]bool{}
+	for _, u := range candidates {
+		if u == "" || seen[u] || !c.allow(u) {
+			continue
+		}
+		seen[u] = true
+		if _, err := c.get(ctx, u, false); err == nil {
+			return u, nil
+		}
+	}
+	return "", errors.New("no icon found")
+}
+
+// faviconAt is /favicon.ico of the site of rawURL.
+func faviconAt(rawURL string) string {
+	u, err := url.Parse(rawURL)
+	if err != nil || u.Host == "" {
+		return ""
+	}
+	return u.Scheme + "://" + u.Host + "/favicon.ico"
+}
+
+// pageIcons reads the head of the page at pageURL and returns where it ended
+// up (after redirects, each vetted as icon URLs are) and the icons it names,
+// the best first.
+func (c *faviconCache) pageIcons(ctx context.Context, pageURL string) (string, []string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, pageURL, nil)
+	if err != nil {
+		return "", nil, err
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 MAYAK/0.1.0")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml")
+	client := *c.client
+	client.CheckRedirect = func(r *http.Request, via []*http.Request) error {
+		if len(via) >= 5 || !c.allow(r.URL.String()) {
+			return errors.New("redirect not followed")
+		}
+		return nil
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", nil, err
+	}
+	defer resp.Body.Close()
+	final := resp.Request.URL.String()
+	if resp.StatusCode != http.StatusOK {
+		return final, nil, errors.New("page request returned " + resp.Status)
+	}
+	if kind, _, _ := mime.ParseMediaType(resp.Header.Get("Content-Type")); kind != "" && !strings.Contains(kind, "html") {
+		return final, nil, errors.New("page is not HTML")
+	}
+	return final, iconLinks(io.LimitReader(resp.Body, siteIconPageBytes), resp.Request.URL), nil
+}
+
+// iconLinks reads an HTML head for the icons it names, as absolute URLs:
+// rel="icon" (and "shortcut icon") in their order, then apple-touch-icon;
+// mask-icon (a one-colour outline) is left out.
+func iconLinks(r io.Reader, page *url.URL) []string {
+	base := page
+	var icons, touch []string
+	z := html.NewTokenizer(r)
+	for {
+		tt := z.Next()
+		if tt == html.ErrorToken {
+			break
+		}
+		if tt != html.StartTagToken && tt != html.SelfClosingTagToken {
+			continue
+		}
+		tag, hasAttr := z.TagName()
+		name := string(tag)
+		if name == "body" {
+			break
+		}
+		if (name != "link" && name != "base") || !hasAttr {
+			continue
+		}
+		attrs := map[string]string{}
+		for more := true; more; {
+			var k, v []byte
+			k, v, more = z.TagAttr()
+			attrs[strings.ToLower(string(k))] = string(v)
+		}
+		href := strings.TrimSpace(attrs["href"])
+		if href == "" {
+			continue
+		}
+		if name == "base" {
+			if u, err := page.Parse(href); err == nil {
+				base = u
+			}
+			continue
+		}
+		u, err := base.Parse(href)
+		if err != nil {
+			continue
+		}
+		rels := strings.Fields(strings.ToLower(attrs["rel"]))
+		switch {
+		case slices.Contains(rels, "icon"):
+			icons = append(icons, u.String())
+		case slices.Contains(rels, "apple-touch-icon") || slices.Contains(rels, "apple-touch-icon-precomposed"):
+			touch = append(touch, u.String())
+		}
+	}
+	return append(icons, touch...)
 }

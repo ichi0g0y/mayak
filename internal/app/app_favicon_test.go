@@ -4,8 +4,10 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -55,5 +57,56 @@ func TestFaviconCacheServesAndRefreshes(t *testing.T) {
 	icon = []byte{0, 0, 1, 0, 9, 9, 9}
 	if changed, _ := c.get(context.Background(), u, true); changed == first || calls != 2 {
 		t.Fatalf("changed icon not picked up: calls %d", calls)
+	}
+}
+
+func TestIconLinksReadsTheHead(t *testing.T) {
+	page, _ := url.Parse("https://example.com/wiki/Page")
+	doc := `<html><head><link rel="mask-icon" href="/mask.svg"><link rel="apple-touch-icon" href="/touch.png">
+<link rel="shortcut icon" href="/static/fav.ico"><base href="https://cdn.example.com/"><link rel="icon" href="i.png" sizes="32x32"></head>
+<body><link rel="icon" href="/late.png"></body></html>`
+	got := iconLinks(strings.NewReader(doc), page)
+	want := []string{"https://example.com/static/fav.ico", "https://cdn.example.com/i.png", "https://example.com/touch.png"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("iconLinks = %v, want %v", got, want)
+	}
+}
+
+func TestSiteIconFindsTheIconOfAPageNeverOpened(t *testing.T) {
+	icon := []byte{0, 0, 1, 0, 1, 2, 3}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/old":
+			http.Redirect(w, r, "/page", http.StatusFound)
+		case "/page":
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write([]byte(`<head><link rel="icon" href="/missing.png"><link rel="icon" href="/img/icon.ico"></head>`))
+		case "/img/icon.ico", "/favicon.ico":
+			w.Write(icon)
+		case "/bare":
+			w.Header().Set("Content-Type", "text/html")
+			w.Write([]byte(`<head><title>no icon named</title></head>`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+	c := &faviconCache{dir: t.TempDir(), client: server.Client(), allow: func(string) bool { return true }}
+	// Through a redirect, the first named icon that loads.
+	if got, err := c.siteIcon(context.Background(), server.URL+"/old"); err != nil || got != server.URL+"/img/icon.ico" {
+		t.Fatalf("siteIcon = %q, %v", got, err)
+	}
+	// A page naming none falls back to /favicon.ico, and it is cached.
+	got, err := c.siteIcon(context.Background(), server.URL+"/bare")
+	if err != nil || got != server.URL+"/favicon.ico" {
+		t.Fatalf("siteIcon = %q, %v", got, err)
+	}
+	if files, _ := filepath.Glob(filepath.Join(c.dir, "*.img")); len(files) != 2 {
+		t.Fatalf("cached %d icons, want 2", len(files))
+	}
+	// A page the app may not fetch is refused.
+	c.allow = faviconURLAllowed
+	if _, err := c.siteIcon(context.Background(), "http://127.0.0.1/"); err == nil {
+		t.Fatal("siteIcon fetched a local address")
 	}
 }

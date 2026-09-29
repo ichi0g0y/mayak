@@ -19,6 +19,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### Improved
 
+- Bookmark icons show even for sites never opened: those pinned to the sidebar are fetched at start and when pinned, and all of them when the bookmarks page opens, one at a time in the background (a site that refuses this, such as Fandom, gets its icon once opened).
+
 - On a Mac, the menu bar icon is the logo alone (the hexagon and M) in black or white, to suit a light or dark menu bar.
 - The connection to other PCs (from the Host to Clients) goes through a relay (mayak-relay.ich.sh): no network keeps it from connecting any more, and paired PCs connect again on their own at every start (and after a drop). What they say is encrypted with a key only the paired PCs have; the relay cannot read it. The 8-digit code from the Host, entered on the other PC, is all it takes (no response code any more), and a Host takes any number of PCs. Each Client chooses what it shows: tasks, maps and positions, items. The STUN setting is gone.
 - The TARKOV.DEV and TarkovTracker fixed tabs are gone; they are bookmarks pinned to the sidebar. Map detections show on "Map".
