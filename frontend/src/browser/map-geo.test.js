@@ -2,6 +2,9 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   autoMap,
+  hits,
+  segmentDistance,
+  validLine,
   findMap,
   floorFor,
   found,
@@ -204,4 +207,32 @@ test('floors go from the lowest up with the ground among them', async () => {
     layers: [floor('2', [22.1, 25.7], [-4.3, -2.2]), floor('5', [5, 9.5]), floor('b', [-10000, -7.27], [-11, -4.6])],
   }
   assert.deepEqual(floorOrder(reserve), ['b', '', '2', '5'])
+})
+
+test('segmentDistance measures to the nearest point of a segment', () => {
+  assert.equal(segmentDistance([5, 3], [0, 0], [10, 0]), 3)
+  assert.equal(segmentDistance([-4, 3], [0, 0], [10, 0]), 5)
+  assert.equal(segmentDistance([3, 4], [0, 0], [0, 0]), 5)
+})
+
+test('hits finds the pointer on a line, its width included', () => {
+  const line = [
+    [0, 0],
+    [100, 0],
+    [100, 100],
+  ]
+  assert.equal(hits(line, 4, [50, 7], 6), true)
+  assert.equal(hits(line, 4, [50, 9], 6), false)
+  assert.equal(hits(line, 4, [106, 50], 6), true)
+  assert.equal(hits([[10, 10]], 10, [18, 10], 3), true)
+  assert.equal(hits([[10, 10]], 10, [19, 10], 3), false)
+})
+
+test('validLine keeps whole lines only', () => {
+  const line = { id: 'a', map: 'customs', floor: '', c: '#fff', w: 5, p: [[1, 2]] }
+  assert.equal(validLine(line), true)
+  assert.equal(validLine({ ...line, p: [] }), false)
+  assert.equal(validLine({ ...line, w: 'wide' }), false)
+  assert.equal(validLine({ ...line, floor: undefined }), false)
+  assert.equal(validLine(null), false)
 })

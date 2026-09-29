@@ -38,13 +38,15 @@ import {
   revealButton,
   maskedClass,
 } from './shell-core.js'
+import { attach, drawLines, penBar, penButton, snapStrokes } from './map-draw.js'
 
 // The map view: tarkov.dev's interactive map redrawn by MAYAK (Leaflet over
 // its SVG maps; internal/mapdata makes the picture of each floor and the
 // markers from the catalog, the way tarkov.dev builds them), with the
 // squad's positions on top. The map fills the page. Over it: the zoom
 // buttons and under them a column of icon buttons (maps and floors,
-// filters, search, snap note, squad, settings) at the top left, their panels
+// filters, search, snap note, your pen, squad, settings) at the top left, the
+// pen's tools at the top while it is up (map-draw.js), their panels
 // beside it, the raid's clocks and the map's credit at the top right, the
 // pointer's coordinates at the bottom right. Leaflet loads when
 // the view first shows, and the map lives in an element the render leaves
@@ -137,7 +139,7 @@ const floorName = (map, floor) => (floor ? map?.layers?.find((l) => l.id === flo
 
 // The icon buttons in a column under the zoom buttons: map, filters,
 // search, squad and settings, each opening its panel beside the column,
-// and under search the one that makes the map a snap note.
+// and under search the one that makes the map a snap note and your pen.
 function rail(map, floor) {
   const s = state.squad.state
   const count = players(s?.members).length
@@ -150,7 +152,7 @@ function rail(map, floor) {
   const snap = state.snapNotes
     ? `<button class="map-rail-button map-rail-snap" data-action="mapSnap" title="${esc(t('mapSnap'))}" aria-label="${esc(t('mapSnap'))}" ${!map || snapping ? 'disabled' : ''}>${icon('brush')}</button>`
     : ''
-  return `<div class="map-rail">${button('maps', 'map', `${t('mapPick')}${where ? `: ${where}` : ''}`, floorBadge)}${button('filters', 'list', t('mapFilters'))}${button('search', 'search', t('mapSearch'), view.search ? '<span class="map-rail-dot"></span>' : '')}${snap}${button('squad', 'squad', t('squad'), s ? `<span class="squad-badge" data-phase="${esc(s.phase)}">${count}</span>` : '')}${button('settings', 'settings', t('mapSettings'))}</div>`
+  return `<div class="map-rail">${button('maps', 'map', `${t('mapPick')}${where ? `: ${where}` : ''}`, floorBadge)}${button('filters', 'list', t('mapFilters'))}${button('search', 'search', t('mapSearch'), view.search ? '<span class="map-rail-dot"></span>' : '')}${snap}${penButton(!map)}${button('squad', 'squad', t('squad'), s ? `<span class="squad-badge" data-phase="${esc(s.phase)}">${count}</span>` : '')}${button('settings', 'settings', t('mapSettings'))}</div>`
 }
 
 // The map panel: the maps, then the floors of the one shown.
@@ -341,7 +343,7 @@ export function liveMapPage() {
             : view.panel === 'search'
               ? searchPanel()
               : ''
-  return `<div class="live-map-page"><div id="live-map" data-keep="livemap"></div>${note ? `<p class="map-note">${esc(note)}</p>` : ''}${rail(map, floor)}${panel ? `<div class="map-panel-host">${panel}</div>` : ''}${raidInfo(map, data)}<div class="map-coords" data-keep="map-coords"></div></div>`
+  return `<div class="live-map-page"><div id="live-map" data-keep="livemap"></div>${note ? `<p class="map-note">${esc(note)}</p>` : ''}${rail(map, floor)}${penBar()}${panel ? `<div class="map-panel-host">${panel}</div>` : ''}${raidInfo(map, data)}<div class="map-coords" data-keep="map-coords"></div></div>`
 }
 
 // Leaflet and the map drawn with it.
@@ -481,6 +483,7 @@ function build(el, map) {
     },
     { capture: true, passive: false, signal },
   )
+  attach(el, signal)
   // Positions age while nothing else changes: redrawn each half minute.
   lm.tick = setInterval(render, 30000)
   lm.clock = setInterval(tickClocks, 1000)
@@ -776,6 +779,7 @@ function drawMap() {
   if (!data) fetchOnce('markers:' + map.key, 'mapMarkers', { map: map.key })
   drawThings(map, floor, data)
   drawSquad(map, floor, members)
+  drawLines(L, lm.map, map.key, floor, offAlpha())
   if (view.focus?.map === map.key) {
     const { x, z } = view.focus
     view.focus = null
@@ -880,10 +884,16 @@ async function snapMap() {
   render()
   try {
     const { domToPng } = await import('modern-screenshot')
+    const scale = Math.min(2, window.devicePixelRatio || 1)
     const image = await domToPng(el, {
-      scale: Math.min(2, window.devicePixelRatio || 1),
+      scale,
       backgroundColor: getComputedStyle(el).backgroundColor,
-      filter: (node) => !(node instanceof Element && node.classList.contains('leaflet-control-container')),
+      // Your lines go in the note's first layer instead, to stay editable.
+      filter: (node) =>
+        !(
+          node instanceof Element &&
+          (node.classList.contains('leaflet-control-container') || node.classList.contains('leaflet-mapDraw-pane'))
+        ),
       fetchFn: async (url) =>
         url.startsWith('https://assets.tarkov.dev/')
           ? (await window.mayakDesktop?.backend?.BrowserMapTile?.(url)) || false
@@ -892,7 +902,9 @@ async function snapMap() {
     const title = [t('liveMap'), mapName(map.key), map.layers?.length ? floorName(map, floor) : '']
       .filter(Boolean)
       .join(' · ')
-    await action('snapNew', { image, title })
+    const layer = (strokes) => ({ visible: true, strokes })
+    const drawing = { v: 2, base: { visible: true }, layers: [layer(snapStrokes(scale)), layer([]), layer([])] }
+    await action('snapNew', { image, title, drawing })
   } catch (e) {
     await action('mapSnapFailed', String(e?.message || e))
   } finally {

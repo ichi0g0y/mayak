@@ -1,6 +1,7 @@
 // The map view's arithmetic, without Leaflet: which map and floor to show,
 // which markers the filters let through and on which floor they are, where
-// a squadmate lands and which way their marker points. The geometry is
+// a squadmate lands and which way their marker points, and whether the
+// pointer is on a line drawn with the pen (map-draw.js). The geometry is
 // tarkov.dev's maps.json as internal/mapdata passes it on.
 
 // findMap returns the map named name (a key or an alias: night-factory,
@@ -251,4 +252,32 @@ export function floorOrder(map) {
   const ground = !open(low) ? low : high < 1000 ? high - 100000 : Number.isFinite(lowest) ? lowest - 0.001 : 0
   // The ground first among equals: sort keeps the order of ties.
   return [{ id: '', key: ground }, ...floors].sort((a, b) => a.key - b.key).map((f) => f.id)
+}
+
+// validLine tells whether a line drawn with the pen (map-draw.js) is whole:
+// {id, map, floor, c: colour, w: width, p: [[x, z], …]}.
+export const validLine = (l) =>
+  !!l &&
+  typeof l.id === 'string' &&
+  typeof l.map === 'string' &&
+  typeof l.floor === 'string' &&
+  typeof l.c === 'string' &&
+  Number.isFinite(l.w) &&
+  Array.isArray(l.p) &&
+  l.p.length > 0
+
+// Distance from p to the segment a–b, in the same units.
+export function segmentDistance(p, a, b) {
+  const dx = b[0] - a[0],
+    dy = b[1] - a[1]
+  const len = dx * dx + dy * dy
+  const k = len ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len)) : 0
+  return Math.hypot(p[0] - (a[0] + k * dx), p[1] - (a[1] + k * dy))
+}
+// hits tells whether a line (its points on screen) passes within radius of p.
+export function hits(points, width, p, radius) {
+  const reach = radius + width / 2
+  if (points.length === 1) return Math.hypot(p[0] - points[0][0], p[1] - points[0][1]) <= reach
+  for (let i = 1; i < points.length; i++) if (segmentDistance(p, points[i - 1], points[i]) <= reach) return true
+  return false
 }

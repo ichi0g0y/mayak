@@ -1009,6 +1009,22 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-rail-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
 .map-rail-floor{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);height:22px;padding:0 8px;display:flex;align-items:center;white-space:nowrap;border:2px solid rgba(0,0,0,.2);border-radius:8px;background:var(--surface);background-clip:padding-box;color:var(--accent);font:600 11.5px/1 system-ui,sans-serif;pointer-events:none}
 .map-panel-host{position:absolute;top:12px;left:56px;z-index:800}
+/* Your pen (map-draw.js): its tools over the top of the map, and the map
+   while it is up: markers let the pointer through to the pen. */
+.map-draw-bar{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:800;display:flex;align-items:center;gap:2px;padding:4px;border:2px solid rgba(0,0,0,.2);border-radius:8px;background:var(--surface);background-clip:padding-box;max-width:calc(100% - 140px);overflow-x:auto}
+.map-draw-bar button{width:30px;height:30px;padding:0;border:0;border-radius:6px;flex:none}
+.map-draw-bar button.on{background:var(--selected);color:var(--accent)}
+.map-draw-bar .icon{width:16px;height:16px}
+.map-draw-sep{width:1px;height:20px;margin:0 4px;background:var(--border);flex:none}
+.map-draw-color::after{content:"";width:16px;height:16px;border-radius:50%;background:var(--swatch);box-shadow:inset 0 0 0 1px rgba(128,128,128,.6)}
+.map-draw-color.on::after{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.map-draw-color.on{background:transparent!important}
+.map-draw-size span{width:var(--dot);height:var(--dot);border-radius:50%;background:currentColor}
+.leaflet-mapDraw-pane{filter:drop-shadow(0 0 1px rgba(0,0,0,.55))}
+.map-drawing.leaflet-container,.map-drawing .leaflet-interactive{cursor:crosshair}
+.map-erasing.leaflet-container,.map-erasing .leaflet-interactive{cursor:cell}
+.map-drawing.map-grab.leaflet-container{cursor:grab}
+.map-drawing .leaflet-marker-pane *,.map-drawing .leaflet-popup-pane,.map-drawing .leaflet-overlay-pane *{pointer-events:none!important}
 .map-choices{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
 .map-choice{display:flex;align-items:center;justify-content:flex-start;height:30px;padding:0 10px;border:0;border-radius:6px;background:none;color:var(--text);text-align:left;font-size:13px}
 .map-choice:hover{background:var(--hover)}

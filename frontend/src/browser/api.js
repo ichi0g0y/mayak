@@ -1295,6 +1295,9 @@ async function perform(type, data) {
       return snapshot()
     case 'snapNew': {
       const note = await go.SnapNoteCreate(String(data?.image || ''), String(data?.title || ''))
+      // A note of the map carries your lines as its first layer (view-map.js).
+      if (data?.drawing?.layers?.some((l) => l.strokes?.length))
+        await go.SnapNoteSave(note.id, note.title, JSON.stringify(data.drawing), '')
       openLocal(state, 'snapnotes')
       await openSnap(note.id)
       void loadSnaps()

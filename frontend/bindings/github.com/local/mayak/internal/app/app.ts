@@ -396,6 +396,21 @@ export function InstallUpdate(): $CancellablePromise<void> {
     return $Call.ByID(598684024);
 }
 
+/**
+ * MapDrawingLoad returns the lines kept, as a JSON array ("[]" for none).
+ */
+export function MapDrawingLoad(): $CancellablePromise<string> {
+    return $Call.ByID(3673321122);
+}
+
+/**
+ * MapDrawingSave keeps the lines given, all of them (a JSON array of
+ * objects with an id): a line no longer given becomes a tombstone.
+ */
+export function MapDrawingSave(raw: string): $CancellablePromise<void> {
+    return $Call.ByID(3121519351, raw);
+}
+
 export function OpenDebugDirectory(): $CancellablePromise<void> {
     return $Call.ByID(3117568264);
 }
