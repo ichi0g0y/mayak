@@ -11,7 +11,9 @@
 // (a squad room keeps each member's last one for whoever joins later, but
 // not one marked ephemeral with a leading "~": the squad pen's lines and its
 // position, which would push the member's position out).
-// Nothing is written to storage; a room is gone once its last member leaves.
+// A link keeps nothing; a squad room keeps what its members store in it (the
+// squad pen's lines, one sealed slot per member: /squad/<room>/store) for a
+// week after anyone last joined or stored, then forgets it (an alarm).
 //
 // The room uses the WebSocket Hibernation API: while nobody sends anything
 // the Durable Object sleeps and costs no duration, and the clients' "ping"
@@ -27,6 +29,9 @@ const SQUAD = { members: 10, message: 4096, rate: 480, replay: true };
 // The relay's version, told in the welcome: 2 takes the squad pen's
 // ephemeral messages at the rate above (the app draws only with it).
 const VERSION = 2;
+// A squad's store: a slot per member (its key's hash), each at most so big,
+// so many slots, kept so long after the room was last used.
+const STORE = { slot: 512 * 1024, slots: 24, keepMs: 7 * 24 * 60 * 60 * 1000 };
 // A link: the Host and its Clients (a few, and room for a dropped socket the
 // relay has not noticed yet); an item's details can be large, and a burst of
 // recognitions comes quickly.
@@ -127,6 +132,53 @@ export class SquadRoom extends Room {
   constructor(state) {
     super(state, SQUAD);
   }
+
+  // Joining keeps the store another week; the store itself is plain HTTP
+  // (a slot is too big for a message).
+  async fetch(request) {
+    const url = new URL(request.url);
+    const store = url.pathname.match(/\/store(?:\/([0-9a-f]{64}))?$/);
+    if (!store) {
+      await this.keep();
+      return super.fetch(request);
+    }
+    const slot = store[1];
+    if (request.method === 'GET' && !slot) {
+      await this.keep();
+      const slots = await this.state.storage.list({ prefix: 'slot:' });
+      const out = {};
+      for (const [key, value] of slots) out[key.slice(5)] = value;
+      return new Response(JSON.stringify(out), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+    }
+    if (request.method === 'PUT' && slot) {
+      const body = await request.text();
+      if (body.length > STORE.slot || !/^[A-Za-z0-9_-]*$/.test(body)) return text('bad slot', 400);
+      const key = 'slot:' + slot;
+      if (body === '') {
+        await this.state.storage.delete(key);
+      } else {
+        if ((await this.state.storage.get(key)) === undefined) {
+          const count = (await this.state.storage.list({ prefix: 'slot:', limit: STORE.slots })).size;
+          if (count >= STORE.slots) return text('store full', 409);
+        }
+        await this.state.storage.put(key, body);
+      }
+      await this.keep();
+      return text('ok', 200);
+    }
+    return text('not found', 404);
+  }
+
+  // keep puts the store's end a week away.
+  async keep() {
+    await this.state.storage.setAlarm(Date.now() + STORE.keepMs);
+  }
+
+  async alarm() {
+    // Members still here keep it (they store again as they draw).
+    if (this.state.getWebSockets().length) return this.keep();
+    await this.state.storage.deleteAll();
+  }
 }
 
 export class LinkRoom extends Room {
@@ -138,8 +190,8 @@ export class LinkRoom extends Room {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const match = url.pathname.match(/^\/(squad|link)\/([0-9a-f]{64})$/);
-    if (!match) return text('not found', 404);
+    const match = url.pathname.match(/^\/(squad|link)\/([0-9a-f]{64})(\/store(\/[0-9a-f]{64})?)?$/);
+    if (!match || (match[3] && match[1] !== 'squad')) return text('not found', 404);
     const rooms = match[1] === 'squad' ? env.SQUAD : env.LINK;
     const room = rooms.get(rooms.idFromName(match[2]));
     return room.fetch(request);

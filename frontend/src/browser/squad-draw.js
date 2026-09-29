@@ -9,20 +9,30 @@ import { colorOf } from './squad-colors.js'
 // module keeps them in step with the others.
 //
 // A line is {id, by: its drawer's member key, name, c: colour, map, floor, w,
-// p: [[x, z], …], gen}. Only its drawer changes or removes it. A clear-all
-// raises the map's generation (gens): a line of an older one no longer shows.
-// The relay keeps nothing, so the members hand the lines over themselves:
-// when someone joins, each member sends its own lines, and the member with
-// the lowest relay ID also those of members who left. A member back after a
-// drop (or a restart: its own lines are kept on this PC for a day, per
-// squad) first waits for the others' lines and generations, then sends its
-// own again, without those cleared meanwhile.
+// z, p: [[x, z], …], gen}. Only its drawer changes or removes it (undo and
+// redo too: they erase or add again, sent as any change is).
+//
+// A clear-all is an event of its map, {id, gen, undone} (clears): the map's
+// generation is the highest gen of its clears not undone, and a line of an
+// older generation does not show. Undoing a clear marks it undone. The
+// clears of the members join by id, an undone mark anywhere winning, so the
+// lines stay right whoever stored or heard what, and whenever.
+//
+// The squad's store on the relay (squad/store.go) keeps each member's own
+// lines and the clears it knows, for a week after the squad last used it:
+// a member stores them a few seconds after they change (a clear at once),
+// and reads everyone's when it connects, so the lines are there with nobody
+// else in the squad. What was drawn in the last seconds, not stored yet,
+// the members still hand over: when someone joins, each sends its own lines
+// (and the one with the lowest relay ID those of members who left). This
+// PC also keeps its own lines for a day (squad-lines.json), should the relay
+// be out of reach.
 //
 // Messages ({t, …}): b (a line begins), p (its new points; droppable), l
-// (whole lines, with the generations), e (lines erased), x (a map cleared),
-// u (the clear undone), c (the pen's position; droppable), part (a piece of
-// a message too long for one). Messages of other kinds (squad-share.js) go
-// to the handlers given with onShell.
+// (whole lines, with the clears), e (lines erased), x (a map cleared), u (a
+// clear undone), c (the pen's position; droppable), part (a piece of a
+// message too long for one). Messages of other kinds (squad-share.js) go to
+// the handlers given with onShell.
 
 const backend = () => window.mayakDesktop?.backend
 // The longest message sent as one (the relay takes 4096 characters of the
@@ -32,6 +42,8 @@ const PART = 2600
 // How long a clear can be undone, a line being drawn waits for its next
 // points, the pen's position shows unmoved, a message in parts waits.
 const UNDO_MS = 8000
+// How long a change waits to be stored on the relay (more changes join it).
+const STORE_MS = 10000
 const LIVE_MS = 5000
 const CURSOR_MS = 4000
 const PART_MS = 30000
@@ -40,12 +52,13 @@ const MAX_LINES = 3000
 
 export const sq = {
   lines: new Map(),
-  gens: /** @type {Record<string, number>} */ ({}),
+  // Each map's clears: map → [{id, gen, undone, at}].
+  clears: /** @type {Record<string, {id: string, gen: number, undone?: boolean, at?: number}[]>} */ ({}),
   // Lines being drawn by others: id → {line, at}.
   live: new Map(),
   // The squad pen's position of others: member key → {name, c, map, floor, x, z, at}.
   cursors: new Map(),
-  // The last clear-all, while it can be undone: {map, gen, prev, name, at, mine}.
+  // The last clear-all, while it can be undone: {map, id, name, at, mine}.
   cleared: null,
   // Bumped when the lines change, and when what is being drawn moves.
   revision: 0,
@@ -80,7 +93,35 @@ export const myStyle = () => {
   return { c: m ? colorOf(m) : state.squadColor || '#ffd166', name: m?.name || state.squadName || '?' }
 }
 export const myKeyOf = () => myKey
-export const genOf = (map) => sq.gens[map] || 0
+// genOf is a map's generation: its highest clear not undone.
+export const genOf = (map) => Math.max(0, ...(sq.clears[map] || []).filter((c) => !c.undone).map((c) => c.gen))
+// undoable tells whether a clear of the map may still be undone (a little
+// longer than UNDO_MS: the clocks of PCs differ).
+const undoable = (map) => (sq.clears[map] || []).some((c) => !c.undone && Date.now() - (c.at || 0) < UNDO_MS + 5000)
+const nextGen = (map) => Math.max(0, ...(sq.clears[map] || []).map((c) => c.gen)) + 1
+// mergeClears takes in clears heard or read: new ones join, an undone mark
+// sticks. A build before clears sent generations ({map: n}); each is a clear.
+function mergeClears(clears, gens) {
+  let changed = false
+  const add = (map, c) => {
+    if (typeof map !== 'string' || !c || typeof c.id !== 'string' || !Number.isInteger(c.gen) || c.gen < 1) return
+    const list = (sq.clears[map] ||= [])
+    const known = list.find((x) => x.id === c.id)
+    if (!known) {
+      if (list.length >= 100) list.shift()
+      list.push({ id: c.id, gen: c.gen, undone: !!c.undone, at: Number.isFinite(c.at) ? c.at : 0 })
+      changed = true
+    } else if (c.undone && !known.undone) {
+      known.undone = true
+      changed = true
+    }
+  }
+  if (clears && typeof clears === 'object')
+    for (const [map, list] of Object.entries(clears)) for (const c of Array.isArray(list) ? list : []) add(map, c)
+  if (gens && typeof gens === 'object')
+    for (const [map, g] of Object.entries(gens)) if (Number.isInteger(g)) add(map, { id: 'gen' + g, gen: g })
+  return changed
+}
 
 function send(obj, droppable = false) {
   const text = JSON.stringify(obj)
@@ -136,7 +177,7 @@ function sendLines(list, fresh = false) {
   let size = 0
   const flush = () => {
     if (batch.length)
-      send(fresh ? { t: 'l', gens: sq.gens, lines: batch, new: 1 } : { t: 'l', gens: sq.gens, lines: batch })
+      send(fresh ? { t: 'l', clears: sq.clears, lines: batch, new: 1 } : { t: 'l', clears: sq.clears, lines: batch })
     batch = []
     size = 0
   }
@@ -151,26 +192,66 @@ function sendLines(list, fresh = false) {
 const own = () => [...sq.lines.values()].filter((l) => l.by === myKey)
 const shown = (l) => (l.gen || 0) >= genOf(l.map)
 
-// The lines this member draws are kept on this PC, per squad, for a day.
+// What this member keeps: its own lines and the clears it knows.
+const keeping = () => JSON.stringify({ clears: sq.clears, lines: own() })
+// saveOwn keeps them on this PC (half a second after a change) and in the
+// squad's store on the relay: STORE_MS after a change, soon after one the
+// store must not miss (an erase, a clear: else a line gone would come back
+// from it). Changes meanwhile join the one store; drawing on does not put
+// it off.
 let saveTimer = 0
-function saveOwn() {
+let storeTimer = 0
+let storeDue = 0
+function saveOwn(soon = false) {
   if (!code) return
   clearTimeout(saveTimer)
   const squadCode = code
   saveTimer = setTimeout(
     () =>
       void backend()
-        ?.SquadLinesSave?.(squadCode, JSON.stringify({ gens: sq.gens, lines: own() }))
+        ?.SquadLinesSave?.(squadCode, keeping())
         .catch(() => {}),
     500,
   )
+  const due = Date.now() + (soon ? 1000 : STORE_MS)
+  if (storeTimer && storeDue <= due) return
+  clearTimeout(storeTimer)
+  storeDue = due
+  storeTimer = setTimeout(storeOwn, due - Date.now())
+}
+function storeOwn() {
+  storeTimer = 0
+  if (!code || !canDraw()) return
+  void backend()
+    ?.SquadStore?.(keeping())
+    .catch(() => {})
 }
 async function loadOwn(squadCode) {
   try {
     const kept = JSON.parse((await backend()?.SquadLinesLoad?.(squadCode)) || '{}')
     if (squadCode !== code) return
-    mergeGens(kept.gens)
+    mergeClears(kept.clears, kept.gens)
     for (const l of Array.isArray(kept.lines) ? kept.lines : []) if (valid(l) && l.by === myKey) sq.lines.set(l.id, l)
+    notify()
+  } catch {}
+}
+// loadStored reads what every member keeps in the squad's store: the others'
+// lines and everyone's clears (this member's own lines too, when this PC
+// lost them).
+async function loadStored() {
+  try {
+    let list = JSON.parse((await backend()?.SquadStored?.()) || '[]')
+    list = (Array.isArray(list) ? list : []).filter((kept) => kept && typeof kept === 'object')
+    const hadOwn = own().length > 0
+    // Everyone's clears first: a line one member kept may be one another cleared.
+    for (const kept of list) mergeClears(kept.clears, kept.gens)
+    for (const kept of list) {
+      for (const l of Array.isArray(kept.lines) ? kept.lines : []) {
+        if (!valid(l) || (!shown(l) && !undoable(l.map)) || (l.by === myKey && hadOwn)) continue
+        if (!sq.lines.has(l.id) && sq.lines.size >= MAX_LINES) continue
+        sq.lines.set(l.id, l)
+      }
+    }
     notify()
   } catch {}
 }
@@ -183,17 +264,12 @@ const valid = (l) =>
   (l.z === undefined || Number.isFinite(l.z)) &&
   l.p.length <= 20000 &&
   l.p.every((q) => Array.isArray(q) && Number.isFinite(q[0]) && Number.isFinite(q[1]))
-function mergeGens(gens) {
-  if (!gens || typeof gens !== 'object') return
-  for (const [map, g] of Object.entries(gens))
-    if (typeof map === 'string' && Number.isInteger(g) && g > genOf(map)) sq.gens[map] = g
-}
 
 function reset() {
   sq.lines.clear()
   sq.live.clear()
   sq.cursors.clear()
-  sq.gens = {}
+  sq.clears = {}
   sq.cleared = null
   session = ''
   known = new Set()
@@ -207,8 +283,8 @@ function reset() {
 // those of a map cleared since they were drawn.
 function hello() {
   greeted = true
-  for (const l of own()) if (!shown(l)) sq.lines.delete(l.id)
-  sendLines(own())
+  for (const l of own()) if (!shown(l) && !undoable(l.map)) sq.lines.delete(l.id)
+  sendLines(own().filter(shown))
   saveOwn()
   notify()
 }
@@ -220,7 +296,7 @@ function shareWith() {
   const lowest = ids.length && ids.every((id) => id >= me().id)
   const keys = new Set(s.members.map((m) => m.key).filter(Boolean))
   const list = [...sq.lines.values()].filter(
-    (l) => shown(l) && (l.by === myKey || (lowest && !keys.has(l.by) && l.by !== myKey)),
+    (l) => (shown(l) || undoable(l.map)) && (l.by === myKey || (lowest && !keys.has(l.by) && l.by !== myKey)),
   )
   sendLines(list)
 }
@@ -258,10 +334,15 @@ function follow() {
     known = new Set(s.members.filter((m) => !m.me).map((m) => m.id))
     greeted = false
     clearTimeout(helloTimer)
-    // Others send their lines when they see this member; the generations
-    // come with them.
-    if (known.size) helloTimer = setTimeout(hello, 2500)
-    else hello()
+    // What the squad stored comes first (the clears with it); then this
+    // member's own lines go out. The others send what they drew since.
+    const now = session
+    helloTimer = setTimeout(hello, 5000)
+    void loadStored().then(() => {
+      if (session !== now || greeted) return
+      clearTimeout(helloTimer)
+      hello()
+    })
     return
   }
   const fresh = s.members.filter((m) => !m.me && !known.has(m.id))
@@ -350,7 +431,7 @@ function receive(from, data) {
       return notify(true)
     }
     case 'l': {
-      mergeGens(data.gens)
+      mergeClears(data.clears, data.gens)
       let changed = false
       // A line just drawn tells what someone is drawing (squad-share.js).
       const first = Array.isArray(data.lines) ? data.lines[0] : null
@@ -358,13 +439,13 @@ function receive(from, data) {
       for (const l of Array.isArray(data.lines) ? data.lines : []) {
         sq.live.delete(l?.id)
         // This member's own lines are only its own to give.
-        if (!valid(l) || l.by === myKey || !shown(l)) continue
+        if (!valid(l) || l.by === myKey || (!shown(l) && !undoable(l.map))) continue
         if (!sq.lines.has(l.id) && sq.lines.size >= MAX_LINES) continue
         sq.lines.set(l.id, l)
         changed = true
       }
       // Own lines of a map cleared meanwhile go (not while the clear can be undone).
-      if (!clearedNow()) for (const l of own()) if (!shown(l)) sq.lines.delete(l.id)
+      for (const l of own()) if (!shown(l) && !undoable(l.map)) sq.lines.delete(l.id)
       if (changed) notify()
       notify(true)
       return
@@ -377,26 +458,26 @@ function receive(from, data) {
       return
     }
     case 'x': {
-      if (typeof data.map !== 'string' || !Number.isInteger(data.gen) || data.gen <= genOf(data.map)) return
-      sq.cleared = {
-        map: data.map,
-        gen: data.gen,
-        prev: genOf(data.map),
-        name: String(data.name || ''),
-        at: Date.now(),
-        mine: false,
-      }
-      sq.gens[data.map] = data.gen
-      saveOwn()
+      if (typeof data.map !== 'string' || !Number.isInteger(data.gen)) return
+      // A build before clears had no id: its generation names it.
+      const id = typeof data.id === 'string' ? data.id : 'gen' + data.gen
+      const before = genOf(data.map)
+      if (!mergeClears({ [data.map]: [{ id, gen: data.gen, at: Date.now() }] })) return
+      if (genOf(data.map) > before)
+        sq.cleared = { map: data.map, id, name: String(data.name || ''), at: Date.now(), mine: false }
+      saveOwn(true)
       notify()
       render()
       return
     }
     case 'u': {
-      if (typeof data.map !== 'string' || !Number.isInteger(data.gen) || genOf(data.map) !== data.gen) return
-      sq.gens[data.map] = Number(data.prev) || 0
-      if (sq.cleared?.map === data.map) sq.cleared = null
-      saveOwn()
+      if (typeof data.map !== 'string') return
+      const id = typeof data.id === 'string' ? data.id : 'gen' + data.gen
+      const c = (sq.clears[data.map] || []).find((x) => x.id === id)
+      if (!c || c.undone) return
+      c.undone = true
+      if (sq.cleared?.id === id) sq.cleared = null
+      reshow(data.map)
       notify()
       render()
       return
@@ -423,26 +504,35 @@ export function erase(lines) {
   const ids = lines.map((l) => l.id)
   for (const id of ids) sq.lines.delete(id)
   send({ t: 'e', ids })
-  saveOwn()
+  saveOwn(true)
   notify()
 }
 export function clearAll(map) {
-  const prev = genOf(map)
-  const gen = prev + 1
-  sq.gens[map] = gen
-  sq.cleared = { map, gen, prev, name: myStyle().name, at: Date.now(), mine: true }
-  send({ t: 'x', map, gen, name: myStyle().name })
-  saveOwn()
+  const id = Math.random().toString(36).slice(2, 12)
+  const gen = nextGen(map)
+  mergeClears({ [map]: [{ id, gen, at: Date.now() }] })
+  sq.cleared = { map, id, name: myStyle().name, at: Date.now(), mine: true }
+  send({ t: 'x', map, id, gen, name: myStyle().name })
+  saveOwn(true)
   notify()
 }
 export function undoClear() {
   const c = sq.cleared
-  if (!c || Date.now() - c.at > UNDO_MS || genOf(c.map) !== c.gen) return
-  sq.gens[c.map] = c.prev
+  if (!c || Date.now() - c.at > UNDO_MS) return
+  const clear = (sq.clears[c.map] || []).find((x) => x.id === c.id)
+  if (!clear || clear.undone) return
+  clear.undone = true
   sq.cleared = null
-  send({ t: 'u', map: c.map, gen: c.gen, prev: c.prev })
-  saveOwn()
+  send({ t: 'u', map: c.map, id: c.id, gen: clear.gen })
+  reshow(c.map)
   notify()
+}
+// reshow follows a clear undone: this member's lines of the map show again,
+// so they go out again to anyone who missed them (joined meanwhile, or read
+// the store), and are stored.
+function reshow(map) {
+  sendLines(own().filter((l) => l.map === map && shown(l)))
+  saveOwn(true)
 }
 let cursorAt = 0
 export function cursor(map, floor, x, z) {

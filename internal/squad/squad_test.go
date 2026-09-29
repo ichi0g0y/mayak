@@ -3,6 +3,7 @@ package squad
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -350,4 +351,82 @@ func TestRecheckHearsARelayDeployedSince(t *testing.T) {
 	mu.Unlock()
 	c.Recheck()
 	waitFor(t, states, func(s State) bool { return s.Phase == PhaseConnected && s.Drawing })
+}
+
+// fakeStore behaves like the relay's store: a slot per member, over HTTP.
+type fakeStore struct {
+	mu    sync.Mutex
+	slots map[string]string
+}
+
+func (f *fakeStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	path := r.URL.Path
+	switch {
+	case r.Method == http.MethodGet && strings.HasSuffix(path, "/store"):
+		_ = json.NewEncoder(w).Encode(f.slots)
+	case r.Method == http.MethodPut && strings.Contains(path, "/store/"):
+		body, _ := io.ReadAll(r.Body)
+		name := path[strings.LastIndex(path, "/")+1:]
+		if len(body) == 0 {
+			delete(f.slots, name)
+		} else {
+			f.slots[name] = string(body)
+		}
+	default:
+		http.NotFound(w, r)
+	}
+}
+
+func TestStoreKeepsEachMembersSealedSlot(t *testing.T) {
+	store := &fakeStore{slots: map[string]string{}}
+	relay := &fakeRelay{members: map[*websocket.Conn]*fakeMember{}}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "/store") {
+			store.ServeHTTP(w, r)
+			return
+		}
+		relay.ServeHTTP(w, r)
+	}))
+	defer srv.Close()
+	endpoint := "ws" + strings.TrimPrefix(srv.URL, "http") + "/squad/"
+	a, _ := Join("ABCD1234", endpoint, "test", Report{Name: "Alice", Key: strings.Repeat("a", 32)}, nil, nil)
+	defer a.Close()
+	b, _ := Join("ABCD1234", endpoint, "test", Report{Name: "Bob", Key: strings.Repeat("b", 32)}, nil, nil)
+	defer b.Close()
+	if err := a.Store(json.RawMessage(`{"lines":["a1"]}`)); err != nil {
+		t.Fatal(err)
+	}
+	if err := b.Store(json.RawMessage(`{"lines":["b1"]}`)); err != nil {
+		t.Fatal(err)
+	}
+	// Storing again replaces this member's slot only.
+	if err := a.Store(json.RawMessage(`{"lines":["a2"]}`)); err != nil {
+		t.Fatal(err)
+	}
+	for _, sealed := range store.slots {
+		if strings.Contains(sealed, "lines") {
+			t.Fatalf("a slot is not sealed: %s", sealed)
+		}
+	}
+	got, err := b.Stored()
+	if err != nil || len(got) != 2 {
+		t.Fatalf("stored %v, %v", got, err)
+	}
+	joined := string(got[0]) + string(got[1])
+	if !strings.Contains(joined, `"a2"`) || !strings.Contains(joined, `"b1"`) || strings.Contains(joined, `"a1"`) {
+		t.Fatalf("stored %s", joined)
+	}
+	// Another code's client opens none of them.
+	c, _ := Join("ZZZZ9999", endpoint, "test", Report{Name: "Eve", Key: strings.Repeat("e", 32)}, nil, nil)
+	defer c.Close()
+	c.url = a.url
+	if other, _ := c.Stored(); len(other) != 0 {
+		t.Fatalf("another code read %d slots", len(other))
+	}
+	// An empty store lets the slot go.
+	if err := a.Store(nil); err != nil || len(store.slots) != 1 {
+		t.Fatalf("slots after letting go: %d, %v", len(store.slots), err)
+	}
 }

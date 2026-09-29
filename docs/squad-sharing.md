@@ -6,7 +6,7 @@
 
 1. **自分のペン**: 済み（[browser-shell.md](browser-shell.md#自分のペン)）。
 2. **サイドバーの分隊セクションと分隊ページ**: 済み（[browser-shell.md](browser-shell.md#分隊)）。分隊カラーも選べる。共有されたものの一覧も済み。
-3. **分隊ペン**: 済み（[browser-shell.md](browser-shell.md#分隊ペン)）。中継（mayak-relay）も deploy 済み（2026-09-29）。
+3. **分隊ペン**: 済み（[browser-shell.md](browser-shell.md#分隊ペン)）。中継（mayak-relay）も deploy 済み（2026-09-29）。全員が抜けても線が残るよう、中継の分隊の部屋に 1 週間の保存を足した（2026-09-30。中継の deploy が要る）。
 4. **Web タブの共有**: 済み（[browser-shell.md](browser-shell.md#分隊への共有)）。
 5. **スナップノートの共有**: 済み（同じ節）。中継は変えず、分隊の部屋で分けて送る形にした。
 

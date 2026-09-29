@@ -211,6 +211,42 @@ func (a *App) SquadRecheck() {
 	}
 }
 
+// SquadStore keeps data (JSON: what the shell keeps of this member's squad
+// pen) in the squad's store on the relay (squad.Client.Store); empty lets go
+// of it.
+func (a *App) SquadStore(data string) error {
+	if data != "" && !json.Valid([]byte(data)) {
+		return errors.New("invalid squad store")
+	}
+	squadMu.Lock()
+	client := squadClient
+	squadMu.Unlock()
+	if client == nil {
+		return errors.New("not in a squad")
+	}
+	return client.Store(json.RawMessage(data))
+}
+
+// SquadStored returns what the squad's members keep in its store, as a JSON
+// array (squad.Client.Stored).
+func (a *App) SquadStored() (string, error) {
+	squadMu.Lock()
+	client := squadClient
+	squadMu.Unlock()
+	if client == nil {
+		return "[]", nil
+	}
+	list, err := client.Stored()
+	if err != nil {
+		return "[]", err
+	}
+	if list == nil {
+		list = []json.RawMessage{}
+	}
+	out, _ := json.Marshal(list)
+	return string(out), nil
+}
+
 // SquadState returns the squad joined, or nil.
 func (a *App) SquadState() *squad.State {
 	squadMu.Lock()

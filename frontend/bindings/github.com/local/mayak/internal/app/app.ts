@@ -782,6 +782,23 @@ export function SquadState(): $CancellablePromise<squad$0.State | null> {
     });
 }
 
+/**
+ * SquadStore keeps data (JSON: what the shell keeps of this member's squad
+ * pen) in the squad's store on the relay (squad.Client.Store); empty lets go
+ * of it.
+ */
+export function SquadStore(data: string): $CancellablePromise<void> {
+    return $Call.ByID(348558653, data);
+}
+
+/**
+ * SquadStored returns what the squad's members keep in its store, as a JSON
+ * array (squad.Client.Stored).
+ */
+export function SquadStored(): $CancellablePromise<string> {
+    return $Call.ByID(228399899);
+}
+
 export function StartMonitoring(): $CancellablePromise<void> {
     return $Call.ByID(2732801236);
 }
