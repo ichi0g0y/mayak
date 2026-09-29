@@ -155,7 +155,7 @@ function tabs() {
   return listedTabs()
     .map(
       (tab) =>
-        `<div class="tab ${state.active === tab.id ? 'active' : ''} ${tab.pinned ? 'pinned' : ''}" data-tab="${esc(tab.id)}" role="tab" aria-selected="${state.active === tab.id}"><button data-action="activate" data-id="${esc(tab.id)}" class="tab-select" title="${esc(tabName(tab))}">${tabIcon(tab) ? favicon(tabIcon(tab)) : icon(tab.kind === 'settings' ? 'settings' : tab.kind === 'bookmarks' ? 'bookmark' : tab.kind === 'blank' ? 'plus' : tab.role === 'map' ? 'map' : tab.task ? 'task' : 'globe', 'tab-icon')}<span class="tab-name">${esc(tabName(tab))}</span></button><span class="tab-actions">${tab.kind === 'web' ? `<button class="tab-pin" data-action="pin" data-id="${esc(tab.id)}" title="${esc(t(tab.pinned ? 'unpin' : 'pin'))}" aria-label="${esc(t(tab.pinned ? 'unpin' : 'pin'))}" aria-pressed="${!!tab.pinned}">${icon('pin', 'icon pin-on')}${icon('pinOff', 'icon pin-off')}</button>` : ''}${tab.pinned ? '' : `<button class="tab-close" data-action="close" data-id="${esc(tab.id)}" title="${esc(t('close'))}" aria-label="${esc(t('close'))}">${icon('x')}</button>`}</span></div>`,
+        `<div class="tab ${state.active === tab.id ? 'active' : ''} ${tab.pinned ? 'pinned' : ''}" data-tab="${esc(tab.id)}" role="tab" aria-selected="${state.active === tab.id}"><button data-action="activate" data-id="${esc(tab.id)}" class="tab-select" title="${esc(tabName(tab))}">${tabIcon(tab) ? favicon(tabIcon(tab)) : icon(tab.kind === 'settings' ? 'settings' : tab.kind === 'bookmarks' ? 'bookmark' : tab.kind === 'blank' ? 'plus' : tab.role === 'map' ? 'map' : tab.task ? 'task' : 'globe', 'tab-icon')}<span class="tab-name">${esc(tabName(tab))}</span></button><span class="tab-actions">${tab.kind === 'web' && canShare() ? `<button class="tab-share ${sharedTab === tab.id ? 'on' : ''}" data-action="squadShareTab" data-id="${esc(tab.id)}" title="${esc(t(sharedTab === tab.id ? 'squadShareDone' : 'squadShareTab'))}" aria-label="${esc(t('squadShareTab'))}">${icon(sharedTab === tab.id ? 'check' : 'squad')}</button>` : ''}${tab.kind === 'web' ? `<button class="tab-pin" data-action="pin" data-id="${esc(tab.id)}" title="${esc(t(tab.pinned ? 'unpin' : 'pin'))}" aria-label="${esc(t(tab.pinned ? 'unpin' : 'pin'))}" aria-pressed="${!!tab.pinned}">${icon('pin', 'icon pin-on')}${icon('pinOff', 'icon pin-off')}</button>` : ''}${tab.pinned ? '' : `<button class="tab-close" data-action="close" data-id="${esc(tab.id)}" title="${esc(t('close'))}" aria-label="${esc(t('close'))}">${icon('x')}</button>`}</span></div>`,
     )
     .join('')
 }
@@ -900,9 +900,10 @@ function toolIcons(tab) {
 }
 // The tab just shared with the squad, whose button shows so for a moment.
 let sharedTab = ''
-clickHandlers.push(async (type) => {
+// The toolbar's button shares the tab shown; a tab's own (in the sidebar), that tab.
+clickHandlers.push(async (type, id) => {
   if (type !== 'squadShareTab') return false
-  const tab = state.tabs.find((x) => x.id === state.active)
+  const tab = state.tabs.find((x) => x.id === (id || state.active))
   if (tab?.kind === 'web' && (await shareTab(tab.url, tab.title || tab.url))) {
     sharedTab = tab.id
     render()

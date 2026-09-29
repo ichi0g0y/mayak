@@ -56,7 +56,7 @@ test("a Host's client is not listed as a player of its own", () => {
   const members = [{ id: '', me: true, viewer: true }, { id: 'a', viewer: true }, { id: 'b' }]
   assert.deepEqual(
     players(members).map((m) => m.id),
-    ['', 'b'],
+    ['b'],
   )
 })
 

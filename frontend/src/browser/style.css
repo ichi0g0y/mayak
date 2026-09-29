@@ -73,10 +73,10 @@ textarea{font:12px ui-monospace,"Cascadia Code",Consolas,monospace;line-height:1
 /* Per-tab actions: pin and close appear on hover. A pinned tab always shows
    its pin, which turns into "unpin" on hover. */
 .tab-actions{display:flex;align-items:center;gap:1px;margin-right:5px;flex:none}
-.tab-pin,.tab-close{width:24px;height:24px;padding:0;border:0;border-radius:6px;color:var(--muted);flex:none;display:none}
-.tab-pin .icon,.tab-close .icon{width:14px;height:14px}
-.tab:hover .tab-pin,.tab:hover .tab-close,.tab.active .tab-close,.tab.pinned .tab-pin,.tab-pin:focus-visible,.tab-close:focus-visible{display:inline-flex}
-.tab-pin:hover,.tab-close:hover{background:var(--border-strong);color:var(--text)}
+.tab-share,.tab-pin,.tab-close{width:24px;height:24px;padding:0;border:0;border-radius:6px;color:var(--muted);flex:none;display:none}
+.tab-share .icon,.tab-pin .icon,.tab-close .icon{width:14px;height:14px}
+.tab:hover .tab-share,.tab-share.on,.tab:hover .tab-pin,.tab:hover .tab-close,.tab.active .tab-close,.tab.pinned .tab-pin,.tab-pin:focus-visible,.tab-close:focus-visible{display:inline-flex}
+.tab-share:hover,.tab-pin:hover,.tab-close:hover{background:var(--border-strong);color:var(--text)}
 .tab.pinned .tab-pin{color:var(--accent)}
 .tab-pin .pin-off,.tab.pinned .tab-pin:hover .pin-on{display:none}
 .tab.pinned .tab-pin:hover .pin-off{display:block}

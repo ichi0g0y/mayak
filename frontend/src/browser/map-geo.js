@@ -28,7 +28,9 @@ export function floorFor(map, pos) {
 
 // The players of a squad: its members but the PCs that only watch (a
 // Host's client, the same player as the Host), this PC always.
-export const players = (members) => (members || []).filter((m) => m.me || !m.viewer)
+// A PC that only watches (a Client) is left out, this one too: its player
+// is its Host's, who is in the list already (view-squad.js marks them).
+export const players = (members) => (members || []).filter((m) => !m.viewer)
 
 // The members in a raid, with a position.
 export const placed = (members) => (members || []).filter((m) => m.map && m.pos)

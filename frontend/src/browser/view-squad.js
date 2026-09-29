@@ -35,6 +35,15 @@ export const mapName = (key) =>
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ')
 
+// you tells whether a member is this PC's player: this PC, or, on a PC that
+// only watches (a Client), its Host (the same display name, which the Host
+// and its Clients keep the same).
+function you(m) {
+  if (m.me) return true
+  const me = state.squad?.state?.members?.find((x) => x.me)
+  return !!(me?.viewer && m.name && m.name === (state.squadName || me.name))
+}
+
 // whereOf is where a member is, as text: their map and how long ago, or
 // out of a raid.
 function whereOf(m) {
@@ -48,7 +57,7 @@ function whereOf(m) {
 function memberLine(m) {
   const where = esc(whereOf(m))
   const fade = m.map && m.pos ? freshness(m.at) : 'gone'
-  const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-member-name">${esc(m.name || '?')}${m.me ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span><span class="squad-member-where">${where}</span>`
+  const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-member-name">${esc(m.name || '?')}${you(m) ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span><span class="squad-member-where">${where}</span>`
   // A member with a position is a button that shows them on the map (on
   // their map and floor; view-map.js squadFocus).
   return m.map && m.pos
@@ -60,20 +69,20 @@ function memberLine(m) {
 function memberChip(m) {
   const fade = m.map && m.pos ? freshness(m.at) : 'gone'
   const title = `${m.name || '?'} — ${whereOf(m)}`
-  const theirs = m.me || !m.key ? [] : shares.filter((x) => x.by === m.key)
+  const theirs = you(m) || !m.key ? [] : shares.filter((x) => x.by === m.key)
   const unread = theirs.filter((x) => !x.seen).length
   const open = openMember === squadKey(m)
   const badge = unread ? `<span class="squad-chip-count" title="${esc(t('squadMemberUnread'))}">${unread}</span>` : ''
-  const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-chip-name">${esc(m.name || '?')}${m.me ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span>${badge}`
+  const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-chip-name">${esc(m.name || '?')}${you(m) ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span>${badge}`
   // Pressing a member opens what they shared and the way to them on the map;
   // yourself, straight to you on the map.
-  const button = m.me
+  const button = you(m)
     ? m.map && m.pos
-      ? `<button data-action="squadFocus" data-id="me" title="${esc(title)}">${line}</button>`
+      ? `<button data-action="squadFocus" data-id="${esc(squadKey(m))}" title="${esc(title)}">${line}</button>`
       : line
     : `<button data-action="squadMember" data-id="${esc(squadKey(m))}" aria-expanded="${open}" title="${esc(title)}">${line}</button>`
   let body = ''
-  if (open && !m.me) {
+  if (open && !you(m)) {
     const focus =
       m.map && m.pos
         ? `<li><button class="squad-member-map" data-action="squadFocus" data-id="${esc(squadKey(m))}">${icon('map')}<span>${esc(t('squadFocus'))}</span></button></li>`
