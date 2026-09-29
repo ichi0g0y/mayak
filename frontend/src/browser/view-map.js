@@ -892,6 +892,15 @@ clickHandlers.push(async (type, id, button) => {
 
 // A map detected (a raid starts, a position screenshot) brings the map view
 // back to following the map and floor played.
+// A squadmate's drawing pressed in the squad's list shows that map.
+window.addEventListener('mayak:map-show', (event) => {
+  const key = /** @type {CustomEvent} */ (event).detail
+  if (!findMap(state.squad?.maps, key)) return
+  view.map = key
+  view.floor = 'auto'
+  if (state.tabs.find((tab) => tab.id === state.active)?.kind !== 'livemap') void action('livemap')
+  else render()
+})
 window.addEventListener('mayak:map-follow', () => {
   view.map = 'auto'
   view.floor = 'auto'

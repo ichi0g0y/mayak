@@ -1,5 +1,6 @@
 import { age } from './item.js'
 import { assignColors, findMap, freshness, memberColor, players, squadColors, squadKey } from './map-geo.js'
+import { shares, markSeen } from './squad-share.js'
 import {
   state,
   esc,
@@ -8,6 +9,7 @@ import {
   action,
   clickHandlers,
   render,
+  afterRenderHooks,
   secretText,
   revealButton,
   maskedClass,
@@ -80,6 +82,25 @@ export const memberList = (members, cls = '') =>
 
 const activeKind = () => state.tabs.find((tab) => tab.id === state.active)?.kind
 
+// A shared thing's row: its kind's icon, its title (or who drew where), who
+// shared it, when, and a dot while unread. Pressing it opens it.
+const shareIcons = { tab: 'globe', snap: 'snap', draw: 'pencil' }
+function shareTitle(s) {
+  return s.kind === 'draw' ? t('squadDrew').replace('{map}', mapName(s.map)) : s.title || s.url || t('snapNotes')
+}
+function shareRow(s, full) {
+  const from = `<span class="squad-share-from"><span class="squad-dot" style="--c:${esc(s.c)}"></span>${esc(s.mine ? t('squadYou') : s.name || '?')}${full ? ` · ${esc(age(new Date(s.at).toISOString(), state.language))}` : ''}</span>`
+  const title = s.kind === 'tab' ? `${shareTitle(s)}\n${s.url}` : shareTitle(s)
+  return `<li class="squad-share ${s.seen ? '' : 'unseen'}"><button data-action="squadShareOpen" data-id="${esc(s.id)}" title="${esc(title)}">${icon(shareIcons[s.kind] || 'globe')}<span class="squad-share-text"><span class="squad-share-title">${esc(shareTitle(s))}</span>${from}</span>${s.seen ? '' : '<span class="squad-share-dot"></span>'}</button></li>`
+}
+let shareFilter = 'all'
+function sharesCard() {
+  const chip = (id, label) =>
+    `<button data-action="squadShareFilter" data-id="${id}" class="${shareFilter === id ? 'selected' : ''}">${esc(t(label))}</button>`
+  const list = shares.filter((s) => shareFilter === 'all' || s.kind === shareFilter)
+  return `<section class="panel squad-shares-card"><div class="squad-shares-head"><h2>${esc(t('squadShares'))}</h2><div class="segmented" role="group">${chip('all', 'squadSharesAll')}${chip('tab', 'squadSharesTabs')}${chip('snap', 'snapNotes')}${chip('draw', 'squadSharesDraw')}</div></div><p class="hint">${esc(t('squadSharesHint'))}</p>${list.length ? `<ul class="squad-shares">${list.map((s) => shareRow(s, true)).join('')}</ul>` : `<p class="shot-empty">${esc(t('squadSharesEmpty'))}</p>`}</section>`
+}
+
 // The sidebar's section: the heading (with how many are in the squad and
 // whether it is connected) folds it; the button at its end opens the page.
 export function squadSection() {
@@ -92,8 +113,9 @@ export function squadSection() {
     : ''
   const head = `<div class="section-label squad-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSquadSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('squad'))}${count}${icon('chevron', 'section-chevron')}</button><button class="new-tab squad-open" data-action="squadPage" title="${esc(t('squadOpen'))}" aria-label="${esc(t('squadOpen'))}" aria-pressed="${open}">${icon('squad')}</button></div>`
   if (folded) return head
+  const recent = shares.slice(0, 4)
   const body = s
-    ? `<ul class="squad-chips squad-section">${players(s.members).map(memberChip).join('')}</ul>`
+    ? `<ul class="squad-chips squad-section">${players(s.members).map(memberChip).join('')}</ul>${recent.length ? `<ul class="squad-shares squad-section">${recent.map((x) => shareRow(x, false)).join('')}</ul>` : ''}`
     : `<div class="squad-section"><button class="squad-start" data-action="squadPage">${esc(t('squadStart'))}</button></div>`
   return head + body
 }
@@ -147,7 +169,7 @@ export function squadPage() {
     return `<div class="page squad-page">${head}${profile}<section class="panel squad-forms"><h2>${esc(t('squadJoinTitle'))}</h2><p class="hint">${esc(t('squadIntro'))}</p><form id="squad-form" class="squad-form"><button class="primary" type="submit" value="create">${esc(t('squadCreate'))}</button><div class="squad-join"><span class="secret-field"><input name="squadCode" class="${maskedClass('squadInput')}" maxlength="12" autocomplete="off" spellcheck="false" placeholder="ABCD-1234" aria-label="${esc(t('squadCode'))}" value="${esc(drafts.code)}">${revealButton('squadInput')}</span><button type="submit" value="join">${esc(t('squadJoin'))}</button></div>${notice}</form>${recentSquads()}${privacy}</section></div>`
   const viewer = s.members.find((m) => m.me)?.viewer ? `<p class="hint">${esc(t('squadViewer'))}</p>` : ''
   const code = `<div class="squad-code"><output>${esc(secretText('squad', state.squadCode || s.code))}</output>${revealButton('squad')}<button data-action="squadCopy" title="${esc(t('squadCopy'))}">${icon('copy')}<span>${esc(t(drafts.notice === 'squadCopied' ? 'squadCopied' : 'squadCopy'))}</span></button></div><p class="squad-phase" data-phase="${esc(s.phase)}">${esc(t('squadPhase_' + s.phase))}</p>`
-  return `<div class="page squad-page">${head}${profile}<section class="panel squad-forms"><h2>${esc(t('squadJoined'))}</h2><h3>${esc(t('squadCode'))}</h3>${code}<h3>${esc(t('squadMembers'))}</h3>${memberList(s.members)}${viewer}${notice}<button class="squad-leave" data-action="squadLeave">${esc(t('squadLeave'))}</button>${privacy}</section></div>`
+  return `<div class="page squad-page">${head}${profile}<section class="panel squad-forms"><h2>${esc(t('squadJoined'))}</h2><h3>${esc(t('squadCode'))}</h3>${code}<h3>${esc(t('squadMembers'))}</h3>${memberList(s.members)}${viewer}${notice}<button class="squad-leave" data-action="squadLeave">${esc(t('squadLeave'))}</button>${privacy}</section>${sharesCard()}</div>`
 }
 
 const inForms = (el) => !!el.closest?.('.squad-forms')
@@ -192,7 +214,26 @@ document.addEventListener(
   true,
 )
 
+// Seen on the squad's page, what was shared is read.
+afterRenderHooks.push(() => {
+  if (activeKind() === 'squad' && shares.some((s) => !s.seen)) setTimeout(() => markSeen(), 1500)
+})
+
 clickHandlers.push(async (type, id) => {
+  if (type === 'squadShareFilter') {
+    shareFilter = id || 'all'
+    render()
+    return true
+  }
+  if (type === 'squadShareOpen') {
+    const s = shares.find((x) => x.id === id)
+    if (!s) return true
+    markSeen(s.id)
+    if (s.kind === 'tab') void action('open', s.url)
+    else if (s.kind === 'snap') void action('snapNew', { image: s.image, title: s.title })
+    else window.dispatchEvent(new CustomEvent('mayak:map-show', { detail: s.map }))
+    return true
+  }
   if (type === 'toggleSquadSection') {
     void action('preferences', { squadCollapsed: !state.squadCollapsed })
     return true

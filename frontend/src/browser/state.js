@@ -549,7 +549,7 @@ function goHome(state, id) {
 }
 // The toolbar's icons of a web page, in their default order: the snap note
 // left of the wiki search. The user reorders them by dragging (tool-drag.js).
-const toolKeys = ['translate', 'snap', 'wikiSearch', 'external']
+const toolKeys = ['translate', 'snap', 'squadShare', 'wikiSearch', 'external']
 function toolOrderOf(value) {
   const order = Array.isArray(value) ? value.filter((key, i) => toolKeys.includes(key) && value.indexOf(key) === i) : []
   for (const key of toolKeys)

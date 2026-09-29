@@ -78,11 +78,13 @@ export const squadKey = (m) => (m.me ? 'me' : m.id)
 
 // assignColors gives each player of a squad (not the PCs that only watch) a
 // colour of their own, keyed by squadKey: the one they chose while no one
-// before them (by ID) has it, else the one their name gives when it is free,
+// before them (by member key, which stays across reconnections; else relay
+// ID) has it, else the one their name gives when it is free,
 // else the first free one. Every member works it out the same from the same
 // reports; a squad has at most as many players as colours.
 export function assignColors(members) {
-  const list = (members || []).filter((m) => !m.viewer).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+  const order = (m) => m.key || m.id || ''
+  const list = (members || []).filter((m) => !m.viewer).sort((a, b) => (order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0))
   const out = new Map()
   const used = new Set()
   for (const m of list)

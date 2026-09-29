@@ -21,13 +21,14 @@ import { colorOf } from './view-squad.js'
 // Messages ({t, …}): b (a line begins), p (its new points; droppable), l
 // (whole lines, with the generations), e (lines erased), x (a map cleared),
 // u (the clear undone), c (the pen's position; droppable), part (a piece of
-// a message too long for one).
+// a message too long for one). Messages of other kinds (squad-share.js) go
+// to the handlers given with onShell.
 
 const backend = () => window.mayakDesktop?.backend
 // The longest message sent as one (the relay takes 4096 characters of the
 // sealed text, about 4/3 of this plus a little).
 const LIMIT = 2800
-const PART = 1300
+const PART = 2600
 // How long a clear can be undone, a line being drawn waits for its next
 // points, the pen's position shows unmoved, a message in parts waits.
 const UNDO_MS = 8000
@@ -89,18 +90,48 @@ function send(obj, droppable = false) {
     void go.SquadSend(text, droppable).catch(() => {})
     return
   }
-  if (droppable) return
-  const id = Math.random().toString(36).slice(2, 10)
-  const n = Math.ceil(text.length / PART)
-  for (let i = 0; i < n; i++)
-    void go.SquadSend(JSON.stringify({ t: 'part', id, i, n, s: text.slice(i * PART, (i + 1) * PART) }), false).catch(() => {})
+  if (!droppable) void sendParts(text)
 }
-// sendLines sends lines in as few messages as fit, each with the generations.
-function sendLines(list) {
+// sendParts sends a message too long for one in pieces, one after another
+// (each waits for room under the relay's limit), telling onProgress how far
+// it is (0 to 1). A piece is as long as fits once escaped in its message.
+async function sendParts(text, onProgress = (_done) => {}) {
+  const go = backend()
+  const pieces = []
+  for (let at = 0; at < text.length; ) {
+    let size = PART
+    while (size > 200 && JSON.stringify(text.slice(at, at + size)).length > PART + 100) size -= 200
+    pieces.push(text.slice(at, at + size))
+    at += size
+  }
+  const id = Math.random().toString(36).slice(2, 10)
+  const n = pieces.length
+  for (let i = 0; i < n; i++) {
+    if (!(await go.SquadSend(JSON.stringify({ t: 'part', id, i, n, s: pieces[i] }), false).catch(() => false))) return false
+    onProgress((i + 1) / n)
+  }
+  return true
+}
+// sendShell sends a message of another kind (squad-share.js); a long one
+// goes in pieces, with its progress told. It tells whether it went.
+export async function sendShell(obj, onProgress) {
+  const text = JSON.stringify(obj)
+  if (!canDraw()) return false
+  if (text.length <= LIMIT) return !!(await backend()?.SquadSend(text, false).catch(() => false))
+  return sendParts(text, onProgress)
+}
+const handlers = {}
+export const onShell = (type, fn) => (handlers[type] = fn)
+// Functions run when members join (after this member's lines went to them).
+const joinHooks = []
+export const onJoin = (fn) => joinHooks.push(fn)
+// sendLines sends lines in as few messages as fit, each with the generations;
+// fresh marks lines just drawn (not handed over).
+function sendLines(list, fresh = false) {
   let batch = []
   let size = 0
   const flush = () => {
-    if (batch.length) send({ t: 'l', gens: sq.gens, lines: batch })
+    if (batch.length) send(fresh ? { t: 'l', gens: sq.gens, lines: batch, new: 1 } : { t: 'l', gens: sq.gens, lines: batch })
     batch = []
     size = 0
   }
@@ -226,7 +257,10 @@ function follow() {
   }
   const fresh = s.members.filter((m) => !m.me && !known.has(m.id))
   for (const m of fresh) known.add(m.id)
-  if (fresh.length && greeted) shareWith()
+  if (fresh.length && greeted) {
+    shareWith()
+    for (const fn of joinHooks) fn()
+  }
   // The pen's position of a member who left goes.
   const keys = new Set(s.members.map((m) => m.key))
   for (const key of sq.cursors.keys()) if (!keys.has(key)) sq.cursors.delete(key)
@@ -240,7 +274,7 @@ function senderKey(from) {
 function receive(from, data) {
   if (!data || typeof data !== 'object' || !code) return
   if (data.t === 'part') {
-    if (!Number.isInteger(data.i) || !Number.isInteger(data.n) || data.n > 200 || typeof data.s !== 'string') return
+    if (!Number.isInteger(data.i) || !Number.isInteger(data.n) || data.n > 1000 || typeof data.s !== 'string') return
     const key = from + ':' + data.id
     const got = parts.get(key) || { n: data.n, pieces: [], at: Date.now() }
     got.pieces[data.i] = data.s
@@ -280,6 +314,9 @@ function receive(from, data) {
     case 'l': {
       mergeGens(data.gens)
       let changed = false
+      // A line just drawn tells what someone is drawing (squad-share.js).
+      const first = Array.isArray(data.lines) ? data.lines[0] : null
+      if (data.new && first && by) handlers.drew?.(by, { name: first.name, c: first.c, map: first.map })
       for (const l of Array.isArray(data.lines) ? data.lines : []) {
         sq.live.delete(l?.id)
         // This member's own lines are only its own to give.
@@ -319,6 +356,8 @@ function receive(from, data) {
       render()
       return
     }
+    default:
+      if (by && typeof data.t === 'string') handlers[data.t]?.(by, data)
   }
 }
 
@@ -331,7 +370,7 @@ export function points(id, list) {
 }
 export function add(lines) {
   for (const l of lines) sq.lines.set(l.id, l)
-  sendLines(lines)
+  sendLines(lines, true)
   saveOwn()
   notify()
 }

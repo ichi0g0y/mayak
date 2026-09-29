@@ -258,4 +258,12 @@ test('assignColors gives every player a colour of their own', () => {
   // Ten players take the ten colours.
   const ten = Array.from({ length: 10 }, (_, i) => ({ id: 'id' + i, name: 'same', color: c }))
   assert.equal(new Set(assignColors(ten).values()).size, 10)
+  // The member key orders them before the relay ID: reconnected (a new ID),
+  // the one who had the colour keeps it.
+  const keyed = [
+    { id: 'z9', key: 'a'.repeat(32), name: 'Ann', color: a },
+    { id: 'a1', key: 'b'.repeat(32), name: 'Bob', color: a },
+  ]
+  assert.equal(assignColors(keyed).get('z9'), a)
+  assert.equal(new Set(assignColors(ten).values()).size, 10)
 })

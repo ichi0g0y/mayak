@@ -52,6 +52,7 @@ import { tutorialOpen, tutorialHTML, handleTutorial, openTutorial } from './view
 import { snapButton, snapSection, snapNotesPage, snapMenuHTML, snapToolbar } from './view-snapnotes.js'
 import { liveMapEntry, liveMapPage } from './view-map.js'
 import { squadPage, squadSection } from './view-squad.js'
+import { canShare, shareTab } from './squad-share.js'
 setRender(render)
 
 // The changelog page, rendered from CHANGELOG.md in the repository.
@@ -858,6 +859,9 @@ function toolIcons(tab) {
   const buttons = {
     translate: translateButton(tab),
     snap: snapButton(tab),
+    squadShare: canShare()
+      ? `<button class="squad-share-page ${sharedTab === tab.id ? 'on' : ''}" data-action="squadShareTab" title="${esc(t(sharedTab === tab.id ? 'squadShareDone' : 'squadShareTab'))}" aria-label="${esc(t('squadShareTab'))}">${icon(sharedTab === tab.id ? 'check' : 'squad')}</button>`
+      : '',
     wikiSearch: tab.task
       ? `<button data-action="wikiSearch" title="${t('searchWiki')}" aria-label="${t('searchWiki')}">${icon('search')}</button>`
       : '',
@@ -868,6 +872,21 @@ function toolIcons(tab) {
     .join('')
   return html ? `<div class="tool-icons" role="group">${html}</div>` : ''
 }
+// The tab just shared with the squad, whose button shows so for a moment.
+let sharedTab = ''
+clickHandlers.push(async (type) => {
+  if (type !== 'squadShareTab') return false
+  const tab = state.tabs.find((x) => x.id === state.active)
+  if (tab?.kind === 'web' && (await shareTab(tab.url, tab.title || tab.url))) {
+    sharedTab = tab.id
+    render()
+    setTimeout(() => {
+      sharedTab = ''
+      render()
+    }, 2000)
+  }
+  return true
+})
 function translateButton(tab) {
   if (tab?.kind !== 'web' || tab.fixed) return ''
   const on = isTranslated(tab.url)

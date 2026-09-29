@@ -272,7 +272,8 @@ func (c *Client) run() {
 			return
 		case <-time.After(wait):
 		}
-		wait = min(wait*2, time.Minute)
+		// At most 15 s apart: in a raid a longer wait keeps the squad away.
+		wait = min(wait*2, 15*time.Second)
 		c.setPhase(PhaseConnecting)
 	}
 }
