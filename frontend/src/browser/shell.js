@@ -169,7 +169,7 @@ function connectionLabel() {
   const p = state.peer || { phase: 'idle' }
   const status = linkStatus(p, mode === 'client')
   return mode === 'local'
-    ? `${t('hostMode')} · ${t('local')}${p.phase !== 'idle' ? ' · ' + t(status).replace('{n}', String(p.peers || 0)) : ''}`
+    ? `${t('hostMode')}${p.phase !== 'idle' ? ' · ' + t(status).replace('{n}', String(p.peers || 0)) : ''}`
     : `${t('clientMode')} · ${t(status)}`
 }
 // The top of the sidebar: the status indicators; the rest of the row is title
@@ -184,7 +184,7 @@ function indicators() {
   const mode = state.connection.mode
   const status =
     mode === 'local' ? 'host' : mode === 'off' ? 'off' : state.peer?.phase === 'connected' ? 'linked' : 'unlinked'
-  return `${gameModeBadge()}<span class="mode-status ${status}" tabindex="0" role="button" data-action="settingsAt" data-id="connection" aria-label="${esc(label)}">${icon(status)}<span class="status-tooltip" role="tooltip">${esc(label)}</span></span>${monitorButton()}${trackerIndicator()}`
+  return `${gameModeBadge()}<span class="mode-status ${status}" tabindex="0" role="button" data-action="settingsAt" data-id="connection" aria-label="${esc(label)}">${icon(status)}<span class="status-tooltip" role="tooltip">${esc(label)}</span></span>${trackerIndicator()}${monitorButton()}`
 }
 // The game mode being played (PvP, PvE, Season), as the Host detects it
 // from the game's logs and TarkovTracker; none while it is unknown. It opens
@@ -240,7 +240,7 @@ function monitorButton() {
     .join(' · ')
   return `<button class="monitor-toggle ${on ? 'on' : ''}" data-action="monitor" title="${esc(details)}" aria-label="${esc(details)}" aria-pressed="${on}"><span class="monitor-dot"></span></button>`
 }
-// TarkovTracker, beside monitoring, while a key is registered: whether the
+// TarkovTracker, left of monitoring, while a key is registered: whether the
 // key for the profile played is in use (synced), on its way, missing or
 // failing. It opens the TarkovTracker settings.
 function trackerIndicator() {
@@ -606,7 +606,7 @@ function browserSettings(key) {
     case 'adblock':
       return `<section class="panel"><label class="check"><input type="checkbox" data-action="adblock" ${state.adblock ? 'checked' : ''}>${t('adblockEnable')}</label><p class="hint">${t('adblockHelp')}</p></section>`
     default:
-      return `<section class="panel"><h2>${t('connection')}</h2>${select('mode', t('mode'), [...(state.localHost ? [['local', t('local')]] : []), ['client', t('clientConnection')], ['off', t('disabled')]], state.connection.mode, 'connection')}${state.connection.mode === 'local' ? `<p class="hint">${t('localHelp')}</p>` : ''}</section>${peerPanel()}`
+      return `<section class="panel"><h2>${t('connection')}</h2>${select('mode', t('mode'), [...(state.localHost ? [['local', t('local')]] : []), ['client', t('clientConnection')], ['off', t('disabled')]], state.connection.mode, 'connection')}${state.connection.mode === 'local' ? `<p class="hint">${t('localHelp')}</p>` : state.connection.mode === 'client' ? `<p class="hint">${t('clientHelp')}</p>` : ''}</section>${peerPanel()}`
   }
 }
 // linkStatus is the word for the link's phase (api.js peerState).

@@ -190,9 +190,9 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | 表示 | 状態 |
 |---|---|
 | ゲームモード（`game-mode-badge`） | Host が検出しているゲームモード（PvP / PvE / Season）を太字で出す（枠なし、PvE と Season は色付き）。分からないあいだは出さない。クリックで 設定 → ゲームと認識 を開く（`settingsAt`） |
-| Host アイコン（`mode-status`） | `host`（`local`・Host モード）/ `linked`（Client で Host とつながっている）/ `unlinked`（Client で未接続）/ `off`（受信 OFF）。ツールチップには「Hostモード · このPCで検出する」や「Clientモード · 接続中」などを出し、Host で接続中の PC があれば台数も出す。クリックで 設定 → 他のPCとの接続 を開く（`settingsAt`） |
+| Host アイコン（`mode-status`） | `host`（`local`・Host モード）/ `linked`（Client で Host とつながっている）/ `unlinked`（Client で未接続）/ `off`（受信 OFF）。ツールチップには「Hostモード」や「Clientモード · 接続中」などを出し、Host で接続中の PC があれば台数も出す。クリックで 設定 → 他のPCとの接続 を開く（`settingsAt`） |
 | 監視ドット（`monitor-toggle`） | Windows の Host のときだけ表示する。`on` クラスで監視中を示す。ツールチップは「監視中/監視停止中 · マップ · レイド中/外 · TarkovTracker: 状態 · クリックで開始/停止」。クリックで `StartMonitoring` / `StopMonitoring` を呼ぶ。監視停止中に押したとき Screenshots フォルダが未設定（`GetSettings` の `screenshotDirectory` が空）なら、監視を始める代わりに 設定 → フォルダ を開く（自動判別に失敗したまま「何も認識されない」状態から、選び直す場所へ直接行けるように） |
-| TarkovTracker（`tracker-status`） | Windows の Host で TarkovTracker のキーが 1 つ以上あるときだけ、監視ドットの右に出す（無ければ出さない）。`status.tracker.connection` に合わせて緑（`connected`・同期中）、黄（`connecting` / `waiting-profile`）、赤（`missing-token` / `error`）、灰（`disabled`）。ツールチップに状態と最後のエラー。クリックで 設定 → TarkovTracker を開く（`settingsAt`） |
+| TarkovTracker（`tracker-status`） | Windows の Host で TarkovTracker のキーが 1 つ以上あるときだけ、監視ドットの左に出す（無ければ出さない）。`status.tracker.connection` に合わせて緑（`connected`・同期中）、黄（`connecting` / `waiting-profile`）、赤（`missing-token` / `error`）、灰（`disabled`）。ツールチップに状態と最後のエラー。クリックで 設定 → TarkovTracker を開く（`settingsAt`） |
 
 状態は Host が送る `status:update` イベント（`monitoring`、`currentMap`、`raidActive`、`tracker.connection`）から更新します。
 
@@ -302,9 +302,9 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 
 | モード | 意味 |
 |---|---|
-| `local` | このPCで検出する（Host モード）。Windows のみ選択可。監視、認識、Host 設定を使える |
-| `client` | 別の PC の Host から受け取る（Client モード）。Host とは中継サーバー経由の暗号化したリンクでつながる |
-| `off` | 接続しない（受信 OFF） |
+| `local` | 「Host：このPCでタルコフを起動する」（Host モード）。Windows のみ選択可。監視、認識、Host 設定を使える |
+| `client` | 「Client：タルコフは別のPC（Host）で起動する」（Client モード）。Host とは中継サーバー経由の暗号化したリンクでつながる |
+| `off` | 「使わない（検出も受け取りもしない）」 |
 
 - Windows 以外で `local` が保存されている場合は `client` にします。認識できないモードは `off` にします。WebRTC で直接つないでいたころの `webrtc` は `client` に読み替えます。旧 `remote`（LAN 受信）モードで保存されていた場合は `off` で起動します（`restore()`）。当時の接続先 URL とトークンは読み込まず、保存もしません。
 - Go 側は `BrowserSetMode` でモード（`local` / `client` / `off`）を受け取り、`local` 以外のときは Client として扱います（`browserClient`）。Windows では起動時に `browser.json` を読み、`client`（旧 `webrtc`）/ `off` なら Client として起動します（Windows 以外は常に Client）。このとき OCR やフォルダの初期化、自動監視は行いません。

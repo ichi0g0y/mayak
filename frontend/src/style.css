@@ -528,11 +528,11 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .tracker-group-columns, .tracker-profile { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(240px, 1.2fr) auto; align-items: center; gap: 14px; }
 .tracker-group-columns { padding: 6px 12px 4px; font-size: 10px; color: var(--muted-foreground); }
 .tracker-profile { padding: 10px 12px; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
-/* Rows alternate between the card and a shade a few percent towards the
-   text colour (profiles and keys alike), the same small step in every
-   theme: the themes' second surface is far off in some (Catppuccin Mocha). */
+/* Rows alternate between the card and the theme's stripe (profiles and keys
+   alike): a small step each theme sets to the same contrast, where its
+   second surface is far off in some (Catppuccin Mocha). */
 .tracker-profile.current { border-color: var(--border); }
-.tracker-profile:nth-child(even of .tracker-profile), .tracker-manage-key:nth-child(even) { background: color-mix(in srgb, var(--text) 3.5%, var(--card)); }
+.tracker-profile:nth-child(even of .tracker-profile), .tracker-manage-key:nth-child(even) { background: var(--stripe); }
 .tracker-profile-info > span:empty { display: none; }
 .tracker-profile-key { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-items: start; }
 .tracker-profile-key .tracker-profile-actions { grid-template-columns: auto; }

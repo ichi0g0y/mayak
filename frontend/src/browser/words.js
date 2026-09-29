@@ -156,9 +156,12 @@ export const words = {
       '表示中のタスクは、上のサイト選択で英語Wiki・日本語Wikiを切り替えられます。固定したタブは自動更新の対象外です。',
     connection: 'Host接続',
     mode: '接続方法',
-    local: 'このPCで検出する',
-    disabled: '接続しない',
-    localHelp: 'このPCの検出結果をタブに表示します。',
+    local: 'Host：このPCでタルコフを起動する',
+    disabled: '使わない（検出も受け取りもしない）',
+    localHelp:
+      'Escape from Tarkov を遊ぶPCで選びます。スクショやログから検出したタスク・マップ・アイテムをこのPCのタブに出し、つないだ別のPCにも送ります。',
+    clientHelp:
+      'Escape from Tarkov は別のPC（Host）で遊び、そのPCの MAYAK が検出したものをこのPCに出します。下で Host とつないでください。',
     bookmarkHelp: 'カードをクリックして開く。名前と分類は編集できます。',
     tabHelp: 'ドラッグで順序変更',
     dismiss: '閉じる',
@@ -229,7 +232,7 @@ export const words = {
     openScreenshotFolder: 'フォルダを開く',
     newerScreenshot: '新しい方へ',
     olderScreenshot: '古い方へ',
-    clientConnection: '別の PC（Host）から受け取る',
+    clientConnection: 'Client：タルコフは別のPC（Host）で起動する',
     p2pTitle: '別の PC へ送る',
     p2pReceive: 'Host とつなぐ',
     p2pHelp:
@@ -758,9 +761,12 @@ export const words = {
       'Switch the current task between English and Japanese wikis using the website selector above. Pinned tabs are never replaced automatically.',
     connection: 'Host connection',
     mode: 'Connection mode',
-    local: 'Detect on this computer',
-    disabled: 'No connection',
-    localHelp: 'Show detections from this computer in tabs.',
+    local: 'Host: Escape from Tarkov runs on this PC',
+    disabled: 'Off (nothing detected or received)',
+    localHelp:
+      'Choose this on the PC you play on: tasks, maps and items found in screenshots and logs open in tabs here and go to the PCs paired with it.',
+    clientHelp:
+      'Escape from Tarkov runs on another PC (the Host); what its MAYAK finds shows here. Pair with the Host below.',
     bookmarkHelp: 'Click a card to open it. Names and categories are editable.',
     tabHelp: 'Drag to reorder',
     dismiss: 'Dismiss',
@@ -831,7 +837,7 @@ export const words = {
     openScreenshotFolder: 'Open folder',
     newerScreenshot: 'Newer',
     olderScreenshot: 'Older',
-    clientConnection: 'Receive from another PC (the Host)',
+    clientConnection: 'Client: Escape from Tarkov runs on another PC (the Host)',
     p2pTitle: 'Send to another PC',
     p2pReceive: 'Connect to a Host',
     p2pHelp:
