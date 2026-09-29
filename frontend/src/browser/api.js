@@ -1526,7 +1526,12 @@ async function perform(type, data) {
       const url = webURL(data)
       if (!url) throw new Error(t(state.language, 'enterWebURL'))
       if (type === 'openOrFocus') {
-        const same = state.tabs.find((t) => t.kind === 'web' && t.url === url)
+        // The same page: its address without a fragment or a trailing slash.
+        const bare = (u) =>
+          String(u || '')
+            .replace(/#.*$/, '')
+            .replace(/\/$/, '')
+        const same = state.tabs.find((t) => t.kind === 'web' && bare(t.url) === bare(url))
         if (same) {
           state.active = same.id
           break

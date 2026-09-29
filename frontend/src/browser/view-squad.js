@@ -252,6 +252,19 @@ document.addEventListener(
   true,
 )
 
+// openSharedSnap keeps a shared snap note as a note of this PC's the first
+// time, and opens that note after (a new one if it was deleted since).
+async function openSharedSnap(s) {
+  if (s.noteId) {
+    try {
+      const next = await action('snapOpen', s.noteId)
+      if (next?.snapNotes?.open?.note?.id === s.noteId) return
+    } catch {}
+  }
+  const next = await action('snapNew', { image: s.image, title: s.title })
+  s.noteId = next?.snapNotes?.open?.note?.id || ''
+}
+
 // Seen on the squad's page, what was shared is read.
 afterRenderHooks.push(() => {
   if (activeKind() === 'squad' && shares.some((s) => !s.seen)) setTimeout(() => markSeen(), 1500)
@@ -272,8 +285,10 @@ clickHandlers.push(async (type, id) => {
     const s = shares.find((x) => x.id === id)
     if (!s) return true
     markSeen(s.id)
-    if (s.kind === 'tab') void action('open', s.url)
-    else if (s.kind === 'snap') void action('snapNew', { image: s.image, title: s.title })
+    // A page already open in a tab comes forward rather than again; a snap
+    // note taken in once opens that note again.
+    if (s.kind === 'tab') void action('openOrFocus', s.url)
+    else if (s.kind === 'snap') void openSharedSnap(s)
     else if (s.kind === 'view')
       window.dispatchEvent(
         new CustomEvent('mayak:map-show', {
