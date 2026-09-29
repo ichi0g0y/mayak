@@ -11,6 +11,10 @@ import (
 func TestImmediateSettingsAndTrackerAssignmentSurviveReload(t *testing.T) {
 	t.Setenv("APPDATA", t.TempDir())
 	a := NewApp()
+	// The key assignment starts a sync that saves the store: it ends before
+	// the temporary folder goes (it once outlived it and wrote the fixture
+	// into the real store).
+	t.Cleanup(a.trackerJobs.Wait)
 	settings, err := config.Load()
 	if err != nil {
 		t.Fatal(err)

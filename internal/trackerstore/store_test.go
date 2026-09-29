@@ -2,6 +2,7 @@ package trackerstore
 
 import (
 	"encoding/json"
+	"os"
 	"strings"
 	"testing"
 )
@@ -160,5 +161,27 @@ func TestHistorySyncedAtSurvivesRememberingTheProfile(t *testing.T) {
 	d.RememberProfiles([]Profile{{AccountID: "1", ProfileID: "p", Mode: "pve", FirstSeen: "2026-01-01T00:00:00Z", LastSeen: "2026-09-26T00:00:00Z"}})
 	if got := d.Profiles[0].HistorySyncedAt; got != "2026-09-27T00:00:00Z" {
 		t.Fatalf("HistorySyncedAt = %q after the logs were read again", got)
+	}
+}
+
+// A store keeps the file it first used: a save from work that outlived a
+// test's temporary user folder must not land in the real one.
+func TestStoreKeepsItsFileAfterTheFolderChanges(t *testing.T) {
+	first, second := t.TempDir(), t.TempDir()
+	t.Setenv("APPDATA", first)
+	t.Setenv("XDG_CONFIG_HOME", first)
+	t.Setenv("HOME", first)
+	s := &Store{}
+	if _, err := s.Load(); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("APPDATA", second)
+	t.Setenv("XDG_CONFIG_HOME", second)
+	t.Setenv("HOME", second)
+	if err := s.Save(Empty()); err != nil {
+		t.Fatal(err)
+	}
+	if entries, _ := os.ReadDir(second); len(entries) != 0 {
+		t.Fatalf("saved into the new folder: %v", entries)
 	}
 }

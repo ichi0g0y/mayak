@@ -1,4 +1,4 @@
-import { Check, CloudSync, ExternalLink, History, KeyRound, RefreshCw, X } from 'lucide-react'
+import { Check, CloudSync, ExternalLink, History, KeyRound, RefreshCw, Trash2 } from 'lucide-react'
 import {
   BrowserOpenURL,
   DiscoverTrackerProfiles,
@@ -248,6 +248,20 @@ export function TrackerSection({
                   <div>
                     <Label>{t('trackerKeysTitle')}</Label>
                     <p className="help">{t('trackerKeysHelp')}</p>
+                    <p className="tracker-links">
+                      <button
+                        type="button"
+                        className="inline-link"
+                        onClick={() => BrowserOpenURL('https://tarkovtracker.org/settings#api')}
+                      >
+                        <ExternalLink />
+                        {t('trackerOpenSettings')}
+                      </button>
+                      <button type="button" className="inline-link" onClick={() => BrowserOpenURL('https://tarkovtracker.org/')}>
+                        <ExternalLink />
+                        {t('trackerOpenSite')}
+                      </button>
+                    </p>
                   </div>
                 </div>
                 <div className="tracker-import">
@@ -327,12 +341,13 @@ export function TrackerSection({
                             <Button
                               type="button"
                               variant="ghost"
+                              className="tracker-key-remove"
                               disabled={busy}
                               aria-label={t('trackerRemoveToken')}
                               title={t('trackerRemoveToken')}
                               onClick={() => void removeTrackerKey(key.id)}
                             >
-                              <X />
+                              <Trash2 />
                             </Button>
                           </div>
                         </div>
@@ -366,7 +381,7 @@ export function TrackerSection({
                             title={key.bound ? t('trackerUnassignBeforeRemove') : t('trackerRemoveToken')}
                             onClick={() => void removeTrackerKey(key.id)}
                           >
-                            <X />
+                            <Trash2 />
                           </Button>
                         </div>
                       ))}
@@ -411,16 +426,16 @@ export function TrackerSection({
               </section>
             </div>
           )}
-          <p className="help">
-            <button
-              type="button"
-              className="inline-link"
-              onClick={() => BrowserOpenURL('https://tarkovtracker.org/settings#api')}
-            >
-              <ExternalLink />
-              {t('trackerOpenSettings')}
-            </button>
-          </p>
+          {/* Turned off, the links under step 1 are hidden: TarkovTracker is
+              reachable from here. */}
+          {!settings.tarkovTrackerEnabled && (
+            <p className="help tracker-links">
+              <button type="button" className="inline-link" onClick={() => BrowserOpenURL('https://tarkovtracker.org/')}>
+                <ExternalLink />
+                {t('trackerOpenSite')}
+              </button>
+            </p>
+          )}
         </CardContent>
       </Card>
     </>

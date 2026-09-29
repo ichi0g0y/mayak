@@ -1035,7 +1035,8 @@ function App() {
           </div>
         </TabsContent>
         <TabsContent value="tracker">
-          <TrackerSection
+          <div className="settings-stack">
+            <TrackerSection
             settings={settings}
             status={status}
             t={t}
@@ -1046,9 +1047,10 @@ function App() {
             setNotice={setNotice}
             setNoticeError={setNoticeError}
             trackerModeLabel={trackerModeLabel}
-            trackerToken={trackerToken}
-            setTrackerToken={setTrackerToken}
-          />
+              trackerToken={trackerToken}
+              setTrackerToken={setTrackerToken}
+            />
+          </div>
         </TabsContent>
         <TabsContent value="sounds">
           <div className="settings-stack">

@@ -184,7 +184,7 @@ function indicators() {
   const mode = state.connection.mode
   const status =
     mode === 'local' ? 'host' : mode === 'off' ? 'off' : state.peer?.phase === 'connected' ? 'linked' : 'unlinked'
-  return `${gameModeBadge()}<span class="mode-status ${status}" tabindex="0" role="button" data-action="settingsAt" data-id="connection" aria-label="${esc(label)}">${icon(status)}<span class="status-tooltip" role="tooltip">${esc(label)}</span></span>${monitorButton()}`
+  return `${gameModeBadge()}<span class="mode-status ${status}" tabindex="0" role="button" data-action="settingsAt" data-id="connection" aria-label="${esc(label)}">${icon(status)}<span class="status-tooltip" role="tooltip">${esc(label)}</span></span>${monitorButton()}${trackerIndicator()}`
 }
 // The game mode being played (PvP, PvE, Season), as the Host detects it
 // from the game's logs and TarkovTracker; none while it is unknown. It opens
@@ -239,6 +239,26 @@ function monitorButton() {
     .filter(Boolean)
     .join(' · ')
   return `<button class="monitor-toggle ${on ? 'on' : ''}" data-action="monitor" title="${esc(details)}" aria-label="${esc(details)}" aria-pressed="${on}"><span class="monitor-dot"></span></button>`
+}
+// TarkovTracker, beside monitoring, while a key is registered: whether the
+// key for the profile played is in use (synced), on its way, missing or
+// failing. It opens the TarkovTracker settings.
+function trackerIndicator() {
+  const h = state.host
+  if (!h || !state.localHost || !h.trackerKeys) return ''
+  const status = h.tracker || 'disabled'
+  const kind =
+    status === 'connected'
+      ? 'ok'
+      : status === 'error' || status === 'missing-token'
+        ? 'bad'
+        : status === 'disabled'
+          ? 'off'
+          : 'wait'
+  const text = [`TarkovTracker: ${words[state.language]['tracker_' + status] || status}`, h.trackerError]
+    .filter(Boolean)
+    .join(' · ')
+  return `<span class="tracker-status ${kind}" tabindex="0" role="button" data-action="settingsAt" data-id="tracker" title="${esc(text)}" aria-label="${esc(text)}">${icon('tracker')}</span>`
 }
 // The dock's layout button opens a menu choosing, by icon, where the tabs
 // and the item details go.

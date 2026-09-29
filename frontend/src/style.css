@@ -491,6 +491,12 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .badge.warn { color: var(--danger, #e06c75); border-color: var(--border-strong); background: var(--bg); }
 .tracker-unassigned { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
 .tracker-unassigned-key { display: grid; grid-template-columns: minmax(200px, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px; border: 1px dashed var(--border-strong); border-radius: var(--radius); background: var(--surface-2); }
+/* An unassigned key's actions stay in one row: assign to the latest profile,
+   choose a profile, and the trash can at the end. */
+.tracker-unassigned-key .tracker-profile-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.tracker-unassigned-key .tracker-key-select { flex: 1 1 150px; }
+.tracker-key-remove.button, .tracker-manage-key .button { flex: none; padding: 4px; height: 28px; width: 28px; }
+.tracker-key-remove svg, .tracker-manage-key .button svg { width: 15px; height: 15px; }
 .tracker-manage { padding-top: 12px; border-top: 1px solid var(--border); }
 .tracker-manage summary { cursor: pointer; font-size: 12px; color: var(--muted-foreground); }
 .tracker-manage-list { display: grid; gap: 6px; margin-top: 8px; }
@@ -503,6 +509,8 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .tracker-step + .tracker-step { padding-top: 16px; border-top: 1px solid var(--border); }
 .tracker-step-heading { display: flex; align-items: flex-start; gap: 10px; }
 .tracker-step-heading > div { display: grid; gap: 4px; }
+.tracker-links { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 2px 0 0; }
+.tracker-links .inline-link svg { width: 13px; height: 13px; }
 .step-pill { flex-shrink: 0; margin-top: 1px; padding: 1px 9px; border-radius: 999px; background: var(--accent); color: var(--on-accent, #fff); font-size: 11px; font-weight: 600; line-height: 18px; letter-spacing: .02em; }
 .tracker-step .tracker-unassigned { padding-top: 0; border-top: 0; }
 .tracker-step .tracker-manage { padding-top: 10px; }

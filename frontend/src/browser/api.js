@@ -454,6 +454,10 @@ function hostStatus(s) {
   }
   if (s.tracker && typeof s.tracker === 'object') {
     out.tracker = String(s.tracker.connection || '')
+    // Keys registered (none hides the TarkovTracker indicator) and the last
+    // error, for the indicator's tooltip.
+    out.trackerKeys = Array.isArray(s.tracker.keys) ? s.tracker.keys.length : 0
+    out.trackerError = String(s.tracker.lastError || '')
     out.mode = String(s.tracker.mode || '')
     // The player's name, the map view's default name for a squad.
     out.player = String(s.tracker.displayName || '').trim().slice(0, 24)

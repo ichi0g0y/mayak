@@ -97,6 +97,9 @@ type App struct {
 	trackerClient  *tracker.Client
 	trackerStore   trackerstore.Store
 	trackerStoreMu sync.Mutex
+	// trackerJobs is the work a key assignment starts (a sync of the
+	// profile's past logs, a refresh), for a test to wait on.
+	trackerJobs    sync.WaitGroup
 	trackerNamesMu sync.Mutex
 	trackerData    trackerstore.Document
 	trackerTasks   map[string]string

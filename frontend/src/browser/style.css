@@ -463,6 +463,15 @@ button.need-row:hover .need-name{color:var(--accent)}
 .monitor-dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .monitor-toggle.on .monitor-dot{background:var(--success)}
 .monitor-toggle:hover{color:var(--text)}
+/* TarkovTracker's state (trackerIndicator): green in use, amber on its way,
+   red missing or failing, grey off. */
+.tracker-status{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--muted);cursor:pointer}
+.tracker-status .icon{width:15px;height:15px}
+.tracker-status:hover{background:var(--hover)}
+.tracker-status.ok{color:var(--success)}
+.tracker-status.wait{color:var(--warn)}
+.tracker-status.bad{color:var(--danger)}
+body[data-sidebar=collapsed] .tracker-status{display:none}
 body[data-sidebar=collapsed] .monitor-toggle{display:none}
 /* The item sidebar's left edge resizes it, like the left sidebar's edge. */
 .item-resizer{position:fixed;top:0;bottom:var(--status-bar);right:calc(var(--nav-right) + var(--item-width) - 6px);width:6px;z-index:5;cursor:col-resize;--wails-draggable:no-drag}

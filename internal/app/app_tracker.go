@@ -170,10 +170,18 @@ func (a *App) SetTrackerProfileKey(accountID, profileID, mode, keyID string) err
 	a.emitStatus(status)
 	a.addLog("Info", "TarkovTracker", "Updated key assignment for "+maskProfileID(profileID)+" ("+mode+")")
 	if active {
-		go func() { _ = a.refreshTrackerMode(mode) }()
+		a.trackerJobs.Add(1)
+		go func() {
+			defer a.trackerJobs.Done()
+			_ = a.refreshTrackerMode(mode)
+		}()
 	}
 	if keyID != "" {
-		go a.syncAssignedHistory(accountID, profileID, mode)
+		a.trackerJobs.Add(1)
+		go func() {
+			defer a.trackerJobs.Done()
+			a.syncAssignedHistory(accountID, profileID, mode)
+		}()
 	}
 	return nil
 }

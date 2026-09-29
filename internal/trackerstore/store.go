@@ -195,12 +195,29 @@ func (d Document) hasProfile(accountID, profileID, mode string) bool {
 	return false
 }
 
-type Store struct{ mu sync.Mutex }
+type Store struct {
+	mu sync.Mutex
+	// path is the file, fixed on first use: work still running after the
+	// user folder changed (a test's temporary one put back) writes where it
+	// read, never over another store.
+	path string
+}
+
+func (s *Store) file() (string, error) {
+	if s.path == "" {
+		path, err := storePath()
+		if err != nil {
+			return "", err
+		}
+		s.path = path
+	}
+	return s.path, nil
+}
 
 func (s *Store) Load() (Document, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	path, err := storePath()
+	path, err := s.file()
 	if err != nil {
 		return Empty(), err
 	}
@@ -246,7 +263,7 @@ func (s *Store) Save(document Document) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	document.Version = CurrentVersion
-	path, err := storePath()
+	path, err := s.file()
 	if err != nil {
 		return err
 	}
