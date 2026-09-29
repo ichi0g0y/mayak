@@ -10,7 +10,10 @@ import * as squad from './squad-draw.js'
 // who join later; a snap note, being large, reaches only those there when
 // it is sent.
 //
-// An item: {id, kind: 'tab' | 'snap' | 'draw', by (member key), name, c
+// A map view shared ("look here": its map, floor, centre and zoom) comes
+// the same way, as kind 'view', and brings that view up when opened.
+//
+// An item: {id, kind: 'tab' | 'snap' | 'draw' | 'view', by (member key), name, c
 // (colour), title, url, image, map, at, mine, seen}. The list is this PC's,
 // for the squad joined, and goes with it.
 
@@ -51,6 +54,11 @@ squad.onShell('snap', (by, d) => {
   if (!/^data:image\/(jpeg|png);base64,/.test(d.image)) return
   keep({ id: d.id, kind: 'snap', by, name: text(d.name, 24), c: text(d.c, 7), title: text(d.title, 160), image: d.image, at: Date.now(), mine: false, seen: false })
 })
+squad.onShell('view', (by, d) => {
+  if (typeof d.id !== 'string' || typeof d.map !== 'string' || shares.some((s) => s.id === d.id)) return
+  if (![d.x, d.z, d.zoom].every(Number.isFinite)) return
+  keep({ id: d.id, kind: 'view', by, name: text(d.name, 24), c: text(d.c, 7), map: text(d.map, 60), floor: text(d.floor, 60), x: d.x, z: d.z, zoom: d.zoom, at: Date.now(), mine: false, seen: false })
+})
 // Someone drew a line on a map: one item per member and map, moved up.
 squad.onShell('drew', (by, d) => {
   if (!d.map) return
@@ -67,7 +75,7 @@ afterRenderHooks.push(() => {
   }
 })
 // The shares waiting to be seen (pages and snap notes, not drawings), the
-// newest first: the sidebar's notices (view-squad.js shareToasts).
+// newest first: counted on the squad's button and beside who shared them.
 export const waiting = () => shares.filter((s) => !s.seen && s.kind !== 'draw')
 // Those who join get the pages shared here lately.
 squad.onJoin(() => {
@@ -96,6 +104,19 @@ export async function shareSnap(title, image, onProgress) {
   const id = Math.random().toString(36).slice(2, 12)
   const ok = await squad.sendShell({ t: 'snap', id, title: text(title, 160), image, ...style }, onProgress)
   if (ok) keep({ id, kind: 'snap', by: squad.myKeyOf(), ...style, title: text(title, 160), image, at: Date.now(), mine: true, seen: true })
+  return ok
+}
+
+// shareView shares the map view shown (map, floor, centre, zoom): "look
+// here". It tells whether it went.
+export async function shareView(v) {
+  if (!canShare()) return false
+  const style = squad.myStyle()
+  const id = Math.random().toString(36).slice(2, 12)
+  const round = (n) => Math.round(n * 100) / 100
+  const view = { map: text(v.map, 60), floor: text(v.floor, 60), x: round(v.x), z: round(v.z), zoom: round(v.zoom) }
+  const ok = await squad.sendShell({ t: 'view', id, ...view, ...style })
+  if (ok) keep({ id, kind: 'view', by: squad.myKeyOf(), ...style, ...view, at: Date.now(), mine: true, seen: true })
   return ok
 }
 

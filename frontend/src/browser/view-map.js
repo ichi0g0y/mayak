@@ -36,7 +36,7 @@ import {
 import { attach, clearNotice, drawLines, penBar, penButton, snapStrokes, squadSnapStrokes } from './map-draw.js'
 import { mapName, memberList, ownName } from './view-squad.js'
 import { colorOf } from './squad-colors.js'
-import { mapFresh } from './squad-share.js'
+import { canShare, mapFresh, shareView } from './squad-share.js'
 
 // The map view: tarkov.dev's interactive map redrawn by MAYAK (Leaflet over
 // its SVG maps; internal/mapdata makes the picture of each floor and the
@@ -137,7 +137,7 @@ function rail(map, floor) {
   const snap = state.snapNotes
     ? `<button class="map-rail-button map-rail-snap" data-action="mapSnap" title="${esc(t('mapSnap'))}" aria-label="${esc(t('mapSnap'))}" ${!map || snapping ? 'disabled' : ''}>${icon('snap')}</button>`
     : ''
-  return `<div class="map-rail">${button('maps', 'map', `${t('mapPick')}${where ? `: ${where}` : ''}`, floorBadge)}${button('filters', 'list', t('mapFilters'))}${button('search', 'search', t('mapSearch'), view.search ? '<span class="map-rail-dot"></span>' : '')}${snap}${penButton(!map)}${button('squad', 'squad', t('squad'), s ? `<span class="squad-badge" data-phase="${esc(s.phase)}">${count}</span>` : '')}${button('settings', 'settings', t('mapSettings'))}</div>`
+  return `<div class="map-rail">${button('maps', 'map', `${t('mapPick')}${where ? `: ${where}` : ''}`, floorBadge)}${button('filters', 'list', t('mapFilters'))}${button('search', 'search', t('mapSearch'), view.search ? '<span class="map-rail-dot"></span>' : '')}${snap}${penButton(!map)}${canShare() ? `<button class="map-rail-button ${viewShared ? 'selected' : ''}" data-action="mapShareView" title="${esc(t(viewShared ? 'squadShareDone' : 'mapShareView'))}" aria-label="${esc(t('mapShareView'))}" ${map ? '' : 'disabled'}>${icon(viewShared ? 'check' : 'crosshair')}</button>` : ''}${button('squad', 'squad', t('squad'), s ? `<span class="squad-badge" data-phase="${esc(s.phase)}">${count}</span>` : '')}${button('settings', 'settings', t('mapSettings'))}</div>`
 }
 
 // The map panel: the maps, then the floors of the one shown.
@@ -737,10 +737,20 @@ function drawMap() {
   drawSquad(map, floor, members)
   drawLines(L, lm.map, map.key, floor, offAlpha())
   if (view.focus?.map === map.key) {
-    const { x, z } = view.focus
+    const { x, z, zoom, pulse } = view.focus
     view.focus = null
-    const near = Math.max(lm.map.getZoom(), ((map.minZoom || 2) + Math.max(7, map.maxZoom || 6)) / 2)
+    const near = Number.isFinite(zoom) ? zoom : Math.max(lm.map.getZoom(), ((map.minZoom || 2) + Math.max(7, map.maxZoom || 6)) / 2)
     lm.map.setView(L.latLng(z, x), near)
+    // A view shared: a ring in the sharer's colour where they looked.
+    if (pulse) {
+      const ring = L.marker(L.latLng(z, x), {
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: 3000,
+        icon: L.divIcon({ className: 'map-look-icon', html: `<span class="map-look" style="--c:${esc(pulse)}"></span>`, iconSize: [0, 0] }),
+      }).addTo(lm.map)
+      setTimeout(() => ring.remove(), 3200)
+    }
   }
 }
 afterRenderHooks.push(drawMap)
@@ -796,6 +806,8 @@ document.addEventListener('keydown', (event) => {
 // opened for drawing. The tiles come through Go: tarkov.dev does not serve
 // them for a page to read.
 let snapping = false
+// The view was just shared: its button shows so for a moment.
+let viewShared = false
 async function snapMap() {
   const el = document.getElementById('live-map')
   const { map, floor } = shown()
@@ -859,6 +871,21 @@ clickHandlers.push(async (type, id, button) => {
     void snapMap()
     return true
   }
+  // "Look here": the view shown goes to the squad.
+  if (type === 'mapShareView') {
+    const { map, floor } = shown()
+    if (!map || !lm.map) return true
+    const c = lm.map.getCenter()
+    if (await shareView({ map: map.key, floor, x: c.lng, z: c.lat, zoom: lm.map.getZoom() })) {
+      viewShared = true
+      render()
+      setTimeout(() => {
+        viewShared = false
+        render()
+      }, 2000)
+    }
+    return true
+  }
   if (type === 'mapPick') {
     view.map = id || 'auto'
     view.floor = 'auto'
@@ -896,10 +923,16 @@ clickHandlers.push(async (type, id, button) => {
 // back to following the map and floor played.
 // A squadmate's drawing pressed in the squad's list shows that map.
 window.addEventListener('mayak:map-show', (event) => {
-  const key = /** @type {CustomEvent} */ (event).detail
+  const d = /** @type {CustomEvent} */ (event).detail || {}
+  const key = d.map
   if (!findMap(state.squad?.maps, key)) return
   view.map = key
   view.floor = 'auto'
+  // A view shared: its floor, centre and zoom too.
+  if (Number.isFinite(d.x) && Number.isFinite(d.z)) {
+    view.floor = typeof d.floor === 'string' ? d.floor : 'auto'
+    view.focus = { map: key, x: d.x, z: d.z, zoom: d.zoom, pulse: d.c || '#ffd166' }
+  }
   if (state.tabs.find((tab) => tab.id === state.active)?.kind !== 'livemap') void action('livemap')
   else render()
 })

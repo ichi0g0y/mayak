@@ -1,6 +1,7 @@
 import { age } from './item.js'
 import { findMap, freshness, players, squadColors, squadKey } from './map-geo.js'
 import { colorOf, squadColorMap } from './squad-colors.js'
+import { codeBoxes, onCodeBoxes } from './code-boxes.js'
 import { shares, markSeen, waiting } from './squad-share.js'
 import {
   state,
@@ -59,11 +60,30 @@ function memberLine(m) {
 function memberChip(m) {
   const fade = m.map && m.pos ? freshness(m.at) : 'gone'
   const title = `${m.name || '?'} — ${whereOf(m)}`
-  const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-chip-name">${esc(m.name || '?')}${m.me ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span>`
-  return m.map && m.pos
-    ? `<li class="squad-chip ${fade}"><button data-action="squadFocus" data-id="${esc(squadKey(m))}" title="${esc(title)}">${line}</button></li>`
-    : `<li class="squad-chip ${fade}" title="${esc(title)}">${line}</li>`
+  const theirs = m.me || !m.key ? [] : shares.filter((x) => x.by === m.key)
+  const unread = theirs.filter((x) => !x.seen).length
+  const open = openMember === squadKey(m)
+  const badge = unread ? `<span class="squad-chip-count" title="${esc(t('squadMemberUnread'))}">${unread}</span>` : ''
+  const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-chip-name">${esc(m.name || '?')}${m.me ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span>${badge}`
+  // Pressing a member opens what they shared and the way to them on the map;
+  // yourself, straight to you on the map.
+  const button = m.me
+    ? m.map && m.pos
+      ? `<button data-action="squadFocus" data-id="me" title="${esc(title)}">${line}</button>`
+      : line
+    : `<button data-action="squadMember" data-id="${esc(squadKey(m))}" aria-expanded="${open}" title="${esc(title)}">${line}</button>`
+  let body = ''
+  if (open && !m.me) {
+    const focus =
+      m.map && m.pos
+        ? `<li><button class="squad-member-map" data-action="squadFocus" data-id="${esc(squadKey(m))}">${icon('map')}<span>${esc(t('squadFocus'))}</span><small>${esc(whereOf(m))}</small></button></li>`
+        : `<li class="squad-member-where-note">${esc(whereOf(m))}</li>`
+    body = `<ul class="squad-member-shares">${focus}${theirs.length ? theirs.map((x) => shareRow(x, true)).join('') : `<li class="squad-member-none">${esc(t('squadMemberNone'))}</li>`}</ul>`
+  }
+  return `<li class="squad-chip ${fade} ${open ? 'open' : ''}" ${button === line ? `title="${esc(title)}"` : ''}>${button}${body}</li>`
 }
+// The member whose shares show under them in the sidebar (squadKey), or ''.
+let openMember = ''
 
 export { colorOf }
 
@@ -75,37 +95,23 @@ const activeKind = () => state.tabs.find((tab) => tab.id === state.active)?.kind
 
 // A shared thing's row: its kind's icon, its title (or who drew where), who
 // shared it, when, and a dot while unread. Pressing it opens it.
-const shareIcons = { tab: 'globe', snap: 'snap', draw: 'pencil' }
+const shareIcons = { tab: 'globe', snap: 'snap', draw: 'pencil', view: 'crosshair' }
 function shareTitle(s) {
-  return s.kind === 'draw' ? t('squadDrew').replace('{map}', mapName(s.map)) : s.title || s.url || t('snapNotes')
+  if (s.kind === 'draw') return t('squadDrew').replace('{map}', mapName(s.map))
+  if (s.kind === 'view') return t('squadLookHere').replace('{map}', mapName(s.map))
+  return s.title || s.url || t('snapNotes')
 }
 function shareRow(s, full) {
   const from = `<span class="squad-share-from"><span class="squad-dot" style="--c:${esc(s.c)}"></span>${esc(s.mine ? t('squadYou') : s.name || '?')}${full ? ` · ${esc(age(new Date(s.at).toISOString(), state.language))}` : ''}</span>`
   const title = s.kind === 'tab' ? `${shareTitle(s)}\n${s.url}` : shareTitle(s)
   return `<li class="squad-share ${s.seen ? '' : 'unseen'}"><button data-action="squadShareOpen" data-id="${esc(s.id)}" title="${esc(title)}">${icon(shareIcons[s.kind] || 'globe')}<span class="squad-share-text"><span class="squad-share-title">${esc(shareTitle(s))}</span>${from}</span>${s.seen ? '' : '<span class="squad-share-dot"></span>'}</button></li>`
 }
-// Notices of what the squad shared, at the bottom of the sidebar: they
-// stay until opened (pressed), put away (×) or seen on the squad's page;
-// three at most show, the rest counted on a button to the page. The page
-// views are native windows over the page area, so the notices keep to the
-// sidebar (not on the collapsed one, nor in the horizontal layout, where the
-// squad's button counts them).
-const TOASTS = 3
-export function shareToasts() {
-  const list = waiting()
-  if (!list.length || state.layout !== 'vertical' || state.sidebarCollapsed) return ''
-  const toast = (s) =>
-    `<div class="squad-toast" style="--c:${esc(s.c)}"><button class="squad-toast-open" data-action="squadShareOpen" data-id="${esc(s.id)}" title="${esc(s.kind === 'tab' ? `${shareTitle(s)}\n${s.url}` : shareTitle(s))}">${icon(shareIcons[s.kind] || 'globe')}<span class="squad-share-text"><span class="squad-share-title">${esc(shareTitle(s))}</span><span class="squad-share-from"><span class="squad-dot" style="--c:${esc(s.c)}"></span>${esc(t(s.kind === 'snap' ? 'squadToastSnap' : 'squadToastTab').replace('{name}', s.name || '?'))}</span></span></button><button class="squad-toast-close" data-action="squadShareDismiss" data-id="${esc(s.id)}" title="${esc(t('squadToastDismiss'))}" aria-label="${esc(t('squadToastDismiss'))}">${icon('x')}</button></div>`
-  const more = list.length > TOASTS ? `<button class="squad-toast-more" data-action="squadPage">${esc(t('squadToastMore').replace('{n}', String(list.length - TOASTS)))}</button>` : ''
-  return `<div class="squad-toasts" role="status">${list.slice(0, TOASTS).map(toast).join('')}${more}</div>`
-}
-
 let shareFilter = 'all'
 function sharesCard() {
   const chip = (id, label) =>
     `<button data-action="squadShareFilter" data-id="${id}" class="${shareFilter === id ? 'selected' : ''}">${esc(t(label))}</button>`
   const list = shares.filter((s) => shareFilter === 'all' || s.kind === shareFilter)
-  return `<section class="panel squad-shares-card"><div class="squad-shares-head"><h2>${esc(t('squadShares'))}</h2><div class="segmented" role="group">${chip('all', 'squadSharesAll')}${chip('tab', 'squadSharesTabs')}${chip('snap', 'snapNotes')}${chip('draw', 'squadSharesDraw')}</div></div><p class="hint">${esc(t('squadSharesHint'))}</p>${list.length ? `<ul class="squad-shares">${list.map((s) => shareRow(s, true)).join('')}</ul>` : `<p class="shot-empty">${esc(t('squadSharesEmpty'))}</p>`}</section>`
+  return `<section class="panel squad-shares-card"><div class="squad-shares-head"><h2>${esc(t('squadShares'))}</h2><div class="segmented" role="group">${chip('all', 'squadSharesAll')}${chip('tab', 'squadSharesTabs')}${chip('snap', 'snapNotes')}${chip('view', 'squadSharesView')}${chip('draw', 'squadSharesDraw')}</div></div><p class="hint">${esc(t('squadSharesHint'))}</p>${list.length ? `<ul class="squad-shares">${list.map((s) => shareRow(s, true)).join('')}</ul>` : `<p class="shot-empty">${esc(t('squadSharesEmpty'))}</p>`}</section>`
 }
 
 // The sidebar's section: the heading (with how many are in the squad and
@@ -172,7 +178,7 @@ export function squadPage() {
   const profile = `<section class="panel squad-forms squad-profile"><h2>${esc(t('squadProfile'))}</h2><p class="hint">${esc(t('squadProfileHelp'))}</p><form id="squad-name-form" class="squad-name"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" placeholder="${esc(t('squadNamePlaceholder'))}" value="${esc(name)}"></label></form>${colorPicker()}</section>`
   const privacy = `<p class="hint">${esc(t('squadPrivacy'))}</p>`
   if (!s)
-    return `<div class="page squad-page">${head}${profile}<section class="panel squad-forms"><h2>${esc(t('squadJoinTitle'))}</h2><p class="hint">${esc(t('squadIntro'))}</p><form id="squad-form" class="squad-form"><button class="primary" type="submit" value="create">${esc(t('squadCreate'))}</button><div class="squad-join"><span class="secret-field"><input name="squadCode" class="${maskedClass('squadInput')}" maxlength="12" autocomplete="off" spellcheck="false" placeholder="ABCD-1234" aria-label="${esc(t('squadCode'))}" value="${esc(drafts.code)}">${revealButton('squadInput')}</span><button type="submit" value="join">${esc(t('squadJoin'))}</button></div>${notice}</form>${recentSquads()}${privacy}</section></div>`
+    return `<div class="page squad-page">${head}${profile}<section class="panel squad-forms"><h2>${esc(t('squadJoinTitle'))}</h2><p class="hint">${esc(t('squadIntro'))}</p><form id="squad-form" class="squad-form"><button class="primary" type="submit" value="create">${esc(t('squadCreate'))}</button><div class="squad-join"><span class="secret-field code-boxes-field">${codeBoxes('squad', drafts.code, { cls: maskedClass('squadInput'), label: t('squadCode') })}${revealButton('squadInput')}</span><button type="submit" value="join">${esc(t('squadJoin'))}</button></div>${notice}</form>${recentSquads()}${privacy}</section></div>`
   const viewer = s.members.find((m) => m.me)?.viewer ? `<p class="hint">${esc(t('squadViewer'))}</p>` : ''
   const code = `<div class="squad-code"><output>${esc(secretText('squad', state.squadCode || s.code))}</output>${revealButton('squad')}<button data-action="squadCopy" title="${esc(t('squadCopy'))}">${icon('copy')}<span>${esc(t(drafts.notice === 'squadCopied' ? 'squadCopied' : 'squadCopy'))}</span></button></div><p class="squad-phase" data-phase="${esc(s.phase)}">${esc(t('squadPhase_' + s.phase))}</p>`
   return `<div class="page squad-page">${head}${profile}<section class="panel squad-forms"><h2>${esc(t('squadJoined'))}</h2><h3>${esc(t('squadCode'))}</h3>${code}<h3>${esc(t('squadMembers'))}</h3>${memberList(s.members)}${viewer}${notice}<button class="squad-leave" data-action="squadLeave">${esc(t('squadLeave'))}</button>${privacy}</section>${sharesCard()}</div>`
@@ -183,7 +189,6 @@ document.addEventListener('input', (event) => {
   const el = /** @type {HTMLInputElement} */ (event.target)
   if (!inForms(el)) return
   if (el.name === 'squadName') drafts.name = el.value
-  if (el.name === 'squadCode') drafts.code = el.value
 })
 document.addEventListener('submit', (event) => {
   const form = /** @type {HTMLFormElement} */ (event.target)
@@ -207,6 +212,24 @@ document.addEventListener('submit', (event) => {
     if (next?.squad?.state) Object.assign(drafts, { code: '', name: null, notice: '' })
   })
 })
+// The squad code: eight boxes of a letter or digit each (code-boxes.js), the
+// hyphen never typed; the eighth joins.
+onCodeBoxes('squad', {
+  allow: /[0-9A-Z]/,
+  onChange: (code) => (drafts.code = code),
+  onComplete: (code) => join(code),
+})
+function join(code) {
+  const name = String(drafts.name ?? ownName()).trim()
+  drafts.notice = !name ? 'squadNeedName' : code.replace(/[\s-]/g, '').length !== 8 ? 'squadInvalidCode' : ''
+  if (drafts.notice) {
+    render()
+    return
+  }
+  void action('squadJoin', { code, name }).then((next) => {
+    if (next?.squad?.state) Object.assign(drafts, { code: '', name: null, notice: '' })
+  })
+}
 // A name changed and left without Enter is kept too.
 document.addEventListener(
   'blur',
@@ -231,8 +254,9 @@ clickHandlers.push(async (type, id) => {
     render()
     return true
   }
-  if (type === 'squadShareDismiss') {
-    markSeen(id)
+  if (type === 'squadMember') {
+    openMember = openMember === id ? '' : id
+    render()
     return true
   }
   if (type === 'squadShareOpen') {
@@ -241,7 +265,9 @@ clickHandlers.push(async (type, id) => {
     markSeen(s.id)
     if (s.kind === 'tab') void action('open', s.url)
     else if (s.kind === 'snap') void action('snapNew', { image: s.image, title: s.title })
-    else window.dispatchEvent(new CustomEvent('mayak:map-show', { detail: s.map }))
+    else if (s.kind === 'view')
+      window.dispatchEvent(new CustomEvent('mayak:map-show', { detail: { map: s.map, floor: s.floor, x: s.x, z: s.z, zoom: s.zoom, c: s.c } }))
+    else window.dispatchEvent(new CustomEvent('mayak:map-show', { detail: { map: s.map } }))
     return true
   }
   if (type === 'toggleSquadSection') {

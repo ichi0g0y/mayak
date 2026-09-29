@@ -791,10 +791,18 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .reveal[aria-pressed=true]{color:var(--text)}
 .secret-field>.reveal{height:34px}
 /* The 8-digit pairing code. */
-.pair-digits-field{align-items:center}
-.pair-digits{display:flex;align-items:center;gap:6px}
-.pair-digit{width:40px!important;height:48px!important;padding:0;text-align:center;font:600 22px/1 ui-monospace,"Cascadia Code",Consolas,monospace}
-.pair-gap{width:10px}
+/* Codes typed a character a box (code-boxes.js): the pairing and squad codes. */
+.code-boxes-field{align-items:center}
+.code-boxes{display:flex;align-items:center;gap:6px}
+.code-box{width:40px!important;height:48px!important;padding:0;text-align:center;text-transform:uppercase;font:600 22px/1 ui-monospace,"Cascadia Code",Consolas,monospace}
+.code-gap{width:10px}
+.squad-join .code-box{width:34px!important;height:40px!important;font-size:18px}
+.squad-join .code-boxes{gap:4px}
+.squad-join .code-gap{width:6px}
+.code-boxes-field>.reveal{width:40px;height:48px;margin-left:4px;border:1px solid var(--border);border-radius:8px}
+.code-boxes-field>.reveal .icon{width:20px;height:20px}
+.squad-join .code-boxes-field>.reveal{width:34px;height:40px}
+.squad-join .code-boxes-field>.reveal .icon{width:18px;height:18px}
 /* The PCs' names once the link is made. */
 .peer-names{display:grid;gap:6px;margin:4px 0 14px}
 .peer-names>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -1191,20 +1199,23 @@ div.squad-section{padding:2px 10px 8px}
 .squad-shares-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .squad-shares-card .squad-shares{margin-top:6px}
 .squad-shares-card .squad-share-title{font-size:13px}
-/* The notices of what was shared, at the bottom of the sidebar. */
-.squad-toasts{position:fixed;left:0;bottom:calc(48px + var(--status-bar));z-index:13;width:var(--sidebar-width);padding:0 8px 8px;display:flex;flex-direction:column;gap:6px;pointer-events:none}
-body[data-nav=right] .squad-toasts{left:auto;right:0}
-.squad-toast{pointer-events:auto;display:flex;align-items:stretch;border:1px solid var(--border-strong);border-left:3px solid var(--c,var(--accent));border-radius:8px;background:var(--surface);box-shadow:0 4px 14px var(--shadow);animation:squad-toast-in .18s ease-out}
-.squad-toast-open{flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:7px 4px 7px 9px;border:0;border-radius:6px 0 0 6px;background:transparent;font-weight:400;text-align:left}
-.squad-toast-open .icon{flex:none;width:16px;height:16px;color:var(--muted)}
-.squad-toast-close{flex:none;width:28px;padding:0;border:0;border-radius:0 6px 6px 0;background:transparent;color:var(--muted)}
-.squad-toast-close .icon{width:14px;height:14px}
-.squad-toast .squad-share-title{font-weight:600}
-.squad-toast-more{pointer-events:auto;height:28px;font-size:12px;background:var(--surface)}
-@keyframes squad-toast-in{from{opacity:0;transform:translateY(6px)}}
+/* A member's unread shares, and what they shared opened under them. */
+.squad-chip{flex-wrap:wrap;height:auto;min-height:26px}
+.squad-chip>button[aria-expanded=true]{background:var(--hover)}
+.squad-chip-count{flex:none;margin-left:auto;min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--bg);font:700 10.5px/17px system-ui,sans-serif;text-align:center}
+.squad-member-shares{list-style:none;width:100%;margin:2px 0 6px;padding:4px 0 4px 10px;border-left:2px solid var(--border);display:flex;flex-direction:column;gap:1px}
+.squad-member-map{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:100%;min-height:28px;padding:3px 6px;border:0;border-radius:6px;background:transparent;font-size:12.5px;font-weight:500;text-align:left}
+.squad-member-map:hover{background:var(--hover)}
+.squad-member-map .icon{width:15px;height:15px;color:var(--muted)}
+.squad-member-map small{margin-left:auto;color:var(--muted);font-weight:400;white-space:nowrap}
+.squad-member-where-note,.squad-member-none{padding:4px 6px;font-size:12px;color:var(--muted)}
 .squad-open{position:relative}
 .squad-open-count{position:absolute;top:-3px;right:-4px;min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:var(--accent);color:var(--bg);font:700 10px/15px system-ui,sans-serif}
 /* Someone drew on the map since it last showed. */
+/* Where a view shared looks: a ring that grows and fades. */
+.map-look-icon{background:none;border:0}
+.map-look{position:absolute;left:-40px;top:-40px;width:80px;height:80px;border-radius:50%;border:3px solid var(--c);box-shadow:0 0 0 2px rgba(0,0,0,.35);animation:map-look 1s ease-out 3;pointer-events:none}
+@keyframes map-look{from{transform:scale(.3);opacity:1}to{transform:scale(1.4);opacity:0}}
 .map-fresh{flex:none;width:7px;height:7px;margin-left:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
 .squad-start{width:100%;height:30px;font-size:12.5px;font-weight:500}
 .squad-section-label.active .squad-open{background:var(--selected);color:var(--text)}
@@ -1243,3 +1254,4 @@ body[data-sidebar=collapsed] .live-map-entry .live-map-icon,[data-layout=horizon
 .map-panel header+h3{margin-top:0}
 .map-popup-link{padding:0;border:0;background:none;color:#f0d890;font:inherit;font-weight:600;text-decoration:underline;cursor:pointer;text-align:left}
 .map-popup-link:hover{color:#fff}
+.connection-only{margin:0 0 12px;font-weight:500}

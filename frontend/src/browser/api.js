@@ -897,7 +897,8 @@ const ready = (async () => {
       })
       .catch(() => {})
   }
-  if (!['local', 'client', 'off'].includes(state.connection.mode)) state.connection.mode = 'off'
+  // "Off" (no detection, no link) was a Client without a pairing; it is one.
+  if (!['local', 'client'].includes(state.connection.mode)) state.connection.mode = 'client'
   if (platform !== 'windows' && state.connection.mode === 'local') state.connection.mode = 'client'
   await go.BrowserSetMode(state.connection.mode)
   // The pairing kept meets its other PC again (transport.js).
@@ -1602,7 +1603,7 @@ async function perform(type, data) {
     case 'connection': {
       if (data.receive !== undefined) state.connection.receive = receiveOf(data.receive)
       if (data.mode !== undefined) await go.BrowserSetMode(data.mode)
-      if (['local', 'client', 'off'].includes(data.mode) && (data.mode !== 'local' || platform === 'windows')) {
+      if (['local', 'client'].includes(data.mode) && (data.mode !== 'local' || platform === 'windows')) {
         // A pairing being made ends; the one kept runs while the mode is
         // its side.
         forgetPairCode()

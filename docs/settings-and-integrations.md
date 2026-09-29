@@ -165,7 +165,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `appearance` | 表示言語、テーマ、時刻表示、タブとアイテム情報の位置、「チュートリアルを表示」 |
 | `tasks` | Host 上（`local`）では Host の `questSite` を直接編集する（`hostQuestSite` アクション。シェルの `questSite` は `host` に戻る）。Client では `questSite`（「Host の設定に従う」を含む）。どちらでも `taskMode` を設定する |
 | `adblock` | 有効化のチェックボックス。EasyList、EasyPrivacy、AdGuard 日本語フィルタを使う。tarkov.dev は対象外 |
-| `connection` | 接続方法（`local` は Windows のみ / `client` / `off`）。Host では接続コードの発行（ペアリング済みなら「別の PC を追加」）とすべての PC との解除、Client では接続コードの入力（長いコードの貼り付けも可）、この PC に出すもの（`connection.receive`）、この PC の解除 |
+| `connection` | 接続方法（`local` は Windows のみ / `client`。前の版の `off` は `client` に読み替える）。Host では接続コードの発行（ペアリング済みなら「別の PC を追加」）とすべての PC との解除、Client では接続コードの入力（長いコードの貼り付けも可）、この PC に出すもの（`connection.receive`）、この PC の解除 |
 | `about` | 名前とバージョン（`GetVersion`。開発ビルドでは「開発ビルド」）、公式サイト・ソースコード・変更履歴へのリンク、ライセンスとクレジット、アップデート（現在の版・最新の版・最終確認、「更新を確認」`CheckForUpdates`、「ダウンロード」`DownloadUpdate`、「再起動して適用」`InstallUpdate`）。タスクトレイの右クリックにも「更新を確認」がある |
 
 - 以前、ブラウザ側で `questSite` を選んでいた場合は、Windows の Host で起動したときに一度だけ Host の `questSite` へ移し、ブラウザ側を `host` に戻します。
@@ -304,9 +304,8 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 |---|---|
 | `local` | 「Host：このPCでタルコフを起動する」（Host モード）。Windows のみ選択可。監視、認識、Host 設定を使える |
 | `client` | 「Client：タルコフは別のPC（Host）で起動する」（Client モード）。Host とは中継サーバー経由の暗号化したリンクでつながる |
-| `off` | 「使わない（検出も受け取りもしない）」 |
 
-- Windows 以外で `local` が保存されている場合は `client` にします。認識できないモードは `off` にします。WebRTC で直接つないでいたころの `webrtc` は `client` に読み替えます。旧 `remote`（LAN 受信）モードで保存されていた場合は `off` で起動します（`restore()`）。当時の接続先 URL とトークンは読み込まず、保存もしません。
+- Windows 以外で `local` が保存されている場合は `client` にします。認識できないモードと、前の版の「使わない」（`off`。ペアリングしていない Client と同じ動きだった）は `client` にします。Windows 以外では選ぶものが Client だけなので、選択欄は出さずに説明だけを出します。検出を止めたい Host は、監視のスイッチを切ります。WebRTC で直接つないでいたころの `webrtc` は `client` に読み替えます。旧 `remote`（LAN 受信）モードで保存されていた場合は `off` で起動します（`restore()`）。当時の接続先 URL とトークンは読み込まず、保存もしません。
 - Go 側は `BrowserSetMode` でモード（`local` / `client` / `off`）を受け取り、`local` 以外のときは Client として扱います（`browserClient`）。Windows では起動時に `browser.json` を読み、`client`（旧 `webrtc`）/ `off` なら Client として起動します（Windows 以外は常に Client）。このとき OCR やフォルダの初期化、自動監視は行いません。
 - 1 台の Host に、Client を何台でもつなげます（中継の部屋の上限は後述）。LAN は使わないので、同じネットワークにいる必要も、macOS のローカルネットワークの許可もいりません。
 
@@ -321,7 +320,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 
 - **期限**: 招待は 10 分で失効します。それまでに会えなければ、作りかけのペアリングも捨てます（`expireIn`）。「キャンセル」でも捨てます（`cancelCode`）。
 - **中継サーバー**: 招待の文字列だけを、接続コードごとに 10 分間保持します（`MAYAK1.` で始まる 100000 文字以内のものだけ受け付けます）。招待には鍵が入っているので、10 分のあいだに 8 桁を当てて招待を取った人は、そのあともリンクに入れます。8 桁は総当たりに強くはないので、10 分の有効期限以上の保護はありません。
-- **入力欄**: Client の接続コードは 1 桁ずつの 8 つの枠（4 桁ずつ）に打ちます。打つと次の枠へ進み、Backspace で前の枠に戻り、貼り付けると枠を埋めます。8 桁目を打つと、そのままつなぎます。
+- **入力欄**: Client の接続コードは 1 桁ずつの 8 つの枠（4 桁ずつ。`code-boxes.js`、分隊コードと同じ部品）に打ちます。打つと次の枠へ進み、Backspace で前の枠に戻り、貼り付けると枠を埋めます。8 桁目を打つと、そのままつなぎます。
 - **お互いの PC の名前**: つながると、お互いのコンピューター名（`BrowserHostname`、`os.Hostname`）を出します。Client には「Host の PC」、Host には「つながっている PC」（Client ごと）、両方に「この PC」です。名前はリンクの `hello` に入れて送ります（暗号化される。名前のない古い版の相手は出さない）。
 - **伏せ字**: 8 桁の接続コード、長い招待コード、Client の入力欄は「•」で出し、横の目のボタンで表示します（[browser-shell.md](browser-shell.md#マップ) の分隊コードと同じ `revealButton`）。コピーのボタンは伏せ字のままでも本当のコードをコピーします。
 - **別の PC を追加**: ペアリング済みの Host は、同じ鍵で新しい接続コードを出せます。初めて会った Client（接続コードで入った PC）が来た時点でそのコードは消し、すでにペアリング済みの Client がつなぎ直しただけでは消しません。

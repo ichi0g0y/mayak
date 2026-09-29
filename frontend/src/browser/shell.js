@@ -52,7 +52,8 @@ import { itemToggle, itemPanel } from './view-item.js'
 import { tutorialOpen, tutorialHTML, handleTutorial, openTutorial } from './view-tutorial.js'
 import { snapButton, snapSection, snapNotesPage, snapMenuHTML, snapToolbar } from './view-snapnotes.js'
 import { liveMapEntry, liveMapPage } from './view-map.js'
-import { shareToasts, squadPage, squadSection } from './view-squad.js'
+import { squadPage, squadSection } from './view-squad.js'
+import { codeBoxes, onCodeBoxes } from './code-boxes.js'
 import { canShare, shareTab } from './squad-share.js'
 setRender(render)
 
@@ -616,64 +617,22 @@ function browserSettings(key) {
     case 'adblock':
       return `<section class="panel"><label class="check"><input type="checkbox" data-action="adblock" ${state.adblock ? 'checked' : ''}>${t('adblockEnable')}</label><p class="hint">${t('adblockHelp')}</p></section>`
     default:
-      return `<section class="panel"><h2>${t('connection')}</h2>${select('mode', t('mode'), [...(state.localHost ? [['local', t('local')]] : []), ['client', t('clientConnection')], ['off', t('disabled')]], state.connection.mode, 'connection')}${state.connection.mode === 'local' ? `<p class="hint">${t('localHelp')}</p>` : state.connection.mode === 'client' ? `<p class="hint">${t('clientHelp')}</p>` : ''}</section>${peerPanel()}`
+      // Host or Client (a PC that cannot be a Host, not Windows, is a Client).
+      return `<section class="panel"><h2>${t('connection')}</h2>${state.localHost ? select('mode', t('mode'), [['local', t('local')], ['client', t('clientConnection')]], state.connection.mode, 'connection') : `<p class="connection-only">${esc(t('clientConnection'))}</p>`}${state.connection.mode === 'local' ? `<p class="hint">${t('localHelp')}</p>` : state.connection.mode === 'client' ? `<p class="hint">${t('clientHelp')}</p>` : ''}</section>${peerPanel()}`
   }
 }
-// The pairing code a Client types: eight boxes of one digit (four, a gap,
-// four), the typing moving on by itself, a paste filling them all; hidden
-// behind dots like the other codes until the eye is pressed.
-function pairDigits() {
-  const code = String(peerDrafts.pairCode || '')
-  const box = (i) =>
-    `<input class="pair-digit ${maskedClass('pairInput')}" data-pair-digit="${i}" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="1" aria-label="${esc(t('enterPairCode'))} ${i + 1}" value="${esc(code[i] || '')}">`
-  return `<span class="pair-digits">${[0, 1, 2, 3].map(box).join('')}<span class="pair-gap"></span>${[4, 5, 6, 7].map(box).join('')}</span>`
-}
-function pairDigitsInput(el) {
-  const i = Number(el.dataset.pairDigit)
-  const digits = el.value.replace(/\D/g, '')
-  const code = String(peerDrafts.pairCode || '').padEnd(8, ' ').split('')
-  // One digit, or several at once (a paste): from this box on.
-  for (let k = 0; k < digits.length && i + k < 8; k++) code[i + k] = digits[k]
-  if (!digits) code[i] = ' '
-  peerDrafts.pairCode = code.join('').replace(/\s+$/, '')
-  const boxes = /** @type {HTMLInputElement[]} */ ([...document.querySelectorAll('[data-pair-digit]')])
-  boxes.forEach((b, k) => (b.value = code[k]?.trim() || ''))
-  const next = Math.min(7, i + Math.max(1, digits.length))
-  if (digits) boxes[next]?.focus()
-  // The eighth digit sends the code.
-  if (/^\d{8}$/.test(peerDrafts.pairCode) && digits) {
+// The pairing code a Client types: eight boxes of one digit (code-boxes.js),
+// hidden behind dots like the other codes until the eye is pressed; the
+// eighth digit sends it.
+const pairDigits = () =>
+  codeBoxes('pair', peerDrafts.pairCode, { cls: maskedClass('pairInput'), label: t('enterPairCode'), numeric: true })
+onCodeBoxes('pair', {
+  allow: /\d/,
+  onChange: (code) => (peerDrafts.pairCode = code),
+  onComplete: (code) => {
     copied = false
-    void action('peerJoin', peerDrafts.pairCode)
-  }
-}
-document.addEventListener('keydown', (event) => {
-  const el = /** @type {HTMLInputElement} */ (event.target)
-  if (!el.dataset?.pairDigit) return
-  const i = Number(el.dataset.pairDigit)
-  const boxes = /** @type {HTMLInputElement[]} */ ([...document.querySelectorAll('[data-pair-digit]')])
-  if (event.key === 'Backspace' && !el.value && i > 0) {
-    event.preventDefault()
-    boxes[i - 1].value = ''
-    const code = String(peerDrafts.pairCode || '').padEnd(8, ' ').split('')
-    code[i - 1] = ' '
-    peerDrafts.pairCode = code.join('').replace(/\s+$/, '')
-    boxes[i - 1].focus()
-  } else if (event.key === 'ArrowLeft' && i > 0) boxes[i - 1].focus()
-  else if (event.key === 'ArrowRight' && i < 7) boxes[i + 1].focus()
-})
-// A paste fills the boxes from the one it lands in (a box takes one digit,
-// so the browser would cut the pasted code short).
-document.addEventListener('paste', (event) => {
-  const el = /** @type {HTMLInputElement} */ (event.target)
-  if (!el.dataset?.pairDigit) return
-  event.preventDefault()
-  el.value = event.clipboardData?.getData('text') || ''
-  pairDigitsInput(el)
-})
-// A box takes the pointer's focus with its digit selected, to type over.
-document.addEventListener('focusin', (event) => {
-  const el = /** @type {HTMLInputElement} */ (event.target)
-  if (el.dataset?.pairDigit) el.select()
+    void action('peerJoin', code)
+  },
 })
 
 // linkStatus is the word for the link's phase (api.js peerState).
@@ -720,7 +679,7 @@ function peerPanel() {
       : ''
   const clientForms =
     receive && !p.paired && !joining
-      ? `<form id="peer-join-form"><div class="field"><span>${t('enterPairCode')}</span><span class="secret-field pair-digits-field">${pairDigits()}${revealButton('pairInput')}</span></div><button class="primary" type="submit" ${disabled}>${t('joinPair')}</button></form><details class="peer-manual"><summary>${t('manualExchange')}</summary><form id="peer-offer-form"><label class="field"><span>${t('enterOffer')}</span><span class="secret-field"><textarea name="peerOffer" class="${maskedClass('offerInput')}" required spellcheck="false" maxlength="4096" rows="3">${esc(peerDrafts.offer)}</textarea>${revealButton('offerInput')}</span></label><button type="submit" ${disabled}>${t('acceptInvite')}</button></form></details>`
+      ? `<form id="peer-join-form"><div class="field"><span>${t('enterPairCode')}</span><span class="secret-field code-boxes-field">${pairDigits()}${revealButton('pairInput')}</span></div><button class="primary" type="submit" ${disabled}>${t('joinPair')}</button></form><details class="peer-manual"><summary>${t('manualExchange')}</summary><form id="peer-offer-form"><label class="field"><span>${t('enterOffer')}</span><span class="secret-field"><textarea name="peerOffer" class="${maskedClass('offerInput')}" required spellcheck="false" maxlength="4096" rows="3">${esc(peerDrafts.offer)}</textarea>${revealButton('offerInput')}</span></label><button type="submit" ${disabled}>${t('acceptInvite')}</button></form></details>`
       : ''
   // What this Client takes from its Host (the others choose their own).
   const takes = receive
@@ -867,7 +826,7 @@ function render() {
       })
       .filter(Boolean)
   )
-  const html = `<div class="sidebar-resizer" role="separator" aria-orientation="vertical" aria-valuemin="${sidebarWidths.min}" aria-valuemax="${sidebarWidths.max}" aria-valuenow="${state.sidebarWidth}" title="${esc(t('resizeSidebar'))}"></div>${brandBar()}<nav class="tab-strip ${tab?.kind === 'settings' ? 'settings-strip' : ''}" aria-label="${esc(t(tab?.kind === 'settings' ? 'settings' : 'tabHelp'))}">${tab?.kind === 'settings' ? settingsSidebar() : `${mapEntry()}${squadSection()}${bookmarkSection()}${screenshotSection()}${snapSection()}${bossSection()}<div class="section-label tabs-section-label ${tab?.kind === 'tabs' ? 'active' : ''}"><button class="section-link" data-action="tabsPage" title="${esc(t('allTabs'))}">${esc(t('tabs'))}</button><button class="new-tab tabs-open" data-action="tabsPage" title="${esc(t('allTabs'))}" aria-label="${esc(t('allTabs'))}" aria-pressed="${tab?.kind === 'tabs'}">${icon('tabs')}</button><button class="new-tab" data-action="newTab" title="${esc(t('newTab'))}" aria-label="${esc(t('newTab'))}">${icon('plus')}</button></div><div class="tabs" role="tablist" style="--n:${tabCount()}">${tabs()}</div>`}</nav>${tab?.kind === 'settings' ? '' : shareToasts()}<div class="layout-dock">${state.layout === 'vertical' ? sidebarToggle() : ''}${layoutToggle()}${itemToggle()}<button class="dock-button dock-settings ${tab?.kind === 'settings' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'settings'}" data-action="settings" title="${esc(t('settings'))}" aria-label="${esc(t('settings'))}">${icon('settings')}</button>${state.layout === 'horizontal' ? `<span class="dock-indicators">${indicators()}</span>` : ''}</div>${windowControls()}<div class="toolbar">${
+  const html = `<div class="sidebar-resizer" role="separator" aria-orientation="vertical" aria-valuemin="${sidebarWidths.min}" aria-valuemax="${sidebarWidths.max}" aria-valuenow="${state.sidebarWidth}" title="${esc(t('resizeSidebar'))}"></div>${brandBar()}<nav class="tab-strip ${tab?.kind === 'settings' ? 'settings-strip' : ''}" aria-label="${esc(t(tab?.kind === 'settings' ? 'settings' : 'tabHelp'))}">${tab?.kind === 'settings' ? settingsSidebar() : `${mapEntry()}${squadSection()}${bookmarkSection()}${screenshotSection()}${snapSection()}${bossSection()}<div class="section-label tabs-section-label ${tab?.kind === 'tabs' ? 'active' : ''}"><button class="section-link" data-action="tabsPage" title="${esc(t('allTabs'))}">${esc(t('tabs'))}</button><button class="new-tab tabs-open" data-action="tabsPage" title="${esc(t('allTabs'))}" aria-label="${esc(t('allTabs'))}" aria-pressed="${tab?.kind === 'tabs'}">${icon('tabs')}</button><button class="new-tab" data-action="newTab" title="${esc(t('newTab'))}" aria-label="${esc(t('newTab'))}">${icon('plus')}</button></div><div class="tabs" role="tablist" style="--n:${tabCount()}">${tabs()}</div>`}</nav><div class="layout-dock">${state.layout === 'vertical' ? sidebarToggle() : ''}${layoutToggle()}${itemToggle()}<button class="dock-button dock-settings ${tab?.kind === 'settings' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'settings'}" data-action="settings" title="${esc(t('settings'))}" aria-label="${esc(t('settings'))}">${icon('settings')}</button>${state.layout === 'horizontal' ? `<span class="dock-indicators">${indicators()}</span>` : ''}</div>${windowControls()}<div class="toolbar">${
     tab?.fixed
       ? `<button data-action="back" aria-label="${t('back')}" title="${t('back')}" ${!tab.canBack ? 'disabled' : ''}>${icon('back')}</button><button data-action="forward" aria-label="${t('forward')}" title="${t('forward')}" ${!tab.canForward ? 'disabled' : ''}>${icon('forward')}</button><button data-action="reload" aria-label="${t('reload')}" title="${t('reload')}">${icon('reload')}</button><button data-action="home" aria-label="${esc(t('home'))}" title="${esc(t('homeHelp'))}" ${tab.url === tab.home ? 'disabled' : ''}>${icon('home')}</button><form id="address-form" class="readonly">${icon('globe', 'address-icon')}<input id="address" readonly aria-readonly="true" aria-label="${esc(tabName(tab))}" title="${esc(t('fixedAddress'))}" value="${esc(tab.url)}">${loadBar(tab)}</form>`
       : tab?.kind === 'snapnotes'
@@ -1105,7 +1064,6 @@ document.addEventListener('input', (event) => {
   }
   if (event.target.closest('#bookmark-form') && editingBookmark) editingBookmark[event.target.name] = event.target.value
   if (event.target.name === 'peerOffer') peerDrafts.offer = event.target.value
-  if (event.target.dataset?.pairDigit) pairDigitsInput(event.target)
 })
 document.addEventListener('submit', (event) => {
   event.preventDefault()
