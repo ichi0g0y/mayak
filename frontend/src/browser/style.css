@@ -1020,8 +1020,11 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 /* The columns of buttons under the zoom buttons: the map's, and while in a squad the squad's under it. */
 .map-rails{position:absolute;top:96px;left:12px;z-index:800;display:flex;flex-direction:column;gap:8px}
 .map-rail{position:relative;display:flex;flex-direction:column;overflow:visible}
-/* The squad's column: what is in it is cut to its rounded corners. */
-.map-rail-squad{border-color:var(--c);border-radius:8px;overflow:hidden}
+/* The squad's column: on a ground of the squad colour (its frame and the
+   mark at its head), the buttons sit as one rounded block. */
+.map-rail-squad{border-color:var(--c);border-radius:8px;overflow:hidden;background:var(--c)}
+.map-rail-squad .map-rail-head+.map-rail-button{border-radius:6px 6px 0 0}
+.map-rail-squad .map-rail-button:last-child{border-radius:0 0 6px 6px}
 .map-rail-head{display:flex;align-items:center;justify-content:center;height:16px;background:var(--c);color:#16181d}
 .map-rail-head .icon{width:12px;height:12px;stroke-width:2.6}
 .map-rail-button{position:relative;width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border:0;border-bottom:1px solid rgba(0,0,0,.2);border-radius:0;background:var(--surface);color:var(--text)}
