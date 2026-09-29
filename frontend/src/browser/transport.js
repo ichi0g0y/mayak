@@ -7,7 +7,9 @@
 // shell; external websites use separate native views.
 //
 // Only what the Host recognizes (tasks, maps, positions, items) goes to the
-// Clients, and the squad joined goes both ways (see sendSquad). The link
+// Clients, and the squad joined goes both ways (see sendSquad). Each PC says
+// its computer's name in its hello, and the PCs met are told with theirs
+// (names), so that each side shows the other. The link
 // reconnects on its own, with a growing pause, until it is stopped.
 
 const LINK_RELAY = 'wss://mayak-relay.ich.sh/link/'
@@ -77,7 +79,10 @@ class MayakLink {
     this.key = ''
     this.secrets = null
     // The members of the room that proved they have the key (a hello).
-    this.peers = new Set()
+    // The PCs met: relay ID → their computer's name ("" from a build before).
+    this.peers = new Map()
+    // This PC's computer's name, said in the hello (api.js sets it).
+    this.name = ''
     this.retry = 0
     this.timer = 0
     this.ping = 0
@@ -122,7 +127,7 @@ class MayakLink {
   }
   connect(run) {
     if (run !== this.run) return
-    this.onState({ phase: 'connecting' })
+    this.onState({ phase: 'connecting', names: [] })
     const ws = new WebSocket(this.relay + this.secrets.room)
     this.ws = ws
     this.peers.clear()
@@ -138,7 +143,7 @@ class MayakLink {
         if (Date.now() - this.seen > 75000) ws.close(4000, 'silent')
         else ws.send('ping')
       }, 30000)
-      this.onState({ phase: 'waiting' })
+      this.onState({ phase: 'waiting', names: [] })
     }
     ws.onmessage = (event) => {
       if (this.ws !== ws) return
@@ -154,7 +159,7 @@ class MayakLink {
       this.peers.clear()
       // Again after 2, 4, 8… seconds, a minute at most.
       const wait = Math.min(60000, 2000 * 2 ** this.retry++)
-      this.onState({ phase: 'offline' })
+      this.onState({ phase: 'offline', names: [] })
       this.timer = setTimeout(() => this.connect(run), wait)
     }
   }
@@ -167,7 +172,7 @@ class MayakLink {
     }
     if (frame.t === 'welcome') {
       // Whoever is there already hears who joined by our hello.
-      if (frame.members?.length) await this.say(ws, { t: 'hello', fresh: this.fresh })
+      if (frame.members?.length) await this.say(ws, { t: 'hello', fresh: this.fresh, name: this.name })
       return
     }
     if (frame.t === 'leave') {
@@ -184,12 +189,12 @@ class MayakLink {
     if (this.ws !== ws || !message || message.r === this.role || !['host', 'client'].includes(message.r)) return
     if (message.t === 'hello') {
       const known = this.peers.has(frame.from)
-      this.peers.add(frame.from)
-      if (!message.reply) await this.say(ws, { t: 'hello', reply: true, fresh: this.fresh })
+      this.peers.set(frame.from, typeof message.name === 'string' ? message.name.slice(0, 64) : '')
+      if (!message.reply) await this.say(ws, { t: 'hello', reply: true, fresh: this.fresh, name: this.name })
       if (!known) {
         // A Client met once is paired: the next start is not its first.
         if (this.role === 'client') this.fresh = false
-        this.onState({ phase: 'connected', peers: this.peers.size, joined: true, newcomer: message.fresh === true })
+        this.onState({ phase: 'connected', peers: this.peers.size, names: this.names(), joined: true, newcomer: message.fresh === true })
       }
       return
     }
@@ -239,7 +244,15 @@ class MayakLink {
   }
   // counted tells how many PCs are met after one left.
   counted() {
-    this.onState(this.peers.size ? { phase: 'connected', peers: this.peers.size } : { phase: 'waiting', peers: 0 })
+    this.onState(
+      this.peers.size
+        ? { phase: 'connected', peers: this.peers.size, names: this.names() }
+        : { phase: 'waiting', peers: 0, names: [] },
+    )
+  }
+  // names is the computers' names of the PCs met ("" left out).
+  names() {
+    return [...this.peers.values()].filter(Boolean)
   }
   // unpair tells the others the pairing is over (from the Host: for all;
   // from a Client: for it), then leaves.

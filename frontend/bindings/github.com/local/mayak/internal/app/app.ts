@@ -84,6 +84,14 @@ export function BrowserGoonReportInfo(): $CancellablePromise<$models.GoonReportI
 }
 
 /**
+ * BrowserHostname is this computer's name, which paired PCs show of each
+ * other (transport.js).
+ */
+export function BrowserHostname(): $CancellablePromise<string> {
+    return $Call.ByID(1326376971);
+}
+
+/**
  * BrowserItemHistory returns the item's flea market price history for the
  * item sidebar's chart.
  */
@@ -321,6 +329,13 @@ export function ChooseSoundFile(): $CancellablePromise<string> {
 
 export function ClearLogs(): $CancellablePromise<void> {
     return $Call.ByID(2638454672);
+}
+
+/**
+ * DevInstance tells the shell whether this is the `task dev` build.
+ */
+export function DevInstance(): $CancellablePromise<boolean> {
+    return $Call.ByID(3601052190);
 }
 
 export function DiscoverTrackerProfiles(): $CancellablePromise<void> {

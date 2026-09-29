@@ -243,6 +243,7 @@ body[data-sidebar=collapsed] .tab.pinned+.tab:not(.pinned)::before{left:6px;righ
 body[data-sidebar=collapsed] .layout-dock{flex-direction:column;justify-content:flex-end;height:150px;padding:6px 0 8px;gap:2px}
 
 /* Sidebar bookmark section */
+.dev-badge{flex:none;margin-right:6px;padding:1px 5px;border-radius:4px;background:var(--warn);color:var(--bg);font:700 10px/1.4 system-ui,sans-serif;letter-spacing:.06em}
 .section-link{padding:0;border:0;background:transparent!important;color:inherit;font:inherit;font-weight:600}
 .section-link:hover{color:var(--text)}
 .section-link{display:inline-flex;align-items:center;gap:4px}
@@ -790,6 +791,17 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .reveal[aria-pressed=true]{color:var(--text)}
 .secret-field>.reveal{height:34px}
 /* The 8-digit pairing code. */
+.pair-digits-field{align-items:center}
+.pair-digits{display:flex;align-items:center;gap:6px}
+.pair-digit{width:40px!important;height:48px!important;padding:0;text-align:center;font:600 22px/1 ui-monospace,"Cascadia Code",Consolas,monospace}
+.pair-gap{width:10px}
+/* The PCs' names once the link is made. */
+.peer-names{display:grid;gap:6px;margin:4px 0 14px}
+.peer-names>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.peer-names dt{min-width:110px;font-size:12.5px;color:var(--text-2)}
+.peer-names dd{margin:0;display:flex;gap:8px;flex-wrap:wrap}
+.peer-name{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border:1px solid var(--border);border-radius:999px;font-size:13px}
+.peer-name .icon{width:14px;height:14px;color:var(--muted)}
 .pair-code{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
 .pair-code output{font:600 30px/1.2 ui-monospace,"Cascadia Code",Consolas,monospace;letter-spacing:.14em;color:var(--text)}
 .peer-error{color:var(--danger,#e06c75)}

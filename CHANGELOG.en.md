@@ -25,6 +25,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - The sidebar's collapse button moved from the top of the sidebar to the buttons at its bottom, with an arrow that shows which way it opens or closes, so it is easy to tell from the placement button. In the collapsed sidebar the "Tabs" heading is an icon too (it opens the list of tabs).
 - Squad codes, the codes pairing other PCs and tarkov.dev Remote IDs show as dots, and the eye button beside one shows it; what is typed into those fields shows as dots too. A stream or a screenshot no longer gives a code away.
 - Snap notes have a note with a folded corner for their icon instead of a brush, and screenshots a camera instead of a picture, to tell them from the map's pens (a pencil).
+- Pairing with another PC: a Client types the code into eight boxes of one digit (the typing moves on, a paste fills them, the eighth digit connects), and once linked each PC shows the other's computer name under Settings → Connection.
 
 ### Fixed
 

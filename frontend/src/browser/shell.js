@@ -41,6 +41,7 @@ import {
   loadVersion,
   setRender,
   afterRenderHooks,
+  devInstance,
   secretText,
   revealButton,
   maskedClass,
@@ -184,7 +185,8 @@ function connectionLabel() {
 // bar, so the window can be dragged from it. In the horizontal layout the
 // indicators sit at the right end of the top strip.
 function brandBar() {
-  return state.layout === 'vertical' ? `<div class="app-menu-anchor">${indicators()}</div>` : ''
+  const dev = devInstance ? `<span class="dev-badge" title="${esc(t('devInstance'))}">DEV</span>` : ''
+  return state.layout === 'vertical' ? `<div class="app-menu-anchor">${dev}${indicators()}</div>` : ''
 }
 // Host (or connection) status and the monitoring switch.
 function indicators() {
@@ -617,6 +619,63 @@ function browserSettings(key) {
       return `<section class="panel"><h2>${t('connection')}</h2>${select('mode', t('mode'), [...(state.localHost ? [['local', t('local')]] : []), ['client', t('clientConnection')], ['off', t('disabled')]], state.connection.mode, 'connection')}${state.connection.mode === 'local' ? `<p class="hint">${t('localHelp')}</p>` : state.connection.mode === 'client' ? `<p class="hint">${t('clientHelp')}</p>` : ''}</section>${peerPanel()}`
   }
 }
+// The pairing code a Client types: eight boxes of one digit (four, a gap,
+// four), the typing moving on by itself, a paste filling them all; hidden
+// behind dots like the other codes until the eye is pressed.
+function pairDigits() {
+  const code = String(peerDrafts.pairCode || '')
+  const box = (i) =>
+    `<input class="pair-digit ${maskedClass('pairInput')}" data-pair-digit="${i}" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="1" aria-label="${esc(t('enterPairCode'))} ${i + 1}" value="${esc(code[i] || '')}">`
+  return `<span class="pair-digits">${[0, 1, 2, 3].map(box).join('')}<span class="pair-gap"></span>${[4, 5, 6, 7].map(box).join('')}</span>`
+}
+function pairDigitsInput(el) {
+  const i = Number(el.dataset.pairDigit)
+  const digits = el.value.replace(/\D/g, '')
+  const code = String(peerDrafts.pairCode || '').padEnd(8, ' ').split('')
+  // One digit, or several at once (a paste): from this box on.
+  for (let k = 0; k < digits.length && i + k < 8; k++) code[i + k] = digits[k]
+  if (!digits) code[i] = ' '
+  peerDrafts.pairCode = code.join('').replace(/\s+$/, '')
+  const boxes = /** @type {HTMLInputElement[]} */ ([...document.querySelectorAll('[data-pair-digit]')])
+  boxes.forEach((b, k) => (b.value = code[k]?.trim() || ''))
+  const next = Math.min(7, i + Math.max(1, digits.length))
+  if (digits) boxes[next]?.focus()
+  // The eighth digit sends the code.
+  if (/^\d{8}$/.test(peerDrafts.pairCode) && digits) {
+    copied = false
+    void action('peerJoin', peerDrafts.pairCode)
+  }
+}
+document.addEventListener('keydown', (event) => {
+  const el = /** @type {HTMLInputElement} */ (event.target)
+  if (!el.dataset?.pairDigit) return
+  const i = Number(el.dataset.pairDigit)
+  const boxes = /** @type {HTMLInputElement[]} */ ([...document.querySelectorAll('[data-pair-digit]')])
+  if (event.key === 'Backspace' && !el.value && i > 0) {
+    event.preventDefault()
+    boxes[i - 1].value = ''
+    const code = String(peerDrafts.pairCode || '').padEnd(8, ' ').split('')
+    code[i - 1] = ' '
+    peerDrafts.pairCode = code.join('').replace(/\s+$/, '')
+    boxes[i - 1].focus()
+  } else if (event.key === 'ArrowLeft' && i > 0) boxes[i - 1].focus()
+  else if (event.key === 'ArrowRight' && i < 7) boxes[i + 1].focus()
+})
+// A paste fills the boxes from the one it lands in (a box takes one digit,
+// so the browser would cut the pasted code short).
+document.addEventListener('paste', (event) => {
+  const el = /** @type {HTMLInputElement} */ (event.target)
+  if (!el.dataset?.pairDigit) return
+  event.preventDefault()
+  el.value = event.clipboardData?.getData('text') || ''
+  pairDigitsInput(el)
+})
+// A box takes the pointer's focus with its digit selected, to type over.
+document.addEventListener('focusin', (event) => {
+  const el = /** @type {HTMLInputElement} */ (event.target)
+  if (el.dataset?.pairDigit) el.select()
+})
+
 // linkStatus is the word for the link's phase (api.js peerState).
 function linkStatus(p, receive) {
   if (p.reason === 'invite-expired') return 'p2pExpired'
@@ -630,6 +689,14 @@ function linkStatus(p, receive) {
       failed: 'linkFailed',
     }[p.phase] || 'linkIdle'
   )
+}
+// The PCs' names: the other side's (the Host, or the Clients met) and this one's.
+function peerNames(p, receive) {
+  const others = p.phase === 'connected' ? p.names || [] : []
+  const row = (label, names) =>
+    names.length ? `<div><dt>${esc(t(label))}</dt><dd>${names.map((n) => `<span class="peer-name">${icon('monitor')}${esc(n)}</span>`).join('')}</dd></div>` : ''
+  const html = row(receive ? 'peerHostName' : 'peerClientNames', others) + row('peerSelfName', p.self ? [p.self] : [])
+  return html ? `<dl class="peer-names">${html}</dl>` : ''
 }
 // The pairing with the other PCs: the Host hands out codes (another Client
 // can join the pairing kept with one), a Client enters one; then the state
@@ -653,7 +720,7 @@ function peerPanel() {
       : ''
   const clientForms =
     receive && !p.paired && !joining
-      ? `<form id="peer-join-form"><label class="field"><span>${t('enterPairCode')}</span><span class="secret-field"><input name="pairCode" class="${maskedClass('pairInput')}" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="1234 5678" value="${esc(peerDrafts.pairCode || '')}" required>${revealButton('pairInput')}</span></label><button class="primary" type="submit" ${disabled}>${t('joinPair')}</button></form><details class="peer-manual"><summary>${t('manualExchange')}</summary><form id="peer-offer-form"><label class="field"><span>${t('enterOffer')}</span><span class="secret-field"><textarea name="peerOffer" class="${maskedClass('offerInput')}" required spellcheck="false" maxlength="4096" rows="3">${esc(peerDrafts.offer)}</textarea>${revealButton('offerInput')}</span></label><button type="submit" ${disabled}>${t('acceptInvite')}</button></form></details>`
+      ? `<form id="peer-join-form"><div class="field"><span>${t('enterPairCode')}</span><span class="secret-field pair-digits-field">${pairDigits()}${revealButton('pairInput')}</span></div><button class="primary" type="submit" ${disabled}>${t('joinPair')}</button></form><details class="peer-manual"><summary>${t('manualExchange')}</summary><form id="peer-offer-form"><label class="field"><span>${t('enterOffer')}</span><span class="secret-field"><textarea name="peerOffer" class="${maskedClass('offerInput')}" required spellcheck="false" maxlength="4096" rows="3">${esc(peerDrafts.offer)}</textarea>${revealButton('offerInput')}</span></label><button type="submit" ${disabled}>${t('acceptInvite')}</button></form></details>`
       : ''
   // What this Client takes from its Host (the others choose their own).
   const takes = receive
@@ -669,7 +736,7 @@ function peerPanel() {
     : joining
       ? `<button data-action="peerCancel" ${disabled}>${t('cancelPairing')}</button>`
       : ''
-  return `<section class="panel peer-panel"><h2>${t(receive ? 'p2pReceive' : 'p2pTitle')}</h2><p class="hint">${t('p2pHelp')}</p><p class="peer-status" role="status" data-phase="${esc(p.phase)}">${esc(t(linkStatus(p, receive)).replace('{n}', String(p.peers || 0)))}</p>${invite}${hostCode}${clientForms}${takes}${end}<p class="hint">${t('p2pLimit')}</p></section>`
+  return `<section class="panel peer-panel"><h2>${t(receive ? 'p2pReceive' : 'p2pTitle')}</h2><p class="hint">${t('p2pHelp')}</p><p class="peer-status" role="status" data-phase="${esc(p.phase)}">${esc(t(linkStatus(p, receive)).replace('{n}', String(p.peers || 0)))}</p>${peerNames(p, receive)}${invite}${hostCode}${clientForms}${takes}${end}<p class="hint">${t('p2pLimit')}</p></section>`
 }
 function settingsHost() {
   return (
@@ -1038,7 +1105,7 @@ document.addEventListener('input', (event) => {
   }
   if (event.target.closest('#bookmark-form') && editingBookmark) editingBookmark[event.target.name] = event.target.value
   if (event.target.name === 'peerOffer') peerDrafts.offer = event.target.value
-  if (event.target.name === 'pairCode') peerDrafts.pairCode = event.target.value
+  if (event.target.dataset?.pairDigit) pairDigitsInput(event.target)
 })
 document.addEventListener('submit', (event) => {
   event.preventDefault()

@@ -11,6 +11,13 @@ import "strings"
 // Development when nothing set it.
 var Version = Development
 
+// Instance is "dev" in the build `task dev` runs (Taskfile.yml build:dev):
+// it keeps its data apart and runs beside an installed MAYAK (DevInstance).
+var Instance = ""
+
+// DevInstance reports whether this is the `task dev` build.
+func DevInstance() bool { return Instance == "dev" }
+
 // Development is the version of a build that nothing versioned.
 const Development = "dev"
 

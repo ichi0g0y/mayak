@@ -43,6 +43,13 @@ func Run(assets fs.FS, icon []byte) error {
 	// The data folder of the app's earlier name (RaidLens) moves to Mayak
 	// before anything reads it.
 	moved, moveErr := appdir.Migrate()
+	// The `task dev` build keeps its data apart (appdir.DevName), taking the
+	// installed app's preferences the first time.
+	var seeded bool
+	var seedErr error
+	if version.DevInstance() {
+		seeded, seedErr = appdir.UseDev()
+	}
 	service := NewApp()
 	service.hideoutStore.OnSaved = service.hideoutSaved
 	// With the KeepPriority setting, the window's WebView2 processes are kept
@@ -56,6 +63,11 @@ func Run(assets fs.FS, icon []byte) error {
 	if restarted {
 		service.addLog("Info", "Update", "Restarted into MAYAK "+version.Current())
 	}
+	if seedErr != nil {
+		service.addLog("Warn", "Application", "Could not copy the preferences into "+appdir.DevName+": "+seedErr.Error())
+	} else if seeded {
+		service.addLog("Info", "Application", "Development build: data in "+appdir.DevName+", preferences copied from Mayak")
+	}
 	if moveErr != nil {
 		service.addLog("Warn", "Application", "Could not move the RaidLens data folder to Mayak: "+moveErr.Error())
 	} else if moved {
@@ -66,7 +78,7 @@ func Run(assets fs.FS, icon []byte) error {
 		Name:           "MAYAK",
 		Services:       []application.Service{application.NewService(service)},
 		Assets:         application.AssetOptions{Handler: application.AssetFileServerFS(assets)},
-		SingleInstance: &application.SingleInstanceOptions{UniqueID: "com.ichi0g0y.mayak", OnSecondInstanceLaunch: func(application.SecondInstanceData) { service.showWindow() }},
+		SingleInstance: &application.SingleInstanceOptions{UniqueID: singleInstanceID(), OnSecondInstanceLaunch: func(application.SecondInstanceData) { service.showWindow() }},
 	})
 	service.desktop = desktop
 	// The window's hooks (minimise to tray) may run before ServiceStartup
@@ -74,7 +86,7 @@ func Run(assets fs.FS, icon []byte) error {
 	service.settings = normalizeSettings(settings)
 	var restoreState config.WindowState
 	windowOptions := application.WebviewWindowOptions{
-		Name: "main", Title: "MAYAK", Width: 1120, Height: 760, MinWidth: 760, MinHeight: 560,
+		Name: "main", Title: windowTitle(), Width: 1120, Height: 760, MinWidth: 760, MinHeight: 560,
 		StartState: application.WindowStateNormal, URL: "/", ZoomControlEnabled: false,
 		// The shell draws its own title bar, so the sidebar reaches the top
 		// edge. On Windows and Linux the window is frameless and the shell
@@ -144,3 +156,23 @@ func Run(assets fs.FS, icon []byte) error {
 	})
 	return desktop.Run()
 }
+
+// singleInstanceID is the app's single-instance ID; the `task dev` build has
+// its own, so it runs beside an installed MAYAK (one of each).
+func singleInstanceID() string {
+	if version.DevInstance() {
+		return "com.ichi0g0y.mayak.dev"
+	}
+	return "com.ichi0g0y.mayak"
+}
+
+// windowTitle names the window, the `task dev` build's apart.
+func windowTitle() string {
+	if version.DevInstance() {
+		return "MAYAK (dev)"
+	}
+	return "MAYAK"
+}
+
+// DevInstance tells the shell whether this is the `task dev` build.
+func (a *App) DevInstance() bool { return version.DevInstance() }

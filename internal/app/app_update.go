@@ -116,6 +116,11 @@ func (a *App) startUpdateChecks() {
 			status.Platform = runtime.GOOS + "/" + runtime.GOARCH
 			status.State = "idle"
 		})
+		// The `task dev` build is built from the source; it never replaces
+		// itself with a release.
+		if version.DevInstance() {
+			return
+		}
 		a.restoreStagedUpdate()
 		go a.updateCheckLoop()
 	})

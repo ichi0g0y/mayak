@@ -7,8 +7,23 @@ import (
 	"path/filepath"
 )
 
-// Name is the app's folder under os.UserConfigDir().
-const Name = "Mayak"
+// Name is the app's folder under os.UserConfigDir(): Mayak, or DevName for
+// the `task dev` build (UseDev), set before anything reads the folder.
+var Name = "Mayak"
+
+// DevName is the `task dev` build's folder, apart from the installed app's
+// so that the two run side by side as two PCs would (their own pairing,
+// squad member key, window and web data).
+const DevName = "Mayak-dev"
+
+// devSeed is what the `task dev` build takes from the installed app's
+// folder when its own does not exist yet: the preferences, folders and
+// keys the user set, but nothing that makes it the same PC (browser.json
+// with the pairing and the squad joined, the squad member key, the window).
+var devSeed = []string{
+	"settings.json", "preferences.json", "browser-preferences.json", "bookmarks.json",
+	"map-drawings.json", "tracker-tokens.dat", "sounds",
+}
 
 // legacyName is the folder of the app's earlier name, RaidLens.
 const legacyName = "RaidLens"
@@ -32,6 +47,62 @@ func Config() string {
 func Path(parts ...string) (string, error) {
 	base, err := os.UserConfigDir()
 	return filepath.Join(append([]string{base, Name}, parts...)...), err
+}
+
+// UseDev makes Name DevName and, when that folder does not exist yet,
+// seeds it from the installed app's (devSeed). It tells whether it seeded.
+func UseDev() (bool, error) {
+	base, err := os.UserConfigDir()
+	Name = DevName
+	if err != nil {
+		return false, err
+	}
+	return seed(filepath.Join(base, "Mayak"), filepath.Join(base, DevName))
+}
+
+func seed(from, to string) (bool, error) {
+	if _, err := os.Stat(to); err == nil {
+		return false, nil
+	}
+	if err := os.MkdirAll(to, 0o700); err != nil {
+		return false, err
+	}
+	if _, err := os.Stat(from); err != nil {
+		return false, nil
+	}
+	for _, name := range devSeed {
+		if err := copyTree(filepath.Join(from, name), filepath.Join(to, name)); err != nil && !os.IsNotExist(err) {
+			return true, err
+		}
+	}
+	return true, nil
+}
+
+func copyTree(from, to string) error {
+	info, err := os.Stat(from)
+	if err != nil {
+		return err
+	}
+	if info.IsDir() {
+		entries, err := os.ReadDir(from)
+		if err != nil {
+			return err
+		}
+		if err := os.MkdirAll(to, 0o700); err != nil {
+			return err
+		}
+		for _, e := range entries {
+			if err := copyTree(filepath.Join(from, e.Name()), filepath.Join(to, e.Name())); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	data, err := os.ReadFile(from)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(to, data, 0o600)
 }
 
 // Migrate moves the data folder of the earlier name to Name, once, when Name

@@ -199,7 +199,7 @@ const snapshot = () => ({
           ? 'connected'
           : 'disconnected',
   // paired: a pairing is kept for this mode.
-  peer: { ...peerState, paired: !!state.connection.link && state.connection.link.role === linkRole() },
+  peer: { ...peerState, self: hostName, paired: !!state.connection.link && state.connection.link.role === linkRole() },
   error,
 })
 const update = () => notify(snapshot())
@@ -684,6 +684,8 @@ function forgetPairCode() {
 }
 // The pairing being made: kept once the other PC is met.
 let pending = null
+// This PC's computer's name, shown beside the other PC's.
+let hostName = ''
 // linkRole is the side this PC takes in the mode chosen.
 const linkRole = () => (state.connection.mode === 'local' ? 'host' : state.connection.mode === 'client' ? 'client' : '')
 const peer = new /** @type {any} */ (globalThis).MayakLink({
@@ -900,6 +902,10 @@ const ready = (async () => {
   await go.BrowserSetMode(state.connection.mode)
   // The pairing kept meets its other PC again (transport.js).
   peer.relay = (await go.BrowserLinkRelay()) || peer.relay
+  try {
+    peer.name = (await go.BrowserHostname()) || ''
+    hostName = peer.name
+  } catch {}
   startLink()
   try {
     await go.BrowserSetAdblock(state.adblock)

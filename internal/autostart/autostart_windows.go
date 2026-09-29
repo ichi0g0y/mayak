@@ -7,15 +7,23 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/local/mayak/internal/version"
 	"golang.org/x/sys/windows/registry"
 )
 
 const (
 	runKeyPath = `Software\Microsoft\Windows\CurrentVersion\Run`
-	valueName  = "Mayak"
 	// legacyValueName is the entry of the app's earlier name, removed either way.
 	legacyValueName = "RaidLens"
 )
+
+// valueName is the startup entry's name (the `task dev` build's apart).
+func valueName() string {
+	if version.DevInstance() {
+		return "Mayak-dev"
+	}
+	return "Mayak"
+}
 
 // Apply adds or removes MAYAK from the current user's Windows startup apps.
 func Apply(enabled bool) error {
@@ -27,7 +35,7 @@ func Apply(enabled bool) error {
 	_ = key.DeleteValue(legacyValueName)
 
 	if !enabled {
-		err = key.DeleteValue(valueName)
+		err = key.DeleteValue(valueName())
 		if errors.Is(err, registry.ErrNotExist) {
 			return nil
 		}
@@ -42,7 +50,7 @@ func Apply(enabled bool) error {
 	if err != nil {
 		return err
 	}
-	return key.SetStringValue(valueName, quoteExecutable(executable))
+	return key.SetStringValue(valueName(), quoteExecutable(executable))
 }
 
 // RemoveLegacy removes the startup entry of the app's earlier name and

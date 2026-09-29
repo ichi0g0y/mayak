@@ -41,6 +41,8 @@ export const api = {
 // The build's version, for the About section; empty in development. The
 // desktop bridge (api.js) exists once the first state arrives, so it loads then.
 export let appVersion = ''
+// Whether this is the `task dev` build (its own data; runs beside MAYAK).
+export let devInstance = false
 // The built-in voices, for their credits under Licenses.
 export let voicePacks = []
 export async function loadVersion() {
@@ -48,10 +50,13 @@ export async function loadVersion() {
     appVersion = (await window.mayakDesktop?.backend?.GetVersion?.()) || ''
   } catch {}
   try {
+    devInstance = !!(await window.mayakDesktop?.backend?.DevInstance?.())
+  } catch {}
+  try {
     const packs = await window.mayakDesktop?.backend?.VoicePacks?.()
     if (Array.isArray(packs)) voicePacks = packs
   } catch {}
-  if (appVersion || voicePacks.length) render()
+  if (appVersion || voicePacks.length || devInstance) render()
 }
 // Where development can be supported (About, the tutorial's last step).
 export const SUPPORT_URL = 'https://buymeacoffee.com/ichi0g0y'

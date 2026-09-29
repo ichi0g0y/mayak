@@ -617,13 +617,15 @@ test('toolbar icons keep a whole order: snap left of the wiki search by default'
   assert.deepEqual(restore({}).toolOrder, ['translate', 'snap', 'squadShare', 'wikiSearch', 'external'])
   assert.deepEqual(toolOrderOf(['external', 'translate']), ['external', 'translate', 'snap', 'squadShare', 'wikiSearch'])
   assert.deepEqual(toolOrderOf(['bogus', 'snap', 'snap', 'external']), ['translate', 'snap', 'squadShare', 'wikiSearch', 'external'])
+  // An order saved before the squad share button takes it after the snap note's.
   assert.deepEqual(restore({ toolOrder: ['wikiSearch', 'snap', 'translate', 'external'] }).toolOrder, [
     'wikiSearch',
     'snap',
+    'squadShare',
     'translate',
     'external',
   ])
-  assert.deepEqual(toolKeys, ['translate', 'snap', 'wikiSearch', 'external'])
+  assert.deepEqual(toolKeys, ['translate', 'snap', 'squadShare', 'wikiSearch', 'external'])
 })
 test('dragging the shown icons keeps the hidden ones in place', () => {
   // No wiki search on a page without a task: the other three are reordered.

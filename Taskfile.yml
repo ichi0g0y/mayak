@@ -169,7 +169,9 @@ tasks:
       - task: bindings
       - task: tesseract:bundle
       - task: syso
-      - 'go build -p 2 -buildvcs=false -ldflags="{{.VERSION_LDFLAGS}}" -o build/bin/Mayak-dev{{exeExt}} .'
+      # Instance=dev: its own data folder (Mayak-dev) and single-instance ID,
+      # so it runs beside an installed MAYAK (internal/version DevInstance).
+      - 'go build -p 2 -buildvcs=false -ldflags="{{.VERSION_LDFLAGS}} -X github.com/local/mayak/internal/version.Instance=dev" -o build/bin/Mayak-dev{{exeExt}} .'
 
   lint:
     summary: Static analysis of the Go code (staticcheck; staticcheck.conf)

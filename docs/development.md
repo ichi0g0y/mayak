@@ -241,6 +241,17 @@ Wails 本体はフォークせず公式モジュールを使います。
 - `third_party/` の変更は監視されません。go-webview2 フォークを変更したら `task dev` を再起動します。
 - `task dev`、`task run`、`wails3 dev` はアプリを起動します。下記の制約に注意してください。
 
+### 入れてある MAYAK と同時に動かす
+
+`task dev` の開発ビルドは、入れてある MAYAK と同じ PC で同時に動かせます。Host と Client、分隊の仲間など、複数の PC がいる動きを 1 台で試すためです（`build:dev` が `-X github.com/local/mayak/internal/version.Instance=dev` を付け、`version.DevInstance` が true になる）。
+
+- **データ**: `%AppData%\Mayak-dev`（`appdir.DevName`）に分かれます。まだ無ければ、初めての起動で `Mayak` から好みと設定だけを写します（`settings.json`、`preferences.json`、`browser-preferences.json`、`bookmarks.json`、`map-drawings.json`、`tracker-tokens.dat`、`sounds/`）。`browser.json`（タブ、ペアリング、参加中の分隊）、`squad-key.txt`（分隊のメンバー鍵）、ウインドウの位置、ページタブの WebView2 のデータは写さないので、別の PC として振る舞います。写し直すときは `Mayak-dev` を消します。
+- **二重起動の防止**: 単一インスタンスの ID が `com.ichi0g0y.mayak.dev` で別なので、入れてある MAYAK とは 1 つずつ動きます（開発ビルドどうしは 1 つだけ）。
+- **見分け**: ウインドウのタイトルが「MAYAK (dev)」になり、サイドバーの上に「DEV」の印が付きます。
+- **自動更新しない**: ソースから作ったビルドなので、nightly やリリースに置き換えません（更新の確認もしない）。
+- **スタートアップ**: Windows のスタートアップの登録名も `Mayak-dev` で別です。
+- どちらも同じ EFT のログとスクリーンショットを見ます。片方を Client にすると、検出するのは Host だけになります。
+
 ## リリース
 
 開発は `main` に直接コミットします。`main` へのプッシュごとに `.github/workflows/check.yml` が、Windows・macOS・Linux でのビルド（`task build`）、`go vet`、staticcheck（Windows と Linux）、Go と シェルのテストを走らせます。`main` は毎晩 nightly としてビルドされ（[nightly ビルド](#nightly-ビルド)）、安定版はタグを打ったときだけ出ます。`main` に未リリースの変更があっても、安定版を使う人には届きません。

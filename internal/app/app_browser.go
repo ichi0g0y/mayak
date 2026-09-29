@@ -98,6 +98,13 @@ func browserStatePath() (string, error) {
 }
 func (a *App) BrowserPlatform() string { return goruntime.GOOS }
 
+// BrowserHostname is this computer's name, which paired PCs show of each
+// other (transport.js).
+func (a *App) BrowserHostname() string {
+	name, _ := os.Hostname()
+	return name
+}
+
 // The built-in browser's state is one object for the shell (state.js), kept
 // in three files: its preferences key by key (browser-preferences.json) and
 // its bookmarks record by record (bookmarks.json), which follow the user to
