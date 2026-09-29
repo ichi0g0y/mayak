@@ -72,8 +72,9 @@ type ContentBlocker interface {
 // SetContentBlocker applies to tabs created afterwards.
 func (m *Manager) SetContentBlocker(b ContentBlocker) {
 	m.scriptMu.Lock()
-	defer m.scriptMu.Unlock()
 	m.blocker = b
+	m.scriptMu.Unlock()
+	blockerSet(b)
 }
 
 // SetDocumentScript sets a script that runs before page scripts in every tab

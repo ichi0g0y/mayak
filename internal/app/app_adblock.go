@@ -8,9 +8,11 @@ import (
 )
 
 // setupAdblock filters the built-in browser's tabs. Filter lists are cached in
-// the config directory and refreshed in the background.
+// the config directory and refreshed in the background. Windows asks the
+// blocker about each request; the Mac makes the lists a WebKit content
+// blocker (browserview view_darwin.go). Linux has neither yet.
 func (a *App) setupAdblock() {
-	if a.browserViews == nil || goruntime.GOOS != "windows" {
+	if a.browserViews == nil || (goruntime.GOOS != "windows" && goruntime.GOOS != "darwin") {
 		return
 	}
 	dir, err := appdir.Path("adblock")

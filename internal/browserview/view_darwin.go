@@ -32,6 +32,14 @@ var (
 	rulesVersion string
 )
 
+// blockerSet starts handing the blocker's rules to WebKit as soon as the
+// app gives it (tabs restored before that get them too).
+func blockerSet(b ContentBlocker) {
+	if b != nil {
+		watchRules(b)
+	}
+}
+
 // watchRules hands b's rules to WebKit, and again when they change.
 func watchRules(b ContentBlocker) {
 	w, ok := b.(webkitBlocker)
