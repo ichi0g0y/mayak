@@ -23,10 +23,20 @@ import {
   textScale,
 } from './map-geo.js'
 import { state, esc, t, icon, action, clickHandlers, afterRenderHooks, render } from './shell-core.js'
-import { attach, clearNotice, drawLines, penBar, penButton, snapStrokes, squadSnapStrokes } from './map-draw.js'
+import {
+  attach,
+  clearNotice,
+  drawLines,
+  pen,
+  penBar,
+  penButton,
+  putPenDown,
+  snapStrokes,
+  squadSnapStrokes,
+} from './map-draw.js'
 import { mapName, ownName } from './view-squad.js'
 import { colorOf } from './squad-colors.js'
-import { canShare, mapFresh, shareView } from './squad-share.js'
+import { canShare, dropPin, mapFresh, pinsOn, removePin } from './squad-share.js'
 
 // The map view: tarkov.dev's interactive map redrawn by MAYAK (Leaflet over
 // its SVG maps; internal/mapdata makes the picture of each floor and the
@@ -125,7 +135,7 @@ function rail(map, floor) {
   const snap = state.snapNotes
     ? `<button class="map-rail-button map-rail-snap" data-action="mapSnap" title="${esc(t('mapSnap'))}" aria-label="${esc(t('mapSnap'))}" ${!map || snapping ? 'disabled' : ''}>${icon('snap')}</button>`
     : ''
-  return `<div class="map-rail">${button('maps', 'map', `${t('mapPick')}${where ? `: ${where}` : ''}`, floorBadge)}${button('filters', 'list', t('mapFilters'))}${button('search', 'search', t('mapSearch'), view.search ? '<span class="map-rail-dot"></span>' : '')}${snap}${penButton(!map)}${canShare() ? `<button class="map-rail-button ${viewShared ? 'selected' : ''}" data-action="mapShareView" title="${esc(t(viewShared ? 'squadShareDone' : 'mapShareView'))}" aria-label="${esc(t('mapShareView'))}" ${map ? '' : 'disabled'}>${icon(viewShared ? 'check' : 'crosshair')}</button>` : ''}${button('settings', 'settings', t('mapSettings'))}</div>`
+  return `<div class="map-rail">${button('maps', 'map', `${t('mapPick')}${where ? `: ${where}` : ''}`, floorBadge)}${button('filters', 'list', t('mapFilters'))}${button('search', 'search', t('mapSearch'), view.search ? '<span class="map-rail-dot"></span>' : '')}${snap}${penButton(!map)}${canShare() ? `<button class="map-rail-button ${pinning || viewShared ? 'selected' : ''}" data-action="mapPin" aria-pressed="${pinning}" title="${esc(t(viewShared ? 'squadShareDone' : pinning ? 'mapPinCancel' : 'mapPin'))}" aria-label="${esc(t('mapPin'))}" ${map ? '' : 'disabled'}>${icon(viewShared ? 'check' : 'mapPin')}</button>` : ''}${button('settings', 'settings', t('mapSettings'))}</div>`
 }
 
 // The map panel: the maps, then the floors of the one shown.
@@ -292,6 +302,7 @@ const fresh = () => ({
   floorTiles: null,
   baseKey: '',
   squad: new Map(),
+  pins: new Map(),
   things: null,
   thingsKey: '',
   resize: null,
@@ -368,6 +379,16 @@ function build(el, map) {
   // over them hides them, as the floor above hides what is below it; the
   // picture lets pointers through, so they can still be clicked.
   lm.map.createPane('offLevel').style.zIndex = '350'
+  // The squad's pins stand over the pens' lines.
+  lm.map.createPane('mapPins').style.zIndex = '660'
+  // With a pin being put, a press on the map puts it there.
+  lm.map.on('click', (e) => {
+    if (!pinning) return
+    pinning = false
+    const { map, floor } = shown()
+    if (map) void putPin({ map: map.key, floor, x: e.latlng.lng, z: e.latlng.lat, zoom: lm.map.getZoom() })
+    render()
+  })
   lm.map.fitBounds(bounds)
   lm.resize = new ResizeObserver(() => lm.map?.invalidateSize())
   lm.resize.observe(el)
@@ -609,6 +630,43 @@ function drawSquad(map, floor, members) {
     }
 }
 
+// drawPins puts the squad's pins on the map: a pin in its member's colour
+// with their name, faint when on another floor. Your own is taken out when
+// pressed.
+function drawPins(map, floor) {
+  const seen = new Set()
+  for (const p of pinsOn(map.key)) {
+    seen.add(p.by)
+    const name = p.mine ? t('squadYou') : p.name || '?'
+    const html = `<span class="map-pin ${p.mine ? 'mine' : ''}" style="--c:${esc(p.c)}"><svg viewBox="0 0 24 24"><path d="M12 22.5s-7.5-6.6-7.5-12.6a7.5 7.5 0 0 1 15 0c0 6-7.5 12.6-7.5 12.6z"/><circle cx="12" cy="9.9" r="2.8"/></svg><span class="map-pin-name">${esc(name)}</span></span>`
+    const key = p.id + html
+    let marker = lm.pins.get(p.by)
+    if (marker && marker._key !== key) {
+      marker.remove()
+      marker = null
+    }
+    if (!marker) {
+      marker = L.marker(L.latLng(p.z, p.x), {
+        pane: 'mapPins',
+        interactive: p.mine,
+        keyboard: false,
+        title: p.mine ? t('mapPinRemove') : '',
+        icon: L.divIcon({ className: 'map-pin-icon', html, iconSize: [30, 30], iconAnchor: [15, 29] }),
+      })
+      if (p.mine) marker.on('click', removePin)
+      marker._key = key
+      marker.addTo(lm.map)
+      lm.pins.set(p.by, marker)
+    }
+    marker.setOpacity((p.floor || '') === (floor || '') ? 1 : 0.45)
+  }
+  for (const [by, marker] of lm.pins)
+    if (!seen.has(by)) {
+      marker.remove()
+      lm.pins.delete(by)
+    }
+}
+
 // offAlpha is how strong what is on another floor shows (the setting).
 const offAlpha = () => (state.mapSettings?.fade ?? 20) / 100
 
@@ -712,6 +770,9 @@ function drawMap() {
   drawThings(map, floor, data)
   drawSquad(map, floor, members)
   drawLines(L, lm.map, map.key, floor, offAlpha())
+  drawPins(map, floor)
+  if (pen.on) pinning = false
+  lm.map.getContainer().classList.toggle('map-pinning', pinning)
   if (view.focus?.map === map.key) {
     const { x, z, zoom, pulse } = view.focus
     view.focus = null
@@ -775,10 +836,11 @@ document.addEventListener('input', (event) => {
     searchTimer = setTimeout(render, 300)
   }
 })
-// Esc closes an open panel, then clears the search.
+// Esc stops putting a pin, closes an open panel, then clears the search.
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape' || !document.getElementById('live-map')) return
-  if (view.panel) view.panel = ''
+  if (pinning) pinning = false
+  else if (view.panel) view.panel = ''
   else if (view.search) view.search = ''
   else return
   render()
@@ -788,8 +850,19 @@ document.addEventListener('keydown', (event) => {
 // opened for drawing. The tiles come through Go: tarkov.dev does not serve
 // them for a page to read.
 let snapping = false
-// The view was just shared: its button shows so for a moment.
+// A pin is being put (the next press on the map puts it); one was just
+// put (its button shows so for a moment).
+let pinning = false
 let viewShared = false
+async function putPin(place) {
+  if (!(await dropPin(place))) return
+  viewShared = true
+  render()
+  setTimeout(() => {
+    viewShared = false
+    render()
+  }, 2000)
+}
 async function snapMap() {
   const el = document.getElementById('live-map')
   const { map, floor } = shown()
@@ -857,19 +930,12 @@ clickHandlers.push(async (type, id, button) => {
     void snapMap()
     return true
   }
-  // "Look here": the view shown goes to the squad.
-  if (type === 'mapShareView') {
-    const { map, floor } = shown()
-    if (!map || !lm.map) return true
-    const c = lm.map.getCenter()
-    if (await shareView({ map: map.key, floor, x: c.lng, z: c.lat, zoom: lm.map.getZoom() })) {
-      viewShared = true
-      render()
-      setTimeout(() => {
-        viewShared = false
-        render()
-      }, 2000)
-    }
+  // "Look here": the next press on the map puts a pin there (the pens go
+  // down meanwhile); pressed again, not.
+  if (type === 'mapPin') {
+    pinning = !pinning && !!shown().map
+    if (pinning) putPenDown()
+    render()
     return true
   }
   if (type === 'mapPick') {

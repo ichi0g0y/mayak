@@ -10,8 +10,11 @@ import * as squad from './squad-draw.js'
 // who join later; a snap note, being large, reaches only those there when
 // it is sent.
 //
-// A map view shared ("look here": its map, floor, centre and zoom) comes
-// the same way, as kind 'view', and brings that view up when opened.
+// A pin ("look here", as on Google Maps) is a point on a map a member
+// pressed: it shows on everyone's map in its member's colour, one per
+// member (a new one takes the old one's place), until its member takes it
+// out or PIN_MS passes. It also lists as kind 'view'; opening it brings its
+// map and floor up around it, at the zoom its member had.
 //
 // An item: {id, kind: 'tab' | 'snap' | 'draw' | 'view', by (member key), name, c
 // (colour), title, url, image, map, at, mine, seen}. The list is this PC's,
@@ -76,12 +79,18 @@ squad.onShell('snap', (by, d) => {
     seen: false,
   })
 })
-squad.onShell('view', (by, d) => {
-  if (typeof d.id !== 'string' || typeof d.map !== 'string' || shares.some((s) => s.id === d.id)) return
+// The pins on the maps: member key → {id, by, name, c, map, floor, x, z,
+// zoom, at, mine}.
+export const pins = new Map()
+const PIN_MS = 10 * 60 * 1000
+function pinIn(by, d) {
+  if (!by || typeof d.id !== 'string' || typeof d.map !== 'string') return
   if (![d.x, d.z, d.zoom].every(Number.isFinite)) return
-  keep({
+  // A pin handed to someone joining keeps its age.
+  const age = Number.isFinite(d.age) ? Math.min(Math.max(0, d.age), PIN_MS) : 0
+  if (age >= PIN_MS) return
+  const pin = {
     id: d.id,
-    kind: 'view',
     by,
     name: text(d.name, 24),
     c: text(d.c, 7),
@@ -90,11 +99,28 @@ squad.onShell('view', (by, d) => {
     x: d.x,
     z: d.z,
     zoom: d.zoom,
-    at: Date.now(),
+    at: Date.now() - age,
     mine: false,
-    seen: false,
-  })
+  }
+  pins.set(by, pin)
+  if (shares.some((s) => s.id === d.id)) render()
+  else keep({ ...pin, kind: 'view', seen: false })
+}
+squad.onShell('pin', pinIn)
+// A build before pins shared the view it showed: its centre is the pin.
+squad.onShell('view', pinIn)
+squad.onShell('unpin', (by, d) => {
+  if (pins.get(by)?.id !== d.id) return
+  pins.delete(by)
+  render()
 })
+// pinsOn is the pins on a map.
+export const pinsOn = (map) => [...pins.values()].filter((p) => p.map === map)
+setInterval(() => {
+  let gone = false
+  for (const [by, p] of pins) if (Date.now() - p.at >= PIN_MS) gone = pins.delete(by) || gone
+  if (gone) render()
+}, 15000)
 // Someone drew a line on a map: one item per member and map, moved up.
 squad.onShell('drew', (by, d) => {
   if (!d.map) return
@@ -123,16 +149,30 @@ afterRenderHooks.push(() => {
 // The shares waiting to be seen (pages and snap notes, not drawings), the
 // newest first: counted on the squad's button and beside who shared them.
 export const waiting = () => shares.filter((s) => !s.seen && s.kind !== 'draw')
-// Those who join get the pages shared here lately.
+// Those who join get the pages shared here lately, and this member's pin.
 squad.onJoin(() => {
   for (const s of shares
     .filter((s) => s.mine && s.kind === 'tab')
     .slice(0, 20)
     .reverse())
     void sendTab(s)
+  const pin = pins.get(squad.myKeyOf())
+  if (pin) void sendPin(pin)
 })
 
 const sendTab = (s) => squad.sendShell({ t: 'share', id: s.id, url: s.url, title: s.title, ...squad.myStyle() })
+const sendPin = (p) =>
+  squad.sendShell({
+    t: 'pin',
+    id: p.id,
+    map: p.map,
+    floor: p.floor,
+    x: p.x,
+    z: p.z,
+    zoom: p.zoom,
+    age: Date.now() - p.at,
+    ...squad.myStyle(),
+  })
 
 // canShare tells whether sharing works now (as the squad pen does).
 export const canShare = () => squad.canDraw()
@@ -178,17 +218,40 @@ export async function shareSnap(title, image, onProgress) {
   return ok
 }
 
-// shareView shares the map view shown (map, floor, centre, zoom): "look
-// here". It tells whether it went.
-export async function shareView(v) {
+// dropPin puts this member's pin at a point of a map (map, floor, x, z),
+// with the zoom it was put at, in place of its last one. It tells whether it
+// went.
+export async function dropPin(v) {
   if (!canShare()) return false
-  const style = squad.myStyle()
-  const id = Math.random().toString(36).slice(2, 12)
   const round = (n) => Math.round(n * 100) / 100
-  const view = { map: text(v.map, 60), floor: text(v.floor, 60), x: round(v.x), z: round(v.z), zoom: round(v.zoom) }
-  const ok = await squad.sendShell({ t: 'view', id, ...view, ...style })
-  if (ok) keep({ id, kind: 'view', by: squad.myKeyOf(), ...style, ...view, at: Date.now(), mine: true, seen: true })
+  const pin = {
+    id: Math.random().toString(36).slice(2, 12),
+    by: squad.myKeyOf(),
+    ...squad.myStyle(),
+    map: text(v.map, 60),
+    floor: text(v.floor, 60),
+    x: round(v.x),
+    z: round(v.z),
+    zoom: round(v.zoom),
+    at: Date.now(),
+    mine: true,
+  }
+  pins.set(pin.by, pin)
+  keep({ ...pin, kind: 'view', seen: true })
+  const ok = await sendPin(pin)
+  if (!ok && pins.get(pin.by)?.id === pin.id) {
+    pins.delete(pin.by)
+    render()
+  }
   return ok
+}
+// removePin takes this member's pin out.
+export function removePin() {
+  const pin = pins.get(squad.myKeyOf())
+  if (!pin) return
+  pins.delete(pin.by)
+  render()
+  void squad.sendShell({ t: 'unpin', id: pin.id })
 }
 
 export const unseen = () => shares.filter((s) => !s.seen).length
@@ -207,8 +270,9 @@ afterRenderHooks.push(() => {
   const next = state.squad?.state ? state.squadCode || state.squad.state.code : ''
   if (next === code) return
   code = next
-  if (shares.length) {
+  if (shares.length || pins.size) {
     shares.length = 0
+    pins.clear()
     render()
   }
 })

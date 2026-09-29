@@ -104,7 +104,7 @@ const activeKind = () => state.tabs.find((tab) => tab.id === state.active)?.kind
 
 // A shared thing's row: its kind's icon, its title (or who drew where), who
 // shared it, when, and a dot while unread. Pressing it opens it.
-const shareIcons = { tab: 'globe', snap: 'snap', draw: 'pencil', view: 'crosshair' }
+const shareIcons = { tab: 'globe', snap: 'snap', draw: 'pencil', view: 'mapPin' }
 function shareTitle(s) {
   if (s.kind === 'draw') return t('squadDrew').replace('{map}', mapName(s.map))
   if (s.kind === 'view') return t('squadLookHere').replace('{map}', mapName(s.map))

@@ -1246,6 +1246,14 @@ body[data-sidebar=collapsed] .live-map-entry .live-map-icon,[data-layout=horizon
 .map-extract-name{position:absolute;left:27px;top:50%;transform:translateY(-50%);white-space:nowrap;font:800 calc(15px * var(--extract-text, 1))/1.2 Arial,system-ui,sans-serif;color:var(--c);-webkit-text-stroke:.6px #000;text-shadow:0 0 3px #000}
 .leaflet-container{font:inherit;background:var(--sidebar)}
 .squad-marker-icon{background:none;border:0}
+/* The squad's pins: a map pin in the member's colour, the name under it; yours can be pressed (to take it out). */
+.map-pinning,.map-pinning .leaflet-interactive{cursor:crosshair}
+.map-pin-icon{background:none;border:0}
+.map-pin{position:relative;display:block;width:30px;height:30px}
+.map-pin svg{width:30px;height:30px;display:block;fill:var(--c);stroke:#000a;stroke-width:1.3;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.map-pin svg circle{fill:#16181d;stroke:none}
+.map-pin.mine svg{stroke:#fff;stroke-width:1.6}
+.map-pin-name{position:absolute;top:31px;left:50%;transform:translateX(-50%);padding:0 5px;border-radius:4px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;line-height:16px;white-space:nowrap;pointer-events:none}
 .squad-marker{position:relative;display:block;width:28px;height:28px;color:var(--c)}
 .squad-marker svg{width:28px;height:28px;fill:var(--c);stroke:#000a;stroke-width:1.5;display:block}
 .squad-marker.me svg{stroke:#fff;stroke-width:2}

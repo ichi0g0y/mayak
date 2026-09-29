@@ -207,6 +207,12 @@ function pickPen(mode) {
   if (pen.on) void load()
   penUsed = Date.now()
 }
+// putPenDown puts up pen down (as a pin is being put).
+export function putPenDown() {
+  if (!pen.on) return
+  if (squadMode()) squad.cursorOff()
+  pen.on = false
+}
 // The squad pen is put down after IDLE_MS without use (no drawing, no
 // pointer over the map): its position stops going, and the squad's room on
 // the relay can sleep (a free service: the relay is paid for by the time its
