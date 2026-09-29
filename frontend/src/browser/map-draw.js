@@ -374,7 +374,6 @@ export function attach(el, signal) {
       if (!pen.on || space || !at.map || e.target.closest?.('.leaflet-control-container')) return
       if (e.button === 1 || e.button === 2) {
         panning = { x: e.clientX, y: e.clientY }
-        el.setPointerCapture(e.pointerId)
         e.preventDefault()
         return
       }
@@ -417,14 +416,31 @@ export function attach(el, signal) {
     },
     { signal },
   )
+  // The map moves with a right or middle drag wherever the pointer goes, and
+  // stops once neither button is down, even if its release was missed (let
+  // go outside the window).
+  window.addEventListener(
+    'pointermove',
+    (e) => {
+      if (!panning) return
+      if (!(e.buttons & 6)) {
+        panning = null
+        return
+      }
+      at.map?.panBy([panning.x - e.clientX, panning.y - e.clientY], { animate: false })
+      panning = { x: e.clientX, y: e.clientY }
+    },
+    { signal },
+  )
+  window.addEventListener('pointerup', () => (panning = null), { signal })
+  // A middle press would start the browser's autoscroll instead.
+  el.addEventListener('mousedown', (e) => pen.on && e.button === 1 && e.preventDefault(), { signal })
   el.addEventListener(
     'pointermove',
     (e) => {
-      if (panning) {
-        at.map?.panBy([panning.x - e.clientX, panning.y - e.clientY], { animate: false })
-        panning = { x: e.clientX, y: e.clientY }
-        return
-      }
+      if (panning) return
+      // A stroke or an erasing whose release was missed ends here.
+      if ((stroke || erased) && !(e.buttons & 1)) return end()
       if (erased) return eraseAt(spot(e))
       if (!stroke) {
         const p = spot(e)
@@ -449,8 +465,7 @@ export function attach(el, signal) {
     },
     { signal },
   )
-  const end = () => {
-    panning = null
+  function end() {
     if (erased) {
       if (erased.length) record({ mode: pen.mode, remove: erased })
       erased = null
@@ -504,7 +519,7 @@ function nameTip(el, p) {
       p && at.map
         ? squad
             .shownLines(at.key)
-            .filter((l) => l.floor === at.floor)
+            .filter((l) => l.floor === at.floor && l.by !== squad.myKeyOf())
             .reverse()
             .find((l) => hits(onScreen(l), widthAt(l), [p.x, p.y], 4))
         : null
@@ -578,9 +593,12 @@ document.addEventListener('keydown', (event) => {
     render()
   }
 })
-document.addEventListener('keyup', (event) => {
-  if (event.key !== ' ' || !space) return
+function releaseSpace() {
+  if (!space) return
   space = false
   at.map?.getContainer().classList.remove('map-grab')
   render()
-})
+}
+document.addEventListener('keyup', (event) => event.key === ' ' && releaseSpace())
+window.addEventListener('blur', releaseSpace)
+document.addEventListener('visibilitychange', releaseSpace)
