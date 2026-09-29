@@ -1,5 +1,5 @@
 // Tidies pages the built-in browser opens, whatever the ad blocker does. It
-// runs before each document's own scripts (view_windows.go).
+// runs before each document's own scripts (view_windows.go, view_darwin.go).
 //
 // A Fandom wiki page translated through Google (translate.goog) is always
 // signed out, so Fandom fills its right rail with a sign-up card ("New to

@@ -314,7 +314,7 @@ Web ページのツールバー右側のアイコン（翻訳、スナップノ�
 - キーボードショートカットは Chrome に合わせています（`state.js` の `shortcut()`。macOS では Ctrl の代わりに Cmd も使えます）。Ctrl+T 新しいタブ（アドレス欄にフォーカス）、Ctrl+W / Ctrl+F4 タブを閉じる（ピン留めは除く）、Ctrl+Shift+T 最後に閉じた Web タブを元の位置に開き直す（起動中に閉じた 20 件まで、保存はしない）、Ctrl+Tab / Ctrl+PageDown 次のタブ、Ctrl+Shift+Tab / Ctrl+PageUp 前のタブ、Ctrl+1〜8 タブの並び（`state.tabs`。マップや設定などシェルのページも含む）で n 番目のタブ、Ctrl+9 最後のタブ、Ctrl+L / Alt+D / F6 アドレス欄にフォーカス、Ctrl+D 表示中のページをブックマークしてサイドバーにピン留め。
   - ページビュー（WebView2 の子ウインドウ）にフォーカスがあるときは、シェルの `keydown` には届きません。Windows では各ビューの `AcceleratorKeyPressed`（`view_windows.go` の `acceleratorKey`）が修飾キー付きのキーをキー名（`event.key` を小文字にしたもの）に直して `SetKeyHandler` に渡し、Go 側の許可リスト（`app_browser.go` の `browserShortcutKey`。`shortcut()` と同じ組み合わせ）にあるものだけ `browser:key` イベントでシェルに送り、ページには渡しません。それ以外のキー（Ctrl+R、Ctrl+F、Ctrl+C など）はページのままです。macOS / Linux ではページ内のキーは転送しません。
   - タブを切り替えたあとのキーボードフォーカスは、Web タブならそのページ、シェルのページ（設定など）ならシェルに移します（`BrowserView` の `focus` コマンド。ID `shell` はウインドウの `Focus()`、それ以外はビューの `MoveFocus`）。ページビューはネイティブのウインドウなので、シェルからは `focus()` だけでは移せません。
-- **翻訳ボタン**（`translate-page`、Web タブだけ）: Chrome の「ページを翻訳」は WebView2 に無いので、代わりに Google 翻訳のプロキシで開き直します（`state.js` の `translatedURL`）。ホスト名のドットをハイフンに（元のハイフンは `--` に）して `.translate.goog` を付け、`_x_tr_sl=auto`・`_x_tr_tl`・`_x_tr_hl`（表示言語: ja / en）を付けます。翻訳中はボタンが点灯し、もう一度押すと元の URL に戻します（`originalURL`。`_x_tr_*` を外してホスト名を戻す）。プロキシは別オリジンなので、ログインが要るページや tarkov.dev の Remote Control には向きません。タスクのサイト選択は翻訳前の URL で判定します（`sitesForURL`）。
+- **翻訳ボタン**（`translate-page`、Web タブだけ）: 翻訳した Fandom のページでは右側のサインアップ欄（`.page__right-rail`）を `sites.js` で隠します（Windows と Mac）。Chrome の「ページを翻訳」は WebView2 に無いので、代わりに Google 翻訳のプロキシで開き直します（`state.js` の `translatedURL`）。ホスト名のドットをハイフンに（元のハイフンは `--` に）して `.translate.goog` を付け、`_x_tr_sl=auto`・`_x_tr_tl`・`_x_tr_hl`（表示言語: ja / en）を付けます。翻訳中はボタンが点灯し、もう一度押すと元の URL に戻します（`originalURL`。`_x_tr_*` を外してホスト名を戻す）。プロキシは別オリジンなので、ログインが要るページや tarkov.dev の Remote Control には向きません。タスクのサイト選択は翻訳前の URL で判定します（`sitesForURL`）。
 - 設定 → タスク の「公式 Wiki（英語）を翻訳して開く」（`translateWiki`、`browser.json`）をオンにすると、タスク検出で開く公式 Wiki のページを最初から翻訳版で開きます（`receiveTask`）。日本語 Wiki と tarkov.dev には掛かりません。
 - 戻る・進むのボタンは、ナビゲーションイベントの `canBack` / `canForward` に合わせて有効・無効が切り替わります。
 - 再読み込みは Ctrl+Shift+R と同じくキャッシュを無視します。DevTools プロトコルの `Page.reload`（`ignoreCache: true`）を使い、失敗した場合だけ通常の再読み込みになります（`browser_tabs.go` の `BrowserCommand`）。キャッシュが壊れたときも再読み込みで回復させるためです。
@@ -352,7 +352,7 @@ Web ページのツールバー右側のアイコン（翻訳、スナップノ�
   - WebKit はリストの版（内容のハッシュ）ごとにコンパイルしたものを保存し、同じ版なら次の起動ではすぐ使います。古い版は消します。要素非表示を WebKit が受け付けなかったときは、ネットワークのルールだけでコンパイルし直します。
   - アプリが Blocker を渡した時点（`SetContentBlocker` → `blockerSet`）で始め、リストが更新されたとき・ON/OFF を変えたときは、Blocker の `OnChange` で付け直します。
   - うまく効かないときは、MAYAK のログの「Ad blocking ready」（リストの読み込み）と、macOS のコンソールの「MAYAK: content blocker」（WebKit がコンパイルを断ったとき）を見ます。
-  - Windows の `collapse.js`（ブロックした跡を詰める）はありません。
+  - 要素非表示は Windows と同じく `DOMContentLoaded` でも CSS（`--rl` の印つき）として挿入し、`collapse.js` が隠した広告のまわりの空いた枠を詰めます。タブは `collapse.js` を `WKUserScript` で読み込み、`DOMContentLoaded` で `mayakAdblock` のメッセージを送ると、Go（`mayakBrowserCosmetic`）がそのページの CSS を返します。ブロックした画像・iframe の通知は WebKit から来ないので、それだけで詰めることはしません。
 
 ## ネイティブビュー
 

@@ -3,24 +3,12 @@
 package browserview
 
 import (
-	_ "embed"
 	"encoding/json"
 
 	"github.com/local/mayak/internal/adblock"
 	"github.com/wailsapp/go-webview2/pkg/edge"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
-
-// collapseScript hides blocked elements and the empty slots they leave.
-//
-//go:embed collapse.js
-var collapseScript string
-
-// cosmeticScript adds the element hiding stylesheet once per document.
-const cosmeticScript = `(css=>{const id="mayak-cosmetic";if(document.getElementById(id))return;
-const style=document.createElement("style");style.id=id;style.textContent=css;
-(document.head||document.documentElement).appendChild(style);
-if(window.__mayakTidy)window.__mayakTidy();})`
 
 var resourceKinds = map[edge.COREWEBVIEW2_WEB_RESOURCE_CONTEXT]string{
 	edge.COREWEBVIEW2_WEB_RESOURCE_CONTEXT_STYLESHEET:       adblock.KindStylesheet,
@@ -127,6 +115,5 @@ func (f *tabFilter) contentLoaded() {
 	if css == "" {
 		return
 	}
-	data, _ := json.Marshal(css)
-	_ = f.chromium.ExecuteScript(cosmeticScript + "(" + string(data) + ")")
+	_ = f.chromium.ExecuteScript(cosmeticCall(css))
 }

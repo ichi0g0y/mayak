@@ -15,7 +15,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - The map pens' lines grow and shrink with the map's zoom, so writing drawn close up keeps its shape for a squadmate seeing it from afar; the squad pen's position goes twenty times a second and glides, and the squad pen is put down after three minutes unused.
 - "Look here": the crosshair button on the map shares the view shown with the squad; pressing it brings up the same map, floor, place and zoom, with a ring where it points.
 - The squad code is typed into boxes of one character, as the pairing code is (no hyphen to type); the eighth joins.
-- Ad blocking works on a Mac too: the same filter lists as on Windows (EasyList, EasyPrivacy, AdGuard Japanese) become a WebKit content blocker. After the first start or a list update it takes a moment to be ready.
+- Ad blocking works on a Mac too: the same filter lists as on Windows (EasyList, EasyPrivacy, AdGuard Japanese) become a WebKit content blocker. After the first start or a list update it takes a moment to be ready. As on Windows, the empty space a hidden ad leaves is closed up.
 
 ### Improved
 
@@ -35,6 +35,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 ### Fixed
 - Closing settings did nothing when there was no tab to go back to; a new tab opens instead.
 - On a Mac, a sign-in popup ("Sign in with Google" on Fandom) did not open; it opens in a small window, as on Windows.
+- On a Mac, the translated official wiki showed Fandom's right rail (a "New to Fandom?" card) and the article was narrow; the rail is hidden, as on Windows.
 - A Client (another PC) could show the bosses, the Goons and the map's markers of another game mode than its Host's; it follows the Host's game mode.
 - With a map pen up, right-drag stuttered (more so zoomed in) or sometimes stopped moving the map (after switching windows with Space held, for one); your own squad lines no longer show your name under the pointer.
 

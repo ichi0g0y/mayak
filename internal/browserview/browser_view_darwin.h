@@ -3,3 +3,5 @@ void *rl_browser_new(void *context, uintptr_t handle);
 void rl_browser_action(void *view, const char *command, const char *url, int left, int top, int right, int bottom);
 void rl_browser_rules(const char *all, const char *network, const char *version);
 void rl_browser_rules_enabled(int on);
+void rl_browser_adblock_script(const char *script);
+void rl_browser_site_script(const char *script);

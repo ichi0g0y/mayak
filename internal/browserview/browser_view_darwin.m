@@ -2,6 +2,7 @@
 #import <WebKit/WebKit.h>
 #import "browser_view_darwin.h"
 extern void mayakBrowserEvent(uintptr_t, char *, char *, int, int, int);
+extern char *mayakBrowserCosmetic(uintptr_t, char *);
 static BOOL validURL(NSURL *url){return url.host.length>0 && ([url.scheme isEqualToString:@"https"]||[url.scheme isEqualToString:@"http"]) && ![url.host.lowercaseString isEqualToString:@"wails.localhost"] && !url.user && !url.password;}
 // A window.open with a size or position is a dialog that reports back to its
 // opener (Google sign-in posts its result to window.opener and closes), as on
@@ -44,7 +45,7 @@ static WKWebView *mayakOpenPopup(WKWebViewConfiguration *configuration,WKWindowF
  [mayakPopups addObject:popup];[popup release];[view release];[window release];
  return view;
 }
-@interface MayakBrowserTab : NSObject <WKNavigationDelegate,WKUIDelegate>
+@interface MayakBrowserTab : NSObject <WKNavigationDelegate,WKUIDelegate,WKScriptMessageHandler>
 @property(retain) WKWebView *view;
 @property(retain) NSArray *constraints;
 @property(assign) uintptr_t handle;
@@ -52,6 +53,13 @@ static WKWebView *mayakOpenPopup(WKWebViewConfiguration *configuration,WKWindowF
 @implementation MayakBrowserTab
 -(void)notify:(BOOL)popup url:(NSURL*)url{
  if(url)mayakBrowserEvent(self.handle,(char*)url.absoluteString.UTF8String,(char*)(self.view.title?:@"").UTF8String,self.view.canGoBack,self.view.canGoForward,popup);
+}
+// The page's DOM is there (mayakAdblockScript): add the element hiding
+// stylesheet, which marks what it hides so collapse.js can close the slots.
+-(void)userContentController:(WKUserContentController*)controller didReceiveScriptMessage:(WKScriptMessage*)message{
+ if(!message.frameInfo.isMainFrame||!self.view.URL)return;
+ char *script=mayakBrowserCosmetic(self.handle,(char*)self.view.URL.absoluteString.UTF8String);
+ if(script){[self.view evaluateJavaScript:[NSString stringWithUTF8String:script] completionHandler:nil];free(script);}
 }
 -(void)observeValueForKeyPath:(NSString*)path ofObject:(id)object change:(NSDictionary*)change context:(void*)context{[self notify:NO url:self.view.URL];}
 -(void)webView:(WKWebView*)view decidePolicyForNavigationAction:(WKNavigationAction*)action decisionHandler:(void (^)(WKNavigationActionPolicy))handler{
@@ -110,6 +118,29 @@ void rl_browser_rules_enabled(int on){
  dispatch_async(dispatch_get_main_queue(),^{if(mayakRulesOn!=(on!=0)){mayakRulesOn=on!=0;mayakApplyAll();}});
 }
 static void onMain(void (^block)(void)){if([NSThread isMainThread])block();else dispatch_sync(dispatch_get_main_queue(),block);}
+// The scripts each tab made afterwards runs before the page's own. They are
+// set from any goroutine (the app sets the blocker while it starts, before
+// the main thread runs its loop) and read on the main thread.
+static NSString *mayakAdblockScript,*mayakSiteScript;
+static id mayakScriptLock(void){static NSObject *lock;static dispatch_once_t once;dispatch_once(&once,^{lock=[[NSObject alloc]init];});return lock;}
+// sites.js, in every frame, the ad blocker on or off, as on Windows
+// (view_windows.go).
+void rl_browser_site_script(const char *script){
+ @autoreleasepool{
+  NSString *text=[NSString stringWithUTF8String:script];
+  @synchronized(mayakScriptLock()){[mayakSiteScript release];mayakSiteScript=[text retain];}
+ }
+}
+// collapse.js, as on Windows (filter_windows.go). A content blocker hides
+// elements but does not say which, so at DOMContentLoaded the tab asks Go for
+// the page's element hiding stylesheet (mayakBrowserCosmetic), which marks
+// them.
+void rl_browser_adblock_script(const char *script){
+ @autoreleasepool{
+  NSString *text=[[NSString stringWithUTF8String:script] stringByAppendingString:@"\n;(()=>{const h=window.webkit.messageHandlers.mayakAdblock;document.addEventListener('DOMContentLoaded',()=>h.postMessage(0),{once:true});})();"];
+  @synchronized(mayakScriptLock()){[mayakAdblockScript release];mayakAdblockScript=[text retain];}
+ }
+}
 void *rl_browser_new(void *ptr,uintptr_t handle){
  __block MayakBrowserTab *tab=nil;
  onMain(^{
@@ -118,8 +149,20 @@ void *rl_browser_new(void *ptr,uintptr_t handle){
   WKWebViewConfiguration *config=[[WKWebViewConfiguration alloc]init];
   // A new content controller contains no Wails script/message handlers.
   config.websiteDataStore=[WKWebsiteDataStore defaultDataStore];
+  tab=[[MayakBrowserTab alloc]init];
+  NSString *siteScript,*adblockScript;
+  @synchronized(mayakScriptLock()){siteScript=[[mayakSiteScript retain]autorelease];adblockScript=[[mayakAdblockScript retain]autorelease];}
+  if(siteScript){
+   WKUserScript *site=[[WKUserScript alloc]initWithSource:siteScript injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
+   [config.userContentController addUserScript:site];[site release];
+  }
+  if(adblockScript){
+   WKUserScript *script=[[WKUserScript alloc]initWithSource:adblockScript injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES];
+   [config.userContentController addUserScript:script];[script release];
+   [config.userContentController addScriptMessageHandler:tab name:@"mayakAdblock"];
+  }
   WKWebView *view=[[WKWebView alloc]initWithFrame:NSZeroRect configuration:config];[config release];
-  tab=[[MayakBrowserTab alloc]init];tab.view=view;tab.handle=handle;view.navigationDelegate=tab;view.UIDelegate=tab;
+  tab.view=view;tab.handle=handle;view.navigationDelegate=tab;view.UIDelegate=tab;
   view.hidden=YES;view.translatesAutoresizingMaskIntoConstraints=NO;
   [content addSubview:view];
   tab.constraints=@[[view.leadingAnchor constraintEqualToAnchor:content.leadingAnchor], [view.topAnchor constraintEqualToAnchor:content.topAnchor], [view.trailingAnchor constraintEqualToAnchor:content.trailingAnchor], [view.bottomAnchor constraintEqualToAnchor:content.bottomAnchor]];
@@ -142,6 +185,8 @@ void rl_browser_action(void *ptr,const char *rawCommand,const char *rawURL,int l
   else if([command isEqualToString:@"reload"])[view reload];
   else if([command isEqualToString:@"close"]){
    view.navigationDelegate=nil;view.UIDelegate=nil;
+   // The content controller holds the tab as its message handler.
+   [view.configuration.userContentController removeScriptMessageHandlerForName:@"mayakAdblock"];
    for(NSString *key in @[@"URL",@"title",@"canGoBack",@"canGoForward"])[view removeObserver:tab forKeyPath:key];
    [view stopLoading];[NSLayoutConstraint deactivateConstraints:tab.constraints];[view removeFromSuperview];[mayakTabs removeObject:tab];[tab release];
   }

@@ -1,4 +1,5 @@
-// Runs in every tab before the page's own scripts (see filter_windows.go).
+// Runs in every tab before the page's own scripts (see filter_windows.go,
+// and mayakAdblockScript in browser_view_darwin.m).
 // Hiding an ad often leaves its slot behind: wrappers that reserve a height,
 // margins, an "Advertisement" label. Starting from the elements MAYAK hid,
 // this collapses each ancestor that has nothing visible left in it.

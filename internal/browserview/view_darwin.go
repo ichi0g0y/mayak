@@ -40,7 +40,8 @@ func blockerSet(b ContentBlocker) {
 	}
 }
 
-// watchRules hands b's rules to WebKit, and again when they change.
+// watchRules hands b's rules to WebKit, and again when they change, and
+// makes the tabs created afterwards run collapseScript.
 func watchRules(b ContentBlocker) {
 	w, ok := b.(webkitBlocker)
 	if !ok {
@@ -53,6 +54,9 @@ func watchRules(b ContentBlocker) {
 	if seen {
 		return
 	}
+	cs := C.CString(collapseScript)
+	defer C.free(unsafe.Pointer(cs))
+	C.rl_browser_adblock_script(cs)
 	w.OnChange(func() { applyRules(w) })
 	go applyRules(w)
 }
@@ -82,6 +86,17 @@ func applyRules(w webkitBlocker) {
 	C.rl_browser_rules_enabled(1)
 }
 
+var siteScriptOnce sync.Once
+
+// setSiteScript makes the tabs created afterwards run siteScript.
+func setSiteScript() {
+	siteScriptOnce.Do(func() {
+		cs := C.CString(siteScript)
+		defer C.free(unsafe.Pointer(cs))
+		C.rl_browser_site_script(cs)
+	})
+}
+
 func (m *Manager) contentBlocker() ContentBlocker {
 	m.scriptMu.Lock()
 	defer m.scriptMu.Unlock()
@@ -106,6 +121,22 @@ type browserCallback struct {
 func mayakBrowserEvent(h C.uintptr_t, u, t *C.char, back, forward, popup C.int) {
 	c := cgo.Handle(h).Value().(browserCallback)
 	c.manager.notify(Event{ID: c.id, URL: C.GoString(u), Title: C.GoString(t), CanBack: back != 0, CanForward: forward != 0, Popup: popup != 0})
+}
+// mayakBrowserCosmetic is the script that adds the element hiding stylesheet
+// for page u, or NULL for none. The caller frees it.
+//
+//export mayakBrowserCosmetic
+func mayakBrowserCosmetic(h C.uintptr_t, u *C.char) *C.char {
+	c := cgo.Handle(h).Value().(browserCallback)
+	b := c.manager.contentBlocker()
+	if b == nil {
+		return nil
+	}
+	css := b.CosmeticCSS(C.GoString(u))
+	if css == "" {
+		return nil
+	}
+	return C.CString(cosmeticCall(css))
 }
 func (v *nativeView) action(command, url string, left, top, right, bottom int) {
 	c, u := C.CString(command), C.CString(url)
@@ -134,6 +165,10 @@ func (m *Manager) command(command string, o Options) error {
 			if m.window.NativeWindow() == nil {
 				return fmt.Errorf("native window is not ready")
 			}
+			setSiteScript()
+			if b := m.contentBlocker(); b != nil {
+				watchRules(b)
+			}
 			h := cgo.NewHandle(browserCallback{m, o.ID})
 			ptr := C.rl_browser_new(m.window.NativeWindow(), C.uintptr_t(h))
 			if ptr == nil {
@@ -142,9 +177,6 @@ func (m *Manager) command(command string, o Options) error {
 			}
 			v = &nativeView{ptr, h}
 			views[o.ID] = v
-			if b := m.contentBlocker(); b != nil {
-				watchRules(b)
-			}
 			v.action("navigate", o.URL, 0, 0, 0, 0)
 		}
 		if command == "show" || command == "hideAll" {
