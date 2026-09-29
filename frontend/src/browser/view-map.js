@@ -806,8 +806,8 @@ async function snapMap() {
     const image = await domToPng(el, {
       scale,
       backgroundColor: getComputedStyle(el).backgroundColor,
-      // Your lines and the squad's go in the note's first two layers
-      // instead, to stay editable.
+      // The lines (the squad's, yours over them) go in the note's first
+      // layer instead, to stay editable; the others are left to write on.
       filter: (node) =>
         !(
           node instanceof Element &&
@@ -822,7 +822,7 @@ async function snapMap() {
       .filter(Boolean)
       .join(' · ')
     const layer = (strokes) => ({ visible: true, strokes })
-    const drawing = { v: 2, base: { visible: true }, layers: [layer(snapStrokes(scale)), layer(squadSnapStrokes(scale)), layer([])] }
+    const drawing = { v: 2, base: { visible: true }, layers: [layer([...squadSnapStrokes(scale), ...snapStrokes(scale)]), layer([]), layer([])] }
     await action('snapNew', { image, title, drawing })
   } catch (e) {
     await action('mapSnapFailed', String(e?.message || e))

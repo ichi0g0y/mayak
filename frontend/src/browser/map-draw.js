@@ -477,8 +477,7 @@ function eraseAt(p) {
 
 // snapStrokes is the lines of the floor shown as a snap note's strokes, in
 // the pixels of the picture taken of the map (scale: its pixels per screen
-// pixel): your own pen's for the note's first layer, the squad's for its
-// second.
+// pixel), your own pen's and the squad's, for the note's first layer.
 function toStrokes(list, scale) {
   const px = (v) => Math.round(v * scale * 10) / 10
   return list.map((l) => ({ c: l.c, w: px(l.w), p: onScreen(l).map(([x, y]) => [px(x), px(y)]) }))
