@@ -132,6 +132,7 @@ export const words = {
     squadLookHere: '{map} にピン',
     squadSharesEveryone: '全員の共有を表示',
     squadColorCustom: '好きな色を選ぶ',
+    squadMemberMore: 'この人が共有したこの種類のものをすべて見る',
     mapSquadFit: '分隊を自動で表示',
     mapSquadFitOn:
       '分隊を自動で表示する（誰かの位置が更新されたとき、自分の出撃マップなら、そこにいる分隊全員が入るように地図を合わせる）',
@@ -814,6 +815,7 @@ export const words = {
     squadLookHere: 'A pin on {map}',
     squadSharesEveryone: 'Show everyone’s shares',
     squadColorCustom: 'Pick any colour',
+    squadMemberMore: 'See all of this kind they shared',
     mapSquadFit: 'Follow the squad',
     mapSquadFitOn:
       'Follow the squad (when someone’s position updates on your raid’s map, the map takes in everyone there)',

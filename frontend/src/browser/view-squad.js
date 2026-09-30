@@ -66,9 +66,9 @@ function memberLine(m) {
 }
 // The sidebar's members: a colour dot and a name each; pressing one shows
 // them on the map (their map and floor, at the zoom the map has, with rings
-// in their colour: view-map.js squadFocus). Under it, the latest thing they
-// shared or did (pressed, it opens as on the squad's page), else where they
-// are. The count of what they shared unread opens the squad's page on
+// in their colour: view-map.js squadFocus). Under it, a small tree of the
+// latest page, snap note and pin they shared (pressed, each opens as on the
+// squad's page), else where they are. The count of what they shared unread opens the squad's page on
 // their shares alone.
 function memberChip(m) {
   const fade = m.map && m.pos ? freshness(m.at) : 'gone'
@@ -83,9 +83,28 @@ function memberChip(m) {
   const badge = unread
     ? `<button class="squad-chip-count" data-action="squadMemberShares" data-id="${esc(m.key)}" title="${esc(t('squadMemberUnread'))}">${unread}</button>`
     : ''
-  const latest = theirs[0]
-  const under = latest
-    ? `<button class="squad-chip-latest ${latest.seen ? '' : 'unseen'}" data-action="squadShareOpen" data-id="${esc(latest.id)}" title="${esc(shareTitle(latest))}">${icon(shareIcons[latest.kind] || 'globe')}<span>${esc(shareTitle(latest))}</span><small>${esc(age(new Date(latest.at).toISOString(), state.language))}</small></button>`
+  // The latest page, snap note and pin they shared, newest first.
+  const latest = ['tab', 'snap', 'view']
+    .map((kind) => theirs.find((x) => x.kind === kind))
+    .filter(Boolean)
+    .sort((a, b) => b.at - a.at)
+  // Each with how many more of its kind they shared: pressed, the squad's
+  // page shows their shares of that kind.
+  const more = (x) => {
+    const n = theirs.filter((y) => y.kind === x.kind).length - 1
+    return n > 0
+      ? `<button class="squad-chip-more" data-action="squadMemberShares" data-id="${esc(`${m.key}|${x.kind}`)}" title="${esc(t('squadMemberMore'))}">+${n}</button>`
+      : ''
+  }
+  const row = (x) =>
+    `<div class="squad-chip-item"><button class="squad-chip-latest ${x.seen ? '' : 'unseen'}" data-action="squadShareOpen" data-id="${esc(x.id)}" title="${esc(
+      x.kind === 'tab'
+        ? `${shareTitle(x)}
+${x.url}`
+        : shareTitle(x),
+    )}">${icon(shareIcons[x.kind] || 'globe')}<span>${esc(shareTitle(x))}</span><small>${esc(age(new Date(x.at).toISOString(), state.language))}</small></button>${more(x)}</div>`
+  const under = latest.length
+    ? `<div class="squad-chip-items">${latest.map(row).join('')}</div>`
     : `<span class="squad-chip-where">${esc(whereOf(m))}</span>`
   return `<li class="squad-chip ${fade}"><div class="squad-chip-row">${head}${badge}</div>${under}</li>`
 }
@@ -292,9 +311,11 @@ clickHandlers.push(async (type, id) => {
     return true
   }
   // A member's count: the squad's page on their shares alone.
+  // A member's count (all they shared) or a row's more (that kind alone).
   if (type === 'squadMemberShares') {
-    shareBy = id || ''
-    shareFilter = 'all'
+    const [key, kind] = String(id || '').split('|')
+    shareBy = key || ''
+    shareFilter = kind || 'all'
     void action('squadPage')
     return true
   }
