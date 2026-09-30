@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   mapSettingsOf,
+  squadColorOf,
   assignColors,
   squadColors,
   autoMap,
@@ -276,4 +277,15 @@ test('the arrow effect in the map settings is one known, in a #rrggbb colour', (
   const bad = mapSettingsOf({ markerEffect: 'spin', markerColor: 'red', markerShape: 'toString' })
   assert.deepEqual([bad.markerEffect, bad.markerColor, bad.markerShape], ['none', '', 'arrow'])
   assert.equal(mapSettingsOf({ markerShape: 'dot' }).markerShape, 'dot')
+})
+
+test('a squad colour is any #rrggbb, the first to choose it keeps it', () => {
+  assert.equal(squadColorOf('#A1B2C3'), '#a1b2c3')
+  assert.equal(squadColorOf('red'), '')
+  const given = assignColors([
+    { id: '1', key: 'a'.repeat(32), name: 'Ann', color: '#123abc' },
+    { id: '2', key: 'b'.repeat(32), name: 'Bob', color: '#123ABC' },
+  ])
+  assert.equal(given.get('1'), '#123abc')
+  assert.notEqual(given.get('2'), '#123abc')
 })

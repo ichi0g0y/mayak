@@ -6,7 +6,7 @@ function randomUUID() {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`
 }
 import { clampItemPanel, clampItemPanelHeight } from './item.js'
-import { defaultMapSettings, hiddenOf, mapSettingsOf, squadColors } from './map-geo.js'
+import { defaultMapSettings, hiddenOf, mapSettingsOf, squadColorOf, squadColors } from './map-geo.js'
 const sites = ['tarkov-dev', 'official-wiki', 'japanese-wiki']
 function webURL(value) {
   try {
@@ -308,7 +308,7 @@ function restore(raw = {}) {
   state.mapSettings = mapSettingsOf(raw.mapSettings)
   state.mapCollapsed = hiddenOf(raw.mapCollapsed)
   state.squadName = typeof raw.squadName === 'string' ? raw.squadName.trim().slice(0, 24) : ''
-  state.squadColor = squadColors.includes(raw.squadColor) ? raw.squadColor : ''
+  state.squadColor = squadColorOf(raw.squadColor)
   state.squadCode = typeof raw.squadCode === 'string' && squadCodePattern.test(raw.squadCode) ? raw.squadCode : ''
   state.squadRecent = recentSquadsOf(raw.squadRecent)
   // The LAN receiving mode ("remote") is gone; a browser saved in it starts

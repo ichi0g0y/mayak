@@ -84,6 +84,9 @@ export const squadKey = (m) => (m.me ? 'me' : m.id)
 // ID) has it, else the one their name gives when it is free,
 // else the first free one. Every member works it out the same from the same
 // reports; a squad has at most as many players as colours.
+// squadColorOf is a colour a member may choose: any #rrggbb (lower-cased),
+// else '' (automatic).
+export const squadColorOf = (c) => (typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c) ? c.toLowerCase() : '')
 export function assignColors(members) {
   const order = (m) => m.key || m.id || ''
   const list = (members || [])
@@ -91,11 +94,14 @@ export function assignColors(members) {
     .sort((a, b) => (order(a) < order(b) ? -1 : order(a) > order(b) ? 1 : 0))
   const out = new Map()
   const used = new Set()
-  for (const m of list)
-    if (squadColors.includes(m.color) && !used.has(m.color)) {
-      out.set(squadKey(m), m.color)
-      used.add(m.color)
+  // A colour chosen (any, the first to choose it keeps it), then the name's.
+  for (const m of list) {
+    const chosen = squadColorOf(m.color)
+    if (chosen && !used.has(chosen)) {
+      out.set(squadKey(m), chosen)
+      used.add(chosen)
     }
+  }
   for (const m of list) {
     if (out.has(squadKey(m))) continue
     let c = memberColor(m.name)

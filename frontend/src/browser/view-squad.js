@@ -171,8 +171,21 @@ function colorPicker() {
     return `<button type="button" class="squad-color ${chosen === c ? 'on' : ''}" data-action="squadColorPick" data-id="${c}" style="--swatch:${c}" title="${esc(label)}" aria-label="${esc(label)}" aria-pressed="${chosen === c}" ${holder && chosen !== c ? 'disabled' : ''}></button>`
   }
   const busy = s && chosen && !me?.viewer && given.get('me') && given.get('me') !== chosen
-  return `<div class="squad-colors"><span class="squad-colors-label">${esc(t('squadColor'))}</span><div class="squad-color-row"><button type="button" class="squad-color-auto ${chosen ? '' : 'on'}" data-action="squadColorPick" data-id="" aria-pressed="${!chosen}">${esc(t('squadColorAuto'))}</button>${squadColors.map(swatch).join('')}</div><p class="hint">${esc(t(busy ? 'squadColorBusy' : 'squadColorHelp'))}</p></div>`
+  return `<div class="squad-colors"><span class="squad-colors-label">${esc(t('squadColor'))}</span><div class="squad-color-row"><button type="button" class="squad-color-auto ${chosen ? '' : 'on'}" data-action="squadColorPick" data-id="" aria-pressed="${!chosen}">${esc(t('squadColorAuto'))}</button>${squadColors.map(swatch).join('')}${custom(chosen && !squadColors.includes(chosen) ? chosen : '', holders)}</div><p class="hint">${esc(t(busy ? 'squadColorBusy' : 'squadColorHelp'))}</p></div>`
 }
+
+// custom is the last swatch: any colour, from the system's colour picker
+// (its colour once chosen; a colour someone else has is taken by them).
+function custom(chosen, holders) {
+  const holder = chosen && holders.get(chosen)
+  const label = holder ? t('squadColorTaken').replace('{name}', holder) : t('squadColorCustom')
+  return `<label class="squad-color squad-color-custom ${chosen ? 'on' : ''}" style="--swatch:${chosen || 'transparent'}" title="${esc(label)}">${chosen ? '' : icon('plus')}<input type="color" data-squad-color value="${esc(chosen || '#ffffff')}" aria-label="${esc(t('squadColorCustom'))}"></label>`
+}
+// A colour chosen in the picker is taken when it closes.
+document.addEventListener('change', (event) => {
+  const el = /** @type {HTMLInputElement} */ (event.target)
+  if (el?.dataset?.squadColor !== undefined && el.matches?.('input[type=color]')) void action('squadColor', el.value)
+})
 
 // The squad's page: your profile (the name and colour the squad sees, kept
 // whether in a squad or not), then the squad: creating or joining one, or

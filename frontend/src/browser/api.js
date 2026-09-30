@@ -32,7 +32,7 @@ import {
   cycleTab,
 } from './state.js'
 import { encode, decode, MAX_AGE, PAIR_RELAY } from './peer-code.js'
-import { hiddenOf, mapSettingsOf, squadColors } from './map-geo.js'
+import { hiddenOf, mapSettingsOf, squadColorOf } from './map-geo.js'
 import { t } from './words.js'
 import './transport.js'
 
@@ -793,7 +793,7 @@ async function receiveHost({ mode }) {
 async function receiveSquad({ code, name, initial, color }) {
   if (!squad.available) return
   // The squad colour follows the other PC's too (the Host reports it).
-  const recolor = color !== undefined && color !== state.squadColor && (color === '' || squadColors.includes(color))
+  const recolor = color !== undefined && color !== state.squadColor && (color === '' || squadColorOf(color) === color)
   if (recolor) {
     state.squadColor = color
     await go.SquadSetColor(color)
@@ -1435,7 +1435,7 @@ async function perform(type, data) {
       void loadSquadMaps()
       break
     case 'squadColor':
-      state.squadColor = squadColors.includes(data) ? data : ''
+      state.squadColor = squadColorOf(data)
       await go.SquadSetColor(state.squadColor)
       shareSquad()
       break
