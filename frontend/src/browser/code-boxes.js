@@ -2,7 +2,7 @@ import { esc } from './shell-core.js'
 
 // Codes typed one character a box, as a passcode is: the pairing code (eight
 // digits) and the squad code (eight letters and digits). Two groups of four
-// boxes with a gap between (so the hyphen of ABCD-1234 is never typed); the
+// boxes with the hyphen of ABCD-1234 shown between (never typed); the
 // typing moves on by itself, Backspace goes back, the arrows move, a paste
 // fills the boxes from the one it lands in, and the last character hands
 // the code over. A group is named; its owner says what a character may be
@@ -24,7 +24,7 @@ export function codeBoxes(name, value = '', { cls = '', label = '', numeric = fa
     `<input class="code-box ${cls}" data-code-box="${esc(name)}" data-i="${i}" ${numeric ? 'inputmode="numeric"' : ''} autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="1" aria-label="${esc(label)} ${i + 1}" value="${esc(code[i] || '')}">`
   const half = Math.ceil(size / 2)
   const all = Array.from({ length: size }, (_, i) => i)
-  return `<span class="code-boxes">${all.slice(0, half).map(box).join('')}<span class="code-gap"></span>${all.slice(half).map(box).join('')}</span>`
+  return `<span class="code-boxes">${all.slice(0, half).map(box).join('')}<span class="code-gap" aria-hidden="true">-</span>${all.slice(half).map(box).join('')}</span>`
 }
 
 const boxesOf = (name) =>

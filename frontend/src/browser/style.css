@@ -799,10 +799,10 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .code-boxes-field{align-items:center}
 .code-boxes{display:flex;align-items:center;gap:6px}
 .code-box{width:40px!important;height:48px!important;padding:0;text-align:center;text-transform:uppercase;font:600 22px/1 ui-monospace,"Cascadia Code",Consolas,monospace}
-.code-gap{width:10px}
+.code-gap{width:14px;text-align:center;color:var(--muted);font:600 22px/1 ui-monospace,"Cascadia Code",Consolas,monospace;user-select:none}
 .squad-join .code-box{width:34px!important;height:40px!important;font-size:18px}
 .squad-join .code-boxes{gap:4px}
-.squad-join .code-gap{width:6px}
+.squad-join .code-gap{width:10px;font-size:18px}
 .code-boxes-field>.reveal{width:40px;height:48px;margin-left:4px;border:1px solid var(--border);border-radius:8px}
 .code-boxes-field>.reveal .icon{width:20px;height:20px}
 .squad-join .code-boxes-field>.reveal{width:34px;height:40px}
