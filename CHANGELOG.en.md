@@ -14,6 +14,7 @@ These changes are planned for the next version.
 
 ### Fixed
 
+- The map's squad column (squad pen, pin, follow the squad) looked washed over with a pale squad colour while its buttons could not be used.
 - A Client's settings drifted from its Host's. The language, theme, clock, how tasks open, translating the wiki, the bosses' mode, bookmarks, the squad display name and the task site now take the Host's when they connect, and a change on either PC is made on the other (a task site chosen on a Client becomes the Host's). With two or more Clients, one's change reaches the others. A Client's game mode badge shows the Host's.
 - On a Client (a Mac say), the map brought forward by the Host stayed at "Loading" until it was opened again from another tab.
 - A Client's map had its own filters and settings, not the Host's: it now takes the Host's when they connect, and a change on either PC is made on the other too.

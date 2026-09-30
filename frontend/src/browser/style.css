@@ -1043,7 +1043,7 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-rail{position:relative;display:flex;flex-direction:column;overflow:visible}
 /* The squad's column: on a ground of the squad colour (its frame and the
    mark at its head), the buttons sit as one rounded block. */
-.map-rail-squad{border-color:var(--c);border-radius:8px;overflow:hidden;background:var(--c)}
+.map-rail-squad{border-color:var(--c);border-radius:8px;overflow:hidden;background:var(--surface)}
 .map-rail-squad .map-rail-head+.map-rail-button{border-radius:6px 6px 0 0}
 .map-rail-squad .map-rail-button:last-child{border-radius:0 0 6px 6px}
 .map-rail-head{display:flex;align-items:center;justify-content:center;height:16px;background:var(--c);color:#16181d}
@@ -1052,7 +1052,9 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-rail-button:first-child{border-radius:8px 8px 0 0}
 .map-rail-button:last-child{border-bottom:0;border-radius:0 0 8px 8px}
 .map-rail-button:hover{background:var(--hover)}
-.map-rail-button:disabled{background:var(--surface);color:var(--muted);cursor:default}
+/* Unlike other buttons, not see-through while off: over the squad's column
+   its colour showed through, a pale wash over the buttons. */
+.map-rail-button:disabled{opacity:1;background:var(--surface);color:var(--muted);cursor:default}
 .map-rail-button.selected{background:var(--selected);color:var(--accent)}
 .map-rail-button .icon{width:17px;height:17px}
 .map-rail-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
