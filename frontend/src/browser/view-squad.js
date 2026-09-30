@@ -226,11 +226,19 @@ function sharesCard() {
   const chip = (id, label) =>
     `<button data-action="squadShareFilter" data-id="${id}" class="${shareFilter === id ? 'selected' : ''}">${esc(t(label))}</button>`
   const list = shares.filter((s) => (shareFilter === 'all' || s.kind === shareFilter) && (!shareBy || s.by === shareBy))
-  const by = shareBy && shares.find((s) => s.by === shareBy)
-  const who = by
-    ? `<button class="squad-shares-by" data-action="squadSharesAllMembers" title="${esc(t('squadSharesEveryone'))}"><span class="squad-dot" style="--c:${esc(by.c)}"></span>${esc(by.name || '?')}${icon('x')}</button>`
-    : ''
-  return `<section class="panel squad-shares-card"><div class="squad-shares-head"><h2>${esc(t('squadShares'))}</h2>${who}<div class="segmented" role="group">${chip('all', 'squadSharesAll')}${chip('tab', 'squadSharesTabs')}${chip('snap', 'snapNotes')}${chip('view', 'squadSharesView')}${chip('draw', 'squadSharesDraw')}</div></div><p class="hint">${esc(t('squadSharesHint'))}</p>${list.length ? `<ul class="squad-shares">${list.map((s) => shareRow(s, true)).join('')}</ul>` : `<p class="shot-empty">${esc(t('squadSharesEmpty'))}</p>`}</section>`
+  // Who shared: everyone, or one of those who shared something (you too),
+  // when more than one did.
+  const people = []
+  for (const s of shares)
+    if (s.by && !people.some((p) => p.by === s.by))
+      people.push({ by: s.by, name: s.mine ? t('squadYou') : s.name || '?', c: s.c })
+  const person = (by, label, c = '') =>
+    `<button data-action="squadSharesBy" data-id="${esc(by)}" class="${shareBy === by ? 'selected' : ''}" aria-pressed="${shareBy === by}">${c ? `<span class="squad-dot" style="--c:${esc(c)}"></span>` : ''}${esc(label)}</button>`
+  const who =
+    people.length > 1 || shareBy
+      ? `<div class="segmented squad-shares-people" role="group" aria-label="${esc(t('squadSharesPeople'))}">${person('', t('squadSharesEveryone'))}${people.map((p) => person(p.by, p.name, p.c)).join('')}</div>`
+      : ''
+  return `<section class="panel squad-shares-card"><div class="squad-shares-head"><h2>${esc(t('squadShares'))}</h2><div class="segmented" role="group">${chip('all', 'squadSharesAll')}${chip('tab', 'squadSharesTabs')}${chip('snap', 'snapNotes')}${chip('view', 'squadSharesView')}${chip('draw', 'squadSharesDraw')}</div></div>${who}<p class="hint">${esc(t('squadSharesHint'))}</p>${list.length ? `<ul class="squad-shares">${list.map((s) => shareRow(s, true)).join('')}</ul>` : `<p class="shot-empty">${esc(t('squadSharesEmpty'))}</p>`}</section>`
 }
 
 // The sidebar's section: the heading (with how many are in the squad and
@@ -431,8 +439,8 @@ clickHandlers.push(async (type, id, button) => {
     void action('squadPage')
     return true
   }
-  if (type === 'squadSharesAllMembers') {
-    shareBy = ''
+  if (type === 'squadSharesBy') {
+    shareBy = id || ''
     render()
     return true
   }
