@@ -50,7 +50,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - Squads: on start-up or joining again, the squadmates already there no longer go missing from the list until someone else joins or leaves (nightly).
 - Closing settings did nothing when there was no tab to go back to; a new tab opens instead.
 - On a Mac, a sign-in popup ("Sign in with Google" on Fandom) did not open; it opens in a small window, as on Windows.
-- On a Mac, the translated official wiki showed Fandom's right rail (a "New to Fandom?" card) and the article was narrow; the rail is hidden, as on Windows.
+- The official wiki's (Fandom's) right rail is hidden whether the page is translated or not and signed in or not (Windows and Mac): its "New to Fandom?" card left the article narrow.
 - A Client (another PC) could show the bosses, the Goons and the map's markers of another game mode than its Host's; it follows the Host's game mode.
 - With a map pen up, right-drag stuttered (more so zoomed in) or sometimes stopped moving the map (after switching windows with Space held, for one); your own squad lines no longer show your name under the pointer.
 
