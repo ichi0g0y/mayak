@@ -3,7 +3,6 @@ import {
   findMap,
   floorFor,
   found,
-  freshness,
   gameModes,
   iconURL,
   inBounds,
@@ -636,8 +635,6 @@ function drawSquad(map, floor, members) {
   const seen = new Set()
   for (const m of placed(members)) {
     if (findMap(state.squad.maps, m.map)?.key !== map.key) continue
-    const age = freshness(m.at)
-    if (age === 'gone') continue
     const id = m.me ? 'me' : m.id
     seen.add(id)
     const html = squadHTML(m)

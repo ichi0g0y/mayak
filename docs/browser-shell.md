@@ -219,7 +219,7 @@ MAYAK が自分で描く tarkov.dev の地図です。tarkov.dev のマップと
 - **伏せ字**: 分隊ページの分隊コード、参加の入力欄、最近の分隊のコードは、配信やスクリーンショットで漏れないよう「•」で出し、横の目のボタン（`shell-core.js` の `revealButton`、`data-action="reveal"`）で表示します。入力欄は `.masked`（`-webkit-text-security: disc`）で伏せます。表示したものは、もう一度押すかアプリを再起動するまで表示のままです（保存しません）。接続コードと Remote ID も同じです（[settings-and-integrations.md](settings-and-integrations.md)）。
 - **保存**: 表示名 `squadName`、分隊カラー `squadColor`、分隊セクションを畳んだか `squadCollapsed`、隠した層 `mapHidden`、設定 `mapSettings`、畳んだまとまり `mapCollapsed` はブラウザの好み（`browser-preferences.json`）、分隊コード `squadCode` と最近の分隊 `squadRecent` はこの PC（`browser.json`）です（[user-data.md](user-data.md)）。起動時に、保存されたコードの分隊へ入り直します。「分隊を抜ける」でコードを消します。
 - **共有する内容**: 表示名と分隊カラー、レイド中に位置のスクリーンショットを撮ったときのマップ・座標・向き・撮った時刻だけです（[settings-and-integrations.md](settings-and-integrations.md#分隊ルーム)）。レイドが終わると「レイド外」を送ります。位置を送るのは Host（`local`）だけです。Host では、分隊に入っていなくても自分の最後の位置を地図に出します。
-- **印**: 仲間ごとに、名前から決まる色、名前、向きの矢印を出します。自分の印は白い縁取りです。矢印は薄くしません（古い位置でも別の階でも同じ濃さ。古さはサイドバーの何分前かで分かる）。30 分より古い位置は出しません。表示中は 30 秒ごとに描き直します。
+- **印**: 仲間ごとに、名前から決まる色、名前、向きの矢印を出します。自分の印は白い縁取りです。矢印は薄くせず、時間では消しません（古い位置でも別の階でも同じ濃さで出し続ける。古さはサイドバーの何分前かで分かる）。レイドを出ると、その人の位置は本人の報告で消えます。表示中は 30 秒ごとに描き直します。
 - **帰属表示**: 右上に「By: 作者」（maps.json の `author`、無ければ Shebuka。押すと作者のページ）と「CC BY-NC-SA 4.0 · tarkov.dev」を出します。地図の絵には非営利・チート目的禁止の条件があるので、有料の機能の中では使いません。
 
 ### 分隊
