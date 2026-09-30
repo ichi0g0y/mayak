@@ -458,6 +458,12 @@ func (a *App) setErrorIfCurrent(sequence uint64, err error) {
 }
 
 func (a *App) setErrorState(sequence uint64, requireCurrent bool, err error) {
+	// A Remote ID nothing is connected to cannot be sent to: that is no error
+	// (remote.ErrUnreachable).
+	if unreachableOnly(err) {
+		a.addLog("Warn", "Remote", err.Error())
+		return
+	}
 	a.mu.Lock()
 	if requireCurrent && a.analysisSequence.Load() != sequence {
 		a.mu.Unlock()

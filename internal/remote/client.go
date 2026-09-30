@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"sync"
@@ -27,6 +28,11 @@ type Client struct {
 	// Watch on the same ID can tell its own commands from someone else's.
 	onSend func(key string)
 }
+
+// ErrUnreachable marks a failure to connect to tarkov.dev's socket for an ID
+// (the dial or its handshake): nothing is connected there, so nothing could
+// be sent.
+var ErrUnreachable = errors.New("remote control not reachable")
 
 func New(remoteID string) *Client  { return &Client{remoteID: remoteID} }
 func (c *Client) RemoteID() string { return c.remoteID }
@@ -63,7 +69,7 @@ func (c *Client) connectLocked(ctx context.Context) error {
 	h := http.Header{"User-Agent": []string{userAgent()}}
 	conn, _, err := d.DialContext(ctx, u.String(), h)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", ErrUnreachable, err)
 	}
 	c.conn = conn
 	go c.readLoop(conn)

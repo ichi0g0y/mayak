@@ -60,6 +60,25 @@ func (a *App) sendTaskTargets(settings config.Settings, normalizedName string) e
 	return result
 }
 
+// unreachableOnly tells a failure made only of Remote IDs that could not be
+// reached (remote.ErrUnreachable): nothing is connected there, the built-in
+// browser's ID with no tarkov.dev map open or a target not open, which is
+// not worth the error state or the "could not send to the map" alert.
+func unreachableOnly(err error) bool {
+	if err == nil {
+		return false
+	}
+	if joined, ok := err.(interface{ Unwrap() []error }); ok {
+		for _, e := range joined.Unwrap() {
+			if !unreachableOnly(e) {
+				return false
+			}
+		}
+		return true
+	}
+	return errors.Is(err, remote.ErrUnreachable)
+}
+
 func (a *App) runRemoteIfCurrent(sequence uint64, operation func() error) (bool, error) {
 	a.remoteOperationMu.Lock()
 	defer a.remoteOperationMu.Unlock()

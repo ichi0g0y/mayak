@@ -4,9 +4,7 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
-## Nightly
-
-These changes are planned for the next version.
+## v0.1.20 (2026-09-30)
 
 ### Improved
 
@@ -14,6 +12,10 @@ These changes are planned for the next version.
 - While in a squad, the sidebar's squad heading has a leave button (left of the squad page's); pressed twice, it leaves the squad.
 - The failed-task notification (Settings → Sounds, "When a task fails") no longer urges restarting failed tasks each time you are back at the menu: it says a task has failed when one fails in the game, without TarkovTracker too, once for tasks failing together. In Tarkov a failed task rarely needs restarting.
 - The squad code and link code boxes show the hyphen between the 4th and 5th characters (it still need not be typed).
+
+### Fixed
+
+- A position screenshot no longer plays the "could not send to the map" alert or shows an error when no tarkov.dev map is connected: a Remote ID nothing is connected to cannot be sent to, so it is only logged as a warning (a send that fails once connected still alerts).
 
 ## v0.1.19 (2026-09-30)
 

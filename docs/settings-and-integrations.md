@@ -88,7 +88,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `itemSoundEnabled` / `itemSoundPath` | `false` / `""` | アイテムを認識したとき |
 | `itemNotMatchedSoundEnabled` / `itemNotMatchedSoundPath` | `false` / `""` | アイテムの文字は読めたが、該当するアイテムが無いとき |
 | `errorSoundEnabled` / `errorSoundPath` | `true` / `""` | スクリーンショットを解析できなかったとき（OCR・データ取得の失敗） |
-| `remoteErrorSoundEnabled` / `remoteErrorSoundPath` | `true` / `""` | tarkov.dev への送信・接続に失敗したとき |
+| `remoteErrorSoundEnabled` / `remoteErrorSoundPath` | `true` / `""` | tarkov.dev への送信に失敗したとき（ID に接続できないだけのときは鳴らない） |
 | `matchFoundSoundEnabled` / `matchFoundSoundPath` | `true` / `""` | マッチ成立時 |
 | `raidStartSoundEnabled` / `raidStartSoundPath` | `true` / `""` | レイド開始時 |
 | `runThroughSoundEnabled` / `runThroughSoundPath` | `true` / `""` | ランスルー時間が過ぎたとき |
@@ -221,7 +221,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | アイテム認識 | アイテムを認識したとき |
 | アイテムを特定できない | アイテムの文字は読めたが、該当するアイテムが無いとき |
 | スクリーンショットの解析エラー | OCR やデータ取得に失敗したとき |
-| マップ連携のエラー | tarkov.dev への送信・接続に失敗したとき |
+| マップ連携のエラー | tarkov.dev への送信に失敗したとき（ID に接続できないだけのときは鳴らない） |
 | マッチ成立 | ログでマッチ成立を検出したとき |
 | レイド開始 | ログでレイド開始を検出したとき |
 | ランスルー終了 | PvE（設定または自動判定）、またはランスルー判定の対象となるレイドで、開始から `runThroughSeconds` が経過し、まだレイド中のとき |
@@ -283,6 +283,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
   - `map` 役のターゲット: マップと位置を受け取る
   - `tasks` 役のターゲット: タスクを受け取る
 - 内蔵ブラウザで開いた tarkov.dev のマップページ（`/map/…` と `/maps/`。どのタブでも）は `browserRemoteId` で自動接続します。ドキュメントスクリプトが `?connection=<ID>` を付与し、保存するタブの URL からは取り除きます。アドレスに `?connection=` があればその ID を優先します。この ID はマップと位置だけを受け取り、タスクはシェルが自分でタブを開きます。マップの検出そのものは、MAYAK の [マップ](browser-shell.md#マップ) に出ます。
+- ID への接続に失敗しただけ（例: `websocket: bad handshake`）なら、その ID に何もつながっていないというだけなので、警告をログに出すだけです。接続状態をエラーにせず、通知音も鳴らしません。接続したあとの送信の失敗はエラーとして扱います（[tasks-and-maps.md](tasks-and-maps.md#接続の失敗)）。
 - 起動時、`remoteTargets` があれば接続テストをバックグラウンドで実行します。
 - 詳細は [tasks-and-maps.md](tasks-and-maps.md) を参照してください。
 
