@@ -439,7 +439,11 @@ function receiveTask(state, task) {
   // The same page is the same whether it was translated since (the
   // translate button, or Google adding its own _x_tr_ parameters) or has
   // moved to a heading; the tab then stays as it is, translated included.
-  let tab = state.tabs.find((t) => t.kind === 'web' && t.task?.id === task.id && samePage(t.url, url))
+  // A tab showing the page without being the task's (a bookmark, a link)
+  // becomes the task's tab.
+  let tab =
+    state.tabs.find((t) => t.kind === 'web' && t.task?.id === task.id && samePage(t.url, url)) ||
+    state.tabs.find((t) => t.kind === 'web' && samePage(t.url, url))
   const same = !!tab
   if (!tab && state.taskMode === 'reuse') tab = state.tabs.find((t) => t.role === 'task' && !t.pinned)
   if (!tab) {
@@ -451,14 +455,15 @@ function receiveTask(state, task) {
   state.active = tab.id
   return tab
 }
-// samePage tells two addresses of one page: translated or not, and with or
-// without a heading (#…).
+// samePage tells two addresses of one page: translated or not, with or
+// without a heading (#…) or a trailing slash.
 function samePage(a, b) {
   const page = (value) => {
     const url = originalURL(value)
     if (!url) return null
     const u = new URL(url)
     u.hash = ''
+    if (u.pathname.length > 1) u.pathname = u.pathname.replace(/\/+$/, '')
     return u.href
   }
   const x = page(a)
@@ -680,6 +685,7 @@ export {
   sites,
   translatedURL,
   originalURL,
+  samePage,
   siteOfURL,
   isTranslated,
   resolveAddress,

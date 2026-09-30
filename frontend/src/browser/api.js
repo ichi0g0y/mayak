@@ -21,6 +21,7 @@ import {
   linkKind,
   translatedURL,
   originalURL,
+  samePage,
   isTranslated,
   moveTab,
   togglePin,
@@ -1632,12 +1633,9 @@ async function perform(type, data) {
       const url = webURL(data)
       if (!url) throw new Error(t(state.language, 'enterWebURL'))
       if (type === 'openOrFocus') {
-        // The same page: its address without a fragment or a trailing slash.
-        const bare = (u) =>
-          String(u || '')
-            .replace(/#.*$/, '')
-            .replace(/\/$/, '')
-        const same = state.tabs.find((t) => t.kind === 'web' && bare(t.url) === bare(url))
+        // The same page (state.js samePage): translated or not, with or
+        // without a heading or a trailing slash.
+        const same = state.tabs.find((t) => t.kind === 'web' && samePage(t.url, url))
         if (same) {
           state.active = same.id
           break

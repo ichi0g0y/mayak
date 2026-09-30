@@ -7,6 +7,7 @@ import {
   defaults,
   restore,
   receiveTask,
+  samePage,
   receiveMap,
   recentSquadsOf,
   rememberSquad,
@@ -85,6 +86,26 @@ test('a task page translated since is the same task page', () => {
   other.url += '&_x_tr_pto=wapp'
   assert.equal(receiveTask(s, task('Checking')).id, other.id)
   assert.notEqual(receiveTask(s, task('Search')).id, other.id)
+})
+test('a tab already showing a task page, not opened for the task, becomes its tab', () => {
+  const s = defaults()
+  s.taskMode = 'new'
+  s.questSite = 'official-wiki'
+  // Opened from a bookmark, translated, with a trailing slash.
+  const opened = {
+    id: 'b1',
+    kind: 'web',
+    url: 'https://escapefromtarkov-fandom-com.translate.goog/wiki/Debut/?_x_tr_sl=auto&_x_tr_tl=ja',
+  }
+  s.tabs.push(opened)
+  const count = s.tabs.length
+  const tab = receiveTask(s, task('Debut'))
+  assert.equal(tab.id, 'b1')
+  assert.equal(tab.task.id, 'Debut')
+  assert.match(tab.url, /translate.goog/)
+  assert.equal(s.tabs.length, count)
+  assert.equal(samePage('https://tarkov.dev/item/ledx/', 'https://tarkov.dev/item/ledx#price'), true)
+  assert.equal(samePage('https://tarkov.dev/item/ledx', 'https://tarkov.dev/item/ledx-2'), false)
 })
 test('reuse preserves pinned tasks and deduplicates repeated detections', () => {
   const s = defaults()

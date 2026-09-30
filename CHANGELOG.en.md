@@ -51,6 +51,7 @@ These changes are planned for the next version.
 - An item's picture that does not load (the dogtag case's, say) is asked for once more, and shows as a "?" when it still fails, instead of a broken image.
 - Squads: after leaving a raid, your squad colour no longer turns back to automatic and your pen lines, pins and shares still reach the squad (nightly). Starting a new raid takes your last raid's position off the maps.
 - Squads: on start-up or joining again, the squadmates already there no longer go missing from the list until someone else joins or leaves (nightly).
+- A bookmark opened, or a task recognized, whose page a tab shows already (translated too) brings that tab forward instead of opening another.
 - Closing settings did nothing when there was no tab to go back to; a new tab opens instead.
 - On a Mac, a sign-in popup ("Sign in with Google" on Fandom) did not open; it opens in a small window, as on Windows.
 - The official wiki's (Fandom's) right rail is hidden whether the page is translated or not and signed in or not (Windows and Mac): its "New to Fandom?" card left the article narrow.

@@ -1086,8 +1086,10 @@ document.addEventListener('click', async (event) => {
     render()
     return
   }
+  // A bookmark whose page a tab shows already (translated too) brings that
+  // tab forward rather than opening another.
   if (type === 'bookmarkOpen') {
-    void action('open', state.bookmarks.find((b) => b.id === id).url)
+    void action('openOrFocus', state.bookmarks.find((b) => b.id === id).url)
     return
   }
   if (type === 'wikiSearch') {
