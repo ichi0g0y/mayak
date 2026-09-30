@@ -144,7 +144,7 @@ tarkov.dev のマップ・タスクページは、`wss://socket.tarkov.dev` 経�
 
 位置の送信では `browser:map` を送りません。内蔵ブラウザや外部で開いた tarkov.dev のマップページは Remote Control 接続で追従します。代わりに `browser:position`（マップ名）を送り、シェルはマップのビューを開くか前面にします（`state.js` の `receivePosition`。`receiveMap` と同じ）。最後に認識したもの（タスク → タスクのページ、位置 → マップ、アイテム → アイテム欄）が表示されるようにするためです。Client にもリンクで同じイベントを送ります（[settings-and-integrations.md](settings-and-integrations.md#リンク)）。
 
-分隊に入っていれば、同じ位置（マップ・座標・向き・時刻）を分隊にも送ります（`squadSendPosition`。[browser-shell.md](browser-shell.md#マップ)）。レイドが終わると（`RaidExited`）、分隊には「レイド外」を送ります。
+分隊に入っていれば、同じ位置（マップ・座標・向き・時刻）を分隊にも送ります（`squadSendPosition`。[browser-shell.md](browser-shell.md#マップ)）。新しいレイドが始まると（`RaidStarted`）前のレイドの位置を外し、レイドが終わると（`RaidExited`）「レイド外」を送ります（`squadDropPosition`。マップと位置だけを外し、表示名・分隊カラー・メンバー鍵は残す）。
 
 ### マップのビュー
 

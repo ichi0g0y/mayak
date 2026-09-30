@@ -38,6 +38,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - Pairing with another PC: a Client types the code into eight boxes of one digit (the typing moves on, a paste fills them, the eighth digit connects), and once linked each PC shows the other's computer name under Settings → Connection.
 
 ### Fixed
+
+- Squads: after leaving a raid, your squad colour no longer turns back to automatic and your pen lines, pins and shares still reach the squad (nightly). Starting a new raid takes your last raid's position off the maps.
 - Closing settings did nothing when there was no tab to go back to; a new tab opens instead.
 - On a Mac, a sign-in popup ("Sign in with Google" on Fandom) did not open; it opens in a small window, as on Windows.
 - On a Mac, the translated official wiki showed Fandom's right rail (a "New to Fandom?" card) and the article was narrow; the rail is hidden, as on Windows.

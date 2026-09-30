@@ -300,8 +300,11 @@ func (a *App) squadSendPosition(mapName string, p model.Position) {
 	client.Report(r)
 }
 
-// squadLeftRaid tells the squad this PC's player is out of the raid.
-func (a *App) squadLeftRaid() {
+// squadDropPosition takes this PC's player's position off the squad's maps:
+// out of the raid, or into a new one (the last raid's place is no longer
+// where they are; the new one comes with its first position screenshot).
+// The rest of the report (the name, the colour, the member key) stays.
+func (a *App) squadDropPosition() {
 	squadMu.Lock()
 	client := squadClient
 	squadMu.Unlock()
@@ -309,10 +312,11 @@ func (a *App) squadLeftRaid() {
 		return
 	}
 	r := client.Mine()
-	if r.Map == "" {
+	if r.Map == "" && r.Pos == nil {
 		return
 	}
-	client.Report(squad.Report{Name: r.Name, Viewer: r.Viewer})
+	r.Map, r.Pos, r.At = "", nil, time.Time{}
+	client.Report(r)
 }
 
 func squadMapSource() *mapdata.Source {
