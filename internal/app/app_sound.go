@@ -106,8 +106,8 @@ func soundChoice(s config.Settings, kind sound.Kind) (bool, string) {
 		return s.GameStartSound, s.GameStartSoundPath
 	case sound.QuestItems:
 		return s.QuestItemsSound, s.QuestItemsSoundPath
-	case sound.RestartTasks:
-		return s.RestartTasksSound, s.RestartTasksSoundPath
+	case sound.TaskFailed:
+		return s.TaskFailedSound, s.TaskFailedSoundPath
 	}
 	return false, ""
 }

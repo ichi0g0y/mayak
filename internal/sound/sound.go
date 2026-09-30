@@ -29,12 +29,13 @@ const (
 	QuestItems Kind = "questItems"
 	GameStart  Kind = "gameStart"
 	// GameExit is EFT closing (its process gone; a crash too).
-	GameExit     Kind = "gameExit"
-	RestartTasks Kind = "restartTasks"
+	GameExit Kind = "gameExit"
+	// TaskFailed is a task failed in the game (from its notification log).
+	TaskFailed Kind = "taskFailed"
 )
 
 // Kinds lists every notification.
-var Kinds = []Kind{Quest, TaskNotMatched, Item, ItemNotMatched, Error, RemoteError, MatchFound, RaidStart, RunThrough, GameStart, QuestItems, RestartTasks, GameExit}
+var Kinds = []Kind{Quest, TaskNotMatched, Item, ItemNotMatched, Error, RemoteError, MatchFound, RaidStart, RunThrough, GameStart, QuestItems, TaskFailed, GameExit}
 
 // ParseKind returns the notification named s.
 func ParseKind(s string) (Kind, bool) {
@@ -88,7 +89,7 @@ func Wave(kind Kind, volume int) []byte {
 		duration = .42
 	case RunThrough:
 		duration = .46
-	case QuestItems, GameStart, GameExit, RestartTasks:
+	case QuestItems, GameStart, GameExit, TaskFailed:
 		duration = .4
 	}
 	count := int(sampleRate * duration)
@@ -117,7 +118,7 @@ func Wave(kind Kind, volume int) []byte {
 			sample = .55*pulse(t, 0, .16, 440) + .72*pulse(t, .13, .18, 610) + pulse(t, .27, .15, 790)
 		case QuestItems, GameStart, GameExit:
 			sample = .72*pulse(t, 0, .14, 330) + pulse(t, .18, .17, 520)
-		case RestartTasks:
+		case TaskFailed:
 			sample = pulse(t, 0, .14, 260) + .75*pulse(t, .17, .18, 210)
 		default:
 			sample = .72*pulse(t, 0, .09, 520) + pulse(t, .085, .13, 760)

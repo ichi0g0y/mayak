@@ -413,7 +413,7 @@ function App() {
     | 'runThroughSoundPath'
     | 'gameStartSoundPath'
     | 'questItemsSoundPath'
-    | 'restartTasksSoundPath'
+    | 'taskFailedSoundPath'
     | 'gameExitSoundPath'
   const chooseSound = async (key: SoundPathKey) => {
     try {
@@ -555,11 +555,11 @@ function App() {
       pathKey: 'questItemsSoundPath',
     },
     {
-      id: 'restart-tasks-sound',
-      label: t('restartTasksSound'),
-      kind: 'restartTasks',
-      enabledKey: 'restartTasksSoundEnabled',
-      pathKey: 'restartTasksSoundPath',
+      id: 'task-failed-sound',
+      label: t('taskFailedSound'),
+      kind: 'taskFailed',
+      enabledKey: 'taskFailedSoundEnabled',
+      pathKey: 'taskFailedSoundPath',
     },
     {
       id: 'game-exit-sound',

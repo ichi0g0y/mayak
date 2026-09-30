@@ -54,8 +54,8 @@ export type Settings = {
   gameStartSoundPath: string
   questItemsSoundEnabled: boolean
   questItemsSoundPath: string
-  restartTasksSoundEnabled: boolean
-  restartTasksSoundPath: string
+  taskFailedSoundEnabled: boolean
+  taskFailedSoundPath: string
   gameExitSoundEnabled: boolean
   gameExitSoundPath: string
   startMinimized: boolean
@@ -234,8 +234,8 @@ export const defaults: Settings = {
   gameStartSoundPath: '',
   questItemsSoundEnabled: false,
   questItemsSoundPath: '',
-  restartTasksSoundEnabled: false,
-  restartTasksSoundPath: '',
+  taskFailedSoundEnabled: false,
+  taskFailedSoundPath: '',
   gameExitSoundEnabled: false,
   gameExitSoundPath: '',
   startMinimized: false,

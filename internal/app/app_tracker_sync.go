@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"github.com/local/mayak/internal/model"
+	"github.com/local/mayak/internal/sound"
 	"github.com/local/mayak/internal/tracker"
 	"github.com/local/mayak/internal/trackerlog"
 	"github.com/local/mayak/internal/trackerstore"
@@ -177,6 +179,12 @@ func (a *App) handleTrackerLogEvent(event trackerlog.Event) {
 			go func() { _ = a.refreshTrackerIdentity(event.Mode, event.ProfileID, event.AccountID) }()
 		}
 	case trackerlog.TaskChanged:
+		// A task failed in the game is an event of its own, TarkovTracker or
+		// not: its notification (a trigger for OBS and the like would start
+		// here too).
+		if event.TaskState == "failed" {
+			a.taskFailed(event.TaskID)
+		}
 		a.mu.RLock()
 		enabled := a.settings.TarkovTrackerEnabled
 		mode := a.status.Tracker.Mode
@@ -190,6 +198,24 @@ func (a *App) handleTrackerLogEvent(event trackerlog.Event) {
 		}
 		go a.syncTrackerTask(mode, profileID, accountID, token, event.TaskID, event.TaskState)
 	}
+}
+
+// lastTaskFailed is when the failed-task notification last played: tasks
+// failing together (a raid lost, a choice between two) say it once.
+var lastTaskFailed atomic.Int64
+
+// taskFailed logs a task failed in the game and notifies it, once for
+// failures within 10 seconds of each other.
+func (a *App) taskFailed(taskID string) {
+	a.addLog("Info", "Tasks", "Task failed in the game: "+taskID)
+	now := time.Now().UnixMilli()
+	if last := lastTaskFailed.Load(); now-last < 10_000 || !lastTaskFailed.CompareAndSwap(last, now) {
+		return
+	}
+	a.mu.RLock()
+	settings := a.settings
+	a.mu.RUnlock()
+	a.notify(settings, sound.TaskFailed)
 }
 
 func (a *App) refreshTrackerMode(mode string) error {

@@ -96,7 +96,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `gameExitSoundEnabled` / `gameExitSoundPath` | `false` / `""` | タルコフを閉じたとき（プロセスの終了。クラッシュも同じ） |
 | `gameStartSoundEnabled` / `gameStartSoundPath` | `false` / `""` | ゲーム起動時（メニューに着いたとき） |
 | `questItemsSoundEnabled` / `questItemsSoundPath` | `false` / `""` | レイドから戻ったとき（名前は以前のタスクアイテム確認の名残） |
-| `restartTasksSoundEnabled` / `restartTasksSoundPath` | `false` / `""` | メニューに戻ったとき、失敗したタスクがあれば |
+| `taskFailedSoundEnabled` / `taskFailedSoundPath` | `false` / `""` | ゲームでタスクが失敗したとき（TarkovTracker が無くても。まとめて失敗しても 10 秒に 1 回） |
 | `soundVolume` | `28` | 全体の音量（0–100 に丸める） |
 | `soundVoice` | `""` | 基本の声。組み込みの声のパック名、`beep`（ビープ音）、空なら言語ごとの標準（日本語は `tsumugi`、ほかは `heart`） |
 | `soundVoices` | `{}` | 通知ごとの声（通知の種類 → パック名 / `beep` / `custom`）。無い通知は基本の声 |

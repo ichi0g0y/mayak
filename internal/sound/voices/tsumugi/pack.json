@@ -23,7 +23,7 @@
     "runThrough": "もう脱出しても大丈夫だよ",
     "gameStart": "おかえり！今日もよろしくね",
     "questItems": "おつかれさま。ゆっくりしてね",
-    "restartTasks": "失敗したタスクあるじゃん、受け直しとこ",
+    "taskFailed": "失敗したタスクあるじゃん",
     "gameExit": "おつかれさま！"
   }
 }

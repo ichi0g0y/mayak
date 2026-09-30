@@ -117,8 +117,8 @@ export class Settings {
     "gameStartSoundPath": string;
     "questItemsSoundEnabled": boolean;
     "questItemsSoundPath": string;
-    "restartTasksSoundEnabled": boolean;
-    "restartTasksSoundPath": string;
+    "taskFailedSoundEnabled": boolean;
+    "taskFailedSoundPath": string;
     "startMinimized": boolean;
 
     /**
@@ -311,11 +311,11 @@ export class Settings {
         if (!("questItemsSoundPath" in $$source)) {
             this["questItemsSoundPath"] = "";
         }
-        if (!("restartTasksSoundEnabled" in $$source)) {
-            this["restartTasksSoundEnabled"] = false;
+        if (!("taskFailedSoundEnabled" in $$source)) {
+            this["taskFailedSoundEnabled"] = false;
         }
-        if (!("restartTasksSoundPath" in $$source)) {
-            this["restartTasksSoundPath"] = "";
+        if (!("taskFailedSoundPath" in $$source)) {
+            this["taskFailedSoundPath"] = "";
         }
         if (!("startMinimized" in $$source)) {
             this["startMinimized"] = false;

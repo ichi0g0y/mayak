@@ -31,7 +31,7 @@ export const kinds = [
   'runThrough',
   'gameStart',
   'questItems',
-  'restartTasks',
+  'taskFailed',
   'gameExit',
 ] as const
 

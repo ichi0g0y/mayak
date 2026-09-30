@@ -31,7 +31,7 @@ func soundFields(s *config.Settings) []*string {
 	return []*string{
 		&s.QuestSoundPath, &s.ErrorSoundPath, &s.TaskNotMatchedSoundPath,
 		&s.RemoteErrorSoundPath, &s.ItemSoundPath, &s.ItemNotMatchedSoundPath, &s.MatchFoundSoundPath,
-		&s.RaidStartSoundPath, &s.RunThroughSoundPath, &s.GameStartSoundPath, &s.QuestItemsSoundPath, &s.GameExitSoundPath, &s.RestartTasksSoundPath,
+		&s.RaidStartSoundPath, &s.RunThroughSoundPath, &s.GameStartSoundPath, &s.QuestItemsSoundPath, &s.GameExitSoundPath, &s.TaskFailedSoundPath,
 	}
 }
 

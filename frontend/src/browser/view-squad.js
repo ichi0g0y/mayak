@@ -113,6 +113,8 @@ ${x.url}`
 
 // The member whose card is open in the sidebar (squadKey), or ''.
 let openCard = ''
+// The sidebar's leave button, pressed once: a second press within 4 s leaves.
+let leaveArmed = false
 // A member's card: who they are in the game and their numbers, from their
 // Overall screen (profile, sent with their report once they took a
 // screenshot of it) and TarkovTracker (tracker, while they sync with it),
@@ -242,7 +244,8 @@ function sharesCard() {
 }
 
 // The sidebar's section: the heading (with how many are in the squad and
-// whether it is connected) folds it; the button at its end opens the page.
+// whether it is connected) folds it; the button at its end opens the page,
+// and in a squad the one before it leaves (pressed twice).
 export function squadSection() {
   if (!state.squad) return ''
   const s = state.squad.state
@@ -251,12 +254,17 @@ export function squadSection() {
   const count = s
     ? `<span class="squad-section-count" data-phase="${esc(s.phase)}" title="${esc(t('squadPhase_' + s.phase))}">${players(s.members).length}</span>`
     : ''
-  const head = `<div class="section-label squad-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSquadSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('squad'))}${count}${icon('chevron', 'section-chevron')}</button><button class="new-tab squad-open" data-action="squadPage" title="${esc(t('squadOpen'))}" aria-label="${esc(t('squadOpen'))}" aria-pressed="${open}">${icon('squad')}${waiting().length ? `<span class="squad-open-count">${waiting().length}</span>` : ''}</button></div>`
+  const head = `<div class="section-label squad-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSquadSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('squad'))}${count}${icon('chevron', 'section-chevron')}</button>${s ? leaveButton() : ''}<button class="new-tab squad-open" data-action="squadPage" title="${esc(t('squadOpen'))}" aria-label="${esc(t('squadOpen'))}" aria-pressed="${open}">${icon('squad')}${waiting().length ? `<span class="squad-open-count">${waiting().length}</span>` : ''}</button></div>`
   if (folded) return head
   const body = s
     ? `<ul class="squad-chips squad-section">${players(s.members).map(memberChip).join('')}</ul>`
     : `<div class="squad-section"><button class="squad-start" data-action="squadPage">${esc(t('squadStart'))}</button></div>`
   return head + body
+}
+
+function leaveButton() {
+  const label = t(leaveArmed ? 'squadLeaveConfirm' : 'squadLeaveQuick')
+  return `<button class="new-tab squad-leave-quick${leaveArmed ? ' armed' : ''}" data-action="squadLeaveQuick" title="${esc(label)}" aria-label="${esc(label)}">${icon('unlinked')}${leaveArmed ? `<span>${esc(label)}</span>` : ''}</button>`
 }
 
 // The squads joined lately, to join again with a click.
@@ -488,6 +496,23 @@ clickHandlers.push(async (type, id, button) => {
         render()
       }
     }, 2000)
+    return true
+  }
+  if (type === 'squadLeaveQuick') {
+    if (!leaveArmed) {
+      leaveArmed = true
+      render()
+      setTimeout(() => {
+        if (leaveArmed) {
+          leaveArmed = false
+          render()
+        }
+      }, 4000)
+      return true
+    }
+    leaveArmed = false
+    Object.assign(drafts, { code: '', name: null, notice: '' })
+    void action('squadLeave')
     return true
   }
   if (type === 'squadLeave') {

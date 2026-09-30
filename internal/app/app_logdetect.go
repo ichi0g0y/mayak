@@ -107,14 +107,6 @@ func (a *App) handleLogEvent(event logdetect.Event) {
 	}
 	a.mu.RLock()
 	settings := a.settings
-	failedTasks := 0
-	if a.status.Tracker.Connection == "connected" {
-		for _, state := range a.trackerTasks {
-			if state == "failed" {
-				failedTasks++
-			}
-		}
-	}
 	a.mu.RUnlock()
 	switch event.Kind {
 	case logdetect.MatchFound:
@@ -169,10 +161,6 @@ func (a *App) handleLogEvent(event logdetect.Event) {
 			a.notify(settings, sound.QuestItems)
 		} else {
 			a.notify(settings, sound.GameStart)
-		}
-		if failedTasks > 0 {
-			a.addLog("Warn", "TarkovTracker", fmt.Sprintf("%d failed task(s) may need to be restarted", failedTasks))
-			a.notify(settings, sound.RestartTasks)
 		}
 	}
 }
