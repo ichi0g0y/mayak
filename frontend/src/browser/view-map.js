@@ -16,6 +16,7 @@ import {
   markerColors,
   markerEffects,
   markerRotation,
+  markerShapes,
   nameColors,
   outlineColor,
   placed,
@@ -246,12 +247,14 @@ function settingsPanel() {
     `<label class="map-filter map-setting"><input type="checkbox" data-map-setting="${key}" ${s[key] ? 'checked' : ''}><span>${esc(label)}${hint ? `<small class="map-setting-hint">${esc(hint)}</small>` : ''}</span></label>`
   const slider = (key, label, min = textScale.min, max = textScale.max) =>
     `<label class="map-slider"><span>${esc(label)}<output data-map-scale-out="${key}">${s[key]}%</output></span><input type="range" min="${min}" max="${max}" step="5" value="${s[key]}" data-map-scale="${key}"></label>`
-  // The arrows: their effect, then (with one) its colour.
+  // The arrows: their shape, their effect, then (with one) its colour.
+  const shape = (id) =>
+    `<button class="map-marker-shape ${s.markerShape === id ? 'selected' : ''}" data-action="mapMarkerShape" data-id="${id}" aria-pressed="${s.markerShape === id}" title="${esc(t('settingShape_' + id))}" aria-label="${esc(t('settingShape_' + id))}"><svg viewBox="0 0 24 24" style="transform:rotate(35deg)">${markerShapes[id]}</svg></button>`
   const effect = (id) =>
     `<button data-action="mapMarkerEffect" data-id="${id}" class="${s.markerEffect === id ? 'selected' : ''}" aria-pressed="${s.markerEffect === id}">${esc(t('settingMarker_' + id))}</button>`
   const color = (c) =>
     `<button class="map-marker-color ${s.markerColor === c ? 'selected' : ''} ${c ? '' : 'auto'}" data-action="mapMarkerColor" data-id="${c}" style="--swatch:${c || 'transparent'}" title="${esc(c ? c : t('settingMarkerAuto'))}" aria-pressed="${s.markerColor === c}"></button>`
-  const marker = `<div class="map-marker-setting"><span class="map-marker-title">${esc(t('settingMarker'))}</span><div class="segmented map-marker-effects" role="group">${markerEffects.map(effect).join('')}</div>${s.markerEffect !== 'none' ? `<div class="map-marker-colors" role="group" aria-label="${esc(t('settingMarkerColor'))}">${markerColors.map(color).join('')}</div>` : ''}</div>`
+  const marker = `<div class="map-marker-setting"><span class="map-marker-title">${esc(t('settingShape'))}</span><div class="map-marker-shapes" role="group" aria-label="${esc(t('settingShape'))}">${Object.keys(markerShapes).map(shape).join('')}</div><span class="map-marker-title">${esc(t('settingMarker'))}</span><div class="segmented map-marker-effects" role="group">${markerEffects.map(effect).join('')}</div>${s.markerEffect !== 'none' ? `<div class="map-marker-colors" role="group" aria-label="${esc(t('settingMarkerColor'))}">${markerColors.map(color).join('')}</div>` : ''}</div>`
   return `<aside class="map-panel map-settings" aria-label="${esc(t('mapSettings'))}">${panelHead(t('mapSettings'))}${row('snipers', t('settingSnipers'), t('settingSnipersHint'))}${row('extracts', t('settingExtracts'), t('settingExtractsHint'))}${row('activeTasks', t('settingActiveTasks'), t('settingActiveTasksHint'))}${row('subtleLabels', t('settingSubtleLabels'))}${slider('fade', t('settingFade'), 0, 60)}${slider('extractText', t('settingExtractText'))}${slider('labelText', t('settingLabelText'))}${marker}</aside>`
 }
 
@@ -626,7 +629,7 @@ function effectOf(m) {
 function squadHTML(m) {
   const rot = markerRotation(m.pos.rot, shown().map?.rotation)
   const fx = effectOf(m)
-  return `<span class="squad-marker ${m.me ? 'me' : ''}${fx.cls}" style="--c:${colorOf(m)}${fx.style}"><svg viewBox="0 0 24 24" style="transform:rotate(${rot}deg)"><path d="M12 2 19 21 12 16.5 5 21z"/></svg><span class="squad-label">${esc(m.name || '?')}</span></span>`
+  return `<span class="squad-marker ${m.me ? 'me' : ''}${fx.cls}" style="--c:${colorOf(m)}${fx.style}"><svg viewBox="0 0 24 24" style="transform:rotate(${rot}deg)">${markerShapes[state.mapSettings?.markerShape] || markerShapes.arrow}</svg><span class="squad-label">${esc(m.name || '?')}</span></span>`
 }
 
 function drawSquad(map, floor, members) {
@@ -987,8 +990,9 @@ clickHandlers.push(async (type, id, button) => {
     render()
     return true
   }
-  if (type === 'mapMarkerEffect' || type === 'mapMarkerColor') {
-    void action('mapSettings', type === 'mapMarkerEffect' ? { markerEffect: id } : { markerColor: id || '' })
+  if (type === 'mapMarkerEffect' || type === 'mapMarkerColor' || type === 'mapMarkerShape') {
+    const key = { mapMarkerEffect: 'markerEffect', mapMarkerColor: 'markerColor', mapMarkerShape: 'markerShape' }[type]
+    void action('mapSettings', { [key]: id || '' })
     return true
   }
   if (type === 'mapPick') {

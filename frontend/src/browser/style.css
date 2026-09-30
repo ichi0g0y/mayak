@@ -1102,6 +1102,11 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 /* The map's settings: the effect on your own arrow, and its colour. */
 .map-marker-setting{display:flex;flex-direction:column;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
 .map-marker-title{font-size:12.5px;color:var(--text-2)}
+.map-marker-shapes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.map-panel .map-marker-shape{display:flex;align-items:center;justify-content:center;height:40px;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2)}
+.map-panel .map-marker-shape:hover{background:var(--hover)}
+.map-panel .map-marker-shape.selected{border-color:var(--accent);background:var(--selected);color:var(--accent)}
+.map-marker-shape svg{width:22px;height:22px;fill:currentColor;stroke:#000a;stroke-width:1.2}
 .map-marker-effects{display:grid;grid-template-columns:repeat(5,1fr)}
 .map-marker-effects button{min-width:0;padding:0 2px;font-size:11.5px;white-space:nowrap}
 .map-marker-colors{display:flex;gap:6px;flex-wrap:wrap}
