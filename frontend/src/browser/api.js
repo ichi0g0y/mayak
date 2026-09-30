@@ -165,6 +165,17 @@ async function loadSquadMaps() {
   }
   update()
 }
+// squadStateNow reads the squad's state from the Go side. A squad:state
+// event can come while the answer is on its way (the relay's welcome just
+// after joining), and the answer was made before it: then the event's state
+// is the newer and stays (else the members already in the squad were lost
+// until someone else joined).
+let squadEvents = 0
+async function squadStateNow() {
+  const seen = squadEvents
+  const next = await go.SquadState()
+  if (seen === squadEvents) squad.state = next || null
+}
 // squadJoin joins a squad as name; here (not for the other PC's word) it
 // also tells the other PC. The squad's page stays, with the code to share.
 async function squadJoin(code, name, here = true) {
@@ -176,7 +187,7 @@ async function squadJoin(code, name, here = true) {
   await go.SquadSetColor(state.squadColor)
   state.squadCode = await go.SquadJoin(String(code || ''), name || host?.player || 'Player')
   state.squadRecent = rememberSquad(state.squadRecent, state.squadCode)
-  squad.state = await go.SquadState()
+  await squadStateNow()
   if (here) shareSquad()
   void loadSquadMaps()
 }
@@ -1085,6 +1096,7 @@ const ready = (async () => {
   // The map view: a nightly feature (SquadAvailable). The squad joined
   // before is joined again; a build without it drops its tab.
   window.mayakDesktop.on('squad:state', (next) => {
+    squadEvents++
     squad.state = next || null
     update()
   })
@@ -1097,11 +1109,8 @@ const ready = (async () => {
     if (state.squadCode && state.squadName)
       go.SquadSetColor(state.squadColor)
         .then(() => go.SquadJoin(state.squadCode, state.squadName))
-        .then(() => go.SquadState())
-        .then((s) => {
-          squad.state = s || null
-          update()
-        })
+        .then(squadStateNow)
+        .then(update)
         .catch(() => {})
   }
   void loadSnaps()
