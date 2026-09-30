@@ -60,7 +60,11 @@ type Settings struct {
 	SoundVoices map[string]string `json:"soundVoices"`
 	// SoundVolumeOffsets turns a notification (its kind) up or down from
 	// SoundVolume, in points (-50 to +50).
-	SoundVolumeOffsets   map[string]int `json:"soundVolumeOffsets"`
+	SoundVolumeOffsets map[string]int `json:"soundVolumeOffsets"`
+	// SoundDelays is how many seconds a notification (its kind) waits before
+	// it plays (0 to SoundDelayMax), so it does not speak over the game; a
+	// kind not in it has its default (soundDelayDefaults), 0 for most.
+	SoundDelays          map[string]int `json:"soundDelays"`
 	AutoStartMonitoring  bool           `json:"autoStartMonitoring"`
 	OpenMapOnRaidStart   bool           `json:"openMapOnRaidStart"`
 	NavigateMapOnShot    bool           `json:"navigateMapOnPositionScreenshot"`
@@ -101,6 +105,23 @@ type Settings struct {
 	WindowWidth      int    `json:"windowWidth"`
 	WindowHeight     int    `json:"windowHeight"`
 	WindowConfigured bool   `json:"windowConfigured"`
+}
+
+// SoundDelayMax is the longest a notification waits, in seconds.
+const SoundDelayMax = 15
+
+// soundDelayDefaults are the delays of the notifications that have one
+// without being set: back from a raid and a task failed come as the game
+// makes its own sounds (frontend/src/settings-model.ts SOUND_DELAY_DEFAULTS).
+var soundDelayDefaults = map[string]int{"questItems": 3, "taskFailed": 3}
+
+// SoundDelay is how many seconds the notification of kind waits: its own
+// delay, else its default.
+func (s Settings) SoundDelay(kind string) int {
+	if seconds, ok := s.SoundDelays[kind]; ok {
+		return min(max(seconds, 0), SoundDelayMax)
+	}
+	return soundDelayDefaults[kind]
 }
 
 type RemoteTarget struct {

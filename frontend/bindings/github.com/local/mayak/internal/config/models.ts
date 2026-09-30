@@ -100,6 +100,13 @@ export class Settings {
      * SoundVolume, in points (-50 to +50).
      */
     "soundVolumeOffsets": { [_ in string]?: number };
+
+    /**
+     * SoundDelays is how many seconds a notification (its kind) waits before
+     * it plays (0 to SoundDelayMax), so it does not speak over the game; a
+     * kind not in it has its default (soundDelayDefaults), 0 for most.
+     */
+    "soundDelays": { [_ in string]?: number };
     "autoStartMonitoring": boolean;
     "openMapOnRaidStart": boolean;
     "navigateMapOnPositionScreenshot": boolean;
@@ -260,6 +267,9 @@ export class Settings {
         if (!("soundVolumeOffsets" in $$source)) {
             this["soundVolumeOffsets"] = {};
         }
+        if (!("soundDelays" in $$source)) {
+            this["soundDelays"] = {};
+        }
         if (!("autoStartMonitoring" in $$source)) {
             this["autoStartMonitoring"] = false;
         }
@@ -364,6 +374,7 @@ export class Settings {
         const $$createField6_0 = $$createType1;
         const $$createField33_0 = $$createType2;
         const $$createField34_0 = $$createType3;
+        const $$createField35_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("remoteTargets" in $$parsedSource) {
             $$parsedSource["remoteTargets"] = $$createField6_0($$parsedSource["remoteTargets"]);
@@ -373,6 +384,9 @@ export class Settings {
         }
         if ("soundVolumeOffsets" in $$parsedSource) {
             $$parsedSource["soundVolumeOffsets"] = $$createField34_0($$parsedSource["soundVolumeOffsets"]);
+        }
+        if ("soundDelays" in $$parsedSource) {
+            $$parsedSource["soundDelays"] = $$createField35_0($$parsedSource["soundDelays"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }

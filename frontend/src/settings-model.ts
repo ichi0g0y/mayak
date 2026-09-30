@@ -39,6 +39,7 @@ export type Settings = {
   soundVoice: string
   soundVoices: Record<string, string>
   soundVolumeOffsets: Record<string, number>
+  soundDelays: Record<string, number>
   autoStartMonitoring: boolean
   openMapOnRaidStart: boolean
   navigateMapOnPositionScreenshot: boolean
@@ -185,6 +186,12 @@ export type UpdateStatus = {
   lastError: string
 }
 
+// A notification's delay (seconds, up to SOUND_DELAY_MAX) when none is set:
+// back from a raid and a task failed come as the game makes its own sounds
+// (internal/config/config.go soundDelayDefaults).
+export const SOUND_DELAY_MAX = 15
+export const SOUND_DELAY_DEFAULTS: Record<string, number> = { questItems: 3, taskFailed: 3 }
+
 export const defaults: Settings = {
   gameLanguage: 'auto',
   questSite: 'tarkov-dev',
@@ -219,6 +226,7 @@ export const defaults: Settings = {
   soundVoice: '',
   soundVoices: {},
   soundVolumeOffsets: {},
+  soundDelays: {},
   autoStartMonitoring: true,
   openMapOnRaidStart: true,
   navigateMapOnPositionScreenshot: true,

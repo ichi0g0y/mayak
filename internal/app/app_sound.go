@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -118,8 +119,16 @@ func (a *App) notify(s config.Settings, kind sound.Kind) {
 	if !s.SoundsEnabled || !enabled {
 		return
 	}
+	path, voice, volume := soundFilePath(path), voiceFor(s, kind), volumeFor(s, kind)
+	// A delay (config SoundDelay) keeps it off the game's own sounds; the
+	// others queued meanwhile play on.
+	if delay := s.SoundDelay(string(kind)); delay > 0 {
+		a.addLog("Info", "Sound", fmt.Sprintf("Playing %s alert in %d s", kind, delay))
+		time.AfterFunc(time.Duration(delay)*time.Second, func() { playNotification(kind, path, voice, volume) })
+		return
+	}
 	a.addLog("Info", "Sound", "Playing "+string(kind)+" alert")
-	playNotification(kind, soundFilePath(path), voiceFor(s, kind), volumeFor(s, kind))
+	playNotification(kind, path, voice, volume)
 }
 
 // volumeFor is a notification's volume: the one for all with its own

@@ -280,6 +280,14 @@ func normalizeSettings(s config.Settings) config.Settings {
 		}
 		s.SoundVolumeOffsets[kind] = min(max(offset, -50), 50)
 	}
+	// A delay set to 0 is kept: it stands against a default that is not.
+	for kind, seconds := range s.SoundDelays {
+		if _, ok := sound.ParseKind(kind); !ok {
+			delete(s.SoundDelays, kind)
+			continue
+		}
+		s.SoundDelays[kind] = min(max(seconds, 0), config.SoundDelayMax)
+	}
 	if s.ScreenshotDirectory != "" {
 		s.ScreenshotDirectory = filepath.Clean(s.ScreenshotDirectory)
 	}

@@ -72,6 +72,8 @@ import {
   hashSection,
   sectionTitles,
   languageNames,
+  SOUND_DELAY_DEFAULTS,
+  SOUND_DELAY_MAX,
 } from './settings-model'
 import { TrackerSection } from './TrackerSection'
 import { LogsSection } from './LogsSection'
@@ -466,6 +468,12 @@ function App() {
     else next[kind] = clamped
     patch({ soundVolumeOffsets: next })
   }
+  // A notification's delay in seconds, so it does not speak over the game
+  // (as internal/app/app_sound.go delayFor; a kind not set has its default).
+  const soundDelays = settings.soundDelays ?? {}
+  const delayOf = (kind: string) => soundDelays[kind] ?? SOUND_DELAY_DEFAULTS[kind] ?? 0
+  const setDelayOf = (kind: string, seconds: number) =>
+    patch({ soundDelays: { ...soundDelays, [kind]: Math.min(SOUND_DELAY_MAX, Math.max(0, Math.round(seconds))) } })
   const offsetLabel = (offset: number) => (offset > 0 ? `+${offset}` : offset === 0 ? '±0' : `${offset}`)
   // A sound file's name as chosen: taken in, it is sounds/<hash>-<name>.
   const soundFileName = (path: string) => (path.split(/[\\/]/).pop() || '').replace(/^[0-9a-f]{16}-/, '')
@@ -1176,6 +1184,28 @@ function App() {
                             <span className="volume-offset-actual" title={t('soundVolumeActual')}>
                               → {volumeOf(alert.kind)}%
                             </span>
+                          </div>
+                          <div className="volume-offset">
+                            <span className="volume-offset-label">{t('soundDelay')}</span>
+                            <input
+                              className="range"
+                              type="range"
+                              min="0"
+                              max={SOUND_DELAY_MAX}
+                              step="1"
+                              aria-label={`${alert.label}: ${t('soundDelay')}`}
+                              value={delayOf(alert.kind)}
+                              onChange={(e) => setDelayOf(alert.kind, Number(e.target.value))}
+                            />
+                            <button
+                              type="button"
+                              className="volume-offset-value"
+                              title={t('soundDelayReset')}
+                              disabled={delayOf(alert.kind) === 0}
+                              onClick={() => setDelayOf(alert.kind, 0)}
+                            >
+                              {t('soundDelaySeconds').replace('{n}', String(delayOf(alert.kind)))}
+                            </button>
                           </div>
                           {choiceOf(alert.kind, path) === 'custom' && (
                             <div className="sound-file-row">

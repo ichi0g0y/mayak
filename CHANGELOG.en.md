@@ -10,6 +10,7 @@ These changes are planned for the next version.
 
 ### Improved
 
+- Each notification sound can be delayed (0 to 15 seconds, Settings → Sounds) so it does not speak over the game; being back from a raid and a task failing wait 3 seconds unless set otherwise.
 - While in a squad, the sidebar's squad heading has a leave button (left of the squad page's); pressed twice, it leaves the squad.
 - The failed-task notification (Settings → Sounds, "When a task fails") no longer urges restarting failed tasks each time you are back at the menu: it says a task has failed when one fails in the game, without TarkovTracker too, once for tasks failing together. In Tarkov a failed task rarely needs restarting.
 - The squad code and link code boxes show the hyphen between the 4th and 5th characters (it still need not be typed).

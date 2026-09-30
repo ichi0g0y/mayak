@@ -101,6 +101,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `soundVoice` | `""` | 基本の声。組み込みの声のパック名、`beep`（ビープ音）、空なら言語ごとの標準（日本語は `tsumugi`、ほかは `heart`） |
 | `soundVoices` | `{}` | 通知ごとの声（通知の種類 → パック名 / `beep` / `custom`）。無い通知は基本の声 |
 | `soundVolumeOffsets` | `{}` | 通知ごとの、全体の音量からの調整（−50〜＋50、0 は持たない） |
+| `soundDelays` | `{}` | 通知ごとの、鳴らすまでの秒数（0〜15）。無い通知は既定値で、「レイドから戻ったとき」（`questItems`）と「タスクに失敗したとき」（`taskFailed`）は 3 秒、ほかは 0 秒。既定値のある通知を 0 にしたときも 0 を持つ（`config.SoundDelay`） |
 | `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | `openMapOnRaidStart` | `true` | レイド開始時に tarkov.dev を現在のマップに切り替える |
 | `navigateMapOnPositionScreenshot` | `true` | 位置スクリーンショットの送信後、そのマップに切り替える |
@@ -209,6 +210,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 - すべての音は `soundsEnabled` と各項目のスイッチの両方が真のときだけ鳴ります。
 - 鳴らすものは、通知ごとに「カスタム（ファイル）→ その通知の声 → 基本の声 → ビープ音」の順に決まります（`internal/app/app_sound.go`）。ファイルはデータフォルダの `sounds/` に取り込んだものです（[ユーザーデータの保存](user-data.md)）。
 - 音量は `soundVolume` に通知ごとの `soundVolumeOffsets` を足して 0–100 に収めたものです。
+- 遅らせる設定（`soundDelays`）のある通知は、その秒数だけ待ってから鳴らす順番に入ります（ゲームの音と重ならないように。待っているあいだもほかの通知は鳴ります）。試聴はすぐ鳴らします。
 - 同時に起きた通知は重ねずに順番に鳴らします。
 - 認識の通知とエラーは、同じ内容で 3 秒以内なら繰り返し鳴らしません（`recognitionSoundCooldown`）。
 

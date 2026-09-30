@@ -123,3 +123,15 @@ func TestSplitErrorSoundsFollowOlderErrorSetting(t *testing.T) {
 		t.Fatalf("defaults = %+v", d)
 	}
 }
+
+func TestSoundDelayDefaultsAndOwn(t *testing.T) {
+	s, err := decodeSettings([]byte(`{"soundDelays":{"taskFailed":0,"matchFound":20}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for kind, want := range map[string]int{"questItems": 3, "taskFailed": 0, "matchFound": SoundDelayMax, "raidStart": 0} {
+		if got := s.SoundDelay(kind); got != want {
+			t.Errorf("SoundDelay(%q) = %d, want %d", kind, got, want)
+		}
+	}
+}
