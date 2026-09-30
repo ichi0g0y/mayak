@@ -231,6 +231,7 @@ func (a *App) refreshTrackerIdentity(mode, profileID, accountID string) error {
 		a.setTrackerConnection("error", err.Error())
 		return err
 	}
+	owner := a.trackerOwner(ctx, token)
 	completed, failed := 0, 0
 	taskStates := make(map[string]string, len(progress.Data.Tasks))
 	for _, task := range progress.Data.Tasks {
@@ -262,6 +263,7 @@ func (a *App) refreshTrackerIdentity(mode, profileID, accountID string) error {
 	a.updateHideoutLocked()
 	a.status.Tracker.Connection = "connected"
 	a.status.Tracker.DisplayName = progress.Data.DisplayName
+	a.status.Tracker.UserID = owner
 	a.status.Tracker.PlayerLevel = progress.Data.PlayerLevel
 	a.status.Tracker.CompletedTasks = completed
 	a.status.Tracker.FailedTasks = failed
@@ -272,7 +274,22 @@ func (a *App) refreshTrackerIdentity(mode, profileID, accountID string) error {
 	a.mu.Unlock()
 	a.emitStatus(status)
 	a.addLog("Info", "TarkovTracker", fmt.Sprintf("Progress loaded for %s: %d completed", mode, completed))
+	a.squadUpdateTracker()
 	return nil
+}
+
+// trackerOwner is the TarkovTracker user token belongs to, asked of
+// /token once per token ("" when it cannot be had).
+func (a *App) trackerOwner(ctx context.Context, token string) string {
+	if owner, ok := a.trackerOwners.Load(token); ok {
+		return owner.(string)
+	}
+	info, err := a.trackerClient.TokenInfo(ctx, token)
+	if err != nil {
+		return ""
+	}
+	a.trackerOwners.Store(token, info.Owner)
+	return info.Owner
 }
 
 func (a *App) syncTrackerTask(mode, profileID, accountID, token, taskID, state string) {

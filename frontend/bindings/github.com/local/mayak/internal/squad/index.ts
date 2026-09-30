@@ -4,5 +4,6 @@
 export {
     Member,
     Position,
-    State
+    State,
+    Tracker
 } from "./models.js";

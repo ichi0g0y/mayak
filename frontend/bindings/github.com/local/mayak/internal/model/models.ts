@@ -663,6 +663,12 @@ export class TrackerStatus {
     "profileId": string;
     "accountId": string;
     "displayName": string;
+
+    /**
+     * UserID is the TarkovTracker user the token belongs to (its /token
+     * owner): their shared profile is tarkovtracker.org/profile/<id>/<mode>.
+     */
+    "userId": string;
     "playerLevel": number;
     "completedTasks": number;
     "failedTasks": number;
@@ -696,6 +702,9 @@ export class TrackerStatus {
         }
         if (!("displayName" in $$source)) {
             this["displayName"] = "";
+        }
+        if (!("userId" in $$source)) {
+            this["userId"] = "";
         }
         if (!("playerLevel" in $$source)) {
             this["playerLevel"] = 0;
@@ -741,14 +750,14 @@ export class TrackerStatus {
      * Creates a new TrackerStatus instance from a string or object.
      */
     static createFrom($$source: any = {}): TrackerStatus {
-        const $$createField15_0 = $$createType21;
-        const $$createField16_0 = $$createType23;
+        const $$createField16_0 = $$createType21;
+        const $$createField17_0 = $$createType23;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("keys" in $$parsedSource) {
-            $$parsedSource["keys"] = $$createField15_0($$parsedSource["keys"]);
+            $$parsedSource["keys"] = $$createField16_0($$parsedSource["keys"]);
         }
         if ("profiles" in $$parsedSource) {
-            $$parsedSource["profiles"] = $$createField16_0($$parsedSource["profiles"]);
+            $$parsedSource["profiles"] = $$createField17_0($$parsedSource["profiles"]);
         }
         return new TrackerStatus($$parsedSource as Partial<TrackerStatus>);
     }

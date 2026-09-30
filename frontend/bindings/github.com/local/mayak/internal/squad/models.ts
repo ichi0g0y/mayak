@@ -38,6 +38,12 @@ export class Member {
      */
     "key"?: string;
 
+    /**
+     * Tracker is this player's TarkovTracker progress in short, when they
+     * sync with it: shown on their card in the others' sidebar.
+     */
+    "tracker"?: Tracker | null;
+
     /** Creates a new Member instance. */
     constructor($$source: Partial<Member> = {}) {
         if (!("id" in $$source)) {
@@ -58,9 +64,13 @@ export class Member {
      */
     static createFrom($$source: any = {}): Member {
         const $$createField5_0 = $$createType1;
+        const $$createField9_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("pos" in $$parsedSource) {
             $$parsedSource["pos"] = $$createField5_0($$parsedSource["pos"]);
+        }
+        if ("tracker" in $$parsedSource) {
+            $$parsedSource["tracker"] = $$createField9_0($$parsedSource["tracker"]);
         }
         return new Member($$parsedSource as Partial<Member>);
     }
@@ -139,7 +149,7 @@ export class State {
      * Creates a new State instance from a string or object.
      */
     static createFrom($$source: any = {}): State {
-        const $$createField2_0 = $$createType3;
+        const $$createField2_0 = $$createType5;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("members" in $$parsedSource) {
             $$parsedSource["members"] = $$createField2_0($$parsedSource["members"]);
@@ -148,8 +158,38 @@ export class State {
     }
 }
 
+/**
+ * Tracker is a player's TarkovTracker progress in short: the name there,
+ * the level, the game mode (pvp, pve), the tasks completed and failed, and
+ * the TarkovTracker user (for the link to their shared profile).
+ */
+export class Tracker {
+    "name"?: string;
+    "level"?: number;
+    "mode"?: string;
+    "done"?: number;
+    "failed"?: number;
+    "user"?: string;
+
+    /** Creates a new Tracker instance. */
+    constructor($$source: Partial<Tracker> = {}) {
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Tracker instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Tracker {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new Tracker($$parsedSource as Partial<Tracker>);
+    }
+}
+
 // Private type creation functions
 const $$createType0 = Position.createFrom;
 const $$createType1 = $Create.Nullable($$createType0);
-const $$createType2 = Member.createFrom;
-const $$createType3 = $Create.Array($$createType2);
+const $$createType2 = Tracker.createFrom;
+const $$createType3 = $Create.Nullable($$createType2);
+const $$createType4 = Member.createFrom;
+const $$createType5 = $Create.Array($$createType4);

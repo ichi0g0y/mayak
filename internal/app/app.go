@@ -93,11 +93,13 @@ type App struct {
 	screenshotIndex   *screenshotstore.Index
 	// lastRaid is the last raid that ended, and goonReports the raids reported
 	// (account|mode|start), for Goons reports.
-	lastRaid       *GoonRaid
-	goonReports    map[string]bool
-	faviconOnce    sync.Once
-	favicons       *faviconCache
-	trackerClient  *tracker.Client
+	lastRaid      *GoonRaid
+	goonReports   map[string]bool
+	faviconOnce   sync.Once
+	favicons      *faviconCache
+	trackerClient *tracker.Client
+	// trackerOwners: each TarkovTracker token's user (its /token owner), asked once.
+	trackerOwners  sync.Map
 	trackerStore   trackerstore.Store
 	trackerStoreMu sync.Mutex
 	// trackerJobs is the work a key assignment starts (a sync of the

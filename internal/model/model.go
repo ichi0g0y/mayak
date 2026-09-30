@@ -90,11 +90,14 @@ type CatalogStatus struct {
 }
 
 type TrackerStatus struct {
-	Connection         string `json:"connection"`
-	Mode               string `json:"mode"`
-	ProfileID          string `json:"profileId"`
-	AccountID          string `json:"accountId"`
-	DisplayName        string `json:"displayName"`
+	Connection  string `json:"connection"`
+	Mode        string `json:"mode"`
+	ProfileID   string `json:"profileId"`
+	AccountID   string `json:"accountId"`
+	DisplayName string `json:"displayName"`
+	// UserID is the TarkovTracker user the token belongs to (its /token
+	// owner): their shared profile is tarkovtracker.org/profile/<id>/<mode>.
+	UserID             string `json:"userId"`
 	PlayerLevel        int    `json:"playerLevel"`
 	CompletedTasks     int    `json:"completedTasks"`
 	FailedTasks        int    `json:"failedTasks"`

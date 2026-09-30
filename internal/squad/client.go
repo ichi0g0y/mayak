@@ -3,6 +3,7 @@ package squad
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -50,6 +51,21 @@ type Report struct {
 	// Key is this PC's member key (32 hex digits), the same across
 	// reconnections, which the squad's lines are owned by (map-draw.js).
 	Key string `json:"key,omitempty"`
+	// Tracker is this player's TarkovTracker progress in short, when they
+	// sync with it: shown on their card in the others' sidebar.
+	Tracker *Tracker `json:"tracker,omitempty"`
+}
+
+// Tracker is a player's TarkovTracker progress in short: the name there,
+// the level, the game mode (pvp, pve), the tasks completed and failed, and
+// the TarkovTracker user (for the link to their shared profile).
+type Tracker struct {
+	Name   string `json:"name,omitempty"`
+	Level  int    `json:"level,omitempty"`
+	Mode   string `json:"mode,omitempty"`
+	Done   int    `json:"done,omitempty"`
+	Failed int    `json:"failed,omitempty"`
+	User   string `json:"user,omitempty"`
 }
 
 type sealedReport struct {
@@ -553,8 +569,37 @@ func clean(r Report) Report {
 		r.Pos = nil
 		r.At = time.Time{}
 	}
+	if r.Tracker != nil {
+		t := *r.Tracker
+		t.Name = strings.TrimSpace(t.Name)
+		if utf8.RuneCountInString(t.Name) > MaxName*2 {
+			t.Name = string([]rune(t.Name)[:MaxName*2])
+		}
+		if t.Level < 0 || t.Level > 200 {
+			t.Level = 0
+		}
+		if t.Mode != "pvp" && t.Mode != "pve" {
+			t.Mode = ""
+		}
+		if t.Done < 0 || t.Done > 10000 {
+			t.Done = 0
+		}
+		if t.Failed < 0 || t.Failed > 10000 {
+			t.Failed = 0
+		}
+		if !trackerUser.MatchString(t.User) {
+			t.User = ""
+		}
+		r.Tracker = &t
+		if t == (Tracker{}) {
+			r.Tracker = nil
+		}
+	}
 	return r
 }
+
+// trackerUser is a TarkovTracker user id: a UUID.
+var trackerUser = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
 // ValidColor tells whether c is a colour as a report carries one: "#rrggbb"
 // in lower case.

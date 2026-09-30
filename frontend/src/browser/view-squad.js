@@ -77,10 +77,8 @@ function memberChip(m) {
   const theirs = you(m) || !m.key ? [] : shares.filter((x) => x.by === m.key)
   const unread = theirs.filter((x) => !x.seen).length
   const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-chip-name">${esc(m.name || '?')}${you(m) ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span>`
-  const head =
-    m.map && m.pos
-      ? `<button class="squad-chip-focus" data-action="squadFocus" data-id="${esc(squadKey(m))}" title="${esc(t('squadFocus'))}\n${esc(whereOf(m))}">${line}</button>`
-      : `<span class="squad-chip-focus" title="${esc(title)}">${line}</span>`
+  const cardOpen = openCard === squadKey(m)
+  const head = `<button class="squad-chip-focus" data-action="squadMemberCard" data-id="${esc(squadKey(m))}" aria-expanded="${cardOpen}" title="${esc(title)}">${line}</button>`
   const badge = unread
     ? `<button class="squad-chip-count" data-action="squadMemberShares" data-id="${esc(m.key)}" title="${esc(t('squadMemberUnread'))}">${unread}</button>`
     : ''
@@ -108,7 +106,28 @@ ${x.url}`
       ? `<div class="squad-chip-item"><button class="squad-chip-latest" data-action="squadFocus" data-id="${esc(squadKey(m))}" title="${esc(t('squadFocus'))}">${icon('map')}<span>${esc(mapName(findMap(state.squad?.maps || [], m.map)?.key || m.map))}</span><small>${esc(age(m.at, state.language))}</small></button></div>`
       : `<span class="squad-chip-where">${icon('map')}<span>${esc(whereOf(m))}</span></span>`
   const under = `<div class="squad-chip-items">${place}${latest.map(row).join('')}</div>`
-  return `<li class="squad-chip ${fade}"><div class="squad-chip-row">${head}${badge}</div>${under}</li>`
+  return `<li class="squad-chip ${fade}"><div class="squad-chip-row">${head}${badge}</div>${cardOpen ? memberCard(m) : ''}${under}</li>`
+}
+
+// The member whose card is open in the sidebar (squadKey), or ''.
+let openCard = ''
+// memberCard is a member's card, opened by their name: their TarkovTracker
+// progress in short (sent with their report while they sync with it) and
+// the way to their shared profile there, which shows when they share it.
+function memberCard(m) {
+  const tr = m.tracker
+  if (!tr) return `<div class="squad-card"><p class="squad-card-none">${esc(t('squadCardNoTracker'))}</p></div>`
+  const mode = tr.mode === 'pve' ? 'PvE' : tr.mode === 'pvp' ? 'PvP' : ''
+  const facts = [
+    tr.level ? `<div><dt>${esc(t('squadCardLevel'))}</dt><dd>${tr.level}</dd></div>` : '',
+    mode ? `<div><dt>${esc(t('squadCardMode'))}</dt><dd>${mode}</dd></div>` : '',
+    `<div><dt>${esc(t('squadCardTasks'))}</dt><dd>${tr.done || 0}${tr.failed ? ` <small>${esc(t('squadCardFailed').replace('{n}', String(tr.failed)))}</small>` : ''}</dd></div>`,
+  ].join('')
+  const url = tr.user ? `https://tarkovtracker.org/profile/${tr.user}/${tr.mode || 'pvp'}` : ''
+  const link = url
+    ? `<button class="squad-card-link" data-action="open" data-id="${esc(url)}" title="${esc(t('squadCardProfileHint'))}">${icon('external')}<span>${esc(t('squadCardProfile'))}</span></button>`
+    : ''
+  return `<div class="squad-card"><div class="squad-card-name">${esc(tr.name || m.name || '?')}<small>TarkovTracker</small></div><dl>${facts}</dl>${link}</div>`
 }
 
 export { colorOf }
@@ -313,6 +332,12 @@ clickHandlers.push(async (type, id) => {
     return true
   }
   // A member's count: the squad's page on their shares alone.
+  // A member's name opens their card, and closes it again.
+  if (type === 'squadMemberCard') {
+    openCard = openCard === id ? '' : id || ''
+    render()
+    return true
+  }
   // A member's count (all they shared) or a row's more (that kind alone).
   if (type === 'squadMemberShares') {
     const [key, kind] = String(id || '').split('|')

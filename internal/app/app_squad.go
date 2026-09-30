@@ -274,7 +274,50 @@ func (a *App) squadReport(name string) squad.Report {
 		r.Map = status.CurrentMap
 		r.Pos, r.At = squadPosition(*status.Position)
 	}
+	r.Tracker = a.squadTracker()
 	return r
+}
+
+// squadTracker is this player's TarkovTracker progress in short, for the
+// squad: while synced with it, and not on a PC that only watches (its Host
+// tells it).
+func (a *App) squadTracker() *squad.Tracker {
+	if a.browserClient.Load() {
+		return nil
+	}
+	a.mu.RLock()
+	tr := a.status.Tracker
+	a.mu.RUnlock()
+	if tr.Connection != "connected" {
+		return nil
+	}
+	mode := strings.ToLower(tr.Mode)
+	if strings.HasPrefix(mode, "pvp") || mode == "regular" {
+		mode = "pvp"
+	} else if strings.HasPrefix(mode, "pve") {
+		mode = "pve"
+	} else {
+		mode = ""
+	}
+	return &squad.Tracker{Name: tr.DisplayName, Level: tr.PlayerLevel, Mode: mode, Done: tr.CompletedTasks, Failed: tr.FailedTasks, User: strings.ToLower(tr.UserID)}
+}
+
+// squadUpdateTracker tells the squad this player's TarkovTracker progress
+// when it has changed (after each sync).
+func (a *App) squadUpdateTracker() {
+	squadMu.Lock()
+	client := squadClient
+	squadMu.Unlock()
+	if client == nil {
+		return
+	}
+	r := client.Mine()
+	next := a.squadTracker()
+	if (r.Tracker == nil && next == nil) || (r.Tracker != nil && next != nil && *r.Tracker == *next) {
+		return
+	}
+	r.Tracker = next
+	client.Report(r)
 }
 
 func squadPosition(p model.Position) (*squad.Position, time.Time) {

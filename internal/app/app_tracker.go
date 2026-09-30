@@ -133,6 +133,7 @@ func (a *App) clearTrackerProgressLocked() {
 	a.hideoutProgress = nil
 	a.trackerTasks = make(map[string]string)
 	a.status.Tracker.DisplayName = ""
+	a.status.Tracker.UserID = ""
 	a.status.Tracker.PlayerLevel = 0
 	a.status.Tracker.CompletedTasks = 0
 	a.status.Tracker.FailedTasks = 0

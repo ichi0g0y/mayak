@@ -430,3 +430,17 @@ func TestStoreKeepsEachMembersSealedSlot(t *testing.T) {
 		t.Fatalf("slots after letting go: %d, %v", len(store.slots), err)
 	}
 }
+
+// A report's TarkovTracker summary keeps what is sound and drops the rest:
+// the user must be a UUID, the mode pvp or pve; one with nothing left goes.
+func TestReportTrackerIsCleaned(t *testing.T) {
+	user := "0f8e2a4c-1b3d-4e5f-8a9b-0c1d2e3f4a5b"
+	r := clean(Report{Name: "Ann", Tracker: &Tracker{Name: " Ann ", Level: 42, Mode: "pve", Done: 120, Failed: 2, User: user}})
+	if r.Tracker == nil || *r.Tracker != (Tracker{Name: "Ann", Level: 42, Mode: "pve", Done: 120, Failed: 2, User: user}) {
+		t.Fatalf("sound summary changed: %+v", r.Tracker)
+	}
+	r = clean(Report{Name: "Ann", Tracker: &Tracker{Level: 999, Mode: "arena", User: "../../x", Done: -1}})
+	if r.Tracker != nil {
+		t.Fatalf("an unsound summary stayed: %+v", r.Tracker)
+	}
+}
