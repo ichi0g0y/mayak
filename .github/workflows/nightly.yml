@@ -158,3 +158,11 @@ jobs:
 
           開発中のビルドです（${NIGHTLY_REF} の ${SHA}）。不具合が残っていることがあります。"
           gh release create nightly dist/* --prerelease --target "$SHA" --title "MAYAK nightly $VERSION" --notes "$notes"
+          # Made again just after the old one and its tag went, the release has
+          # stayed a draft (2026-09-30): the updater would not see it, so it is
+          # published once more when it did.
+          for i in 1 2 3; do
+            [ "$(gh release view nightly --json isDraft -q .isDraft)" = false ] && break
+            sleep 5
+            gh release edit nightly --draft=false --prerelease
+          done
