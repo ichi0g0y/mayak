@@ -675,7 +675,7 @@ export const words = {
     itemLive: 'LIVE',
     itemCatalog: 'カタログ',
     itemPriced: '価格更新',
-    bestSale: '一番高く売れる先',
+    bestSale: '一番高く売れるのは',
     perSlot: '1マス',
     flea: 'フリーマーケット',
     fleaLow: '最安値',
