@@ -183,6 +183,7 @@ async function squadJoin(code, name, here = true) {
 
 const snapshot = () => ({
   ...state,
+  markerEffect,
   squad: squad.available
     ? {
         state: squad.state,
@@ -774,12 +775,32 @@ function startLink() {
 async function shareHostInfo() {
   if (state.connection.mode !== 'local') return
   try {
-    peer.sendHost({ mode: String((await go.BrowserCatalogMode()) || '') })
+    peer.sendHost({ mode: String((await go.BrowserCatalogMode()) || ''), marker: markerEffect })
+  } catch {}
+}
+// The effect on your own arrow on the map (settings → the player marker on
+// tarkov.dev's map, the Host's): on the Host from its settings, read again
+// when they change it; on a Client from its Host.
+let markerEffect = { effect: 'none', color: '' }
+async function loadMarkerEffect() {
+  if (platform !== 'windows' || state.connection.mode !== 'local') return
+  try {
+    const s = await go.GetSettings()
+    const next = { effect: s.playerMarkerEffect || 'none', color: s.playerMarkerColor || '' }
+    if (next.effect === markerEffect.effect && next.color === markerEffect.color) return
+    markerEffect = next
+    update()
+    void shareHostInfo()
   } catch {}
 }
 let hostMode = ''
-async function receiveHost({ mode }) {
-  if (state.connection.mode !== 'client' || mode === hostMode) return
+async function receiveHost({ mode, marker }) {
+  if (state.connection.mode !== 'client') return
+  if (marker && (marker.effect !== markerEffect.effect || marker.color !== markerEffect.color)) {
+    markerEffect = marker
+    update()
+  }
+  if (mode === hostMode) return
   hostMode = mode
   await go.BrowserSetHostMode(mode)
   // What was read in the mode before is read again.
@@ -1001,6 +1022,8 @@ const ready = (async () => {
   } catch {}
   // The Host's monitoring state for the sidebar's monitoring button.
   if (platform === 'windows') {
+    void loadMarkerEffect()
+    window.mayakDesktop.on('browser:document-script', () => void loadMarkerEffect())
     try {
       host = hostStatus(await go.GetStatus())
       const s = await go.GetSettings()

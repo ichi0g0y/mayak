@@ -607,9 +607,20 @@ function drawThings(map, floor, data) {
   }
 }
 
+// Your own arrow wears the effect chosen for tarkov.dev's player marker
+// (settings: an outline, a glow, a pulsing ring, a beacon), in its colour:
+// white for the outline and a warning red for the rest until one is chosen.
+const markerEffects = ['outline', 'glow', 'pulse', 'beacon']
+function effectOf(m) {
+  const fx = state.markerEffect
+  if (!m.me || !fx || !markerEffects.includes(fx.effect)) return { cls: '', style: '' }
+  const c = /^#[0-9a-f]{6}$/i.test(fx.color || '') ? fx.color : fx.effect === 'outline' ? '#ffffff' : '#ff3b30'
+  return { cls: ` fx-${fx.effect}`, style: `;--fx:${c}` }
+}
 function squadHTML(m) {
   const rot = markerRotation(m.pos.rot, shown().map?.rotation)
-  return `<span class="squad-marker ${m.me ? 'me' : ''}" style="--c:${colorOf(m)}"><svg viewBox="0 0 24 24" style="transform:rotate(${rot}deg)"><path d="M12 2 19 21 12 16.5 5 21z"/></svg><span class="squad-label">${esc(m.name || '?')}</span></span>`
+  const fx = effectOf(m)
+  return `<span class="squad-marker ${m.me ? 'me' : ''}${fx.cls}" style="--c:${colorOf(m)}${fx.style}"><svg viewBox="0 0 24 24" style="transform:rotate(${rot}deg)"><path d="M12 2 19 21 12 16.5 5 21z"/></svg><span class="squad-label">${esc(m.name || '?')}</span></span>`
 }
 
 function drawSquad(map, floor, members) {
@@ -809,11 +820,13 @@ function drawMap() {
   drawPins(map, floor)
   lm.map.getContainer().classList.toggle('map-pinning', pinning)
   if (view.focus?.map === map.key) {
-    const { x, z, zoom, pulse } = view.focus
+    const { x, z, zoom, pulse, keep, rings } = view.focus
     view.focus = null
     const near = Number.isFinite(zoom)
       ? zoom
-      : Math.max(lm.map.getZoom(), ((map.minZoom || 2) + Math.max(7, map.maxZoom || 6)) / 2)
+      : keep
+        ? lm.map.getZoom()
+        : Math.max(lm.map.getZoom(), ((map.minZoom || 2) + Math.max(7, map.maxZoom || 6)) / 2)
     lm.map.setView(L.latLng(z, x), near)
     // A view shared: a ring in the sharer's colour where they looked.
     if (pulse) {
@@ -823,7 +836,7 @@ function drawMap() {
         zIndexOffset: 3000,
         icon: L.divIcon({
           className: 'map-look-icon',
-          html: `<span class="map-look" style="--c:${esc(pulse)}"></span>`,
+          html: `<span class="map-look ${rings ? 'rings' : ''}" style="--c:${esc(pulse)}"></span>`,
           iconSize: [0, 0],
         }),
       }).addTo(lm.map)
@@ -947,7 +960,9 @@ clickHandlers.push(async (type, id, button) => {
     if (!map) return true
     view.map = map.key
     view.floor = floorFor(map, m.pos)
-    view.focus = { map: map.key, x: m.pos.x, z: m.pos.z }
+    // At the zoom the map has (none when it opens anew), with rings in
+    // their colour where they are.
+    view.focus = { map: map.key, x: m.pos.x, z: m.pos.z, keep: true, pulse: colorOf(m), rings: true }
     // From the sidebar or the squad's page, the map comes forward.
     if (state.tabs.find((tab) => tab.id === state.active)?.kind !== 'livemap') await action('livemap')
     else render()

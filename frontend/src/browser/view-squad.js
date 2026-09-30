@@ -64,35 +64,31 @@ function memberLine(m) {
     ? `<li class="squad-member ${fade}"><button class="squad-member-focus" data-action="squadFocus" data-id="${esc(squadKey(m))}" title="${esc(t('squadFocus'))}">${line}</button></li>`
     : `<li class="squad-member ${fade}">${line}</li>`
 }
-// The sidebar's members: a colour dot and a name each, where they are in
-// the title; one with a position shows them on the map when pressed.
+// The sidebar's members: a colour dot and a name each; pressing one shows
+// them on the map (their map and floor, at the zoom the map has, with rings
+// in their colour: view-map.js squadFocus). Under it, the latest thing they
+// shared or did (pressed, it opens as on the squad's page), else where they
+// are. The count of what they shared unread opens the squad's page on
+// their shares alone.
 function memberChip(m) {
   const fade = m.map && m.pos ? freshness(m.at) : 'gone'
   const title = `${m.name || '?'} — ${whereOf(m)}`
   const theirs = you(m) || !m.key ? [] : shares.filter((x) => x.by === m.key)
   const unread = theirs.filter((x) => !x.seen).length
-  const open = openMember === squadKey(m)
-  const badge = unread ? `<span class="squad-chip-count" title="${esc(t('squadMemberUnread'))}">${unread}</span>` : ''
-  const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-chip-name">${esc(m.name || '?')}${you(m) ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span>${badge}`
-  // Pressing a member opens what they shared and the way to them on the map;
-  // yourself, straight to you on the map.
-  const button = you(m)
-    ? m.map && m.pos
-      ? `<button data-action="squadFocus" data-id="${esc(squadKey(m))}" title="${esc(title)}">${line}</button>`
-      : line
-    : `<button data-action="squadMember" data-id="${esc(squadKey(m))}" aria-expanded="${open}" title="${esc(title)}">${line}</button>`
-  let body = ''
-  if (open && !you(m)) {
-    const focus =
-      m.map && m.pos
-        ? `<li><button class="squad-member-map" data-action="squadFocus" data-id="${esc(squadKey(m))}">${icon('map')}<span>${esc(t('squadFocus'))}</span></button></li>`
-        : `<li class="squad-member-where-note">${esc(whereOf(m))}</li>`
-    body = `<ul class="squad-member-shares">${focus}${theirs.length ? theirs.map((x) => shareRow(x, true)).join('') : `<li class="squad-member-none">${esc(t('squadMemberNone'))}</li>`}</ul>`
-  }
-  return `<li class="squad-chip ${fade} ${open ? 'open' : ''}" ${button === line ? `title="${esc(title)}"` : ''}>${button}${body}</li>`
+  const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-chip-name">${esc(m.name || '?')}${you(m) ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span>`
+  const head =
+    m.map && m.pos
+      ? `<button class="squad-chip-focus" data-action="squadFocus" data-id="${esc(squadKey(m))}" title="${esc(t('squadFocus'))}\n${esc(whereOf(m))}">${line}</button>`
+      : `<span class="squad-chip-focus" title="${esc(title)}">${line}</span>`
+  const badge = unread
+    ? `<button class="squad-chip-count" data-action="squadMemberShares" data-id="${esc(m.key)}" title="${esc(t('squadMemberUnread'))}">${unread}</button>`
+    : ''
+  const latest = theirs[0]
+  const under = latest
+    ? `<button class="squad-chip-latest ${latest.seen ? '' : 'unseen'}" data-action="squadShareOpen" data-id="${esc(latest.id)}" title="${esc(shareTitle(latest))}">${icon(shareIcons[latest.kind] || 'globe')}<span>${esc(shareTitle(latest))}</span><small>${esc(age(new Date(latest.at).toISOString(), state.language))}</small></button>`
+    : `<span class="squad-chip-where">${esc(whereOf(m))}</span>`
+  return `<li class="squad-chip ${fade}"><div class="squad-chip-row">${head}${badge}</div>${under}</li>`
 }
-// The member whose shares show under them in the sidebar (squadKey), or ''.
-let openMember = ''
 
 export { colorOf }
 
@@ -116,11 +112,17 @@ function shareRow(s, full) {
   return `<li class="squad-share ${s.seen ? '' : 'unseen'}"><button data-action="squadShareOpen" data-id="${esc(s.id)}" title="${esc(title)}">${icon(shareIcons[s.kind] || 'globe')}<span class="squad-share-text"><span class="squad-share-title">${esc(shareTitle(s))}</span>${from}</span>${s.seen ? '' : '<span class="squad-share-dot"></span>'}</button></li>`
 }
 let shareFilter = 'all'
+// The member whose shares alone the list shows (member key), or ''.
+let shareBy = ''
 function sharesCard() {
   const chip = (id, label) =>
     `<button data-action="squadShareFilter" data-id="${id}" class="${shareFilter === id ? 'selected' : ''}">${esc(t(label))}</button>`
-  const list = shares.filter((s) => shareFilter === 'all' || s.kind === shareFilter)
-  return `<section class="panel squad-shares-card"><div class="squad-shares-head"><h2>${esc(t('squadShares'))}</h2><div class="segmented" role="group">${chip('all', 'squadSharesAll')}${chip('tab', 'squadSharesTabs')}${chip('snap', 'snapNotes')}${chip('view', 'squadSharesView')}${chip('draw', 'squadSharesDraw')}</div></div><p class="hint">${esc(t('squadSharesHint'))}</p>${list.length ? `<ul class="squad-shares">${list.map((s) => shareRow(s, true)).join('')}</ul>` : `<p class="shot-empty">${esc(t('squadSharesEmpty'))}</p>`}</section>`
+  const list = shares.filter((s) => (shareFilter === 'all' || s.kind === shareFilter) && (!shareBy || s.by === shareBy))
+  const by = shareBy && shares.find((s) => s.by === shareBy)
+  const who = by
+    ? `<button class="squad-shares-by" data-action="squadSharesAllMembers" title="${esc(t('squadSharesEveryone'))}"><span class="squad-dot" style="--c:${esc(by.c)}"></span>${esc(by.name || '?')}${icon('x')}</button>`
+    : ''
+  return `<section class="panel squad-shares-card"><div class="squad-shares-head"><h2>${esc(t('squadShares'))}</h2>${who}<div class="segmented" role="group">${chip('all', 'squadSharesAll')}${chip('tab', 'squadSharesTabs')}${chip('snap', 'snapNotes')}${chip('view', 'squadSharesView')}${chip('draw', 'squadSharesDraw')}</div></div><p class="hint">${esc(t('squadSharesHint'))}</p>${list.length ? `<ul class="squad-shares">${list.map((s) => shareRow(s, true)).join('')}</ul>` : `<p class="shot-empty">${esc(t('squadSharesEmpty'))}</p>`}</section>`
 }
 
 // The sidebar's section: the heading (with how many are in the squad and
@@ -276,8 +278,15 @@ clickHandlers.push(async (type, id) => {
     render()
     return true
   }
-  if (type === 'squadMember') {
-    openMember = openMember === id ? '' : id
+  // A member's count: the squad's page on their shares alone.
+  if (type === 'squadMemberShares') {
+    shareBy = id || ''
+    shareFilter = 'all'
+    void action('squadPage')
+    return true
+  }
+  if (type === 'squadSharesAllMembers') {
+    shareBy = ''
     render()
     return true
   }
