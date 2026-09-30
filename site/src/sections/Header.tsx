@@ -26,6 +26,7 @@ export function Header({ home = true }: { home?: boolean }) {
   const links: [string, string][] = [
     [`${prefix}#features`, t.nav.features],
     [`${prefix}#start`, t.nav.start],
+    [`${prefix}#squad`, t.nav.squad],
     [`${prefix}#safety`, t.nav.safety],
     [`${prefix}#faq`, t.nav.faq],
     ['/changelog', t.nav.changelog],
@@ -37,7 +38,7 @@ export function Header({ home = true }: { home?: boolean }) {
           <img src="/assets/mayak-mark-white.png" alt="" width={28} height={28} className="size-7" />
           <span className="text-lg font-extrabold tracking-tight">MAYAK</span>
         </a>
-        <nav className="hidden items-center gap-6 text-sm md:flex">
+        <nav className="hidden items-center gap-5 text-sm whitespace-nowrap lg:flex">
           {links.map(([href, label]) => (
             <a key={href} href={href} className="text-muted-foreground hover:text-foreground transition-colors">
               {label}

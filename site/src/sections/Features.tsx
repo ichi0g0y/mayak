@@ -1,9 +1,9 @@
-import { Bell, Brush, Check, Compass, MapPinned, Package, ScanLine } from 'lucide-react'
+import { Bell, Check, Compass, MapPinned, MonitorSmartphone, Package, ScanLine, StickyNote, Users } from 'lucide-react'
 import { Reveal } from '@/components/Reveal'
 import { useT } from '@/i18n'
 import { Section } from './Section'
 
-const icons = [MapPinned, ScanLine, Package, Compass, Brush, Bell]
+const icons = [MapPinned, Users, ScanLine, Package, Compass, StickyNote, Bell, MonitorSmartphone]
 
 export function Features() {
   const t = useT()
