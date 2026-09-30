@@ -64,12 +64,13 @@ function memberLine(m) {
     ? `<li class="squad-member ${fade}"><button class="squad-member-focus" data-action="squadFocus" data-id="${esc(squadKey(m))}" title="${esc(t('squadFocus'))}">${line}</button></li>`
     : `<li class="squad-member ${fade}">${line}</li>`
 }
-// The sidebar's members: a colour dot and a name each; pressing one shows
-// them on the map (their map and floor, at the zoom the map has, with rings
-// in their colour: view-map.js squadFocus). Under it, a small tree of the
-// latest page, snap note and pin they shared (pressed, each opens as on the
-// squad's page), else where they are. The count of what they shared unread opens the squad's page on
-// their shares alone.
+// The sidebar's members: a colour dot and a name each (pressed, it shows
+// them on the map as their place does). Under it, always open, a small
+// tree of the latest of each: where they are (pressed, it shows them on the
+// map: their map and floor, at the zoom the map has, with rings in their
+// colour: view-map.js squadFocus), the page, the snap note and the pin they
+// shared (pressed, each opens as on the squad's page, and stays). The count
+// of what they shared unread opens the squad's page on their shares alone.
 function memberChip(m) {
   const fade = m.map && m.pos ? freshness(m.at) : 'gone'
   const title = `${m.name || '?'} — ${whereOf(m)}`
@@ -83,11 +84,8 @@ function memberChip(m) {
   const badge = unread
     ? `<button class="squad-chip-count" data-action="squadMemberShares" data-id="${esc(m.key)}" title="${esc(t('squadMemberUnread'))}">${unread}</button>`
     : ''
-  // The latest page, snap note and pin they shared, newest first.
-  const latest = ['tab', 'snap', 'view']
-    .map((kind) => theirs.find((x) => x.kind === kind))
-    .filter(Boolean)
-    .sort((a, b) => b.at - a.at)
+  // The latest page, snap note and pin they shared, in that order.
+  const latest = ['tab', 'snap', 'view'].map((kind) => theirs.find((x) => x.kind === kind)).filter(Boolean)
   // Each with how many more of its kind they shared: pressed, the squad's
   // page shows their shares of that kind.
   const more = (x) => {
@@ -103,9 +101,13 @@ function memberChip(m) {
 ${x.url}`
         : shareTitle(x),
     )}">${icon(shareIcons[x.kind] || 'globe')}<span>${esc(shareTitle(x))}</span><small>${esc(age(new Date(x.at).toISOString(), state.language))}</small></button>${more(x)}</div>`
-  const under = latest.length
-    ? `<div class="squad-chip-items">${latest.map(row).join('')}</div>`
-    : `<span class="squad-chip-where">${esc(whereOf(m))}</span>`
+  // Where they are: their map and how long ago (shows them), else out of
+  // a raid or on a map without a place yet.
+  const place =
+    m.map && m.pos
+      ? `<div class="squad-chip-item"><button class="squad-chip-latest" data-action="squadFocus" data-id="${esc(squadKey(m))}" title="${esc(t('squadFocus'))}">${icon('map')}<span>${esc(mapName(findMap(state.squad?.maps || [], m.map)?.key || m.map))}</span><small>${esc(age(m.at, state.language))}</small></button></div>`
+      : `<span class="squad-chip-where">${icon('map')}<span>${esc(whereOf(m))}</span></span>`
+  const under = `<div class="squad-chip-items">${place}${latest.map(row).join('')}</div>`
   return `<li class="squad-chip ${fade}"><div class="squad-chip-row">${head}${badge}</div>${under}</li>`
 }
 

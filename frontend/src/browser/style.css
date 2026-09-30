@@ -1222,7 +1222,9 @@ button.squad-chip-focus:hover{background:var(--hover)}
 .squad-chip-latest span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .squad-chip-latest small{flex:none;margin-left:auto;color:var(--muted);font-size:10.5px}
 .squad-chip-latest.unseen{color:var(--text);font-weight:600}
-.squad-chip-where{padding:0 6px 3px 24px;overflow:hidden;color:var(--muted);font-size:11.5px;text-overflow:ellipsis;white-space:nowrap}
+.squad-chip-where{display:flex;align-items:center;gap:6px;min-width:0;height:22px;padding:0 6px 0 7px;color:var(--muted);font-size:11.5px}
+.squad-chip-where .icon{flex:none;width:12px;height:12px}
+.squad-chip-where span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .squad-shares-by{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 6px 0 9px;border-radius:13px;font-size:12.5px}
 .squad-shares-by .icon{width:12px;height:12px;color:var(--muted)}
 .squad-chip.stale,.squad-chip.gone{color:var(--text-2)}
