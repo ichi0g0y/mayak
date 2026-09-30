@@ -39,7 +39,7 @@ import {
   snapStrokes,
   squadSnapStrokes,
 } from './map-draw.js'
-import { mapName, ownName } from './view-squad.js'
+import { mapName, ownName, you } from './view-squad.js'
 import { colorOf } from './squad-colors.js'
 import { myStyle as squadStyle } from './squad-draw.js'
 import { askShot, bubbles, canShare, dropPin, mapFresh, pinsOn, removePin, shares } from './squad-share.js'
@@ -647,7 +647,8 @@ function effectOf(m) {
 function squadHTML(m) {
   const rot = markerRotation(m.pos.rot, shown().map?.rotation)
   const fx = effectOf(m)
-  return `<span class="squad-marker ${m.me ? 'me' : ''}${fx.cls}" style="--c:${colorOf(m)}${fx.style}"><svg viewBox="0 0 24 24" style="transform:rotate(${rot}deg)">${markerShapes[state.mapSettings?.markerShape] || markerShapes.arrow}</svg><span class="squad-label">${esc(m.name || '?')}</span></span>`
+  // Yours: on a Client, its Host's too (the same player: view-squad.js you).
+  return `<span class="squad-marker ${m.me || you(m) ? 'me' : ''}${fx.cls}" style="--c:${colorOf(m)}${fx.style}"><svg viewBox="0 0 24 24" style="transform:rotate(${rot}deg)">${markerShapes[state.mapSettings?.markerShape] || markerShapes.arrow}</svg><span class="squad-label">${esc(m.name || '?')}</span></span>`
 }
 
 function drawSquad(map, floor, members) {
@@ -660,7 +661,7 @@ function drawSquad(map, floor, members) {
     const at = L.latLng(m.pos.z, m.pos.x)
     let marker = lm.squad.get(id)
     if (!marker) {
-      marker = L.marker(at, { interactive: false, keyboard: false, zIndexOffset: m.me ? 2000 : 1000 })
+      marker = L.marker(at, { interactive: false, keyboard: false, zIndexOffset: m.me || you(m) ? 2000 : 1000 })
       marker._html = ''
       marker.addTo(lm.map)
       lm.squad.set(id, marker)

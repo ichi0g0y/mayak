@@ -40,7 +40,7 @@ export const mapName = (key) =>
 // you tells whether a member is this PC's player: this PC, or, on a PC that
 // only watches (a Client), its Host (the same display name, which the Host
 // and its Clients keep the same).
-function you(m) {
+export function you(m) {
   if (m.me) return true
   const me = state.squad?.state?.members?.find((x) => x.me)
   return !!(me?.viewer && m.name && m.name === (state.squadName || me.name))
