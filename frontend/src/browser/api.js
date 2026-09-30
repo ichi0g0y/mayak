@@ -37,7 +37,8 @@ import { t } from './words.js'
 import './transport.js'
 
 // onMenu gets the choice of a menu opened in the menu window ("" for none).
-let onMenu = /** @type {(choice:string)=>void} */ (() => {})
+// The menu window's choices go to every listener (each knows its own menu).
+const menuListeners = /** @type {((choice:string)=>void)[]} */ ([])
 let state,
   go,
   platform,
@@ -154,7 +155,7 @@ async function nextIcon() {
 // offers it, the squad as the Go side last reported it, the maps' geometry,
 // the map pictures loaded (by "map|floor") and the markers (by
 // "map|language").
-const squad = { available: false, state: null, maps: null, mapsError: false, images: {}, markers: {} }
+const squad = { available: false, state: null, maps: null, mapsError: false, images: {}, markers: {}, pictures: {} }
 async function loadSquadMaps() {
   if (!squad.available || squad.maps) return
   try {
@@ -201,6 +202,7 @@ const snapshot = () => ({
         mapsError: squad.mapsError,
         images: squad.images,
         markers: squad.markers,
+        pictures: squad.pictures,
       }
     : null,
   snapNotes: snapsAvailable()
@@ -389,6 +391,7 @@ async function persist() {
     mapCollapsed,
     squadName,
     squadColor,
+    squadPicture,
     squadCode,
     squadRecent,
     bookmarks,
@@ -430,6 +433,7 @@ async function persist() {
       mapCollapsed,
       squadName,
       squadColor,
+      squadPicture,
       squadCode,
       squadRecent,
       bookmarks,
@@ -512,6 +516,9 @@ function hostStatus(s) {
       .slice(0, 24)
     out.identity = [s.tracker.accountId, s.tracker.profileId, s.tracker.mode].map((v) => String(v || '')).join('|')
   }
+  // When the character's Overall screen was last read (its picture goes to
+  // the squad).
+  if ('profile' in s) out.profileAt = String(s.profile?.at || '')
   return out
 }
 // The task site for pages opened from the item sidebar: the Host's current
@@ -782,6 +789,16 @@ function startLink() {
 // it changes (a Client has no game of its own to read); a Client's Go side
 // then reads the boss details, the Goons, the map's markers and the item
 // search in it.
+// shareSquadPicture puts this player's character picture (the Overall
+// screen's, app_profile.go) in the squad's store, or takes it out when the
+// player does not share it (squadPicture). The Host's alone: a Client's
+// player is its Host's.
+async function shareSquadPicture() {
+  if (platform !== 'windows' || state.connection.mode !== 'local' || squad.state?.phase !== 'connected') return
+  try {
+    await go.SquadSharePicture(state.squadPicture !== false)
+  } catch {}
+}
 async function shareHostInfo() {
   if (state.connection.mode !== 'local') return
   try {
@@ -1033,13 +1050,15 @@ const ready = (async () => {
     // Another EFT account, profile or mode: the item shown is read again in the
     // mode now played, so its prices and progress are that profile's.
     window.mayakDesktop.on('status:update', (next) => {
-      const tracker = host?.tracker,
+      const profileAt = host?.profileAt,
+        tracker = host?.tracker,
         mode = host?.mode,
         identity = host?.identity
       host = { ...host, ...hostStatus(next) }
       if (host.tracker !== tracker || host.mode !== mode) void loadBosses()
       if (host.mode !== mode) void shareHostInfo()
       if (identity !== undefined && host.identity !== identity) void reloadItem()
+      if (host.profileAt && host.profileAt !== profileAt) void shareSquadPicture()
       update()
     })
   }
@@ -1092,12 +1111,17 @@ const ready = (async () => {
   // A new screenshot shows in the sidebar (and on the screenshot page).
   window.mayakDesktop.on('browser:screenshot', () => void loadShots())
   window.mayakDesktop.on('snapnote:changed', () => void loadSnaps())
-  window.mayakDesktop.on('menu:choice', (choice) => onMenu(String(choice?.id || '')))
+  window.mayakDesktop.on('menu:choice', (choice) => {
+    for (const fn of menuListeners) fn(String(choice?.id || ''))
+  })
   // The map view: a nightly feature (SquadAvailable). The squad joined
   // before is joined again; a build without it drops its tab.
   window.mayakDesktop.on('squad:state', (next) => {
     squadEvents++
+    const was = squad.state?.phase
     squad.state = next || null
+    // Connected (again), this player's picture goes to the squad's store.
+    if (squad.state?.phase === 'connected' && was !== 'connected') void shareSquadPicture()
     update()
   })
   try {
@@ -1443,6 +1467,24 @@ async function perform(type, data) {
       openLocal(state, 'squad')
       void loadSquadMaps()
       break
+    // Whether this player's character picture is shown to the squad.
+    case 'squadPicture':
+      state.squadPicture = data !== false
+      void shareSquadPicture()
+      break
+    // The squad's character pictures (member key → data URL; "me" is this
+    // player's own, from this PC).
+    case 'squadPictures': {
+      try {
+        squad.pictures = JSON.parse((await go.SquadPictures()) || '{}')
+      } catch {}
+      if (platform === 'windows' && state.connection.mode === 'local')
+        try {
+          const own = await go.BrowserProfilePicture()
+          if (own) squad.pictures = { ...squad.pictures, me: own }
+        } catch {}
+      return snapshot()
+    }
     case 'squadColor':
       state.squadColor = squadColorOf(data)
       await go.SquadSetColor(state.squadColor)
@@ -1945,7 +1987,7 @@ window.mayak = {
     onKey = fn
   },
   onMenu(fn) {
-    onMenu = fn
+    menuListeners.push(fn)
   },
   async action(type, data) {
     await ready

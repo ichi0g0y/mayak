@@ -275,6 +275,7 @@ func (a *App) squadReport(name string) squad.Report {
 		r.Pos, r.At = squadPosition(*status.Position)
 	}
 	r.Tracker = a.squadTracker()
+	r.Profile = a.squadProfile()
 	return r
 }
 

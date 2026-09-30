@@ -270,6 +270,42 @@ export class LogEntry {
     }
 }
 
+/**
+ * PlayerProfile is what the character's Overall screen showed when last
+ * read (internal/profiledetect): the nickname, the level, the experience,
+ * and the stats beside the level. Picture: a picture of the character's
+ * panel was kept with it (profile.jpg).
+ */
+export class PlayerProfile {
+    "name"?: string;
+    "level"?: number;
+    "exp"?: number;
+    "raids"?: number;
+    "kills"?: number;
+    "survivalRate"?: number;
+    "kd"?: number;
+    "hours"?: number;
+    "at": string;
+    "picture"?: boolean;
+
+    /** Creates a new PlayerProfile instance. */
+    constructor($$source: Partial<PlayerProfile> = {}) {
+        if (!("at" in $$source)) {
+            this["at"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new PlayerProfile instance from a string or object.
+     */
+    static createFrom($$source: any = {}): PlayerProfile {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new PlayerProfile($$parsedSource as Partial<PlayerProfile>);
+    }
+}
+
 export class Position {
     "x": number;
     "y": number;
@@ -374,6 +410,10 @@ export class QuestObjective {
 }
 
 export class Status {
+    /**
+     * Profile is the character's Overall screen as last read.
+     */
+    "profile"?: PlayerProfile | null;
     "hideout": HideoutStatus;
     "catalog": CatalogStatus;
     "connection": string;
@@ -526,34 +566,38 @@ export class Status {
      * Creates a new Status instance from a string or object.
      */
     static createFrom($$source: any = {}): Status {
-        const $$createField0_0 = $$createType9;
-        const $$createField1_0 = $$createType10;
-        const $$createField11_0 = $$createType12;
-        const $$createField22_0 = $$createType14;
-        const $$createField26_0 = $$createType16;
-        const $$createField33_0 = $$createType18;
-        const $$createField35_0 = $$createType19;
+        const $$createField0_0 = $$createType10;
+        const $$createField1_0 = $$createType11;
+        const $$createField2_0 = $$createType12;
+        const $$createField12_0 = $$createType14;
+        const $$createField23_0 = $$createType16;
+        const $$createField27_0 = $$createType18;
+        const $$createField34_0 = $$createType20;
+        const $$createField36_0 = $$createType21;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("profile" in $$parsedSource) {
+            $$parsedSource["profile"] = $$createField0_0($$parsedSource["profile"]);
+        }
         if ("hideout" in $$parsedSource) {
-            $$parsedSource["hideout"] = $$createField0_0($$parsedSource["hideout"]);
+            $$parsedSource["hideout"] = $$createField1_0($$parsedSource["hideout"]);
         }
         if ("catalog" in $$parsedSource) {
-            $$parsedSource["catalog"] = $$createField1_0($$parsedSource["catalog"]);
+            $$parsedSource["catalog"] = $$createField2_0($$parsedSource["catalog"]);
         }
         if ("position" in $$parsedSource) {
-            $$parsedSource["position"] = $$createField11_0($$parsedSource["position"]);
+            $$parsedSource["position"] = $$createField12_0($$parsedSource["position"]);
         }
         if ("questCandidates" in $$parsedSource) {
-            $$parsedSource["questCandidates"] = $$createField22_0($$parsedSource["questCandidates"]);
+            $$parsedSource["questCandidates"] = $$createField23_0($$parsedSource["questCandidates"]);
         }
         if ("questObjectives" in $$parsedSource) {
-            $$parsedSource["questObjectives"] = $$createField26_0($$parsedSource["questObjectives"]);
+            $$parsedSource["questObjectives"] = $$createField27_0($$parsedSource["questObjectives"]);
         }
         if ("itemCandidates" in $$parsedSource) {
-            $$parsedSource["itemCandidates"] = $$createField33_0($$parsedSource["itemCandidates"]);
+            $$parsedSource["itemCandidates"] = $$createField34_0($$parsedSource["itemCandidates"]);
         }
         if ("tracker" in $$parsedSource) {
-            $$parsedSource["tracker"] = $$createField35_0($$parsedSource["tracker"]);
+            $$parsedSource["tracker"] = $$createField36_0($$parsedSource["tracker"]);
         }
         return new Status($$parsedSource as Partial<Status>);
     }
@@ -750,8 +794,8 @@ export class TrackerStatus {
      * Creates a new TrackerStatus instance from a string or object.
      */
     static createFrom($$source: any = {}): TrackerStatus {
-        const $$createField16_0 = $$createType21;
-        const $$createField17_0 = $$createType23;
+        const $$createField16_0 = $$createType23;
+        const $$createField17_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("keys" in $$parsedSource) {
             $$parsedSource["keys"] = $$createField16_0($$parsedSource["keys"]);
@@ -840,18 +884,20 @@ const $$createType5 = $Create.Array($$createType4);
 const $$createType6 = hideoutlog$0.Event.createFrom;
 const $$createType7 = $Create.Array($$createType6);
 const $$createType8 = $Create.Array($Create.Any);
-const $$createType9 = HideoutStatus.createFrom;
-const $$createType10 = CatalogStatus.createFrom;
-const $$createType11 = Position.createFrom;
-const $$createType12 = $Create.Nullable($$createType11);
-const $$createType13 = QuestCandidate.createFrom;
-const $$createType14 = $Create.Array($$createType13);
-const $$createType15 = QuestObjective.createFrom;
+const $$createType9 = PlayerProfile.createFrom;
+const $$createType10 = $Create.Nullable($$createType9);
+const $$createType11 = HideoutStatus.createFrom;
+const $$createType12 = CatalogStatus.createFrom;
+const $$createType13 = Position.createFrom;
+const $$createType14 = $Create.Nullable($$createType13);
+const $$createType15 = QuestCandidate.createFrom;
 const $$createType16 = $Create.Array($$createType15);
-const $$createType17 = ItemCandidate.createFrom;
+const $$createType17 = QuestObjective.createFrom;
 const $$createType18 = $Create.Array($$createType17);
-const $$createType19 = TrackerStatus.createFrom;
-const $$createType20 = TrackerKeySummary.createFrom;
-const $$createType21 = $Create.Array($$createType20);
-const $$createType22 = TrackerProfileSummary.createFrom;
+const $$createType19 = ItemCandidate.createFrom;
+const $$createType20 = $Create.Array($$createType19);
+const $$createType21 = TrackerStatus.createFrom;
+const $$createType22 = TrackerKeySummary.createFrom;
 const $$createType23 = $Create.Array($$createType22);
+const $$createType24 = TrackerProfileSummary.createFrom;
+const $$createType25 = $Create.Array($$createType24);

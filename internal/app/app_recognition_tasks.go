@@ -19,6 +19,10 @@ import (
 // handleTaskScreenshot handles screenshots without position metadata: an open
 // item inspection window first, otherwise the task list.
 func (a *App) handleTaskScreenshot(ctx context.Context, sequence uint64, path string, settings config.Settings) {
+	// The character's Overall screen has a reading of its own (app_profile.go).
+	if a.tryProfileScreenshot(ctx, sequence, path, settings) {
+		return
+	}
 	itemDetected, itemErr := itemdetect.AnalyzeFile(path)
 	if itemErr != nil {
 		a.updateAnalysisError(sequence, path, itemErr)

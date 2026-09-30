@@ -54,6 +54,23 @@ type Report struct {
 	// Tracker is this player's TarkovTracker progress in short, when they
 	// sync with it: shown on their card in the others' sidebar.
 	Tracker *Tracker `json:"tracker,omitempty"`
+	// Profile is what this player's Overall screen showed when last read.
+	Profile *Profile `json:"profile,omitempty"`
+}
+
+// Profile is a player's Overall screen in short: the nickname, the level,
+// raids, kills, the survival rate, K/D, hours online, and when the picture
+// of their character was taken (unix seconds; 0 for none), which the
+// others fetch from the squad's store (StoreIn "picture").
+type Profile struct {
+	Name         string  `json:"name,omitempty"`
+	Level        int     `json:"level,omitempty"`
+	Raids        int     `json:"raids,omitempty"`
+	Kills        int     `json:"kills,omitempty"`
+	SurvivalRate float64 `json:"sr,omitempty"`
+	KD           float64 `json:"kd,omitempty"`
+	Hours        float64 `json:"hours,omitempty"`
+	Picture      int64   `json:"picture,omitempty"`
 }
 
 // Tracker is a player's TarkovTracker progress in short: the name there,
@@ -595,8 +612,35 @@ func clean(r Report) Report {
 			r.Tracker = nil
 		}
 	}
+	if r.Profile != nil {
+		p := *r.Profile
+		if !nickname.MatchString(p.Name) {
+			p.Name = ""
+		}
+		if p.Level < 0 || p.Level > 79 {
+			p.Level = 0
+		}
+		p.Raids, p.Kills = min(max(p.Raids, 0), 1000000), min(max(p.Kills, 0), 1000000)
+		if p.SurvivalRate < 0 || p.SurvivalRate > 100 {
+			p.SurvivalRate = 0
+		}
+		if p.KD < 0 || p.KD > 1000 {
+			p.KD = 0
+		}
+		if p.Hours < 0 || p.Hours > 100000 {
+			p.Hours = 0
+		}
+		p.Picture = max(p.Picture, 0)
+		r.Profile = &p
+		if p == (Profile{}) {
+			r.Profile = nil
+		}
+	}
 	return r
 }
+
+// nickname is an EFT nickname.
+var nickname = regexp.MustCompile(`^[A-Za-z0-9_-]{3,15}$`)
 
 // trackerUser is a TarkovTracker user id: a UUID.
 var trackerUser = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)

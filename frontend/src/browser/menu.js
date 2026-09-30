@@ -18,6 +18,15 @@ function draw(menu) {
   const rows = (menu.items || [])
     .map((item) => {
       if (item.kind === 'label') return `<div class="snap-menu-label">${esc(item.title)}</div>`
+      if (item.kind === 'card') {
+        const facts = (item.facts || [])
+          .map((f) => `<div><dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd></div>`)
+          .join('')
+        const mark = /^#[0-9a-f]{6}$/i.test(item.color || '')
+          ? `<span class="menu-card-dot" style="--c:${item.color}"></span>`
+          : ''
+        return `<div class="menu-card">${item.thumb ? `<img class="menu-card-picture" src="${esc(item.thumb)}" alt="">` : ''}<div class="menu-card-body"><div class="menu-card-head">${mark}<strong>${esc(item.title)}</strong>${item.hint ? `<small>${esc(item.hint)}</small>` : ''}</div>${facts ? `<dl>${facts}</dl>` : ''}</div></div>`
+      }
       const picture = item.thumb
         ? `<span class="snap-menu-thumb"><img src="${esc(item.thumb)}" alt=""></span>`
         : item.icon

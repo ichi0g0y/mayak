@@ -131,7 +131,9 @@ type App struct {
 func NewApp() *App {
 	processed, _ := config.LoadProcessedScreenshot()
 	data := catalog.New()
-	return &App{hideoutStore: hideoutlog.NewStore(filepath.Join(hideoutDirectory(), "events.json")), status: model.Status{Connection: "disconnected", ScreenshotType: "unknown", LastScreenshot: processed.Path, Tracker: model.TrackerStatus{Connection: "disabled"}}, lastProcessed: processed, remotes: make(map[string]*remote.Client), catalogClient: data, questClient: questapi.NewWithSource(data).EnableWiki(), itemClient: itemapi.NewWithSource(data), itemInfo: iteminfo.New(data), bossInfo: bossinfo.New(), screenshotIndex: screenshotstore.NewIndex(screenshotIndexPath()), trackerClient: tracker.New(), trackerData: trackerstore.Empty(), trackerTasks: make(map[string]string), logs: applog.New(500), done: make(chan struct{})}
+	a := &App{hideoutStore: hideoutlog.NewStore(filepath.Join(hideoutDirectory(), "events.json")), status: model.Status{Connection: "disconnected", ScreenshotType: "unknown", LastScreenshot: processed.Path, Tracker: model.TrackerStatus{Connection: "disabled"}}, lastProcessed: processed, remotes: make(map[string]*remote.Client), catalogClient: data, questClient: questapi.NewWithSource(data).EnableWiki(), itemClient: itemapi.NewWithSource(data), itemInfo: iteminfo.New(data), bossInfo: bossinfo.New(), screenshotIndex: screenshotstore.NewIndex(screenshotIndexPath()), trackerClient: tracker.New(), trackerData: trackerstore.Empty(), trackerTasks: make(map[string]string), logs: applog.New(500), done: make(chan struct{})}
+	a.status.Profile = loadPlayerProfile()
+	return a
 }
 
 func (a *App) startup(ctx context.Context) {

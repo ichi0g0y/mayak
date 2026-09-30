@@ -22,5 +22,6 @@ test('the shell core and the views load before the shell API exists', async () =
   // api.js sets the API after them, in the same evaluation.
   window.mayak = { action: async () => null, onState() {}, onKey() {}, onMenu: (fn) => registered.push(fn) }
   await new Promise((resolve) => setTimeout(resolve, 40))
-  assert.equal(registered.length, 1)
+  // The snap notes menu and the squadmate card (view-squad.js, through the map).
+  assert.equal(registered.length, 2)
 })

@@ -251,6 +251,8 @@ function defaults() {
     squadName: '',
     // The squad colour chosen ('' lets the squad give one; map-geo.js).
     squadColor: '',
+    // Whether the character's picture (the Overall screen's) is shown to the squad.
+    squadPicture: true,
     squadCode: '',
     squadRecent: [],
     // The mode, the pairing kept (transport.js): its key and which side this
@@ -309,6 +311,7 @@ function restore(raw = {}) {
   state.mapCollapsed = hiddenOf(raw.mapCollapsed)
   state.squadName = typeof raw.squadName === 'string' ? raw.squadName.trim().slice(0, 24) : ''
   state.squadColor = squadColorOf(raw.squadColor)
+  state.squadPicture = raw.squadPicture !== false
   state.squadCode = typeof raw.squadCode === 'string' && squadCodePattern.test(raw.squadCode) ? raw.squadCode : ''
   state.squadRecent = recentSquadsOf(raw.squadRecent)
   // The LAN receiving mode ("remote") is gone; a browser saved in it starts

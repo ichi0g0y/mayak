@@ -98,6 +98,14 @@ func (c *Client) SetTask(ctx context.Context, token, taskID, state string) error
 	return c.do(ctx, http.MethodPost, "/progress/task/"+url.PathEscape(taskID), token, map[string]string{"state": state}, nil)
 }
 
+// SetLevel sets the player's level (1 to 79) on TarkovTracker.
+func (c *Client) SetLevel(ctx context.Context, token string, level int) error {
+	if level < 1 || level > 79 {
+		return errors.New("invalid player level")
+	}
+	return c.do(ctx, http.MethodPost, "/progress/level/"+strconv.Itoa(level), token, nil, nil)
+}
+
 type TaskUpdate struct {
 	ID    string `json:"id"`
 	State string `json:"state"`

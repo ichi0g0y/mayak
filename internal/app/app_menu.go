@@ -30,15 +30,25 @@ type shellMenu struct {
 }
 
 // MenuItem is one row of a menu: an item to choose (Kind "item", the
-// default), a heading (Kind "label"). Icon names an icon of the shell's set;
-// Thumb is a small picture (a JPEG or PNG data URL).
+// default), a heading (Kind "label"), or a card (Kind "card": a picture,
+// Title and Hint over Facts, not to choose). Icon names an icon of the
+// shell's set; Thumb is a picture (a JPEG or PNG data URL).
 type MenuItem struct {
-	ID    string `json:"id"`
-	Kind  string `json:"kind"`
-	Icon  string `json:"icon"`
-	Title string `json:"title"`
-	Hint  string `json:"hint"`
-	Thumb string `json:"thumb"`
+	ID    string     `json:"id"`
+	Kind  string     `json:"kind"`
+	Icon  string     `json:"icon"`
+	Title string     `json:"title"`
+	Hint  string     `json:"hint"`
+	Thumb string     `json:"thumb"`
+	Facts []MenuFact `json:"facts"`
+	// Color is a colour for the card's mark (#rrggbb).
+	Color string `json:"color"`
+}
+
+// MenuFact is one line of a card: a label and its value.
+type MenuFact struct {
+	Label string `json:"label"`
+	Value string `json:"value"`
 }
 
 // MenuRequest is a menu to show: at X, Y (the shell's pixels, relative to the
@@ -64,8 +74,13 @@ func (a *App) BrowserMenuShow(request MenuRequest) error {
 		return errors.New("invalid menu")
 	}
 	for i, item := range request.Items {
-		if len(item.ID) > 200 || len(item.Title) > 300 || len(item.Hint) > 300 || len(item.Icon) > 40 || len(item.Thumb) > 200_000 {
+		if len(item.ID) > 200 || len(item.Title) > 300 || len(item.Hint) > 300 || len(item.Icon) > 40 || len(item.Thumb) > 200_000 || len(item.Facts) > 12 || len(item.Color) > 7 {
 			return errors.New("invalid menu item")
+		}
+		for _, fact := range item.Facts {
+			if len(fact.Label) > 80 || len(fact.Value) > 80 {
+				return errors.New("invalid menu item")
+			}
 		}
 		if item.Thumb != "" && !strings.HasPrefix(item.Thumb, "data:image/jpeg;base64,") && !strings.HasPrefix(item.Thumb, "data:image/png;base64,") {
 			request.Items[i].Thumb = ""

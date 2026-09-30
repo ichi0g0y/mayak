@@ -29,6 +29,7 @@ MAYAK が `%AppData%\Mayak`（`internal/appdir`。`task dev` の開発ビルド�
 | `bookmarks.json` | ユーザーデータ | ブックマーク。`Records`（値はシェルのブックマーク `{id, name, url, group, sidebar}`） |
 | `map-drawings.json` | ユーザーデータ | マップに自分のペンで描いた線（[browser-shell.md](browser-shell.md#自分のペン)）。`Records`（値は `{id, map, floor, c: 色, w: 太さ（画面の px）, p: [[x, z], …]（ゲーム座標）}`） |
 | `squad-key.txt` | この PC | 分隊でのメンバー鍵（32 桁の 16 進。分隊ペンの線の持ち主。[分隊ルーム](settings-and-integrations.md#分隊ルーム)） |
+| `profile.json`・`profile.jpg` | この PC | キャラクター画面「全般」のスクリーンショットから最後に読んだもの(名前・レベル・経験値・レイド・キル・生還率・K/D・プレイ時間、読んだ時刻)と、左の欄の画像(幅 360 px の JPEG)。分隊のカードに使い、画像は分隊に見せる設定なら中継の分隊の枠にも置く([recognition.md](recognition.md)) |
 | `squad-lines.json` | この PC | 分隊ペンで自分が描いた線を、分隊ごと（分隊コードでなく room の ID）に最後の変更から 24 時間だけ（`{<room>: {savedAt, data: {clears, lines}}}`。前の版の `gens` も読む）。落ちたり再起動したりしたあと、分隊に送り直すため。同じものを中継の分隊の枠にも 1 週間置く（[分隊ルーム](settings-and-integrations.md#分隊ルーム)。中継には読めない） |
 | `browser.json` | この PC | ブラウザシェルのそれ以外（タブ、パネルの大きさ、アイテム欄、接続 `connection`、ファビコンの対応表、分隊のコード `squadCode` と最近の分隊 `squadRecent`）。`browserPreferenceKeys` に無いキーはすべてここ |
 | `snapnotes/<id>/` | ユーザーデータ | スナップノート。`note.json`（`createdAt`・`updatedAt`・`changedAt`、削除すると `deleted` の記録だけ残る）、`base.png`、`thumb.jpg` |

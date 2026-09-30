@@ -228,6 +228,14 @@ export function BrowserPopupShow(page: $models.PopupPage, place: $models.PopupPl
 }
 
 /**
+ * BrowserProfilePicture returns this player's character picture as a data
+ * URL ("" without one), for their own card.
+ */
+export function BrowserProfilePicture(): $CancellablePromise<string> {
+    return $Call.ByID(3929546683);
+}
+
+/**
  * BrowserRemoteID lets the browser shell open its fixed map view with
  * ?connection=<ID> directly, instead of waiting for the document script.
  */
@@ -727,6 +735,14 @@ export function SquadNewCode(): $CancellablePromise<string> {
 }
 
 /**
+ * SquadPictures returns the members' character pictures in the squad's
+ * store, as JSON: member key → data URL.
+ */
+export function SquadPictures(): $CancellablePromise<string> {
+    return $Call.ByID(3478748279);
+}
+
+/**
  * SquadRecheck asks the relay its version again when it did not say it
  * takes the squad pen (see squad.Client.Recheck).
  */
@@ -755,6 +771,14 @@ export function SquadSend(data: string, droppable: boolean): $CancellablePromise
  */
 export function SquadSetColor(color: string): $CancellablePromise<void> {
     return $Call.ByID(2482357739, color);
+}
+
+/**
+ * SquadSharePicture puts this player's character picture in the squad's
+ * store (on), or takes it out (off), for the others' cards.
+ */
+export function SquadSharePicture(on: boolean): $CancellablePromise<void> {
+    return $Call.ByID(2208975103, on);
 }
 
 /**

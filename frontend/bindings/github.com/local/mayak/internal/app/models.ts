@@ -220,9 +220,38 @@ export class ItemSearchHit {
 }
 
 /**
+ * MenuFact is one line of a card: a label and its value.
+ */
+export class MenuFact {
+    "label": string;
+    "value": string;
+
+    /** Creates a new MenuFact instance. */
+    constructor($$source: Partial<MenuFact> = {}) {
+        if (!("label" in $$source)) {
+            this["label"] = "";
+        }
+        if (!("value" in $$source)) {
+            this["value"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new MenuFact instance from a string or object.
+     */
+    static createFrom($$source: any = {}): MenuFact {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new MenuFact($$parsedSource as Partial<MenuFact>);
+    }
+}
+
+/**
  * MenuItem is one row of a menu: an item to choose (Kind "item", the
- * default), a heading (Kind "label"). Icon names an icon of the shell's set;
- * Thumb is a small picture (a JPEG or PNG data URL).
+ * default), a heading (Kind "label"), or a card (Kind "card": a picture,
+ * Title and Hint over Facts, not to choose). Icon names an icon of the
+ * shell's set; Thumb is a picture (a JPEG or PNG data URL).
  */
 export class MenuItem {
     "id": string;
@@ -231,6 +260,12 @@ export class MenuItem {
     "title": string;
     "hint": string;
     "thumb": string;
+    "facts": MenuFact[];
+
+    /**
+     * Color is a colour for the card's mark (#rrggbb).
+     */
+    "color": string;
 
     /** Creates a new MenuItem instance. */
     constructor($$source: Partial<MenuItem> = {}) {
@@ -252,6 +287,12 @@ export class MenuItem {
         if (!("thumb" in $$source)) {
             this["thumb"] = "";
         }
+        if (!("facts" in $$source)) {
+            this["facts"] = [];
+        }
+        if (!("color" in $$source)) {
+            this["color"] = "";
+        }
 
         Object.assign(this, $$source);
     }
@@ -260,7 +301,11 @@ export class MenuItem {
      * Creates a new MenuItem instance from a string or object.
      */
     static createFrom($$source: any = {}): MenuItem {
+        const $$createField6_0 = $$createType6;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("facts" in $$parsedSource) {
+            $$parsedSource["facts"] = $$createField6_0($$parsedSource["facts"]);
+        }
         return new MenuItem($$parsedSource as Partial<MenuItem>);
     }
 }
@@ -309,7 +354,7 @@ export class MenuRequest {
      * Creates a new MenuRequest instance from a string or object.
      */
     static createFrom($$source: any = {}): MenuRequest {
-        const $$createField4_0 = $$createType6;
+        const $$createField4_0 = $$createType8;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("items" in $$parsedSource) {
             $$parsedSource["items"] = $$createField4_0($$parsedSource["items"]);
@@ -443,7 +488,7 @@ export class ScreenshotEntry {
      * Creates a new ScreenshotEntry instance from a string or object.
      */
     static createFrom($$source: any = {}): ScreenshotEntry {
-        const $$createField2_0 = $$createType8;
+        const $$createField2_0 = $$createType10;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("meta" in $$parsedSource) {
             $$parsedSource["meta"] = $$createField2_0($$parsedSource["meta"]);
@@ -476,7 +521,7 @@ export class SnapNoteData {
      * Creates a new SnapNoteData instance from a string or object.
      */
     static createFrom($$source: any = {}): SnapNoteData {
-        const $$createField0_0 = $$createType9;
+        const $$createField0_0 = $$createType11;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("note" in $$parsedSource) {
             $$parsedSource["note"] = $$createField0_0($$parsedSource["note"]);
@@ -491,8 +536,10 @@ const $$createType1 = $Create.Nullable($$createType0);
 const $$createType2 = GoonIdentity.createFrom;
 const $$createType3 = $Create.Array($$createType2);
 const $$createType4 = $Create.Map($Create.Any, $Create.Any);
-const $$createType5 = MenuItem.createFrom;
+const $$createType5 = MenuFact.createFrom;
 const $$createType6 = $Create.Array($$createType5);
-const $$createType7 = screenshotstore$0.Record.createFrom;
-const $$createType8 = $Create.Nullable($$createType7);
-const $$createType9 = snapnote$0.Note.createFrom;
+const $$createType7 = MenuItem.createFrom;
+const $$createType8 = $Create.Array($$createType7);
+const $$createType9 = screenshotstore$0.Record.createFrom;
+const $$createType10 = $Create.Nullable($$createType9);
+const $$createType11 = snapnote$0.Note.createFrom;

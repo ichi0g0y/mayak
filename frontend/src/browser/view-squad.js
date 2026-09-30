@@ -9,6 +9,8 @@ import {
   t,
   icon,
   action,
+  request,
+  api,
   clickHandlers,
   render,
   afterRenderHooks,
@@ -69,8 +71,10 @@ function memberLine(m) {
 // tree of the latest of each: where they are (pressed, it shows them on the
 // map: their map and floor, at the zoom the map has, with rings in their
 // colour: view-map.js squadFocus), the page, the snap note and the pin they
-// shared (pressed, each opens as on the squad's page, and stays). The count
-// of what they shared unread opens the squad's page on their shares alone.
+// shared (pressed, each opens as on the squad's page, and stays). A dot
+// beside the name tells they shared something not seen yet. Pressing the
+// name opens their card (memberCard): over the page in the menu window on
+// Windows, else under the name.
 function memberChip(m) {
   const fade = m.map && m.pos ? freshness(m.at) : 'gone'
   const title = `${m.name || '?'} — ${whereOf(m)}`
@@ -79,9 +83,7 @@ function memberChip(m) {
   const line = `<span class="squad-dot" style="--c:${colorOf(m)}"></span><span class="squad-chip-name">${esc(m.name || '?')}${you(m) ? ` <small>(${esc(t('squadYou'))})</small>` : ''}</span>`
   const cardOpen = openCard === squadKey(m)
   const head = `<button class="squad-chip-focus" data-action="squadMemberCard" data-id="${esc(squadKey(m))}" aria-expanded="${cardOpen}" title="${esc(title)}">${line}</button>`
-  const badge = unread
-    ? `<button class="squad-chip-count" data-action="squadMemberShares" data-id="${esc(m.key)}" title="${esc(t('squadMemberUnread'))}">${unread}</button>`
-    : ''
+  const badge = unread ? `<span class="squad-chip-unread" title="${esc(t('squadMemberUnread'))}"></span>` : ''
   // The latest page, snap note and pin they shared, in that order.
   const latest = ['tab', 'snap', 'view'].map((kind) => theirs.find((x) => x.kind === kind)).filter(Boolean)
   // Each with how many more of its kind they shared: pressed, the squad's
@@ -111,24 +113,90 @@ ${x.url}`
 
 // The member whose card is open in the sidebar (squadKey), or ''.
 let openCard = ''
-// memberCard is a member's card, opened by their name: their TarkovTracker
-// progress in short (sent with their report while they sync with it) and
-// the way to their shared profile there, which shows when they share it.
-function memberCard(m) {
-  const tr = m.tracker
-  if (!tr) return `<div class="squad-card"><p class="squad-card-none">${esc(t('squadCardNoTracker'))}</p></div>`
+// A member's card: who they are in the game and their numbers, from their
+// Overall screen (profile, sent with their report once they took a
+// screenshot of it) and TarkovTracker (tracker, while they sync with it),
+// their character's picture (the Overall screen's, from the squad's store)
+// and what can be done from it: show them on the map, open their
+// TarkovTracker profile (shown when they share it there), see what they
+// shared.
+function cardOf(m) {
+  const p = m.profile || {}
+  const tr = m.tracker || {}
   const mode = tr.mode === 'pve' ? 'PvE' : tr.mode === 'pvp' ? 'PvP' : ''
+  const number = (v, digits = 0) => (Number(v) || 0).toLocaleString(state.language, { maximumFractionDigits: digits })
   const facts = [
-    tr.level ? `<div><dt>${esc(t('squadCardLevel'))}</dt><dd>${tr.level}</dd></div>` : '',
-    mode ? `<div><dt>${esc(t('squadCardMode'))}</dt><dd>${mode}</dd></div>` : '',
-    `<div><dt>${esc(t('squadCardTasks'))}</dt><dd>${tr.done || 0}${tr.failed ? ` <small>${esc(t('squadCardFailed').replace('{n}', String(tr.failed)))}</small>` : ''}</dd></div>`,
-  ].join('')
+    (p.level || tr.level) && [t('squadCardLevel'), String(p.level || tr.level)],
+    p.raids && [t('squadCardRaids'), number(p.raids)],
+    p.kills && [t('squadCardKills'), number(p.kills)],
+    p.sr && [t('squadCardSurvival'), `${number(p.sr, 1)}%`],
+    p.kd && [t('squadCardKD'), number(p.kd, 2)],
+    p.hours && [t('squadCardHours'), `${number(p.hours)}h`],
+    tr.done && [t('squadCardTasks'), number(tr.done)],
+    mode && [t('squadCardMode'), mode],
+  ]
+    .filter(Boolean)
+    .map(([label, value]) => ({ label, value }))
   const url = tr.user ? `https://tarkovtracker.org/profile/${tr.user}/${tr.mode || 'pvp'}` : ''
-  const link = url
-    ? `<button class="squad-card-link" data-action="open" data-id="${esc(url)}" title="${esc(t('squadCardProfileHint'))}">${icon('external')}<span>${esc(t('squadCardProfile'))}</span></button>`
-    : ''
-  return `<div class="squad-card"><div class="squad-card-name">${esc(tr.name || m.name || '?')}<small>TarkovTracker</small></div><dl>${facts}</dl>${link}</div>`
+  const picture = (state.squad?.pictures || {})[you(m) ? 'me' : m.key] || ''
+  const game = p.name || tr.name || ''
+  return { name: m.name || '?', game: game && game !== m.name ? game : '', facts, url, picture }
 }
+// The member whose card is open (squadKey): under their name (not on
+// Windows) or in the menu window.
+function memberCard(m) {
+  const c = cardOf(m)
+  const facts = c.facts.map((f) => `<div><dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd></div>`).join('')
+  const link = c.url
+    ? `<button class="squad-card-link" data-action="open" data-id="${esc(c.url)}" title="${esc(t('squadCardProfileHint'))}">${icon('external')}<span>${esc(t('squadCardProfile'))}</span></button>`
+    : ''
+  const body = facts ? `<dl>${facts}</dl>` : `<p class="squad-card-none">${esc(t('squadCardNone'))}</p>`
+  return `<div class="squad-card">${c.picture ? `<img class="squad-card-picture" src="${esc(c.picture)}" alt="">` : ''}<div class="squad-card-name">${esc(c.game || c.name)}</div>${body}${link}</div>`
+}
+// openMemberPopup opens a member's card over the page, beside the name
+// pressed (the menu window, app_menu.go); its choices come back as
+// "member:<what>:<value>".
+async function openMemberPopup(m, button) {
+  await request('squadPictures').catch(() => {})
+  const c = cardOf(m)
+  const r = button.getBoundingClientRect()
+  const theirs = you(m) || !m.key ? [] : shares.filter((x) => x.by === m.key)
+  const items = [
+    { kind: 'card', title: c.name, hint: c.game, thumb: c.picture, color: colorOf(m), facts: c.facts },
+    ...(c.facts.length ? [] : [{ kind: 'label', title: t('squadCardNone') }]),
+    ...(m.map && m.pos ? [{ id: `member:focus:${squadKey(m)}`, icon: 'map', title: t('squadFocus') }] : []),
+    ...(c.url
+      ? [
+          {
+            id: `member:open:${c.url}`,
+            icon: 'external',
+            title: t('squadCardProfile'),
+            hint: t('squadCardProfileHint'),
+          },
+        ]
+      : []),
+    ...(theirs.length ? [{ id: `member:shares:${m.key}`, icon: 'squad', title: t('squadCardShares') }] : []),
+  ]
+  const width = 340
+  const x = state.sidebarSide === 'right' ? r.left - width - 6 : r.right + 6
+  void request('menuShow', { id: 'member', x: Math.round(Math.max(4, x)), y: Math.round(r.top), width, items }).catch(
+    () => {},
+  )
+}
+api.onMenu((choice) => {
+  if (!choice.startsWith('member:')) return
+  const [, what, ...rest] = choice.split(':')
+  const value = rest.join(':')
+  if (what === 'open') void action('open', value)
+  else if (what === 'shares') {
+    shareBy = value
+    shareFilter = 'all'
+    void action('squadPage')
+  } else if (what === 'focus')
+    void (async () => {
+      for (const h of clickHandlers) if (await h('squadFocus', value)) return
+    })()
+})
 
 export { colorOf }
 
@@ -214,6 +282,15 @@ function colorPicker() {
   return `<div class="squad-colors"><span class="squad-colors-label">${esc(t('squadColor'))}</span><div class="squad-color-row"><button type="button" class="squad-color-auto ${chosen ? '' : 'on'}" data-action="squadColorPick" data-id="" aria-pressed="${!chosen}">${esc(t('squadColorAuto'))}</button>${squadColors.map(swatch).join('')}${custom(chosen && !squadColors.includes(chosen) ? chosen : '', holders)}</div><p class="hint">${esc(t(busy ? 'squadColorBusy' : 'squadColorHelp'))}</p></div>`
 }
 
+// pictureSetting: whether the character's picture from the Overall screen
+// goes to the squad (to the others' cards).
+function pictureSetting() {
+  return `<label class="squad-picture-setting"><input type="checkbox" data-squad-picture ${state.squadPicture !== false ? 'checked' : ''}><span>${esc(t('squadPictureShare'))}<small>${esc(t('squadPictureHint'))}</small></span></label>`
+}
+document.addEventListener('change', (event) => {
+  const el = /** @type {HTMLInputElement} */ (event.target)
+  if (el?.dataset?.squadPicture !== undefined) void action('squadPicture', el.checked)
+})
 // custom is the last swatch: any colour, from the system's colour picker
 // (its colour once chosen; a colour someone else has is taken by them).
 function custom(chosen, holders) {
@@ -239,7 +316,7 @@ export function squadPage() {
       ? `<p class="squad-notice" role="alert">${esc(t(drafts.notice))}</p>`
       : ''
   const head = `<div class="bookmarks-head"><h1>${esc(t('squad'))}</h1></div>`
-  const profile = `<section class="panel squad-forms squad-profile"><h2>${esc(t('squadProfile'))}</h2><p class="hint">${esc(t('squadProfileHelp'))}</p><form id="squad-name-form" class="squad-name"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" placeholder="${esc(t('squadNamePlaceholder'))}" value="${esc(name)}"></label></form>${colorPicker()}</section>`
+  const profile = `<section class="panel squad-forms squad-profile"><h2>${esc(t('squadProfile'))}</h2><p class="hint">${esc(t('squadProfileHelp'))}</p><form id="squad-name-form" class="squad-name"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" placeholder="${esc(t('squadNamePlaceholder'))}" value="${esc(name)}"></label></form>${colorPicker()}${pictureSetting()}</section>`
   const privacy = `<p class="hint">${esc(t('squadPrivacy'))}</p>`
   if (!s)
     return `<div class="page squad-page">${head}${profile}<section class="panel squad-forms"><h2>${esc(t('squadJoinTitle'))}</h2><p class="hint">${esc(t('squadIntro'))}</p><form id="squad-form" class="squad-form"><button class="primary" type="submit" value="create">${esc(t('squadCreate'))}</button><div class="squad-join"><span class="secret-field code-boxes-field">${codeBoxes('squad', drafts.code, { cls: maskedClass('squadInput'), label: t('squadCode') })}${revealButton('squadInput')}</span><button type="submit" value="join">${esc(t('squadJoin'))}</button></div>${notice}</form>${recentSquads()}${privacy}</section></div>`
@@ -325,16 +402,24 @@ afterRenderHooks.push(() => {
   if (activeKind() === 'squad' && shares.some((s) => !s.seen)) setTimeout(() => markSeen(), 1500)
 })
 
-clickHandlers.push(async (type, id) => {
+clickHandlers.push(async (type, id, button) => {
   if (type === 'squadShareFilter') {
     shareFilter = id || 'all'
     render()
     return true
   }
   // A member's count: the squad's page on their shares alone.
-  // A member's name opens their card, and closes it again.
+  // A member's name opens their card (over the page on Windows; under the
+  // name, and closed by the name again, elsewhere).
   if (type === 'squadMemberCard') {
+    const m = players(state.squad?.state?.members).find((x) => squadKey(x) === id)
+    if (!m) return true
+    if (state.platform === 'windows') {
+      void openMemberPopup(m, button)
+      return true
+    }
     openCard = openCard === id ? '' : id || ''
+    if (openCard) void request('squadPictures').catch(() => {})
     render()
     return true
   }

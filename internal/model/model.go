@@ -36,7 +36,26 @@ type Position struct {
 	DetectedAt string  `json:"detectedAt"`
 }
 
+// PlayerProfile is what the character's Overall screen showed when last
+// read (internal/profiledetect): the nickname, the level, the experience,
+// and the stats beside the level. Picture: a picture of the character's
+// panel was kept with it (profile.jpg).
+type PlayerProfile struct {
+	Name         string  `json:"name,omitempty"`
+	Level        int     `json:"level,omitempty"`
+	Exp          int     `json:"exp,omitempty"`
+	Raids        int     `json:"raids,omitempty"`
+	Kills        int     `json:"kills,omitempty"`
+	SurvivalRate float64 `json:"survivalRate,omitempty"`
+	KD           float64 `json:"kd,omitempty"`
+	Hours        float64 `json:"hours,omitempty"`
+	At           string  `json:"at"`
+	Picture      bool    `json:"picture,omitempty"`
+}
+
 type Status struct {
+	// Profile is the character's Overall screen as last read.
+	Profile           *PlayerProfile   `json:"profile,omitempty"`
 	Hideout           HideoutStatus    `json:"hideout"`
 	Catalog           CatalogStatus    `json:"catalog"`
 	Connection        string           `json:"connection"`

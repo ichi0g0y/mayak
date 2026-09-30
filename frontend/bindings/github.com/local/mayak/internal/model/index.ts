@@ -7,6 +7,7 @@ export {
     HideoutStatus,
     ItemCandidate,
     LogEntry,
+    PlayerProfile,
     Position,
     QuestCandidate,
     QuestObjective,

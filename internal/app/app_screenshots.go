@@ -133,6 +133,10 @@ func screenshotRecord(status model.Status) screenshotstore.Record {
 		for _, c := range status.ItemCandidates[:min(3, len(status.ItemCandidates))] {
 			r.Candidates = append(r.Candidates, fmt.Sprintf("%s %.0f%%", c.Name, c.Confidence*100))
 		}
+	case "profile":
+		if p := status.Profile; p != nil {
+			r.Match, r.Detail = p.Name, fmt.Sprintf("Lv. %d", p.Level)
+		}
 	case "position":
 		if p := status.Position; p != nil {
 			r.Position = fmt.Sprintf("%.1f, %.1f, %.1f", p.X, p.Y, p.Z)

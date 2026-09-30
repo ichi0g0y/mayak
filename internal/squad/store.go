@@ -46,7 +46,12 @@ func slot(key string) string {
 
 // Store keeps data (JSON; empty to let go of the slot) in this member's
 // slot, sealed.
-func (c *Client) Store(data json.RawMessage) error {
+func (c *Client) Store(data json.RawMessage) error { return c.StoreIn("", data) }
+
+// StoreIn is Store in another of this member's slots, named by kind (the
+// squad pen's lines are in the first, "", a picture in "picture"), so each
+// is replaced on its own.
+func (c *Client) StoreIn(kind string, data json.RawMessage) error {
 	key := c.Mine().Key
 	if !ValidKey(key) {
 		return errors.New("no member key")
@@ -62,7 +67,11 @@ func (c *Client) Store(data json.RawMessage) error {
 		}
 		body = c.seal.seal(plain)
 	}
-	req, err := http.NewRequest(http.MethodPut, c.storeURL()+"/"+slot(key), bytes.NewReader([]byte(body)))
+	name := slot(key)
+	if kind != "" {
+		name = slot(key + "\x00" + kind)
+	}
+	req, err := http.NewRequest(http.MethodPut, c.storeURL()+"/"+name, bytes.NewReader([]byte(body)))
 	if err != nil {
 		return err
 	}

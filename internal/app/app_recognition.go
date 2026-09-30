@@ -181,10 +181,13 @@ func (a *App) processScreenshot(path string, force bool) {
 	}()
 }
 
-// Screenshots are classified in order: an open item inspection window (its
-// item information wins over whatever is behind it), then a task list, then
-// the position from the file name.
+// Screenshots are classified in order: the character's Overall screen, an
+// open item inspection window (its item information wins over whatever is
+// behind it), then a task list, then the position from the file name.
 func (a *App) handleCoordinateScreenshot(ctx context.Context, sequence uint64, path string, settings config.Settings, parsed model.Position) {
+	if a.tryProfileScreenshot(ctx, sequence, path, settings) {
+		return
+	}
 	if itemDetected, err := itemdetect.AnalyzeFile(path); err == nil && itemDetected.IsItem {
 		a.handleItemAnalysis(ctx, sequence, path, settings, itemDetected)
 		return
