@@ -24,7 +24,7 @@ These changes are planned for the next version.
 - The map pens' lines grow and shrink with the map's zoom, so writing drawn close up keeps its shape for a squadmate seeing it from afar; the squad pen's position goes twenty times a second and glides, and the squad pen is put down after three minutes unused.
 - "Follow the squad" in the map's squad column (on from the start; nothing moves while you play alone): when someone's position updates on your raid's map, the map takes in the whole squad there.
 - "Look here" pins: the pin button on the map drops a pin where you press, as on Google Maps, dropping in, and it shows on everyone's map in your squad colour. While the button is on, each press puts it again and a right drag moves the map; later you can still drag your pin, and its × takes it out (one each, gone after ten minutes). The squad pen and the pin sit in their own column under the map's buttons, framed in your squad colour. Pressing it in the squad list brings up its map and floor, closing in at the zoom it was dropped at.
-- The squad code is typed into boxes of one character, as the pairing code is (no hyphen to type); the eighth joins.
+- The squad code is typed into boxes of one character, as the pairing code is (no hyphen to type); the eighth joins. Out of a squad, the squad page tells how to make one and how to join a squadmate's.
 - Ad blocking works on a Mac too: the same filter lists as on Windows (EasyList, EasyPrivacy, AdGuard Japanese) become a WebKit content blocker. After the first start or a list update it takes a moment to be ready. As on Windows, the empty space a hidden ad leaves is closed up.
 
 ### Improved

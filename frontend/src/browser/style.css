@@ -1170,6 +1170,8 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-popup-items img{width:40px;height:40px;object-fit:contain}
 .squad-form{display:flex;flex-direction:column;gap:10px}
 .squad-form .hint{margin:0}
+.squad-form .squad-how{margin-top:-4px;font-size:12px}
+.squad-form .squad-how-join{margin-top:6px}
 .squad-join{display:flex;gap:8px}
 .squad-join input{flex:1;min-width:0;height:34px;font-family:ui-monospace,"Cascadia Code",Consolas,monospace;text-transform:uppercase}
 .squad-notice{margin:0;color:var(--danger)}

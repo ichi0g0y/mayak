@@ -113,6 +113,10 @@ export const words = {
     squadProfile: 'あなたのプロフィール',
     squadProfileHelp: '分隊の仲間に見える名前と色です。分隊を変えても同じものを使います。',
     squadJoinTitle: '分隊に入る',
+    squadCreateHow:
+      '自分で作るとき：押すと新しい分隊コードが発行され、そのまま分隊に入ります。このページに出るコードを仲間に伝えてください（コピーのボタンもあります）。',
+    squadJoinHow:
+      '仲間の分隊に入るとき：仲間から聞いた 8 文字の分隊コードを下に入れます（ハイフンは不要）。8 文字目でそのまま参加します。',
     squadJoined: '参加中の分隊',
     squadShares: '共有されたもの',
     squadSharesAll: 'すべて',
@@ -821,6 +825,10 @@ export const words = {
     squadProfile: 'Your profile',
     squadProfileHelp: 'The name and colour your squad sees; they stay the same from squad to squad.',
     squadJoinTitle: 'Join a squad',
+    squadCreateHow:
+      'To make one: press it for a new squad code, and you are in the squad. Tell your squadmates the code this page shows (it has a copy button).',
+    squadJoinHow:
+      'To join a squadmate’s: type the 8-character squad code they gave you below (no hyphen needed); the 8th character joins.',
     squadJoined: 'Your squad',
     squadShares: 'Shared',
     squadSharesAll: 'All',
