@@ -312,6 +312,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - **中継サーバー**: 招待の文字列だけを、接続コードごとに 10 分間保持します（`MAYAK1.` で始まる 100000 文字以内のものだけ受け付けます）。招待には鍵が入っているので、10 分のあいだに 8 桁を当てて招待を取った人は、そのあともリンクに入れます。8 桁は総当たりに強くはないので、10 分の有効期限以上の保護はありません。
 - **入力欄**: Client の接続コードは 1 桁ずつの 8 つの枠（4 桁ずつ。`code-boxes.js`、分隊コードと同じ部品）に打ちます。打つと次の枠へ進み、Backspace で前の枠に戻り、貼り付けると枠を埋めます。8 桁目を打つと、そのままつなぎます。
 - **Host のゲームモード**: Host は、つながったときとゲームモード（TarkovTracker やログから判断したもの）が変わったときに、自分のモードを Client に送ります（`host:info`、`BrowserCatalogMode`）。Client の Go 側はそれを `BrowserSetHostMode` で受け取り、ボスと Goons、マップの印、アイテムの検索を Host と同じモードで読みます（`effectiveCatalogMode`。Client にはゲームのログが無いので、自分では判断しない）。Host が最新の状態を持ち、Client はそれを受け取って見る、という考え方です。
+- **Host のマップと位置**: 同じ `host:info` に、Host が遊んでいるマップ（`map`）、レイド中か（`raid`）、最後の位置（`position`: `x`・`y`・`z`・`rot`・`at`）も載せ、どれかが変わるたびに送り直します（`shareHostInfo`。受ける側は `transport.js` の `hostInfoOf` で確かめる）。Client はそれを `hostView` に持ち、マップ画面は Host 自身と同じように、そのマップを出し（自動のとき）、分隊に入っていなければ Host の位置を自分の矢印として出します（`view-map.js` の `hostOf`。分隊では Host は仲間の 1 人として出るので出さない）。
 - **お互いの PC の名前**: つながると、お互いのコンピューター名（`BrowserHostname`、`os.Hostname`）を出します。Client には「Host の PC」、Host には「つながっている PC」（Client ごと）、両方に「この PC」です。名前はリンクの `hello` に入れて送ります（暗号化される。名前のない古い版の相手は出さない）。
 - **伏せ字**: 8 桁の接続コード、長い招待コード、Client の入力欄は「•」で出し、横の目のボタンで表示します（[browser-shell.md](browser-shell.md#マップ) の分隊コードと同じ `revealButton`）。コピーのボタンは伏せ字のままでも本当のコードをコピーします。
 - **別の PC を追加**: ペアリング済みの Host は、同じ鍵で新しい接続コードを出せます。初めて会った Client（接続コードで入った PC）が来た時点でそのコードは消し、すでにペアリング済みの Client がつなぎ直しただけでは消しません。

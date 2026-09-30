@@ -12,6 +12,10 @@ These changes are planned for the next version.
 
 - The 8-digit code the Host issues for another PC shows as 1234-5678, with a hyphen (it was split by a space).
 
+### Fixed
+
+- A Client's map (another PC, a Mac say) did not switch to the map the Host recognized at matching or in a raid. The Host now tells its Clients the map it plays, whether in a raid and its position, and the Client's map shows that map (and, outside a squad, the Host's position as its own arrow).
+
 ## v0.1.21 (2026-09-30)
 
 ### New

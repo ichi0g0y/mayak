@@ -77,18 +77,24 @@ export function liveMapEntry() {
 }
 
 // shown is the map and floor to draw now.
+// hostOf is what the map view knows of the game played: the Host's own
+// status, or on a Client what its Host told it (hostView).
+const hostOf = () => state.host || state.hostView || null
 function shown() {
   const sq = state.squad
   const maps = sq?.maps || []
   let members = sq?.state?.members || []
-  // On the Host, its own last position shows without a squad too.
-  const own = state.host?.raid && state.host.map ? state.host.position : null
+  // On the Host, its own last position shows without a squad too; on a
+  // Client, the Host's (hostView) when not in a squad (in one, the Host is
+  // a member already).
+  const h = hostOf()
+  const own = h?.raid && h.map && (state.host || !sq?.state) ? h.position : null
   if (own && !placed(members).some((m) => m.me))
     members = [
       ...members.filter((m) => !m.me),
-      { id: '', me: true, name: ownName() || t('squadYou'), map: state.host.map, pos: own, at: own.at },
+      { id: '', me: true, name: ownName() || t('squadYou'), map: h.map, pos: own, at: own.at },
     ]
-  const key = view.map === 'auto' ? autoMap(members, state.host?.map || '') : view.map
+  const key = view.map === 'auto' ? autoMap(members, h?.map || '') : view.map
   const map = findMap(maps, key) || (view.map === 'auto' ? maps.find(drawable) : null) || null
   const me = placed(members).find((m) => m.me)
   // Automatically: my floor while I am on this map, else the floor
@@ -857,7 +863,8 @@ function followSquad(map, members) {
 // your last position was.
 function raidMap() {
   const maps = state.squad?.maps
-  if (state.host?.raid && state.host.map) return findMap(maps, state.host.map)?.key || ''
+  const h = hostOf()
+  if (h?.raid && h.map) return findMap(maps, h.map)?.key || ''
   const me = placed(state.squad?.state?.members || []).find((m) => m.me)
   return me ? findMap(maps, me.map)?.key || '' : ''
 }

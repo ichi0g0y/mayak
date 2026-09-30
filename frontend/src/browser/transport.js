@@ -20,6 +20,22 @@ const MAX_MESSAGE = 65536
 // five sixths of them (paced), so the relay never has to close it; these are
 // taken until a welcome tells.
 const LINK_LIMITS = { rate: 120, rateWindow: 10000, bytes: 16 * 1024 * 1024, bytesWindow: 60000 }
+// hostInfoOf keeps what is sound of the Host's info: its game mode, the
+// map it plays (a map key), whether in a raid, and its last position (game
+// coordinates and facing, when it was taken), else null.
+export function hostInfoOf(h) {
+  const p = h.position
+  const position =
+    p && typeof p === 'object' && [p.x, p.y, p.z, p.rot].every(Number.isFinite)
+      ? { x: p.x, y: p.y, z: p.z, rot: p.rot, at: String(p.at || '').slice(0, 40) }
+      : null
+  return {
+    mode: String(h.mode || '').slice(0, 20),
+    map: typeof h.map === 'string' && /^[a-z0-9-]{0,60}$/.test(h.map) ? h.map : '',
+    raid: h.raid === true,
+    position,
+  }
+}
 // limitsOf reads a welcome's limits, anything missing or odd as the default.
 export function limitsOf(told) {
   const out = { ...LINK_LIMITS }
@@ -264,7 +280,7 @@ class MayakLink {
     // What the Host is (its game mode), for its Clients to follow.
     if (message.event === 'host:info' && this.role === 'client' && message.r === 'host') {
       const h = message.args?.[0]
-      if (h && typeof h.mode === 'string') this.onHost({ mode: h.mode.slice(0, 20) })
+      if (h && typeof h.mode === 'string') this.onHost(hostInfoOf(h))
       return
     }
     if (

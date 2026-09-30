@@ -221,7 +221,7 @@ const snapshot = () => ({
   updateBar: updateBarVisible(),
   statusRows: statusRows(),
   goonReport,
-  bosses: bosses && { ...bosses, current: host?.map || '' },
+  bosses: bosses && { ...bosses, current: (state.connection.mode === 'client' ? remoteHost?.map : host?.map) || '' },
   screenshots: shotsAvailable()
     ? { list: shots.list, thumbs: shots.thumbs, viewing: shots.viewing, full: shots.full[shots.viewing] || '' }
     : null,
@@ -229,6 +229,9 @@ const snapshot = () => ({
   popup: popup && { key: popup.key },
   faviconData,
   host: state.connection.mode === 'local' ? host : null,
+  // A Client's view of its Host (receiveHost): the map played, whether in a
+  // raid, the last position, for the map view.
+  hostView: state.connection.mode === 'client' ? remoteHost : null,
   hostQuestSite,
   item,
   itemOpen,
@@ -821,15 +824,28 @@ async function shareSquadPicture() {
     await go.SquadSharePicture(state.squadPicture !== false)
   } catch {}
 }
+// What the Host knows goes to its Clients: its game mode, and the map it
+// plays, whether in a raid and its last position (the Client's map view
+// shows them as the Host's own), again when they change.
 async function shareHostInfo() {
   if (state.connection.mode !== 'local') return
   try {
-    peer.sendHost({ mode: String((await go.BrowserCatalogMode()) || '') })
+    peer.sendHost({
+      mode: String((await go.BrowserCatalogMode()) || ''),
+      map: host?.map || '',
+      raid: !!host?.raid,
+      position: host?.position || null,
+    })
   } catch {}
 }
+const hostPlace = () => JSON.stringify([host?.map || '', !!host?.raid, host?.position || null])
 let hostMode = ''
-async function receiveHost({ mode }) {
-  if (state.connection.mode !== 'client' || mode === hostMode) return
+let remoteHost = null
+async function receiveHost({ mode, map, raid, position }) {
+  if (state.connection.mode !== 'client') return
+  remoteHost = { map, raid, position }
+  update()
+  if (mode === hostMode) return
   hostMode = mode
   await go.BrowserSetHostMode(mode)
   // What was read in the mode before is read again.
@@ -1075,10 +1091,11 @@ const ready = (async () => {
       const profileAt = host?.profileAt,
         tracker = host?.tracker,
         mode = host?.mode,
-        identity = host?.identity
+        identity = host?.identity,
+        place = hostPlace()
       host = { ...host, ...hostStatus(next) }
       if (host.tracker !== tracker || host.mode !== mode) void loadBosses()
-      if (host.mode !== mode) void shareHostInfo()
+      if (host.mode !== mode || hostPlace() !== place) void shareHostInfo()
       if (identity !== undefined && host.identity !== identity) void reloadItem()
       if (host.profileAt && host.profileAt !== profileAt) void shareSquadPicture()
       update()
