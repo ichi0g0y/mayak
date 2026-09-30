@@ -115,8 +115,10 @@ class MayakLink {
     onSquad = /** @type {(squad:{code:string,name:string,initial:boolean,color?:string})=>void} */ (() => {}),
     onUnpair = () => {},
     onHost = /** @type {(host:{mode:string})=>void} */ (() => {}),
+    onMap = /** @type {(map:{hidden:any[],collapsed:any[],settings:object,initial:boolean})=>void} */ (() => {}),
     relay = LINK_RELAY,
   } = {}) {
+    this.onMap = onMap
     this.onState = onState
     this.onMessage = onMessage
     this.onHost = onHost
@@ -277,6 +279,20 @@ class MayakLink {
         })
       return
     }
+    // The map view's filters and settings go both ways too, so that the
+    // map looks the same on either PC and a change on one is the other's
+    // (see sendMap; checked where they are taken).
+    if (message.event === 'map:sync') {
+      const m = message.args?.[0]
+      if (m && typeof m === 'object')
+        this.onMap({
+          hidden: Array.isArray(m.hidden) ? m.hidden.slice(0, 1000) : [],
+          collapsed: Array.isArray(m.collapsed) ? m.collapsed.slice(0, 1000) : [],
+          settings: m.settings && typeof m.settings === 'object' ? m.settings : {},
+          initial: m.initial === true,
+        })
+      return
+    }
     // What the Host is (its game mode), for its Clients to follow.
     if (message.event === 'host:info' && this.role === 'client' && message.r === 'host') {
       const h = message.args?.[0]
@@ -339,6 +355,13 @@ class MayakLink {
   sendSquad(squad) {
     if (!this.connected) return false
     void this.say(this.ws, { event: 'squad:sync', args: [squad] }).catch(() => {})
+    return true
+  }
+  // sendMap tells the other PC the map view's filters and settings;
+  // initial marks the Host's when they connect.
+  sendMap(map) {
+    if (!this.connected) return false
+    void this.say(this.ws, { event: 'map:sync', args: [map] }).catch(() => {})
     return true
   }
   send(message) {

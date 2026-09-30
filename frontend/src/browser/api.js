@@ -788,6 +788,8 @@ const peer = new /** @type {any} */ (globalThis).MayakLink({
       // not answers with its own (receiveSquad).
       if (state.connection.mode === 'local' && squad.available)
         peer.sendSquad({ code: state.squadCode, name: state.squadName, color: state.squadColor, initial: true })
+      // The map view's filters and settings: the Host's for its Clients.
+      if (state.connection.mode === 'local') shareMap(true)
       if (state.connection.mode === 'local') void shareHostInfo()
     }
     update()
@@ -795,6 +797,7 @@ const peer = new /** @type {any} */ (globalThis).MayakLink({
   onMessage: (message) => void display(message, true),
   onSquad: (s) => void enqueue(() => receiveSquad(s)),
   onHost: (h) => void enqueue(() => receiveHost(h)),
+  onMap: (m) => void enqueue(() => receiveMapView(m)),
   // The Host ended the pairing: this Client forgets it too.
   onUnpair: () => void enqueue(() => unpair(false)),
 })
@@ -881,6 +884,18 @@ async function receiveSquad({ code, name, initial, color }) {
   await changed()
 }
 // shareSquad tells the other PC of a squad joined or left here.
+// shareMap tells the other PC the map view's filters, folded groups and
+// settings (a change here, or the Host's when they connect); receiveMapView
+// takes them without telling them back.
+const shareMap = (initial = false) =>
+  peer.sendMap({ hidden: state.mapHidden, collapsed: state.mapCollapsed, settings: state.mapSettings, initial })
+async function receiveMapView({ hidden, collapsed, settings }) {
+  state.mapHidden = hiddenOf(hidden)
+  state.mapCollapsed = hiddenOf(collapsed)
+  state.mapSettings = mapSettingsOf(settings)
+  update()
+  await persist()
+}
 const shareSquad = () => peer.sendSquad({ code: state.squadCode, name: state.squadName, color: state.squadColor })
 // unpair ends the pairing (or the one being made), telling the other PC
 // unless it told this one.
@@ -1574,14 +1589,19 @@ async function perform(type, data) {
     case 'squadCopy':
       await Clipboard.SetText(state.squadCode || '')
       return snapshot()
+    // The map view's filters, folded groups and settings go to the other PC
+    // too (shareMap).
     case 'mapHidden':
       state.mapHidden = hiddenOf(data)
+      shareMap()
       break
     case 'mapCollapsed':
       state.mapCollapsed = hiddenOf(data)
+      shareMap()
       break
     case 'mapSettings':
       state.mapSettings = mapSettingsOf({ ...state.mapSettings, ...data })
+      shareMap()
       break
     case 'mapMarkers': {
       // By map, language and game mode (auto: the one played).
