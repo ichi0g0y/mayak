@@ -100,10 +100,24 @@ squad.onShell('shot', (by, d) => {
     if (d.large && !had.large) {
       Object.assign(had, { image: d.image, large: true })
       if (asking === had.id) asking = ''
+      const bubble = bubbles.get(by)
+      if (bubble?.hash === d.hash) bubble.large = d.image
+      window.dispatchEvent(new CustomEvent('mayak:shot-large', { detail: had.id }))
       render()
     }
     return
   }
+  // One on a position shows by its member's arrow on the map (view-map.js).
+  if (Number.isFinite(d.x) && Number.isFinite(d.z))
+    bubbles.set(by, {
+      id: d.id,
+      hash: d.hash,
+      image: d.image,
+      large: d.large ? d.image : '',
+      x: d.x,
+      z: d.z,
+      map: text(d.map, 60),
+    })
   keep({
     id: d.id,
     kind: 'shot',
@@ -318,6 +332,16 @@ export function removePin() {
   void squad.sendShell({ t: 'unpin', id: pin.id })
 }
 
+// The screenshots by the arrows on the map: member key (this player's:
+// 'me') → {id (its share's), hash, image (small), large (a data URL once
+// there), x, z, map, file (this player's: its file)}. One shows while its
+// member's arrow is where it was taken (view-map.js drawBubbles).
+export const bubbles = new Map()
+
+// The size a large screenshot goes at (squad page): '1080' (in 1920×1080,
+// at first), '720' or 'full' (as taken).
+const largeSize = () => (['720', 'full'].includes(state.squadShotSize) ? state.squadShotSize : '1080')
+
 // The screenshots this PC sent: the squad and their file's MD5 (sentKey)
 // → {id, file, at, largeAt}
 // (when the small one and the large one went), kept across restarts so the
@@ -340,12 +364,12 @@ function rememberSent(hash, v) {
 }
 // sendShot sends a screenshot of the screenshot folder (its file name),
 // small or large, unless that one went already. It tells whether it went.
-async function sendShot(file, large, onProgress) {
+async function sendShot(file, large, onProgress, made) {
   const go = window.mayakDesktop?.backend
   if (!canShare() || !go?.SquadShot) return false
-  let shot
+  let shot = made
   try {
-    shot = await go.SquadShot(file, large)
+    shot ||= await go.SquadShot(file, large ? largeSize() : 'small')
   } catch {
     return false
   }
@@ -364,6 +388,7 @@ async function sendShot(file, large, onProgress) {
       map: shot.map || '',
       image: shot.image,
       ...(large ? { large: 1 } : {}),
+      ...(!large && shot.positioned ? { x: round(shot.x), z: round(shot.z) } : {}),
       ...style,
     },
     onProgress,
@@ -422,48 +447,66 @@ export async function askShot(id) {
   return squad.sendShell({ t: 'shotAsk', hash: s.hash, to: s.by })
 }
 
-// A screenshot taken while in a squad is shared by itself when the player
-// chose so (state.squadAutoShot; only those with a position unless
-// state.squadShotScope is 'all'): small, at most one every AUTO_GAP, the
-// latest taken meanwhile in place of those before it.
-const AUTO_GAP = 20_000
-let autoLast = 0
-let autoNext = ''
-let autoTimer = 0
-window.addEventListener('mayak:screenshot', (event) => autoShot(/** @type {CustomEvent} */ (event).detail))
-export function autoShot(file) {
-  if (!state.squadAutoShot || !canShare() || !file) return
-  autoNext = file
-  if (autoTimer) return
-  const wait = Math.max(0, autoLast + AUTO_GAP - Date.now())
-  // A moment first: the analysis says what the screenshot is.
-  autoTimer = setTimeout(autoSend, Math.max(wait, 1500))
-}
-async function autoSend() {
-  autoTimer = 0
-  const file = autoNext
-  autoNext = ''
-  if (!file || !state.squadAutoShot || !canShare()) return
+// A screenshot of the position (its name has one: in a raid every
+// screenshot's does, and the analysis found no screen in it, no task or
+// item) goes with the position when the player chose so (the map's setting
+// shotBubble): small, it shows by their arrow on the map, alone too, and in
+// a squad it goes to the squad, at most one every SEND_GAP (the latest taken
+// meanwhile in place of those between).
+const SEND_GAP = 20_000
+const round = (n) => Math.round(n * 100) / 100
+window.addEventListener('mayak:screenshot', (event) => void positionShot(/** @type {CustomEvent} */ (event).detail))
+let lastFile = ''
+async function positionShot(file) {
   const go = window.mayakDesktop?.backend
+  if (!state.mapSettings?.shotBubble || !file || file === lastFile || !go?.SquadShotHash) return
+  lastFile = file
+  let shot
   try {
-    let shot = await go.SquadShotHash(file)
-    if (sentShots.has(sentKey(shot.hash))) return
-    if (state.squadShotScope !== 'all') {
-      // A screenshot of the position: its name has one (in a raid every
-      // screenshot's does) and the analysis found no screen in it (a task,
-      // an item: those are read, not shown). The analysis may take a while.
-      for (let i = 0; i < 5 && shot.positioned && !shot.kind; i++) {
-        await new Promise((done) => setTimeout(done, 2000))
-        shot = await go.SquadShotHash(file)
-      }
-      if (!shot.positioned || (shot.kind && shot.kind !== 'position')) return
+    shot = await go.SquadShotHash(file)
+    // The analysis may take a while.
+    for (let i = 0; i < 5 && shot.positioned && !shot.kind; i++) {
+      await new Promise((done) => setTimeout(done, 2000))
+      shot = await go.SquadShotHash(file)
     }
+    if (!shot.positioned || (shot.kind && shot.kind !== 'position')) return
+    shot = await go.SquadShot(file, 'small')
   } catch {
     return
   }
-  autoLast = Date.now()
-  await sendShot(file, false)
-  if (autoNext) autoShot(autoNext)
+  const old = bubbles.get('me')
+  bubbles.set('me', {
+    id: '',
+    hash: shot.hash,
+    image: shot.image,
+    large: old?.hash === shot.hash ? old.large : '',
+    x: shot.x,
+    z: shot.z,
+    map: shot.map || '',
+    file,
+  })
+  render()
+  queueSend(file, shot)
+}
+let sendLast = 0
+let sendNext = null
+let sendTimer = 0
+function queueSend(file, shot) {
+  if (!canShare() || sentShots.has(sentKey(shot.hash))) return
+  sendNext = { file, shot }
+  if (sendTimer) return
+  sendTimer = setTimeout(
+    async () => {
+      sendTimer = 0
+      const next = sendNext
+      sendNext = null
+      if (!next || !state.mapSettings?.shotBubble) return
+      sendLast = Date.now()
+      await sendShot(next.file, false, undefined, next.shot)
+      if (sendNext) queueSend(sendNext.file, sendNext.shot)
+    },
+    Math.max(0, sendLast + SEND_GAP - Date.now()),
+  )
 }
 
 export const unseen = () => shares.filter((s) => !s.seen).length
@@ -482,9 +525,10 @@ afterRenderHooks.push(() => {
   const next = state.squad?.state ? state.squadCode || state.squad.state.code : ''
   if (next === code) return
   code = next
-  if (shares.length || pins.size) {
+  if (shares.length || pins.size || bubbles.size > (bubbles.has('me') ? 1 : 0)) {
     shares.length = 0
     pins.clear()
+    for (const key of bubbles.keys()) if (key !== 'me') bubbles.delete(key)
     render()
   }
 })

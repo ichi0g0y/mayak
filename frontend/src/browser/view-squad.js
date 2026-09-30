@@ -307,18 +307,16 @@ function pictureSetting() {
 document.addEventListener('change', (event) => {
   const el = /** @type {HTMLInputElement} */ (event.target)
   if (el?.dataset?.squadPicture !== undefined) void action('squadPicture', el.checked)
-  if (el?.dataset?.squadAutoShot !== undefined) void action('squadAutoShot', el.checked)
-  if (el?.dataset?.squadShotScope !== undefined && el.checked) void action('squadShotScope', el.value)
+  if (el?.dataset?.squadShotBubble !== undefined) void action('mapSettings', { shotBubble: el.checked })
 })
-// autoShotSetting: whether a screenshot taken in a squad goes to it by
-// itself (small, one every 20 s at most), and which: those with a position,
-// or all. The Host's alone (it takes the screenshots).
-function autoShotSetting() {
+// shotSettings: whether a screenshot of the position goes with it (the
+// map's setting shotBubble: by the arrow, and to the squad), and the size a
+// large screenshot goes at. The Host's alone (it takes the screenshots).
+function shotSettings() {
   if (state.platform !== 'windows' || state.connection?.mode !== 'local') return ''
-  const on = state.squadAutoShot === true
-  const scope = (value, label) =>
-    `<label class="squad-shot-scope"><input type="radio" name="squadShotScope" data-squad-shot-scope value="${value}" ${state.squadShotScope === value ? 'checked' : ''} ${on ? '' : 'disabled'}><span>${esc(t(label))}</span></label>`
-  return `<label class="squad-picture-setting"><input type="checkbox" data-squad-auto-shot ${on ? 'checked' : ''}><span>${esc(t('squadAutoShot'))}<small>${esc(t('squadAutoShotHint'))}</small></span></label><div class="squad-shot-scopes">${scope('position', 'squadShotScopePosition')}${scope('all', 'squadShotScopeAll')}</div>`
+  const size = (value, label) =>
+    `<button data-action="squadShotSize" data-id="${value}" class="${(state.squadShotSize || '1080') === value ? 'selected' : ''}">${esc(t(label))}</button>`
+  return `<label class="squad-picture-setting"><input type="checkbox" data-squad-shot-bubble ${state.mapSettings?.shotBubble ? 'checked' : ''}><span>${esc(t('settingShotBubble'))}<small>${esc(t('settingShotBubbleHint'))}</small></span></label><div class="squad-shot-size"><span>${esc(t('squadShotSize'))}<small>${esc(t('squadShotSizeHint'))}</small></span><div class="segmented" role="group">${size('full', 'squadShotSizeFull')}${size('1080', 'squadShotSize1080')}${size('720', 'squadShotSize720')}</div></div>`
 }
 // The screenshot of a squadmate's shown large on the squad's page (its
 // share's id), with its large picture to ask for and a way to keep it.
@@ -364,7 +362,7 @@ export function squadPage() {
       ? `<p class="squad-notice" role="alert">${esc(t(drafts.notice))}</p>`
       : ''
   const head = `<div class="bookmarks-head"><h1>${esc(t('squad'))}</h1></div>`
-  const profile = `<section class="panel squad-forms squad-profile"><h2>${esc(t('squadProfile'))}</h2><p class="hint">${esc(t('squadProfileHelp'))}</p><form id="squad-name-form" class="squad-name"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" placeholder="${esc(t('squadNamePlaceholder'))}" value="${esc(name)}"></label></form>${colorPicker()}${pictureSetting()}${autoShotSetting()}</section>`
+  const profile = `<section class="panel squad-forms squad-profile"><h2>${esc(t('squadProfile'))}</h2><p class="hint">${esc(t('squadProfileHelp'))}</p><form id="squad-name-form" class="squad-name"><label class="field"><span>${esc(t('squadName'))}</span><input name="squadName" maxlength="24" autocomplete="off" spellcheck="false" placeholder="${esc(t('squadNamePlaceholder'))}" value="${esc(name)}"></label></form>${colorPicker()}${pictureSetting()}${shotSettings()}</section>`
   const privacy = `<p class="hint">${esc(t('squadPrivacy'))}</p>`
   if (!s)
     return `<div class="page squad-page">${head}${profile}<section class="panel squad-forms"><h2>${esc(t('squadJoinTitle'))}</h2><p class="hint">${esc(t('squadIntro'))}</p><form id="squad-form" class="squad-form"><button class="primary" type="submit" value="create">${esc(t('squadCreate'))}</button><p class="hint squad-how">${esc(t('squadCreateHow'))}</p><p class="hint squad-how squad-how-join">${esc(t('squadJoinHow'))}</p><div class="squad-join"><span class="secret-field code-boxes-field">${codeBoxes('squad', drafts.code, { cls: maskedClass('squadInput'), label: t('squadCode') })}${revealButton('squadInput')}</span><button type="submit" value="join">${esc(t('squadJoin'))}</button></div>${notice}</form>${recentSquads()}${privacy}</section></div>`
@@ -451,6 +449,10 @@ afterRenderHooks.push(() => {
 })
 
 clickHandlers.push(async (type, id, button) => {
+  if (type === 'squadShotSize') {
+    void action('squadShotSize', id)
+    return true
+  }
   if (type === 'squadShotClose') {
     viewingShot = ''
     render()

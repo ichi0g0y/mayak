@@ -16,18 +16,18 @@ import (
 	"github.com/local/mayak/internal/position"
 )
 
-// A screenshot shared with the squad (squad-share.js): a small picture sent
-// by itself when the player shares every screenshot, the larger one when
-// they share one by hand or a squadmate asks for it. Its file's MD5 names
-// it, so the same screenshot is never sent twice.
+// A screenshot shared with the squad (squad-share.js): a small picture on
+// a position (the bubble by its arrow on the map), the larger one when the
+// player shares one by hand or a squadmate asks for it. Its file's MD5
+// names it, so the same screenshot is never sent twice.
 
-// squadShotSmall is the longest side of the picture shared by itself, and
-// squadShotLarge that of the one shared in full: the relay carries 4 KB
-// messages, so a small one is a dozen of them and a large one a hundred.
-const (
-	squadShotSmall = 640
-	squadShotLarge = 1920
-)
+// squadShotSmall is the longest side of the small picture: the relay
+// carries 4 KB messages, so it is a dozen of them (a large one, a hundred).
+const squadShotSmall = 640
+
+// squadShotBoxes are the sizes a large picture is made at, a box it fits
+// in ("full": as taken).
+var squadShotBoxes = map[string][2]int{"1080": {1920, 1080}, "720": {1280, 720}}
 
 // SquadShot is a screenshot made ready for the squad.
 type SquadShot struct {
@@ -42,11 +42,14 @@ type SquadShot struct {
 	// Kind is what MAYAK recognized it as (tasks, item, position, profile,
 	// unknown; "" before its analysis).
 	Kind string `json:"kind,omitempty"`
+	// X and Z are the position in its name (with Positioned).
+	X float64 `json:"x,omitempty"`
+	Z float64 `json:"z,omitempty"`
 }
 
 // SquadShot reads a screenshot of the screenshot folder (its name) for the
-// squad: small, or large with full.
-func (a *App) SquadShot(name string, full bool) (SquadShot, error) {
+// squad at a size: "small", "720", "1080" or "full" (as taken).
+func (a *App) SquadShot(name, size string) (SquadShot, error) {
 	dir := a.screenshotDir()
 	if dir == "" || name != filepath.Base(name) || !screenshotName(name) {
 		return SquadShot{}, errors.New("invalid screenshot")
@@ -60,17 +63,20 @@ func (a *App) SquadShot(name string, full bool) (SquadShot, error) {
 	if err != nil {
 		return SquadShot{}, err
 	}
-	side, quality := squadShotSmall, 70
-	if full {
-		side, quality = squadShotLarge, 80
+	fitted, quality := fitWithin(img, squadShotSmall, squadShotSmall), 70
+	if size != "small" {
+		fitted, quality = img, 80
+		if box, ok := squadShotBoxes[size]; ok {
+			fitted = fitWithin(img, box[0], box[1])
+		}
 	}
 	var buffer bytes.Buffer
-	if err := jpeg.Encode(&buffer, fitWithin(img, side), &jpeg.Options{Quality: quality}); err != nil {
+	if err := jpeg.Encode(&buffer, fitted, &jpeg.Options{Quality: quality}); err != nil {
 		return SquadShot{}, err
 	}
 	shot := SquadShot{Hash: hex.EncodeToString(sum[:]), Image: imaging.DataURL("image/jpeg", buffer.Bytes())}
-	if _, err := position.ParseFilename(name); err == nil {
-		shot.Positioned = true
+	if p, err := position.ParseFilename(name); err == nil {
+		shot.Positioned, shot.X, shot.Z = true, p.X, p.Z
 	}
 	if a.screenshotIndex != nil {
 		if r, ok := a.screenshotIndex.Get(name); ok {
@@ -97,8 +103,10 @@ func (a *App) SquadShotHash(name string) (SquadShot, error) {
 		return SquadShot{}, err
 	}
 	sum := md5.Sum(data)
-	_, err = position.ParseFilename(name)
-	shot := SquadShot{Hash: hex.EncodeToString(sum[:]), Positioned: err == nil}
+	shot := SquadShot{Hash: hex.EncodeToString(sum[:])}
+	if p, err := position.ParseFilename(name); err == nil {
+		shot.Positioned, shot.X, shot.Z = true, p.X, p.Z
+	}
 	if a.screenshotIndex != nil {
 		if r, ok := a.screenshotIndex.Get(name); ok {
 			shot.Kind = r.Type
@@ -107,17 +115,17 @@ func (a *App) SquadShotHash(name string) (SquadShot, error) {
 	return shot, nil
 }
 
-// fitWithin scales img down so its longest side is at most side.
-func fitWithin(img image.Image, side int) image.Image {
+// fitWithin scales img down to fit in a box of width by height.
+func fitWithin(img image.Image, width, height int) image.Image {
 	b := img.Bounds()
 	w, h := b.Dx(), b.Dy()
-	if w <= side && h <= side {
+	if w <= width && h <= height {
 		return img
 	}
-	if w >= h {
-		h, w = max(1, h*side/w), side
+	if w*height >= h*width {
+		h, w = max(1, h*width/w), width
 	} else {
-		w, h = max(1, w*side/h), side
+		w, h = max(1, w*height/h), height
 	}
 	small := image.NewRGBA(image.Rect(0, 0, w, h))
 	draw.ApproxBiLinear.Scale(small, small.Bounds(), img, b, draw.Src, nil)

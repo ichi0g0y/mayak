@@ -10,7 +10,9 @@ These changes are planned for the next version.
 
 ### New
 
-- Screenshots can be shared with the squad: "Share with the squad" in the screenshot viewer sends one large. With "Share screenshots with the squad by themselves" on (off at first, on the squad page), those taken while in a squad go to it small (only those with a position at first, or all), one every 20 seconds at most, and the same screenshot (told by its file's MD5) never twice. A squadmate opens one from the squad section or page, can ask its sender for the large picture ("See it large") and keep it as a snap note.
+- Screenshots can be shared with the squad: "Share with the squad" in the screenshot viewer sends one (at the size chosen on the squad page: as taken, 1080p or 720p; 1080p at first), and the same screenshot (told by its file's MD5) never goes twice. A squadmate opens it from the squad section or page and can keep it as a snap note.
+- "Screenshots with the position" in the map's settings (the gear; off at first): a screenshot of the position shows in a bubble above your arrow on the map, large when pressed (pressing outside closes it), alone too. In a squad it goes to the squad as well, small (one every 20 seconds at most), and shows above your arrow on their maps; they can ask you for the large picture ("See it large").
+- "Show the map when a raid starts" and "Show the map on a position screenshot" in the map's settings (both on at first): turned off, a raid starting or a position screenshot no longer switches from another tab to the map (a map showing still follows).
 
 ## v0.1.20 (2026-09-30)
 

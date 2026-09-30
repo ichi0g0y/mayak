@@ -557,6 +557,12 @@ export class SquadShot {
      */
     "kind"?: string;
 
+    /**
+     * X and Z are the position in its name (with Positioned).
+     */
+    "x"?: number;
+    "z"?: number;
+
     /** Creates a new SquadShot instance. */
     constructor($$source: Partial<SquadShot> = {}) {
         if (!("hash" in $$source)) {

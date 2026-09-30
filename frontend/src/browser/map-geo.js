@@ -204,6 +204,13 @@ export function mapSettingsOf(saved) {
     // Following the squad (on unless turned off): a position updated on your
     // raid's map brings the whole squad there into view.
     squadFit: s.squadFit !== false,
+    // A screenshot of the position goes with it: a bubble by the arrow (and
+    // to the squad). Off unless turned on.
+    shotBubble: s.shotBubble === true,
+    // A map detected at a raid's start, and a position, bring the map view
+    // forward (on unless turned off).
+    openOnRaid: s.openOnRaid !== false,
+    openOnPosition: s.openOnPosition !== false,
   }
 }
 

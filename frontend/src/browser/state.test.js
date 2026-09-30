@@ -442,6 +442,9 @@ test('the map view, its filters and the squad come back, one tab at most', () =>
     markerColor: '',
     markerShape: 'arrow',
     squadFit: true,
+    shotBubble: false,
+    openOnRaid: true,
+    openOnPosition: true,
   })
   assert.equal(restore({ mapSettings: { extractText: 999, labelText: '75' } }).mapSettings.extractText, 200)
   assert.equal(restore({ mapSettings: { labelText: '75' } }).mapSettings.labelText, 75)
@@ -463,6 +466,9 @@ test('the map view, its filters and the squad come back, one tab at most', () =>
     markerColor: '',
     markerShape: 'arrow',
     squadFit: true,
+    shotBubble: false,
+    openOnRaid: true,
+    openOnPosition: true,
   })
 })
 

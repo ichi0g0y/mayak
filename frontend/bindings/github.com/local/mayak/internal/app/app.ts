@@ -794,10 +794,10 @@ export function SquadSharePicture(on: boolean): $CancellablePromise<void> {
 
 /**
  * SquadShot reads a screenshot of the screenshot folder (its name) for the
- * squad: small, or large with full.
+ * squad at a size: "small", "720", "1080" or "full" (as taken).
  */
-export function SquadShot(name: string, full: boolean): $CancellablePromise<$models.SquadShot> {
-    return $Call.ByID(1307805452, name, full).then(($result: any) => {
+export function SquadShot(name: string, size: string): $CancellablePromise<$models.SquadShot> {
+    return $Call.ByID(1307805452, name, size).then(($result: any) => {
         return $$createType25($result);
     });
 }

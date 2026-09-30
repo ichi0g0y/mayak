@@ -393,8 +393,7 @@ async function persist() {
     squadName,
     squadColor,
     squadPicture,
-    squadAutoShot,
-    squadShotScope,
+    squadShotSize,
     squadCode,
     squadRecent,
     bookmarks,
@@ -437,8 +436,7 @@ async function persist() {
       squadName,
       squadColor,
       squadPicture,
-      squadAutoShot,
-      squadShotScope,
+      squadShotSize,
       squadCode,
       squadRecent,
       bookmarks,
@@ -476,15 +474,29 @@ function display(message, remote = false) {
       return
     }
     // The last detection decides the tab shown: a task its page, a position
-    // (after a task, say) the map view again.
+    // (after a task, say) the map view again, unless the map's settings keep
+    // it where it is (openOnRaid, openOnPosition): then a map view showing
+    // still follows.
+    const mapEvent = message.event === 'browser:map' || message.event === 'browser:position'
+    const stay =
+      (message.event === 'browser:map' && state.mapSettings?.openOnRaid === false) ||
+      (message.event === 'browser:position' && state.mapSettings?.openOnPosition === false)
     const tab =
       message.event === 'browser:task'
         ? receiveTask(state, message.args[0])
-        : message.event === 'browser:map'
-          ? receiveMap(state, message.args[0])
-          : message.event === 'browser:position'
-            ? receivePosition(state, message.args[0])
-            : null
+        : stay
+          ? null
+          : message.event === 'browser:map'
+            ? receiveMap(state, message.args[0])
+            : message.event === 'browser:position'
+              ? receivePosition(state, message.args[0])
+              : null
+    if (!tab && mapEvent && stay) {
+      if (!remote) peer.send(message)
+      if (state.tabs.find((t) => t.id === state.active)?.kind === 'livemap')
+        window.dispatchEvent(new Event('mayak:map-follow'))
+      return
+    }
     if (tab) {
       if (!remote) peer.send(message)
       // The map view follows the map played again (view-map.js).
@@ -1119,7 +1131,7 @@ const ready = (async () => {
     .then(updateChanged)
     .catch(() => {})
   // A new screenshot shows in the sidebar (and on the screenshot page).
-  // It may go to the squad too (squad-share.js autoShot).
+  // One of the position may go with it (squad-share.js positionShot).
   window.mayakDesktop.on('browser:screenshot', (name) => {
     void loadShots()
     window.dispatchEvent(new CustomEvent('mayak:screenshot', { detail: String(name || '') }))
@@ -1495,12 +1507,9 @@ async function perform(type, data) {
       if (platform === 'windows') await go.TrackerDismissTasks(Array.isArray(data) ? data.map(String) : [])
       break
     // Whether this player's character picture is shown to the squad.
-    // Whether screenshots taken in a squad go to it by themselves, and which.
-    case 'squadAutoShot':
-      state.squadAutoShot = data === true
-      break
-    case 'squadShotScope':
-      state.squadShotScope = data === 'all' ? 'all' : 'position'
+    // The size a large screenshot goes to the squad at.
+    case 'squadShotSize':
+      state.squadShotSize = ['720', 'full'].includes(data) ? data : '1080'
       break
     case 'squadPicture':
       state.squadPicture = data !== false

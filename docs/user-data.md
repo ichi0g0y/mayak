@@ -58,7 +58,7 @@ MAYAK が `%AppData%\Mayak`（`internal/appdir`。`task dev` の開発ビルド�
 | `squadCollapsed` | `browser-preferences.json` | サイドバーの分隊セクションを畳んだか |
 | `mapHidden` | `browser-preferences.json` | マップのフィルターで隠した層のキー（最大 400 件） |
 | `mapCollapsed` | `browser-preferences.json` | フィルターで畳んだまとまり |
-| `mapSettings` | `browser-preferences.json` | マップの設定 `{snipers, extracts, activeTasks, subtleLabels, extractText, labelText, fade, style, mode}`。既定は `snipers: true`、ほかの真偽値は `false`、`extractText` / `labelText` は 100（50〜200%）、`fade` は 20（別の階の濃さ、0〜60%）、`style` は `svg`（`tile` で Satellite）、`mode` は `auto`（`regular` / `pve` / `pvp-season`: 地点のデータのゲームモード） |
+| `mapSettings` | `browser-preferences.json` | マップの設定 `{snipers, extracts, activeTasks, subtleLabels, extractText, labelText, fade, style, mode, markerEffect, markerColor, markerShape, squadFit, shotBubble, openOnRaid, openOnPosition}`。既定は `snipers`・`squadFit`・`openOnRaid`・`openOnPosition`（レイド開始・位置のスクショでマップを前に出す）が `true`、ほかの真偽値（`shotBubble`: 位置にスクショを付ける、など）は `false`、`extractText` / `labelText` は 100（50〜200%）、`fade` は 20（別の階の濃さ、0〜60%）、`style` は `svg`（`tile` で Satellite）、`mode` は `auto`（`regular` / `pve` / `pvp-season`: 地点のデータのゲームモード） |
 
 ## 読み書きの流れ
 

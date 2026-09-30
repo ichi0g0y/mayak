@@ -42,7 +42,7 @@ import {
 import { mapName, ownName } from './view-squad.js'
 import { colorOf } from './squad-colors.js'
 import { myStyle as squadStyle } from './squad-draw.js'
-import { canShare, dropPin, mapFresh, pinsOn, removePin } from './squad-share.js'
+import { askShot, bubbles, canShare, dropPin, mapFresh, pinsOn, removePin, shares } from './squad-share.js'
 
 // The map view: tarkov.dev's interactive map redrawn by MAYAK (Leaflet over
 // its SVG maps; internal/mapdata makes the picture of each floor and the
@@ -257,7 +257,7 @@ function settingsPanel() {
   const color = (c) =>
     `<button class="map-marker-color ${s.markerColor === c ? 'selected' : ''} ${c ? '' : 'auto'}" data-action="mapMarkerColor" data-id="${c}" style="--swatch:${c || 'transparent'}" title="${esc(c ? c : t('settingMarkerAuto'))}" aria-pressed="${s.markerColor === c}"></button>`
   const marker = `<div class="map-marker-setting"><span class="map-marker-title">${esc(t('settingShape'))}</span><div class="map-marker-shapes" role="group" aria-label="${esc(t('settingShape'))}">${Object.keys(markerShapes).map(shape).join('')}</div><span class="map-marker-title">${esc(t('settingMarker'))}</span><div class="segmented map-marker-effects" role="group">${markerEffects.map(effect).join('')}</div>${s.markerEffect !== 'none' ? `<div class="map-marker-colors" role="group" aria-label="${esc(t('settingMarkerColor'))}">${markerColors.map(color).join('')}</div>` : ''}</div>`
-  return `<aside class="map-panel map-settings" aria-label="${esc(t('mapSettings'))}">${panelHead(t('mapSettings'))}${row('snipers', t('settingSnipers'), t('settingSnipersHint'))}${row('extracts', t('settingExtracts'), t('settingExtractsHint'))}${row('activeTasks', t('settingActiveTasks'), t('settingActiveTasksHint'))}${row('subtleLabels', t('settingSubtleLabels'))}${slider('fade', t('settingFade'), 0, 60)}${slider('extractText', t('settingExtractText'))}${slider('labelText', t('settingLabelText'))}${marker}</aside>`
+  return `<aside class="map-panel map-settings" aria-label="${esc(t('mapSettings'))}">${panelHead(t('mapSettings'))}${row('snipers', t('settingSnipers'), t('settingSnipersHint'))}${row('extracts', t('settingExtracts'), t('settingExtractsHint'))}${row('activeTasks', t('settingActiveTasks'), t('settingActiveTasksHint'))}${row('subtleLabels', t('settingSubtleLabels'))}${row('shotBubble', t('settingShotBubble'), t('settingShotBubbleHint'))}${row('openOnRaid', t('settingOpenOnRaid'))}${row('openOnPosition', t('settingOpenOnPosition'))}${slider('fade', t('settingFade'), 0, 60)}${slider('extractText', t('settingExtractText'))}${slider('labelText', t('settingLabelText'))}${marker}</aside>`
 }
 
 // applyTextScale sizes the extracts' and places' names (CSS variables on
@@ -328,6 +328,8 @@ const fresh = () => ({
   baseKey: '',
   squad: new Map(),
   pins: new Map(),
+  // The screenshots in bubbles by the arrows (drawBubbles): member → marker.
+  bubbles: new Map(),
   things: null,
   thingsKey: '',
   resize: null,
@@ -342,6 +344,7 @@ let lm = fresh()
 const requested = new Set()
 
 function teardown() {
+  closeShot()
   lm.resize?.disconnect()
   lm.listeners?.abort()
   clearInterval(lm.tick)
@@ -661,6 +664,105 @@ function drawSquad(map, floor, members) {
     }
 }
 
+// drawBubbles puts a screenshot of the position in a bubble above each
+// arrow still where it was taken (squad-share.js bubbles: yours with the
+// map's setting shotBubble, a squadmate's when they send one), in its
+// member's colour. Pressed, it shows large over the map (openShot).
+function drawBubbles(map, members) {
+  const seen = new Set()
+  for (const m of placed(members)) {
+    if (findMap(state.squad?.maps, m.map)?.key !== map.key) continue
+    const key = m.me ? 'me' : m.key
+    const b = key && bubbles.get(key)
+    if (!b || (key === 'me' && !state.mapSettings?.shotBubble)) continue
+    if (Math.abs(b.x - m.pos.x) > 2 || Math.abs(b.z - m.pos.z) > 2) continue
+    seen.add(key)
+    const at = L.latLng(m.pos.z, m.pos.x)
+    let marker = lm.bubbles.get(key)
+    if (marker && marker._hash !== b.hash) {
+      marker.remove()
+      marker = null
+    }
+    if (!marker) {
+      const html = `<button class="map-shot-bubble" style="--c:${esc(colorOf(m))}" title="${esc(t('squadShot'))}"><img src="${b.image}" alt="" draggable="false"></button>`
+      marker = L.marker(at, {
+        keyboard: false,
+        zIndexOffset: 3000,
+        icon: L.divIcon({ className: 'map-shot-bubble-icon', html, iconSize: [128, 80], iconAnchor: [64, 102] }),
+      })
+      marker.on('click', () => openShot(key))
+      marker._hash = b.hash
+      marker.addTo(lm.map)
+      lm.bubbles.set(key, marker)
+    } else marker.setLatLng(at)
+  }
+  for (const [key, marker] of lm.bubbles)
+    if (!seen.has(key)) {
+      marker.remove()
+      lm.bubbles.delete(key)
+    }
+}
+
+// A bubble's screenshot shown large over the map: pressing outside it, its
+// ×, or Escape closes it. Yours at its size as taken; a squadmate's small
+// until they send the large one (asked for with its button).
+let shotBox = null
+function closeShot() {
+  shotBox?.remove()
+  shotBox = null
+}
+function openShot(key) {
+  const b = bubbles.get(key)
+  if (!b) return
+  closeShot()
+  const share = key === 'me' ? null : shares.find((x) => x.id === b.id)
+  const ask =
+    share && !b.large
+      ? `<button class="map-shot-large" data-shot-ask="${esc(b.id)}">${icon('fit')}<span>${esc(t('squadShotLarge'))}</span></button>`
+      : ''
+  const box = document.createElement('div')
+  box.className = 'map-shot-box'
+  box.innerHTML = `<figure><img src="${b.large || b.image}" alt="" draggable="false"><button class="map-shot-close" title="${esc(t('mapShotClose'))}" aria-label="${esc(t('close'))}">${icon('x')}</button>${ask}</figure>`
+  box.addEventListener('click', (event) => {
+    const target = /** @type {HTMLElement} */ (event.target)
+    const asking = /** @type {HTMLElement|null} */ (target.closest('[data-shot-ask]'))
+    if (asking) {
+      asking.setAttribute('disabled', '')
+      asking.querySelector('span').textContent = t('squadShotAsking')
+      void askShot(asking.dataset.shotAsk)
+      return
+    }
+    if (target.closest('.map-shot-close') || !target.closest('figure')) closeShot()
+  })
+  box.dataset.key = key
+  document.body.append(box)
+  shotBox = box
+  // Yours: the screenshot as taken, once read.
+  if (key === 'me' && b.file && !b.large)
+    void window.mayakDesktop?.backend
+      ?.BrowserScreenshotImage(b.file, false)
+      .then((full) => {
+        b.large = full
+        if (shotBox === box) box.querySelector('img').src = full
+      })
+      .catch(() => {})
+}
+// A squadmate's large screenshot come in shows at once.
+window.addEventListener('mayak:shot-large', (event) => {
+  const id = /** @type {CustomEvent} */ (event).detail
+  const key = shotBox?.dataset.key
+  const b = key && bubbles.get(key)
+  if (!b || b.id !== id || !b.large) return
+  shotBox.querySelector('img').src = b.large
+  shotBox.querySelector('.map-shot-large')?.remove()
+})
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && shotBox) {
+    event.stopPropagation()
+    closeShot()
+  }
+})
+
 // drawPins puts the squad's pins on the map: a pin in its member's colour
 // with their name, faint when on another floor. A pin just put drops in.
 // Yours can be dragged (not while a pen is up) and taken out with the ×
@@ -862,6 +964,7 @@ function drawMap() {
   if (!data) fetchOnce('markers:' + map.key, 'mapMarkers', { map: map.key })
   drawThings(map, floor, data)
   drawSquad(map, floor, members)
+  drawBubbles(map, members)
   drawLines(L, lm.map, map.key, floor, offAlpha())
   if (pen.on) pinning = false
   setPinning(pinning)
