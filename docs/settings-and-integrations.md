@@ -313,6 +313,8 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - **入力欄**: Client の接続コードは 1 桁ずつの 8 つの枠（4 桁ずつ。`code-boxes.js`、分隊コードと同じ部品）に打ちます。打つと次の枠へ進み、Backspace で前の枠に戻り、貼り付けると枠を埋めます。8 桁目を打つと、そのままつなぎます。
 - **Host のゲームモード**: Host は、つながったときとゲームモード（TarkovTracker やログから判断したもの）が変わったときに、自分のモードを Client に送ります（`host:info`、`BrowserCatalogMode`）。Client の Go 側はそれを `BrowserSetHostMode` で受け取り、ボスと Goons、マップの印、アイテムの検索を Host と同じモードで読みます（`effectiveCatalogMode`。Client にはゲームのログが無いので、自分では判断しない）。Host が最新の状態を持ち、Client はそれを受け取って見る、という考え方です。
 - **マップのフィルターと設定**: マップのフィルター（`mapHidden`）、畳んだまとまり（`mapCollapsed`）、マップの設定（`mapSettings`）は、両方向にそろえます（`map:sync`）。つながったときは Host のものを Client が受け取って復元し（`initial`）、どちらかで変えると、そのたびに相手に送ります（`shareMap`。受けた側は `receiveMapView` で入れ替えて保存し、送り返さない）。
+- **つながっていないあいだの認識**: Host は、Client がつながっていないあいだ（Client がつなぎ直している、眠っていた）に認識したもの（タスク・マップ・位置・アイテム）を、種類ごとに最新の 1 つだけ 1 分とっておき、Client の hello を受けたときに送ります（`transport.js` の `held`・`flushHeld`）。
+- **眠りから覚めたとき**: macOS は裏にあるアプリのタイマーを止める（App Nap）ので、Mac 版は `Info.plist` の `NSAppSleepDisabled` で止めさせません。それでもウインドウが前に出たり見えるようになったりしたときは、リンクをすぐ確かめ、しばらく何も聞こえていなければつなぎ直し、つなぎ直しを待っていれば今つなぎます（`wake`）。
 - **共有する設定**: 基本は「Client は Host の設定を引き継ぎ、Client で変えた共有すべきものは Host にも伝える」です。そろえるのは次のとおりです。
   - **好み**（`prefs:sync`）: 言語、テーマ、時計、タスクの開き方（`taskMode`）、公式 Wiki の翻訳（`translateWiki`）、ボスのモード（`bossMode`）。つながったときは Host のものを Client が受け、どちらかで変えると（`perform` が前後を比べる）相手に送ります（`receivePrefs`。受けたものは送り返さず、Host はほかの Client に回す）。
   - **タスクの表示先**: Host の設定（`questSite`）を `host:info` で Client に知らせ、Client は「Host の設定」のときタスク・アイテム欄・マップのタスクの印でそれを使います。Client で表示先を選ぶと、それが Host の設定になり（`prefs:sync` の `questSite`。Host は `PersistSettings` して知らせ直す）、Client は「Host の設定」に戻ります。

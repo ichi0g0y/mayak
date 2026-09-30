@@ -57,3 +57,15 @@ test('the Host info keeps what is sound: mode, task site, map, raid and position
   const bad = hostInfoOf({ mode: 'pvp', questSite: 'host', map: 'The Lab!', raid: 'yes', position: { x: 'a' } })
   assert.deepEqual(bad, { mode: 'pvp', questSite: '', map: '', raid: false, position: null })
 })
+
+test('the Host keeps what it detected while no Client was there, the latest of each kind', () => {
+  const { MayakLink } = /** @type {any} */ (globalThis)
+  const link = new MayakLink()
+  link.role = 'host'
+  assert.equal(link.send({ event: 'browser:task', args: [{ id: 'a' }] }), false)
+  assert.equal(link.send({ event: 'browser:task', args: [{ id: 'b' }] }), false)
+  assert.equal(link.send({ event: 'browser:map', args: ['customs'] }), false)
+  assert.equal(link.send({ event: 'squad:state', args: [] }), false)
+  assert.deepEqual([...link.held.keys()], ['browser:task', 'browser:map'])
+  assert.equal(link.held.get('browser:task').message.args[0].id, 'b')
+})

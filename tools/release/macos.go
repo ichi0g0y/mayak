@@ -57,6 +57,7 @@ func buildApp(dir, bin, version, iconPNG string) (string, error) {
 	<key>CFBundleVersion</key><string>%s</string>
 	<key>LSMinimumSystemVersion</key><string>11.0</string>
 	<key>NSHighResolutionCapable</key><true/>
+	<key>NSAppSleepDisabled</key><true/>
 	<key>NSHumanReadableCopyright</key><string>Copyright MAYAK contributors. GPL-3.0.</string>
 </dict>
 </plist>

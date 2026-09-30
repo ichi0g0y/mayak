@@ -15,6 +15,8 @@
 const LINK_RELAY = 'wss://mayak-relay.ich.sh/link/'
 const displayEvents = ['browser:task', 'browser:map', 'browser:position', 'browser:item']
 const MAX_MESSAGE = 65536
+// How long a detection made while no Client is connected waits for one.
+const HELD_MS = 60_000
 // The relay's limits for a member of a link (told in its welcome: limits):
 // messages per rateWindow and characters per bytesWindow. The link keeps to
 // five sixths of them (paced), so the relay never has to close it; these are
@@ -137,6 +139,15 @@ class MayakLink {
     // The members of the room that proved they have the key (a hello).
     // The PCs met: relay ID → their computer's name ("" from a build before).
     this.peers = new Map()
+    // The Host's detections waiting for a Client (send): event → {message, at}.
+    this.held = new Map()
+    // A PC woken up (macOS stops a hidden app's timers) checks its link at
+    // once rather than at the next ping: one gone quiet is made again.
+    if (typeof window !== 'undefined') {
+      const wake = () => this.wake()
+      window.addEventListener('focus', wake)
+      document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && wake())
+    }
     // This PC's computer's name, said in the hello (api.js sets it).
     this.name = ''
     this.retry = 0
@@ -152,6 +163,21 @@ class MayakLink {
   }
   get connected() {
     return this.peers.size > 0 && this.ws?.readyState === WebSocket.OPEN
+  }
+  // wake checks the link after the PC slept: a socket that heard nothing
+  // for a while is closed (and made again), one waiting to be made again
+  // is made now.
+  wake() {
+    if (!this.key || !this.role) return
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      if (Date.now() - this.seen > 75000) this.ws.close(4000, 'silent')
+      else this.ws.send('ping')
+    } else if (!this.ws && this.timer) {
+      clearTimeout(this.timer)
+      this.timer = 0
+      this.retry = 0
+      this.connect(this.run)
+    }
   }
   // start joins the room of key as role ("host" or "client"), again after
   // every drop until stop; fresh marks a Client joining for the first time
@@ -258,6 +284,8 @@ class MayakLink {
           joined: true,
           newcomer: message.fresh === true,
         })
+        // What the Host detected while no Client was there goes now.
+        if (this.role === 'host') this.flushHeld()
       }
       return
     }
@@ -395,11 +423,24 @@ class MayakLink {
     void this.say(this.ws, { event: 'map:sync', args: [map] }).catch(() => {})
     return true
   }
+  // send passes a detection on to the Clients. One made while none is
+  // connected (a Client reconnecting, woken from sleep) is kept, the latest
+  // of each kind for HELD_MS, and goes when a Client says hello (flushHeld).
   send(message) {
-    if (this.role !== 'host' || !this.connected || !displayEvents.includes(message?.event)) return false
+    if (this.role !== 'host' || !displayEvents.includes(message?.event)) return false
     if (JSON.stringify(message).length > MAX_MESSAGE) return false
+    if (!this.connected) {
+      this.held.set(message.event, { message, at: Date.now() })
+      return false
+    }
     void this.say(this.ws, { event: message.event, args: message.args }).catch(() => {})
     return true
+  }
+  flushHeld() {
+    const now = Date.now()
+    for (const { message, at } of this.held.values())
+      if (now - at < HELD_MS) void this.say(this.ws, { event: message.event, args: message.args }).catch(() => {})
+    this.held.clear()
   }
 }
 Object.assign(globalThis, { MayakLink, newLinkKey, validLinkKey, linkSecrets })
