@@ -500,6 +500,9 @@ function display(message, remote = false) {
         window.dispatchEvent(new Event('mayak:map-follow'))
       return
     }
+    // The map view brought forward by a detection (a Client's by its Host's)
+    // needs the maps as when it is opened by hand.
+    if (tab?.kind === 'livemap') void loadSquadMaps()
     if (tab) {
       if (!remote) peer.send(message)
       // The map view follows the map played again (view-map.js).
@@ -1524,6 +1527,10 @@ async function perform(type, data) {
       openLocal(state, 'livemap')
       void loadSquadMaps()
       break
+    // The map view shows without the maps (opened some other way): they load.
+    case 'squadMaps':
+      await loadSquadMaps()
+      return snapshot()
     // The squad's page (view-squad.js): its code, name, colour, members.
     case 'squadPage':
       if (!squad.available) return snapshot()

@@ -300,12 +300,19 @@ function tickClocks() {
   }
 }
 
+let mapsAsked = 0
 export function liveMapPage() {
   const sq = state.squad
   if (!sq) return `<div class="page"><p class="empty-tabs">${esc(t('squadUnavailable'))}</p></div>`
   const { map, floor } = shown()
   const data = currentData()
   const note = !sq.maps ? t(sq.mapsError ? 'mapDataFailed' : 'mapLoading') : !map ? t('mapNone') : ''
+  // Shown without the maps (brought forward some other way than opening
+  // it, or asked before squads were known to be on): ask, again every 5 s.
+  if (!sq.maps && !sq.mapsError && Date.now() - mapsAsked > 5000) {
+    mapsAsked = Date.now()
+    setTimeout(() => void action('squadMaps'))
+  }
   const panel =
     view.panel === 'maps'
       ? mapsPanel(map, floor)
