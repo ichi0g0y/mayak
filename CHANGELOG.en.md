@@ -14,6 +14,10 @@ These changes are planned for the next version.
 - "Screenshots with the position" in the map's settings (the gear; off at first): a screenshot of the position shows in a bubble above your arrow on the map, large when pressed (pressing outside closes it), alone too. In a squad it goes to the squad as well, small (one every 20 seconds at most), and shows above your arrow on their maps; they can ask you for the large picture ("See it large").
 - "Show the map when a raid starts" and "Show the map on a position screenshot" in the map's settings (both on at first): turned off, a raid starting or a position screenshot no longer switches from another tab to the map (a map showing still follows).
 
+### Improved
+
+- The sidebar's bookmarks moved to just above the tabs.
+
 ## v0.1.20 (2026-09-30)
 
 ### Improved
