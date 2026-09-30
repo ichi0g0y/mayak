@@ -656,6 +656,16 @@ export function SnapNoteSave(id: string, title: string, strokes: string, thumbDa
 }
 
 /**
+ * SnapNoteSetFrom records the squadmate a note shared with the squad came
+ * from: their name (up to 24 characters) and squad colour (#rrggbb).
+ */
+export function SnapNoteSetFrom(id: string, name: string, color: string): $CancellablePromise<snapnote$0.Note> {
+    return $Call.ByID(449245886, id, name, color).then(($result: any) => {
+        return $$createType22($result);
+    });
+}
+
+/**
  * SnapNoteSetMap sets the map of a note's position.
  */
 export function SnapNoteSetMap(id: string, mapName: string): $CancellablePromise<snapnote$0.Note> {

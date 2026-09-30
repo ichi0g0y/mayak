@@ -1411,7 +1411,12 @@ async function perform(type, data) {
       error = t(state.language, 'mapSnapFailed') + String(data || '')
       return snapshot()
     case 'snapNew': {
-      const note = await go.SnapNoteCreate(String(data?.image || ''), String(data?.title || ''))
+      let note = await go.SnapNoteCreate(String(data?.image || ''), String(data?.title || ''))
+      // A note shared by a squadmate keeps who sent it.
+      if (data?.from?.name)
+        note = await go
+          .SnapNoteSetFrom(note.id, String(data.from.name), String(data.from.color || ''))
+          .catch(() => note)
       // A note of the map carries the map's lines as its first layer (view-map.js).
       if (data?.drawing?.layers?.some((l) => l.strokes?.length))
         await go.SnapNoteSave(note.id, note.title, JSON.stringify(data.drawing), '')

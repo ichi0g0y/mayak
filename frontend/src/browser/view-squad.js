@@ -393,7 +393,7 @@ async function openSharedSnap(s) {
       if (next?.snapNotes?.open?.note?.id === s.noteId) return
     } catch {}
   }
-  const next = await action('snapNew', { image: s.image, title: s.title })
+  const next = await action('snapNew', { image: s.image, title: s.title, from: { name: s.name, color: s.c } })
   s.noteId = next?.snapNotes?.open?.note?.id || ''
 }
 

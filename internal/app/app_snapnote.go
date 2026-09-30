@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"unicode/utf8"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/local/mayak/internal/model"
 	"github.com/local/mayak/internal/position"
 	"github.com/local/mayak/internal/snapnote"
+	"github.com/local/mayak/internal/squad"
 	"github.com/local/mayak/internal/sysfonts"
 )
 
@@ -158,6 +160,28 @@ func validMapName(name string) bool {
 		}
 	}
 	return true
+}
+
+// SnapNoteSetFrom records the squadmate a note shared with the squad came
+// from: their name (up to 24 characters) and squad colour (#rrggbb).
+func (a *App) SnapNoteSetFrom(id, name, color string) (snapnote.Note, error) {
+	name = strings.TrimSpace(name)
+	if name == "" || utf8.RuneCountInString(name) > 24 {
+		return snapnote.Note{}, errors.New("invalid name")
+	}
+	if !squad.ValidColor(color) {
+		color = ""
+	}
+	store, err := snapNotes()
+	if err != nil {
+		return snapnote.Note{}, err
+	}
+	note, err := store.SetFrom(id, snapnote.From{Name: name, Color: color})
+	if err != nil {
+		return snapnote.Note{}, err
+	}
+	a.snapNoteChanged()
+	return note, nil
 }
 
 // SnapNoteSetMap sets the map of a note's position.

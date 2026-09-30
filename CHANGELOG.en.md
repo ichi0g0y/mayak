@@ -22,6 +22,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### Improved
 
+- Snap notes open to be looked at, and "Edit" lets you draw on them ("Done" goes back); one just captured or made from a blank sheet opens ready to draw. A snap note from a squadmate remembers who sent it and shows it.
+
 - The setting that gave your position marker on tarkov.dev's map an effect in the built-in browser (Settings → tarkov.dev → Player position marker) is gone: tarkov.dev's pages are left as they are, and the effect is set in MAYAK's own map settings.
 
 - Bookmark icons show even for sites never opened: those pinned to the sidebar are fetched at start and when pinned, and all of them when the bookmarks page opens, one at a time in the background (a site that refuses this, such as Fandom, gets its icon once opened).

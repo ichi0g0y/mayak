@@ -10,6 +10,31 @@ import { Create as $Create } from "@wailsio/runtime";
 import * as json$0 from "../../../../../encoding/json/models.js";
 
 /**
+ * From is who shared a note: their name then and their squad colour.
+ */
+export class From {
+    "name": string;
+    "color"?: string;
+
+    /** Creates a new From instance. */
+    constructor($$source: Partial<From> = {}) {
+        if (!("name" in $$source)) {
+            this["name"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new From instance from a string or object.
+     */
+    static createFrom($$source: any = {}): From {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new From($$parsedSource as Partial<From>);
+    }
+}
+
+/**
  * Note is one snap note. Strokes is the shell's drawing, kept as it sends it.
  */
 export class Note {
@@ -25,6 +50,11 @@ export class Note {
      * name has the position.
      */
     "spot"?: Spot | null;
+
+    /**
+     * From is the squadmate a note shared with the squad came from.
+     */
+    "from"?: From | null;
     "full"?: boolean;
     "width": number;
     "height": number;
@@ -78,9 +108,13 @@ export class Note {
      */
     static createFrom($$source: any = {}): Note {
         const $$createField6_0 = $$createType1;
+        const $$createField7_0 = $$createType3;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("spot" in $$parsedSource) {
             $$parsedSource["spot"] = $$createField6_0($$parsedSource["spot"]);
+        }
+        if ("from" in $$parsedSource) {
+            $$parsedSource["from"] = $$createField7_0($$parsedSource["from"]);
         }
         return new Note($$parsedSource as Partial<Note>);
     }
@@ -127,3 +161,5 @@ export class Spot {
 // Private type creation functions
 const $$createType0 = Spot.createFrom;
 const $$createType1 = $Create.Nullable($$createType0);
+const $$createType2 = From.createFrom;
+const $$createType3 = $Create.Nullable($$createType2);

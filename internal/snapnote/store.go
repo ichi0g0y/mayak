@@ -36,7 +36,9 @@ type Note struct {
 	Favorite  bool   `json:"favorite,omitempty"`
 	// Spot is where a note from a game screenshot was taken, when its file
 	// name has the position.
-	Spot      *Spot     `json:"spot,omitempty"`
+	Spot *Spot `json:"spot,omitempty"`
+	// From is the squadmate a note shared with the squad came from.
+	From      *From     `json:"from,omitempty"`
 	Full      bool      `json:"full,omitempty"`
 	Width     int       `json:"width"`
 	Height    int       `json:"height"`
@@ -51,6 +53,12 @@ type Note struct {
 	// stays as a tombstone for tombstoneAge, so that a copy still having it
 	// does not bring it back.
 	Deleted bool `json:"deleted,omitempty"`
+}
+
+// From is who shared a note: their name then and their squad colour.
+type From struct {
+	Name  string `json:"name"`
+	Color string `json:"color,omitempty"`
 }
 
 // tombstoneAge is how long a removed note's tombstone is kept.
@@ -330,6 +338,22 @@ func (s *Store) SetFavorite(id string, favorite bool) (Note, error) {
 		return Note{}, err
 	}
 	note.Favorite = favorite
+	if err := s.writeNote(note); err != nil {
+		return Note{}, err
+	}
+	note.Strokes = nil
+	return note, nil
+}
+
+// SetFrom records who shared the note.
+func (s *Store) SetFrom(id string, from From) (Note, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	note, err := s.readNote(id)
+	if err != nil {
+		return Note{}, err
+	}
+	note.From = &from
 	if err := s.writeNote(note); err != nil {
 		return Note{}, err
 	}
