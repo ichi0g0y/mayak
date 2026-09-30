@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  mapSettingsOf,
   assignColors,
   squadColors,
   autoMap,
@@ -266,4 +267,12 @@ test('assignColors gives every player a colour of their own', () => {
   ]
   assert.equal(assignColors(keyed).get('z9'), a)
   assert.equal(new Set(assignColors(ten).values()).size, 10)
+})
+
+test('the arrow effect in the map settings is one known, in a #rrggbb colour', () => {
+  assert.deepEqual([mapSettingsOf({}).markerEffect, mapSettingsOf({}).markerColor], ['none', ''])
+  const s = mapSettingsOf({ markerEffect: 'pulse', markerColor: '#FF3B30' })
+  assert.deepEqual([s.markerEffect, s.markerColor], ['pulse', '#ff3b30'])
+  const bad = mapSettingsOf({ markerEffect: 'spin', markerColor: 'red' })
+  assert.deepEqual([bad.markerEffect, bad.markerColor], ['none', ''])
 })

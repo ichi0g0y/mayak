@@ -1099,6 +1099,15 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-setting span{display:flex;flex-direction:column;gap:2px}
 .map-setting-hint{margin:0!important;color:var(--muted);font-size:11.5px}
 .map-slider{display:flex;flex-direction:column;gap:4px;padding:8px 2px 2px;font-size:13px}
+/* The map's settings: the effect on your own arrow, and its colour. */
+.map-marker-setting{display:flex;flex-direction:column;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.map-marker-title{font-size:12.5px;color:var(--text-2)}
+.map-marker-effects{display:grid;grid-template-columns:repeat(5,1fr)}
+.map-marker-effects button{min-width:0;padding:0 2px;font-size:11.5px;white-space:nowrap}
+.map-marker-colors{display:flex;gap:6px;flex-wrap:wrap}
+.map-panel .map-marker-color,.map-panel .map-marker-color.selected{width:22px;height:22px;padding:0;border:2px solid transparent;border-radius:50%;background:var(--swatch);box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+.map-panel .map-marker-color.auto{background:conic-gradient(#4cc9f0 0 25%,#f72585 0 50%,#06d6a0 0 75%,#ffd166 0)}
+.map-panel .map-marker-color.selected{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--surface)}
 .map-slider span{display:flex;justify-content:space-between}
 .map-slider output{color:var(--muted);font-variant-numeric:tabular-nums}
 .map-slider input{width:100%;accent-color:var(--accent)}
@@ -1292,7 +1301,7 @@ body[data-sidebar=collapsed] .live-map-entry .live-map-icon,[data-layout=horizon
 .squad-marker{position:relative;display:block;width:28px;height:28px;color:var(--c)}
 .squad-marker svg{width:28px;height:28px;fill:var(--c);stroke:#000a;stroke-width:1.5;display:block}
 .squad-marker.me svg{stroke:#fff;stroke-width:2}
-/* Your arrow's effect, as on tarkov.dev's map (settings: the player marker), in --fx. */
+/* The arrows' effect (the map's settings), in --fx: the colour chosen, else each member's squad colour. */
 .squad-marker.fx-outline svg{filter:drop-shadow(0 0 1.5px var(--fx)) drop-shadow(0 0 1.5px var(--fx)) drop-shadow(0 0 2px var(--fx)) drop-shadow(0 1px 3px rgba(0,0,0,.9))}
 .squad-marker.fx-glow svg{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 5px var(--fx)) drop-shadow(0 0 12px var(--fx))}
 .squad-marker.fx-pulse svg{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 1px 3px rgba(0,0,0,.9))}

@@ -13,6 +13,8 @@ import {
   labelOff,
   floorOrder,
   markerGroups,
+  markerColors,
+  markerEffects,
   markerRotation,
   nameColors,
   outlineColor,
@@ -244,7 +246,13 @@ function settingsPanel() {
     `<label class="map-filter map-setting"><input type="checkbox" data-map-setting="${key}" ${s[key] ? 'checked' : ''}><span>${esc(label)}${hint ? `<small class="map-setting-hint">${esc(hint)}</small>` : ''}</span></label>`
   const slider = (key, label, min = textScale.min, max = textScale.max) =>
     `<label class="map-slider"><span>${esc(label)}<output data-map-scale-out="${key}">${s[key]}%</output></span><input type="range" min="${min}" max="${max}" step="5" value="${s[key]}" data-map-scale="${key}"></label>`
-  return `<aside class="map-panel map-settings" aria-label="${esc(t('mapSettings'))}">${panelHead(t('mapSettings'))}${row('snipers', t('settingSnipers'), t('settingSnipersHint'))}${row('extracts', t('settingExtracts'), t('settingExtractsHint'))}${row('activeTasks', t('settingActiveTasks'), t('settingActiveTasksHint'))}${row('subtleLabels', t('settingSubtleLabels'))}${slider('fade', t('settingFade'), 0, 60)}${slider('extractText', t('settingExtractText'))}${slider('labelText', t('settingLabelText'))}</aside>`
+  // The arrows: their effect, then (with one) its colour.
+  const effect = (id) =>
+    `<button data-action="mapMarkerEffect" data-id="${id}" class="${s.markerEffect === id ? 'selected' : ''}" aria-pressed="${s.markerEffect === id}">${esc(t('settingMarker_' + id))}</button>`
+  const color = (c) =>
+    `<button class="map-marker-color ${s.markerColor === c ? 'selected' : ''} ${c ? '' : 'auto'}" data-action="mapMarkerColor" data-id="${c}" style="--swatch:${c || 'transparent'}" title="${esc(c ? c : t('settingMarkerAuto'))}" aria-pressed="${s.markerColor === c}"></button>`
+  const marker = `<div class="map-marker-setting"><span class="map-marker-title">${esc(t('settingMarker'))}</span><div class="segmented map-marker-effects" role="group">${markerEffects.map(effect).join('')}</div>${s.markerEffect !== 'none' ? `<div class="map-marker-colors" role="group" aria-label="${esc(t('settingMarkerColor'))}">${markerColors.map(color).join('')}</div>` : ''}</div>`
+  return `<aside class="map-panel map-settings" aria-label="${esc(t('mapSettings'))}">${panelHead(t('mapSettings'))}${row('snipers', t('settingSnipers'), t('settingSnipersHint'))}${row('extracts', t('settingExtracts'), t('settingExtractsHint'))}${row('activeTasks', t('settingActiveTasks'), t('settingActiveTasksHint'))}${row('subtleLabels', t('settingSubtleLabels'))}${slider('fade', t('settingFade'), 0, 60)}${slider('extractText', t('settingExtractText'))}${slider('labelText', t('settingLabelText'))}${marker}</aside>`
 }
 
 // applyTextScale sizes the extracts' and places' names (CSS variables on
@@ -607,15 +615,13 @@ function drawThings(map, floor, data) {
   }
 }
 
-// Your own arrow wears the effect chosen for tarkov.dev's player marker
-// (settings: an outline, a glow, a pulsing ring, a beacon), in its colour:
-// white for the outline and a warning red for the rest until one is chosen.
-const markerEffects = ['outline', 'glow', 'pulse', 'beacon']
+// The arrows (yours and the squad's) wear the effect chosen in the map's
+// settings (an outline, a glow, a pulsing ring, a beacon), in the colour
+// chosen, else each in its member's squad colour.
 function effectOf(m) {
-  const fx = state.markerEffect
-  if (!m.me || !fx || !markerEffects.includes(fx.effect)) return { cls: '', style: '' }
-  const c = /^#[0-9a-f]{6}$/i.test(fx.color || '') ? fx.color : fx.effect === 'outline' ? '#ffffff' : '#ff3b30'
-  return { cls: ` fx-${fx.effect}`, style: `;--fx:${c}` }
+  const s = state.mapSettings || {}
+  if (!s.markerEffect || s.markerEffect === 'none') return { cls: '', style: '' }
+  return { cls: ` fx-${s.markerEffect}`, style: `;--fx:${s.markerColor || colorOf(m)}` }
 }
 function squadHTML(m) {
   const rot = markerRotation(m.pos.rot, shown().map?.rotation)
@@ -979,6 +985,10 @@ clickHandlers.push(async (type, id, button) => {
     pinPut = false
     if (pinning) putPenDown()
     render()
+    return true
+  }
+  if (type === 'mapMarkerEffect' || type === 'mapMarkerColor') {
+    void action('mapSettings', type === 'mapMarkerEffect' ? { markerEffect: id } : { markerColor: id || '' })
     return true
   }
   if (type === 'mapPick') {

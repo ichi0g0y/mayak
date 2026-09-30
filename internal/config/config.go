@@ -60,34 +60,27 @@ type Settings struct {
 	SoundVoices map[string]string `json:"soundVoices"`
 	// SoundVolumeOffsets turns a notification (its kind) up or down from
 	// SoundVolume, in points (-50 to +50).
-	SoundVolumeOffsets  map[string]int `json:"soundVolumeOffsets"`
-	AutoStartMonitoring bool           `json:"autoStartMonitoring"`
-	OpenMapOnRaidStart  bool           `json:"openMapOnRaidStart"`
-	NavigateMapOnShot   bool           `json:"navigateMapOnPositionScreenshot"`
-	// PlayerMarkerEffect is the effect the built-in browser gives the
-	// player's position marker on tarkov.dev's map, PlayerMarkerColor its
-	// colour (#rrggbb; empty for the effect's own); see app_marker.go.
-	// PlayerMarker was 0.1.15's single choice; it is read once and dropped.
-	PlayerMarkerEffect    string `json:"playerMarkerEffect"`
-	PlayerMarkerColor     string `json:"playerMarkerColor"`
-	PlayerMarker          string `json:"playerMarker,omitempty"`
-	TarkovTrackerEnabled  bool   `json:"tarkovTrackerEnabled"`
-	MatchFoundSound       bool   `json:"matchFoundSoundEnabled"`
-	MatchFoundSoundPath   string `json:"matchFoundSoundPath"`
-	RaidStartSound        bool   `json:"raidStartSoundEnabled"`
-	RaidStartSoundPath    string `json:"raidStartSoundPath"`
-	RunThroughSound       bool   `json:"runThroughSoundEnabled"`
-	RunThroughSoundPath   string `json:"runThroughSoundPath"`
-	RunThroughSeconds     int    `json:"runThroughSeconds"`
-	GameExitSound         bool   `json:"gameExitSoundEnabled"`
-	GameExitSoundPath     string `json:"gameExitSoundPath"`
-	GameStartSound        bool   `json:"gameStartSoundEnabled"`
-	GameStartSoundPath    string `json:"gameStartSoundPath"`
-	QuestItemsSound       bool   `json:"questItemsSoundEnabled"`
-	QuestItemsSoundPath   string `json:"questItemsSoundPath"`
-	RestartTasksSound     bool   `json:"restartTasksSoundEnabled"`
-	RestartTasksSoundPath string `json:"restartTasksSoundPath"`
-	StartMinimized        bool   `json:"startMinimized"`
+	SoundVolumeOffsets    map[string]int `json:"soundVolumeOffsets"`
+	AutoStartMonitoring   bool           `json:"autoStartMonitoring"`
+	OpenMapOnRaidStart    bool           `json:"openMapOnRaidStart"`
+	NavigateMapOnShot     bool           `json:"navigateMapOnPositionScreenshot"`
+	TarkovTrackerEnabled  bool           `json:"tarkovTrackerEnabled"`
+	MatchFoundSound       bool           `json:"matchFoundSoundEnabled"`
+	MatchFoundSoundPath   string         `json:"matchFoundSoundPath"`
+	RaidStartSound        bool           `json:"raidStartSoundEnabled"`
+	RaidStartSoundPath    string         `json:"raidStartSoundPath"`
+	RunThroughSound       bool           `json:"runThroughSoundEnabled"`
+	RunThroughSoundPath   string         `json:"runThroughSoundPath"`
+	RunThroughSeconds     int            `json:"runThroughSeconds"`
+	GameExitSound         bool           `json:"gameExitSoundEnabled"`
+	GameExitSoundPath     string         `json:"gameExitSoundPath"`
+	GameStartSound        bool           `json:"gameStartSoundEnabled"`
+	GameStartSoundPath    string         `json:"gameStartSoundPath"`
+	QuestItemsSound       bool           `json:"questItemsSoundEnabled"`
+	QuestItemsSoundPath   string         `json:"questItemsSoundPath"`
+	RestartTasksSound     bool           `json:"restartTasksSoundEnabled"`
+	RestartTasksSoundPath string         `json:"restartTasksSoundPath"`
+	StartMinimized        bool           `json:"startMinimized"`
 	// MinimizeToTray removes the taskbar entry when the window is minimized;
 	// CloseToTray keeps the app running in the tray when it is closed.
 	MinimizeToTray bool `json:"minimizeToTray"`
@@ -161,7 +154,6 @@ var deviceKeys = map[string]bool{
 	"remoteId": true, "remoteTargets": true, "browserRemoteId": true, "map": true,
 	"debug": true, "saveRecognitionDebug": true, "keepPriority": true, "launchAtStartup": true,
 	"windowX": true, "windowY": true, "windowWidth": true, "windowHeight": true, "windowConfigured": true,
-	"playerMarker": true,
 }
 
 // IsDeviceKey tells a setting (its JSON name) that belongs to this PC.

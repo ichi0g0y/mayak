@@ -142,7 +142,13 @@ export const defaultMapSettings = {
   fade: 20,
   style: 'svg',
   mode: 'auto',
+  markerEffect: 'none',
+  markerColor: '',
 }
+// The effects the arrows on the map can wear, and the colours to draw them
+// in ('' is each member's squad colour).
+export const markerEffects = ['none', 'outline', 'glow', 'pulse', 'beacon']
+export const markerColors = ['', '#ff3b30', '#ffd60a', '#34c759', '#32ade6', '#bf5af2', '#ffffff']
 // The catalog's game modes (internal/catalog).
 export const gameModes = ['auto', 'regular', 'pve', 'pvp-season']
 export const textScale = { min: 50, max: 200 }
@@ -170,6 +176,10 @@ export function mapSettingsOf(saved) {
     // The game mode whose data the markers show (boss chances differ), or
     // auto: the one played.
     mode: gameModes.includes(s.mode) ? s.mode : 'auto',
+    // The effect on the arrows (yours and the squad's), in a colour.
+    markerEffect: markerEffects.includes(s.markerEffect) ? s.markerEffect : 'none',
+    markerColor:
+      typeof s.markerColor === 'string' && /^#[0-9a-f]{6}$/i.test(s.markerColor) ? s.markerColor.toLowerCase() : '',
   }
 }
 

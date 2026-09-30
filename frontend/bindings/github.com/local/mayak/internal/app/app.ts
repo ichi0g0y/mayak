@@ -491,32 +491,6 @@ export function PersistSettings(s: config$0.Settings): $CancellablePromise<void>
 }
 
 /**
- * PlayerMarkerEffectColor is the colour effect shows in without a colour
- * chosen, for the settings' colour control.
- */
-export function PlayerMarkerEffectColor(effect: string): $CancellablePromise<string> {
-    return $Call.ByID(2215901919, effect);
-}
-
-/**
- * PlayerMarkerEffects lists the effects the settings offer.
- */
-export function PlayerMarkerEffects(): $CancellablePromise<string[]> {
-    return $Call.ByID(504171073).then(($result: any) => {
-        return $$createType16($result);
-    });
-}
-
-/**
- * PlayerMarkerPreviewCSS is a style sheet for the settings page: each
- * effect's rules, in color (or its own), on
- * .marker-preview[data-effect=<effect>] .marker-icon (the box) and its img.
- */
-export function PlayerMarkerPreviewCSS(color: string): $CancellablePromise<string> {
-    return $Call.ByID(675497734, color);
-}
-
-/**
  * PreviewSound plays a notification as it would sound with a file ("" for
  * none) and a built-in voice ("" for the beeps).
  */

@@ -46,8 +46,7 @@ func ensureBrowserRemoteID(s *config.Settings) bool {
 
 // tarkovDevScript runs before tarkov.dev's own scripts, on map pages and the
 // map index (the map view's start page before a map is detected) only.
-// It adds the player marker's style sheet (css, see app_marker.go; none for
-// tarkov.dev's own marker) and connects the page to Remote Control: tarkov.dev
+// It connects the page to Remote Control: tarkov.dev
 // reads ?connection=<ID> on start-up, stores it as its session ID and enables
 // Remote Control. A connected task page would be navigated away by map
 // commands, hence map pages only. The browser shell strips the parameter
@@ -57,15 +56,11 @@ func ensureBrowserRemoteID(s *config.Settings) bool {
 // once had its own ID keeps connecting with it.
 // A tab keeps the script it was created with, so after the ID is replaced
 // (replaceBrowserRemoteID) an ID in the address wins over the one built in:
-// the shell reopens its map view with the new one (and after the marker
-// style changes, browser:document-script).
-func tarkovDevScript(id, css string) string {
+// the shell reopens its map view with the new one.
+func tarkovDevScript(id string) string {
 	quoted, _ := json.Marshal(id)
-	sheet, _ := json.Marshal(css)
 	return `(()=>{try{
 const p=location.pathname;if(location.hostname!=="tarkov.dev"||!(p.startsWith("/map/")||p==="/maps"||p==="/maps/"))return;
-const css=` + string(sheet) + `;
-if(css){const add=()=>{if(document.getElementById("mayak-player-marker"))return;const s=document.createElement("style");s.id="mayak-player-marker";s.textContent=css;(document.head||document.documentElement).appendChild(s);};if(document.documentElement)add();else document.addEventListener("DOMContentLoaded",add);}
 const u=new URL(location.href),given=u.searchParams.get("connection"),id=/^[A-Z0-9]{4,32}$/.test(given||"")?given:` + string(quoted) + `;
 if(!id)return;
 localStorage.setItem("sessionId",JSON.stringify(id));
@@ -79,7 +74,7 @@ func (a *App) tarkovDevScript() string {
 	a.mu.RLock()
 	settings := a.settings
 	a.mu.RUnlock()
-	return tarkovDevScript(settings.BrowserRemoteID, a.playerMarkerCSS(settings))
+	return tarkovDevScript(settings.BrowserRemoteID)
 }
 
 // applyBrowserScript gives the page views, the popup's too, the document

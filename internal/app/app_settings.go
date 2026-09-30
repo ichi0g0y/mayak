@@ -228,11 +228,6 @@ func (a *App) saveSettings(s config.Settings, restartMonitor bool) error {
 	if old.Language != s.Language {
 		a.setTrayLanguage(s.Language)
 	}
-	// The map view is created again with the new marker style (api.js).
-	if old.PlayerMarkerEffect != s.PlayerMarkerEffect || old.PlayerMarkerColor != s.PlayerMarkerColor {
-		a.applyBrowserScript()
-		a.emitEvent("browser:document-script")
-	}
 	if old.ScreenshotCleanup != s.ScreenshotCleanup || old.ScreenshotRetainCount != s.ScreenshotRetainCount || old.ScreenshotRetainHours != s.ScreenshotRetainHours {
 		go a.runScreenshotMaintenance()
 	}
@@ -268,12 +263,6 @@ func normalizeSettings(s config.Settings) config.Settings {
 	if s.UpdateChannel != update.ChannelNightly {
 		s.UpdateChannel = update.ChannelStable
 	}
-	if s.PlayerMarker != "" && s.PlayerMarkerEffect == "" {
-		s.PlayerMarkerEffect, s.PlayerMarkerColor = legacyPlayerMarker(s.PlayerMarker)
-	}
-	s.PlayerMarker = ""
-	s.PlayerMarkerEffect = normalizePlayerMarkerEffect(s.PlayerMarkerEffect)
-	s.PlayerMarkerColor = normalizePlayerMarkerColor(s.PlayerMarkerColor)
 	// The voice for all: a built-in voice, "beep", or "" for the language's
 	// default. A notification's own: a voice, "beep", or "custom" (its file).
 	if s.SoundVoice != "beep" && !sound.HasVoice(s.SoundVoice) {

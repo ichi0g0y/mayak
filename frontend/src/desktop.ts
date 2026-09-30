@@ -33,7 +33,6 @@ export const {
   OpenLogsDirectory,
   OpenScreenshotDirectory,
   PersistSettings,
-  PlayerMarkerPreviewCSS,
   PreviewSound,
   RefreshCatalog,
   OpenQuestPage,

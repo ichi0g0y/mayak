@@ -42,8 +42,6 @@ export type Settings = {
   autoStartMonitoring: boolean
   openMapOnRaidStart: boolean
   navigateMapOnPositionScreenshot: boolean
-  playerMarkerEffect: string
-  playerMarkerColor: string
   tarkovTrackerEnabled: boolean
   matchFoundSoundEnabled: boolean
   matchFoundSoundPath: string
@@ -224,8 +222,6 @@ export const defaults: Settings = {
   autoStartMonitoring: true,
   openMapOnRaidStart: true,
   navigateMapOnPositionScreenshot: true,
-  playerMarkerEffect: 'none',
-  playerMarkerColor: '',
   tarkovTrackerEnabled: false,
   matchFoundSoundEnabled: true,
   matchFoundSoundPath: '',
@@ -332,18 +328,6 @@ export const maps = [
   'terminal',
   'woods',
 ]
-// The player marker effects (app_marker.go), in the gallery's order, and
-// the colour each has until one is chosen.
-export const markerEffects = ['none', 'outline', 'glow', 'pulse', 'beacon'] as const
-export const markerEffectNames: Record<string, Parameters<typeof translate>[1]> = {
-  none: 'markerEffectNone',
-  outline: 'markerOutline',
-  glow: 'markerGlow',
-  pulse: 'markerPulse',
-  beacon: 'markerBeacon',
-}
-export const markerOwnColor = (effect: string) => (effect === 'outline' ? '#ffffff' : '#ff3b30')
-
 export function normalizeStatus(value: Partial<Status> | null | undefined): Status {
   const next = { ...emptyStatus, ...(value ?? {}) }
   return {

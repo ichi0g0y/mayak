@@ -104,9 +104,6 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | `openMapOnRaidStart` | `true` | レイド開始時に tarkov.dev を現在のマップに切り替える |
 | `navigateMapOnPositionScreenshot` | `true` | 位置スクリーンショットの送信後、そのマップに切り替える |
-| `playerMarkerEffect` | `"none"` | 内蔵ブラウザの tarkov.dev マップに出る自分の位置マーカーのエフェクト。`none` / `outline` / `glow` / `pulse` / `beacon`。それ以外は `none` |
-| `playerMarkerColor` | `""` | エフェクトの色（`#rrggbb`、小文字に揃える）。空ならエフェクト固有の色（縁取りは白、ほかは `#ff3b30`） |
-| `playerMarker` | — | 0.1.15 の単一の選択。読み込み時に `playerMarkerEffect` と `playerMarkerColor` に読み替えて消す（`large` / `outline` → `outline`、`glow-red` → `glow`、`glow-green` → `glow` + `#3dff6e`、`custom` / `default` → `none`） |
 | `tarkovTrackerEnabled` | `false` | TarkovTracker との同期 |
 | `startMinimized` | `false` | 最小化した状態で起動する（「起動とウィンドウ」）。ウインドウの位置を復元したあとで最小化し、`minimizeToTray` が真ならトレイに入る |
 | `minimizeToTray` | `false` | 最小化したときにウィンドウを隠し、タスクバーから消す |
@@ -286,15 +283,6 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - 内蔵ブラウザで開いた tarkov.dev のマップページ（`/map/…` と `/maps/`。どのタブでも）は `browserRemoteId` で自動接続します。ドキュメントスクリプトが `?connection=<ID>` を付与し、保存するタブの URL からは取り除きます。アドレスに `?connection=` があればその ID を優先します。この ID はマップと位置だけを受け取り、タスクはシェルが自分でタブを開きます。マップの検出そのものは、MAYAK の [マップ](browser-shell.md#マップ) に出ます。
 - 起動時、`remoteTargets` があれば接続テストをバックグラウンドで実行します。
 - 詳細は [tasks-and-maps.md](tasks-and-maps.md) を参照してください。
-
-### 現在位置のマーカー（`app_marker.go`）
-
-- tarkov.dev のマップは自分の位置を Leaflet の `divIcon`（class `marker`）で描き、中身は `<img src="/maps/interactive/player-position.png" style="width:24px;height:24px;rotate:Ndeg">`（向きが無いときは `player-position-no-rotation.png`）、アンカーは中心です。レイヤーグループ名は `player-position`、表示中はマップのコンテナに `player-position-shown` が付きます。
-- 設定 `playerMarkerEffect` と `playerMarkerColor` に応じたスタイルシートを、ドキュメントスクリプト（`tarkovDevScript`。Remote Control の接続と同じスクリプト。マップページと `/maps/` だけ）が `<style id="mayak-player-marker">` として差し込みます。画像は `img[src$="/player-position.png"]` で選び、マーカーの箱には `:has()` で届きます。`rotate` は独立したプロパティなので、シートの `filter` と合成され、tarkov.dev の向きは保たれます。
-- エフェクト（`playerMarkerRules`）: `outline`（細い影 3 枚で作る縁取り）、`glow`（光彩）、`pulse`（箱の `::before` に脈打つリング）、`beacon`（光彩と、箱の `::before` に色が薄れていく放射状の光。`rgba()` で色にアルファを付ける）。色は `playerMarkerColor`、空ならエフェクト固有の色（縁取りは白、ほかは `#ff3b30`）。どれもアイコン自体は tarkov.dev の画像と 24 px のままで、拡大も差し替えもしません（効果だけが外へ広がる）。0.1.15 で試した画像の置き換えはやめました（純正のアイコンのまま、エフェクトと色だけを変える）。
-- 設定ページのギャラリーは同じ規則を `.marker-preview[data-effect=…] .marker-icon`（と `img`）向けに、選んでいる色で作ったシート（`PlayerMarkerPreviewCSS(color)`）で、`public/marker-arrow.svg`（tarkov.dev のマーカーに似せた絵）を 35° 回して見せます。色の入力（`<input type="color">`）はプレビューにすぐ反映し、設定への保存は 400 ms 手を止めてからです（保存のたびにドキュメントスクリプトを作り直すため）。
-- 保存時にマーカーの設定が変わると `applyBrowserScript` でシェルとポップアップのドキュメントスクリプトを作り直し、`browser:document-script` を送ります。開いているページはスクリプトを持ち替えず、シェルもこのイベントでタブを作り直さないので、新しい設定はそのあとに開いたタブから効きます。
-- 対象は内蔵ブラウザのマップだけです。自分の Chrome で開いた tarkov.dev には効きません（Stylus などで同じ CSS を入れる形になります）。tarkov.dev がファイル名やクラスを変えると効かなくなり、標準の表示に戻ります。
 
 ## Host / Client モード
 

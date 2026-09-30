@@ -32,7 +32,6 @@ import {
   ChooseLogsDirectory,
   ChooseScreenshotDirectory,
   ChooseSoundFile,
-  PlayerMarkerPreviewCSS,
   GetLogs,
   GetSettings,
   GetStatus,
@@ -67,9 +66,6 @@ import {
   emptyUpdate,
   emptyStatus,
   maps,
-  markerEffects,
-  markerEffectNames,
-  markerOwnColor,
   normalizeStatus,
   HostSection,
   hour12,
@@ -96,33 +92,6 @@ function App() {
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [logLevel, setLogLevel] = useState('all')
   const [logCategory, setLogCategory] = useState('all')
-  // The marker gallery's sheet, built by the Go side in the colour chosen.
-  // The colour control follows the pointer; the setting takes it once the
-  // pointer rests, so the map view is not rebuilt for every shade passed.
-  const [markerCSS, setMarkerCSS] = useState('')
-  const [markerColor, setMarkerColor] = useState('')
-  const markerColorTimer = useRef<number | undefined>(undefined)
-  useEffect(() => {
-    setMarkerColor(settings.playerMarkerColor)
-  }, [settings.playerMarkerColor])
-  useEffect(() => {
-    let live = true
-    PlayerMarkerPreviewCSS(markerColor)
-      .then((css) => {
-        if (live) setMarkerCSS(css)
-      })
-      .catch(() => {
-        if (live) setMarkerCSS('')
-      })
-    return () => {
-      live = false
-    }
-  }, [markerColor])
-  const pickMarkerColor = (color: string) => {
-    setMarkerColor(color)
-    window.clearTimeout(markerColorTimer.current)
-    markerColorTimer.current = window.setTimeout(() => patch({ playerMarkerColor: color }), 400)
-  }
   const [logQuery, setLogQuery] = useState('')
   const [trackerToken, setTrackerToken] = useState('')
   const [now, setNow] = useState(Date.now())
@@ -997,53 +966,6 @@ function App() {
                       onCheckedChange={(navigateMapOnPositionScreenshot) => patch({ navigateMapOnPositionScreenshot })}
                     />
                   </div>
-                </div>
-                <div className="field marker-field">
-                  <Label>{t('markerTitle')}</Label>
-                  <p className="help">{t('markerDescription')}</p>
-                  <style>{markerCSS}</style>
-                  <div className="marker-gallery" role="radiogroup" aria-label={t('markerTitle')}>
-                    {markerEffects.map((effect) => (
-                      <button
-                        type="button"
-                        key={effect}
-                        role="radio"
-                        aria-checked={settings.playerMarkerEffect === effect}
-                        className={`marker-choice${settings.playerMarkerEffect === effect ? ' selected' : ''}`}
-                        onClick={() => patch({ playerMarkerEffect: effect })}
-                      >
-                        <span className="marker-preview" data-effect={effect}>
-                          <span className="marker-icon">
-                            <img
-                              src="/marker-arrow.svg?v=2"
-                              alt=""
-                              style={{ width: 24, height: 24, rotate: '35deg' }}
-                            />
-                          </span>
-                        </span>
-                        <span className="marker-name">{t(markerEffectNames[effect] ?? 'markerEffectNone')}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="marker-color-row">
-                    <Label htmlFor="marker-color">{t('markerColor')}</Label>
-                    <input
-                      id="marker-color"
-                      type="color"
-                      className="marker-color-input"
-                      value={markerColor || markerOwnColor(settings.playerMarkerEffect)}
-                      disabled={settings.playerMarkerEffect === 'none'}
-                      onChange={(e) => pickMarkerColor(e.target.value)}
-                    />
-                    <span className="marker-color-value">{markerColor || t('markerColorOwn')}</span>
-                    {markerColor && (
-                      <Button type="button" size="sm" variant="ghost" onClick={() => pickMarkerColor('')}>
-                        <RotateCcw />
-                        {t('markerColorReset')}
-                      </Button>
-                    )}
-                  </div>
-                  <p className="help">{t('markerHelp')}</p>
                 </div>
                 <div className="connection-test-row">
                   <Button

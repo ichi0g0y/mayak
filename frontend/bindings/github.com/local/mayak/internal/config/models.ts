@@ -103,16 +103,6 @@ export class Settings {
     "autoStartMonitoring": boolean;
     "openMapOnRaidStart": boolean;
     "navigateMapOnPositionScreenshot": boolean;
-
-    /**
-     * PlayerMarkerEffect is the effect the built-in browser gives the
-     * player's position marker on tarkov.dev's map, PlayerMarkerColor its
-     * colour (#rrggbb; empty for the effect's own); see app_marker.go.
-     * PlayerMarker was 0.1.15's single choice; it is read once and dropped.
-     */
-    "playerMarkerEffect": string;
-    "playerMarkerColor": string;
-    "playerMarker"?: string;
     "tarkovTrackerEnabled": boolean;
     "matchFoundSoundEnabled": boolean;
     "matchFoundSoundPath": string;
@@ -278,12 +268,6 @@ export class Settings {
         }
         if (!("navigateMapOnPositionScreenshot" in $$source)) {
             this["navigateMapOnPositionScreenshot"] = false;
-        }
-        if (!("playerMarkerEffect" in $$source)) {
-            this["playerMarkerEffect"] = "";
-        }
-        if (!("playerMarkerColor" in $$source)) {
-            this["playerMarkerColor"] = "";
         }
         if (!("tarkovTrackerEnabled" in $$source)) {
             this["tarkovTrackerEnabled"] = false;
