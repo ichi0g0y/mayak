@@ -200,7 +200,7 @@ Host がスクリーンショットを解析するたびに、何と判定した
 
 ## マップ
 
-MAYAK が自分で描く tarkov.dev の地図です。tarkov.dev のマップと同じ地点をフィルターで出し分け、分隊コードを共有した仲間の位置も同じ地図に出します（`view-map.js`、`map-geo.js`、`internal/app/app_squad.go`、`internal/squad`、`internal/mapdata`）。今は **nightly 版と開発版だけ**の機能です（`version.IsPrerelease`）。リリース版では `SquadAvailable` が false になり、サイドバーの入口を出さず、保存されたタブ（種類 `livemap`）も外します。
+MAYAK が自分で描く tarkov.dev の地図です。tarkov.dev のマップと同じ地点をフィルターで出し分け、分隊コードを共有した仲間の位置も同じ地図に出します（`view-map.js`、`map-geo.js`、`internal/app/app_squad.go`、`internal/squad`、`internal/mapdata`）。v0.1.19 からはリリース版にも入っています（それまでは nightly 版と開発版だけで、`SquadAvailable` は今は常に true を返します）。
 
 - **入口**: サイドバーのいちばん上（状態表示の下）にある「マップ」の行です。タブと同じ形で、行全体が押せ、表示中は選択中の色になり、右端に地図のアイコンがあります。マップの検出（`browser:map`、`browser:position`）でもこのビューが開くか前面に出て（`receiveMap` / `receivePosition`）、手で選んだマップと階は「自動」に戻ります（`mayak:map-follow`）。
 - **画面**: ページ全体が地図です。ツールバーの行は空なので、地図はその下まで広がります（`body[data-page=livemap]`）。左上にズームのボタン、その下にアイコンの縦の列があり（分隊に入っているときは、その下にもう 1 つ、自分の分隊カラーの枠と分隊のアイコンの見出しを付けた「分隊の列」があり、分隊ペン・ピン・分隊の自動表示が入ります）、押すとその内容のパネルが列の横に開きます（もう一度押すか、×・Esc・地図を押すと閉じる）。右上にはレイドの時計 2 つ（tarkov.dev と同じく、モスクワ時間から実時間の 7 倍で進み、2 つは 12 時間ずれる。Factory は固定、The Lab は出さない）、レイドの長さと人数、地図の作者の帰属表示、右下にはポインタの位置のゲーム座標を出します。

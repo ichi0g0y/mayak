@@ -692,7 +692,8 @@ export function SnapNoteThumb(id: string): $CancellablePromise<string> {
 }
 
 /**
- * SquadAvailable reports whether this build offers squads.
+ * SquadAvailable reports whether this build offers squads: every build does
+ * since v0.1.19 (they were nightly-only before); kept for the shell.
  */
 export function SquadAvailable(): $CancellablePromise<boolean> {
     return $Call.ByID(2161399151);

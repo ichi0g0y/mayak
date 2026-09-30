@@ -26,9 +26,6 @@ import (
 // display name (browser preferences) and joins again at start; here the
 // room is only joined, reported to and left. Every change of the room goes
 // to the shell as "squad:state".
-//
-// It is a nightly feature for now: a release build (version.IsPrerelease
-// false) refuses to join and the shell does not offer it.
 
 var (
 	squadJoinMu sync.Mutex
@@ -42,8 +39,6 @@ var (
 	squadMaps     *mapdata.Source
 )
 
-var errSquadOff = errors.New("squads are not available in this version")
-
 // squadEndpoint is the relay; MAYAK_SQUAD_RELAY points a development build
 // at another one (`task relay:dev`: ws://127.0.0.1:8787/squad/).
 func squadEndpoint() string {
@@ -53,8 +48,9 @@ func squadEndpoint() string {
 	return squad.Endpoint
 }
 
-// SquadAvailable reports whether this build offers squads.
-func (a *App) SquadAvailable() bool { return version.IsPrerelease() }
+// SquadAvailable reports whether this build offers squads: every build does
+// since v0.1.19 (they were nightly-only before); kept for the shell.
+func (a *App) SquadAvailable() bool { return true }
 
 // SquadNewCode returns a fresh squad code ("ABCD-1234") to create a squad
 // with.
@@ -63,9 +59,6 @@ func (a *App) SquadNewCode() string { return squad.Format(squad.NewCode()) }
 // SquadJoin joins the squad of code as name, leaving the one joined before.
 // It returns the code in its canonical form ("ABCD-1234").
 func (a *App) SquadJoin(code, name string) (string, error) {
-	if !version.IsPrerelease() {
-		return "", errSquadOff
-	}
 	canonical, err := squad.Normalize(code)
 	if err != nil {
 		return "", err
@@ -373,9 +366,6 @@ func squadMapSource() *mapdata.Source {
 
 // BrowserSquadMaps returns the interactive maps' geometry for the squad map.
 func (a *App) BrowserSquadMaps() ([]mapdata.Map, error) {
-	if !version.IsPrerelease() {
-		return nil, errSquadOff
-	}
 	ctx, cancel := context.WithTimeout(a.baseContext(), 40*time.Second)
 	defer cancel()
 	maps, err := squadMapSource().Maps(ctx)
@@ -389,9 +379,6 @@ func (a *App) BrowserSquadMaps() ([]mapdata.Map, error) {
 // floor (a layer's svgLayer, or "" for the ground level), the ground faded
 // to fade percent under a floor, as a data URL.
 func (a *App) BrowserSquadMapImage(name, layer string, fade int) (string, error) {
-	if !version.IsPrerelease() {
-		return "", errSquadOff
-	}
 	ctx, cancel := context.WithTimeout(a.baseContext(), 40*time.Second)
 	defer cancel()
 	source := squadMapSource()
@@ -414,9 +401,6 @@ func (a *App) BrowserSquadMapImage(name, layer string, fade int) (string, error)
 // assets.tarkov.dev) as a data URL, for the map view's picture made into a
 // snap note.
 func (a *App) BrowserMapTile(url string) (string, error) {
-	if !version.IsPrerelease() {
-		return "", errSquadOff
-	}
 	ctx, cancel := context.WithTimeout(a.baseContext(), 20*time.Second)
 	defer cancel()
 	return squadMapSource().Tile(ctx, url)
@@ -451,9 +435,6 @@ type mapMarkersEntry struct {
 // for the one played (the Host's setting, or what TarkovTracker and the
 // logs tell; PvP when unknown); the markers say which it was.
 func (a *App) BrowserMapMarkers(name, language, mode string) (mapdata.MapMarkers, error) {
-	if !version.IsPrerelease() {
-		return mapdata.MapMarkers{}, errSquadOff
-	}
 	a.mu.RLock()
 	if !catalog.ValidMode(mode) {
 		mode = a.effectiveCatalogMode(a.settings.GameMode)
