@@ -4,6 +4,14 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+These changes are planned for the next version.
+
+### Improved
+
+- The 8-digit code the Host issues for another PC shows as 1234-5678, with a hyphen (it was split by a space).
+
 ## v0.1.21 (2026-09-30)
 
 ### New

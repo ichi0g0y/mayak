@@ -687,7 +687,7 @@ function peerPanel() {
   const disabled = p.busy ? 'disabled' : ''
   // A Client meeting its Host for the first time.
   const joining = receive && !p.paired && !['idle', 'failed'].includes(p.phase)
-  const pairCode = p.pairCode ? `${p.pairCode.slice(0, 4)} ${p.pairCode.slice(4)}` : ''
+  const pairCode = p.pairCode ? `${p.pairCode.slice(0, 4)}-${p.pairCode.slice(4)}` : ''
   const hostCode =
     !receive && p.code
       ? `${pairCode ? `<div class="pair-code"><output>${esc(secretText('pair', pairCode))}</output>${revealButton('pair')}<button data-action="peerCopyPair">${t(copied ? 'copied' : 'copyCode')}</button></div><p class="hint">${t('pairCodeHelp')}</p>` : ''}${p.relayError ? `<p class="hint peer-error">${t('relayFailed')}</p>` : ''}<details class="peer-manual" ${p.relayError ? 'open' : ''}><summary>${t('manualExchange')}</summary><p class="hint">${t('manualExchangeHelp')}</p><div class="code-output"><label class="field"><span>${t('inviteCode')}</span><span class="secret-field"><textarea class="${maskedClass('invite')}" readonly rows="2" spellcheck="false">${esc(p.code)}</textarea>${revealButton('invite')}</span></label><button data-action="peerCopy">${t(copied ? 'copied' : 'copyCode')}</button></div></details><button data-action="peerCancel" ${disabled}>${t('cancelPairing')}</button>`
