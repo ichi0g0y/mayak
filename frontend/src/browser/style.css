@@ -467,7 +467,9 @@ button.need-row:hover .need-name{color:var(--accent)}
 .monitor-toggle:hover{color:var(--text)}
 /* TarkovTracker's state (trackerIndicator): green in use, amber on its way,
    red missing or failing, grey off. */
-.tracker-status{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--muted);cursor:pointer}
+.tracker-status{position:relative;flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--muted);cursor:pointer}
+/* The tasks to complete on TarkovTracker, counted on its indicator. */
+.tracker-count{position:absolute;top:-3px;right:-5px;min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:var(--accent);color:var(--bg);font:700 9.5px/15px system-ui,sans-serif;text-align:center}
 .tracker-status .icon{width:15px;height:15px}
 .tracker-status:hover{background:var(--hover)}
 .tracker-status.ok{color:var(--success)}

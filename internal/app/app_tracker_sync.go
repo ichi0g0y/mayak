@@ -275,6 +275,7 @@ func (a *App) refreshTrackerIdentity(mode, profileID, accountID string) error {
 	a.emitStatus(status)
 	a.addLog("Info", "TarkovTracker", fmt.Sprintf("Progress loaded for %s: %d completed", mode, completed))
 	a.squadUpdateTracker()
+	a.publishCompletable()
 	return nil
 }
 

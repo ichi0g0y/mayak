@@ -98,6 +98,9 @@ type App struct {
 	faviconOnce   sync.Once
 	favicons      *faviconCache
 	trackerClient *tracker.Client
+	// completable: tasks done in the game, not on TarkovTracker, per EFT
+	// profile (app_task_list.go); nil until read.
+	completable map[string]map[string]model.CompletableTask
 	// trackerOwners: each TarkovTracker token's user (its /token owner), asked once.
 	trackerOwners  sync.Map
 	trackerStore   trackerstore.Store

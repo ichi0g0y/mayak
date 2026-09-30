@@ -843,6 +843,23 @@ export function TestRemote(): $CancellablePromise<void> {
 }
 
 /**
+ * TrackerCompleteTasks sets the tasks (their IDs, among the profile
+ * played's list) as completed on TarkovTracker, one after another, and
+ * tells how many were.
+ */
+export function TrackerCompleteTasks(ids: string[]): $CancellablePromise<number> {
+    return $Call.ByID(2418240193, ids);
+}
+
+/**
+ * TrackerDismissTasks takes tasks off the profile played's list without
+ * applying them (all of them when ids is empty).
+ */
+export function TrackerDismissTasks(ids: string[]): $CancellablePromise<void> {
+    return $Call.ByID(1947200664, ids);
+}
+
+/**
  * VoicePacks lists the built-in voices the notifications can speak with.
  */
 export function VoicePacks(): $CancellablePromise<sound$0.VoicePack[]> {

@@ -197,6 +197,7 @@ func (a *App) handleCoordinateScreenshot(ctx context.Context, sequence uint64, p
 		analysis, analysisErr := a.recognizeQuest(ctx, settings, detected.Crop)
 		if analysisErr == nil && topConfidence(analysis.matches) >= .78 {
 			a.handleTaskAnalysis(ctx, sequence, path, settings, detected, &analysis)
+			a.scanTaskList(ctx, path, settings)
 			return
 		}
 		a.addLog("Debug", "Recognition", fmt.Sprintf("Rejected Tasks-like raid image (layout=%s score=%.2f)", detected.Layout, detected.Score))

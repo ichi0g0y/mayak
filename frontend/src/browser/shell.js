@@ -269,7 +269,11 @@ function trackerIndicator() {
   const text = [`TarkovTracker: ${words[state.language]['tracker_' + status] || status}`, h.trackerError]
     .filter(Boolean)
     .join(' · ')
-  return `<span class="tracker-status ${kind}" tabindex="0" role="button" data-action="settingsAt" data-id="tracker" title="${esc(text)}" aria-label="${esc(text)}">${icon('tracker')}</span>`
+  // Tasks done in the game but not on TarkovTracker: a count, and a press
+  // lists them to apply (openCompletable).
+  const todo = h.completable?.length || 0
+  const title = todo ? `${text}\n${t('trackerCompletableCount').replace('{n}', String(todo))}` : text
+  return `<span class="tracker-status ${kind}" tabindex="0" role="button" data-action="${todo ? 'trackerCompletable' : 'settingsAt'}" data-id="tracker" title="${esc(title)}" aria-label="${esc(title)}">${icon('tracker')}${todo ? `<span class="tracker-count">${todo > 99 ? '99+' : todo}</span>` : ''}</span>`
 }
 // The dock's layout button opens a menu choosing, by icon, where the tabs
 // and the item details go.
@@ -920,6 +924,45 @@ function toolIcons(tab) {
 // The tab just shared with the squad, whose button shows so for a moment.
 let sharedTab = ''
 // The toolbar's button shares the tab shown; a tab's own (in the sidebar), that tab.
+// openCompletable lists the tasks done in the game that TarkovTracker does
+// not have completed (gathered from Tasks screenshots with "Show completed"
+// ticked), over the page in the menu window: each is applied when chosen,
+// or all of them at once; the list can be let go of too.
+const completableMax = 30
+function openCompletable(button) {
+  const list = state.host?.completable || []
+  const r = button.getBoundingClientRect()
+  const width = 340
+  const items = [
+    { kind: 'label', title: t('trackerCompletableTitle') },
+    ...list
+      .slice(0, completableMax)
+      .map((x) => ({ id: `tt:one:${x.id}`, icon: 'check', title: x.name, hint: x.trader })),
+    ...(list.length > completableMax
+      ? [{ kind: 'label', title: t('trackerCompletableMore').replace('{n}', String(list.length - completableMax)) }]
+      : []),
+    { kind: 'label', title: '' },
+    { id: 'tt:all', icon: 'check', title: t('trackerCompletableAll').replace('{n}', String(list.length)) },
+    { id: 'tt:clear', icon: 'x', title: t('trackerCompletableClear') },
+    { id: 'tt:settings', icon: 'settings', title: t('trackerCompletableSettings') },
+  ]
+  const x = state.sidebarSide === 'right' ? r.left - width - 6 : r.right + 6
+  void action('menuShow', { id: 'tracker', x: Math.round(Math.max(4, x)), y: Math.round(r.top), width, items })
+}
+api.onMenu((choice) => {
+  if (!choice.startsWith('tt:')) return
+  const [, what, id] = choice.split(':')
+  const all = (state.host?.completable || []).map((x) => x.id)
+  if (what === 'one') void action('trackerComplete', [id])
+  else if (what === 'all') void action('trackerComplete', all)
+  else if (what === 'clear') void action('trackerDismiss', [])
+  else if (what === 'settings') void action('settingsAt', 'tracker')
+})
+clickHandlers.push(async (type, id, button) => {
+  if (type !== 'trackerCompletable') return false
+  openCompletable(button)
+  return true
+})
 clickHandlers.push(async (type, id) => {
   if (type !== 'squadShareTab') return false
   const tab = state.tabs.find((x) => x.id === (id || state.active))

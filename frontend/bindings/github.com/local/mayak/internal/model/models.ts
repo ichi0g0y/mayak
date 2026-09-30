@@ -73,6 +73,39 @@ export class CatalogStatus {
     }
 }
 
+/**
+ * CompletableTask is a task a Tasks screenshot showed completed in the
+ * game that TarkovTracker does not have completed.
+ */
+export class CompletableTask {
+    "id": string;
+    "name": string;
+    "trader": string;
+
+    /** Creates a new CompletableTask instance. */
+    constructor($$source: Partial<CompletableTask> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
+        if (!("name" in $$source)) {
+            this["name"] = "";
+        }
+        if (!("trader" in $$source)) {
+            this["trader"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new CompletableTask instance from a string or object.
+     */
+    static createFrom($$source: any = {}): CompletableTask {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new CompletableTask($$parsedSource as Partial<CompletableTask>);
+    }
+}
+
 export class HideoutStationProgress {
     "id": string;
     "name": string;
@@ -411,6 +444,12 @@ export class QuestObjective {
 
 export class Status {
     /**
+     * CompletableTasks are the tasks done in the game, as Tasks screenshots
+     * showed, not completed on TarkovTracker: for the player to apply.
+     */
+    "completableTasks"?: CompletableTask[];
+
+    /**
      * Profile is the character's Overall screen as last read.
      */
     "profile"?: PlayerProfile | null;
@@ -567,37 +606,41 @@ export class Status {
      */
     static createFrom($$source: any = {}): Status {
         const $$createField0_0 = $$createType10;
-        const $$createField1_0 = $$createType11;
-        const $$createField2_0 = $$createType12;
-        const $$createField12_0 = $$createType14;
-        const $$createField23_0 = $$createType16;
-        const $$createField27_0 = $$createType18;
-        const $$createField34_0 = $$createType20;
-        const $$createField36_0 = $$createType21;
+        const $$createField1_0 = $$createType12;
+        const $$createField2_0 = $$createType13;
+        const $$createField3_0 = $$createType14;
+        const $$createField13_0 = $$createType16;
+        const $$createField24_0 = $$createType18;
+        const $$createField28_0 = $$createType20;
+        const $$createField35_0 = $$createType22;
+        const $$createField37_0 = $$createType23;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("completableTasks" in $$parsedSource) {
+            $$parsedSource["completableTasks"] = $$createField0_0($$parsedSource["completableTasks"]);
+        }
         if ("profile" in $$parsedSource) {
-            $$parsedSource["profile"] = $$createField0_0($$parsedSource["profile"]);
+            $$parsedSource["profile"] = $$createField1_0($$parsedSource["profile"]);
         }
         if ("hideout" in $$parsedSource) {
-            $$parsedSource["hideout"] = $$createField1_0($$parsedSource["hideout"]);
+            $$parsedSource["hideout"] = $$createField2_0($$parsedSource["hideout"]);
         }
         if ("catalog" in $$parsedSource) {
-            $$parsedSource["catalog"] = $$createField2_0($$parsedSource["catalog"]);
+            $$parsedSource["catalog"] = $$createField3_0($$parsedSource["catalog"]);
         }
         if ("position" in $$parsedSource) {
-            $$parsedSource["position"] = $$createField12_0($$parsedSource["position"]);
+            $$parsedSource["position"] = $$createField13_0($$parsedSource["position"]);
         }
         if ("questCandidates" in $$parsedSource) {
-            $$parsedSource["questCandidates"] = $$createField23_0($$parsedSource["questCandidates"]);
+            $$parsedSource["questCandidates"] = $$createField24_0($$parsedSource["questCandidates"]);
         }
         if ("questObjectives" in $$parsedSource) {
-            $$parsedSource["questObjectives"] = $$createField27_0($$parsedSource["questObjectives"]);
+            $$parsedSource["questObjectives"] = $$createField28_0($$parsedSource["questObjectives"]);
         }
         if ("itemCandidates" in $$parsedSource) {
-            $$parsedSource["itemCandidates"] = $$createField34_0($$parsedSource["itemCandidates"]);
+            $$parsedSource["itemCandidates"] = $$createField35_0($$parsedSource["itemCandidates"]);
         }
         if ("tracker" in $$parsedSource) {
-            $$parsedSource["tracker"] = $$createField36_0($$parsedSource["tracker"]);
+            $$parsedSource["tracker"] = $$createField37_0($$parsedSource["tracker"]);
         }
         return new Status($$parsedSource as Partial<Status>);
     }
@@ -794,8 +837,8 @@ export class TrackerStatus {
      * Creates a new TrackerStatus instance from a string or object.
      */
     static createFrom($$source: any = {}): TrackerStatus {
-        const $$createField16_0 = $$createType23;
-        const $$createField17_0 = $$createType25;
+        const $$createField16_0 = $$createType25;
+        const $$createField17_0 = $$createType27;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("keys" in $$parsedSource) {
             $$parsedSource["keys"] = $$createField16_0($$parsedSource["keys"]);
@@ -884,20 +927,22 @@ const $$createType5 = $Create.Array($$createType4);
 const $$createType6 = hideoutlog$0.Event.createFrom;
 const $$createType7 = $Create.Array($$createType6);
 const $$createType8 = $Create.Array($Create.Any);
-const $$createType9 = PlayerProfile.createFrom;
-const $$createType10 = $Create.Nullable($$createType9);
-const $$createType11 = HideoutStatus.createFrom;
-const $$createType12 = CatalogStatus.createFrom;
-const $$createType13 = Position.createFrom;
-const $$createType14 = $Create.Nullable($$createType13);
-const $$createType15 = QuestCandidate.createFrom;
-const $$createType16 = $Create.Array($$createType15);
-const $$createType17 = QuestObjective.createFrom;
+const $$createType9 = CompletableTask.createFrom;
+const $$createType10 = $Create.Array($$createType9);
+const $$createType11 = PlayerProfile.createFrom;
+const $$createType12 = $Create.Nullable($$createType11);
+const $$createType13 = HideoutStatus.createFrom;
+const $$createType14 = CatalogStatus.createFrom;
+const $$createType15 = Position.createFrom;
+const $$createType16 = $Create.Nullable($$createType15);
+const $$createType17 = QuestCandidate.createFrom;
 const $$createType18 = $Create.Array($$createType17);
-const $$createType19 = ItemCandidate.createFrom;
+const $$createType19 = QuestObjective.createFrom;
 const $$createType20 = $Create.Array($$createType19);
-const $$createType21 = TrackerStatus.createFrom;
-const $$createType22 = TrackerKeySummary.createFrom;
-const $$createType23 = $Create.Array($$createType22);
-const $$createType24 = TrackerProfileSummary.createFrom;
+const $$createType21 = ItemCandidate.createFrom;
+const $$createType22 = $Create.Array($$createType21);
+const $$createType23 = TrackerStatus.createFrom;
+const $$createType24 = TrackerKeySummary.createFrom;
 const $$createType25 = $Create.Array($$createType24);
+const $$createType26 = TrackerProfileSummary.createFrom;
+const $$createType27 = $Create.Array($$createType26);

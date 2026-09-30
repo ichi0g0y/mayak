@@ -53,7 +53,18 @@ type PlayerProfile struct {
 	Picture      bool    `json:"picture,omitempty"`
 }
 
+// CompletableTask is a task a Tasks screenshot showed completed in the
+// game that TarkovTracker does not have completed.
+type CompletableTask struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Trader string `json:"trader"`
+}
+
 type Status struct {
+	// CompletableTasks are the tasks done in the game, as Tasks screenshots
+	// showed, not completed on TarkovTracker: for the player to apply.
+	CompletableTasks []CompletableTask `json:"completableTasks,omitempty"`
 	// Profile is the character's Overall screen as last read.
 	Profile           *PlayerProfile   `json:"profile,omitempty"`
 	Hideout           HideoutStatus    `json:"hideout"`

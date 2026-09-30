@@ -38,6 +38,9 @@ func (a *App) handleTaskScreenshot(ctx context.Context, sequence uint64, path st
 		return
 	}
 	a.handleTaskAnalysis(ctx, sequence, path, settings, detected, nil)
+	if detected.IsTasks {
+		a.scanTaskList(ctx, path, settings)
+	}
 }
 
 type questRecognition struct {

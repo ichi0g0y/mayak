@@ -3,6 +3,7 @@
 
 export {
     CatalogStatus,
+    CompletableTask,
     HideoutStationProgress,
     HideoutStatus,
     ItemCandidate,

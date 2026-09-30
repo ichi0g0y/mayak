@@ -516,6 +516,11 @@ function hostStatus(s) {
       .slice(0, 24)
     out.identity = [s.tracker.accountId, s.tracker.profileId, s.tracker.mode].map((v) => String(v || '')).join('|')
   }
+  // Tasks done in the game not completed on TarkovTracker (app_task_list.go),
+  // for the player to apply; the list is left out of the status when empty.
+  out.completable = (Array.isArray(s.completableTasks) ? s.completableTasks : [])
+    .filter((x) => x && typeof x.id === 'string')
+    .map((x) => ({ id: x.id, name: String(x.name || x.id), trader: String(x.trader || '') }))
   // When the character's Overall screen was last read (its picture goes to
   // the squad).
   if ('profile' in s) out.profileAt = String(s.profile?.at || '')
@@ -1471,6 +1476,14 @@ async function perform(type, data) {
       if (!squad.available) return snapshot()
       openLocal(state, 'squad')
       void loadSquadMaps()
+      break
+    // Tasks done in the game set as completed on TarkovTracker, or taken off
+    // the list (all of them for no IDs).
+    case 'trackerComplete':
+      if (platform === 'windows') await go.TrackerCompleteTasks(Array.isArray(data) ? data.map(String) : [])
+      break
+    case 'trackerDismiss':
+      if (platform === 'windows') await go.TrackerDismissTasks(Array.isArray(data) ? data.map(String) : [])
       break
     // Whether this player's character picture is shown to the squad.
     case 'squadPicture':

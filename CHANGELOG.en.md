@@ -4,6 +4,8 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New
 
+- A screenshot of the Tasks screen with "Show completed" ticked is read for the tasks its list shows completed (by the rows' colour); those not completed on TarkovTracker gather in a list, per profile. The TarkovTracker indicator in the sidebar counts them, and pressing it lists them to complete one by one or all at once (nothing is applied on its own).
+
 - Screenshots of the character screen's Overall tab are read: level, nickname, experience, raids, kills, survival rate, K/D and time played; the level is raised on TarkovTracker when it is behind (only when it matches the level the experience makes). In a squad, pressing a squadmate's name opens their card with these and their character's picture (which the squad page can keep to yourself); on Windows it opens over the page.
 
 - "Map", as a trial (nightly build only): a map over the whole page, opened from "Map" at the top of the sidebar. It has tarkov.dev's maps, markers and icons: filters show extracts, transits, spawns, bosses, locks, minefields, containers, loose loot, task objectives and more, and a search finds them. The floor follows your height, or is chosen from a list or with Ctrl + wheel, and how faint the other floors show is a setting. Settings also switch between Abstract (SVG) and Satellite, between PvP, PvE and Season data, set the size of extract and place names and keep sniper spawns always shown. A marker tells more when pressed, and a task objective opens the task's page. A button on the left makes the map as it shows into a snap note.
