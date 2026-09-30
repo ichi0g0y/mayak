@@ -19,6 +19,7 @@ import {
   nameColors,
   outlineColor,
   placed,
+  squadKey,
   searchTerms,
   shows,
   tarkovTime,
@@ -149,7 +150,9 @@ function squadRail(map) {
   if (!state.squad?.state) return ''
   const off = !map || !canShare()
   const pin = `<button class="map-rail-button ${pinning ? 'selected' : ''}" data-action="mapPin" aria-pressed="${pinning}" title="${esc(t(pinning ? 'mapPinCancel' : 'mapPin'))}" aria-label="${esc(t('mapPin'))}" ${off && !pinning ? 'disabled' : ''}>${icon('mapPin')}</button>`
-  return `<div class="map-rail map-rail-squad" style="--c:${esc(squadStyle().c)}" role="group" aria-label="${esc(t('squad'))}"><span class="map-rail-head" title="${esc(t('squad'))}">${icon('squad')}</span>${squadPenButton(!map)}${pin}</div>`
+  const fitOn = !!state.mapSettings?.squadFit
+  const fit = `<button class="map-rail-button ${fitOn ? 'selected' : ''}" data-action="mapSquadFit" aria-pressed="${fitOn}" title="${esc(t(fitOn ? 'mapSquadFitOff' : 'mapSquadFitOn'))}" aria-label="${esc(t('mapSquadFit'))}">${icon('squadFit')}</button>`
+  return `<div class="map-rail map-rail-squad" style="--c:${esc(squadStyle().c)}" role="group" aria-label="${esc(t('squad'))}"><span class="map-rail-head" title="${esc(t('squad'))}">${icon('squad')}</span>${squadPenButton(!map)}${pin}${fit}</div>`
 }
 
 // The map panel: the maps, then the floors of the one shown.
@@ -716,6 +719,51 @@ function drawPins(map, floor) {
     }
 }
 
+// Following the squad (the squad's column, mapSquadFit): when a member's
+// position comes anew (a later time than seen) on the map of your raid, and
+// that map shows, the map takes in everyone there (you too). Not while a pen
+// is up or a pin is being put; a position alone is shown at the zoom the map
+// has. seenAt: each member's position time last seen (the first sight of a
+// member counts as new, once the map has been drawn).
+const seenAt = new Map()
+let fitPrimed = false
+let fitNow = false
+function followSquad(map, members) {
+  const on = !!state.mapSettings?.squadFit
+  let fresh = false
+  for (const m of placed(members)) {
+    const id = m.key || squadKey(m)
+    const at = String(m.at || '')
+    if (seenAt.get(id) !== at) {
+      seenAt.set(id, at)
+      if (findMap(state.squad?.maps, m.map)?.key === map.key) fresh = true
+    }
+  }
+  const primed = fitPrimed
+  fitPrimed = true
+  if (!on || pen.on || pinning || !(fitNow || (primed && fresh))) return
+  fitNow = false
+  const mine = raidMap()
+  if (!mine || mine !== map.key) return
+  const here = placed(members).filter((m) => findMap(state.squad?.maps, m.map)?.key === map.key)
+  if (!here.length) return
+  const points = here.map((m) => L.latLng(m.pos.z, m.pos.x))
+  if (points.length === 1) lm.map.setView(points[0], lm.map.getZoom())
+  else
+    lm.map.fitBounds(L.latLngBounds(points), {
+      padding: [90, 90],
+      maxZoom: Math.max(lm.map.getMinZoom() + 2, (map.maxZoom || 6) - 1),
+    })
+}
+// raidMap is the map of your raid: the Host's own while in one, else where
+// your last position was.
+function raidMap() {
+  const maps = state.squad?.maps
+  if (state.host?.raid && state.host.map) return findMap(maps, state.host.map)?.key || ''
+  const me = placed(state.squad?.state?.members || []).find((m) => m.me)
+  return me ? findMap(maps, me.map)?.key || '' : ''
+}
+
 // offAlpha is how strong what is on another floor shows (the setting).
 const offAlpha = () => (state.mapSettings?.fade ?? 20) / 100
 
@@ -823,6 +871,7 @@ function drawMap() {
   setPinning(pinning)
   drawPins(map, floor)
   lm.map.getContainer().classList.toggle('map-pinning', pinning)
+  followSquad(map, members)
   if (view.focus?.map === map.key) {
     const { x, z, zoom, pulse, keep, rings } = view.focus
     view.focus = null
@@ -983,6 +1032,13 @@ clickHandlers.push(async (type, id, button) => {
     pinPut = false
     if (pinning) putPenDown()
     render()
+    return true
+  }
+  // Following the squad on or off; turned on, it takes the squad in at once.
+  if (type === 'mapSquadFit') {
+    const on = !state.mapSettings?.squadFit
+    fitNow = on
+    void action('mapSettings', { squadFit: on })
     return true
   }
   if (type === 'mapMarkerEffect' || type === 'mapMarkerColor' || type === 'mapMarkerShape') {
