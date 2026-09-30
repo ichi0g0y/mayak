@@ -402,6 +402,8 @@ func (f *fakeStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestStoreKeepsEachMembersSealedSlot(t *testing.T) {
+	defer func(every time.Duration) { storeEvery = every }(storeEvery)
+	storeEvery = 20 * time.Millisecond
 	store := &fakeStore{slots: map[string]string{}}
 	relay := &fakeRelay{members: map[*websocket.Conn]*fakeMember{}}
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -450,6 +452,50 @@ func TestStoreKeepsEachMembersSealedSlot(t *testing.T) {
 	// An empty store lets the slot go.
 	if err := a.Store(nil); err != nil || len(store.slots) != 1 {
 		t.Fatalf("slots after letting go: %d, %v", len(store.slots), err)
+	}
+}
+
+// A slot is written storeEvery apart, and once more after a 429.
+func TestStorePacesAndRetries(t *testing.T) {
+	defer func(every time.Duration) { storeEvery = every }(storeEvery)
+	storeEvery = 150 * time.Millisecond
+	var mu sync.Mutex
+	var puts []time.Time
+	refused := false
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		if !refused {
+			refused = true
+			w.Header().Set("Retry-After", "1")
+			w.WriteHeader(http.StatusTooManyRequests)
+			return
+		}
+		puts = append(puts, time.Now())
+	}))
+	defer srv.Close()
+	seal, err := newSealer("ABCD1234")
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := &Client{done: make(chan struct{}), url: "ws" + strings.TrimPrefix(srv.URL, "http") + "/squad/room", mine: Report{Key: strings.Repeat("a", 32)}, seal: seal}
+	start := time.Now()
+	if err := c.Store(json.RawMessage(`{"a":1}`)); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Store(json.RawMessage(`{"a":2}`)); err != nil {
+		t.Fatal(err)
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if len(puts) != 2 {
+		t.Fatalf("%d writes", len(puts))
+	}
+	if puts[0].Sub(start) < 900*time.Millisecond {
+		t.Fatalf("the retry did not wait for Retry-After: %v", puts[0].Sub(start))
+	}
+	if puts[1].Sub(puts[0]) < 140*time.Millisecond {
+		t.Fatalf("the second write did not wait: %v", puts[1].Sub(puts[0]))
 	}
 }
 

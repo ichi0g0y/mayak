@@ -195,6 +195,9 @@ type Client struct {
 	// likewise.
 	rate  int
 	bytes int
+	// storeEvery is how far apart the relay lets a slot of the store be
+	// written (its welcome's limits; 0: storeEvery).
+	storeEvery time.Duration
 	// recheck makes the next connection at once, without the pause.
 	recheck bool
 	done    chan struct{}
@@ -205,6 +208,10 @@ type Client struct {
 	sentMu    sync.Mutex
 	sent      []time.Time
 	sentBytes []sentSize
+
+	// When each slot of the store may be written next (pace).
+	storedMu sync.Mutex
+	storedAt map[string]time.Time
 }
 
 // Join starts a client for code (canonical, see Normalize) against the
@@ -334,6 +341,10 @@ func (c *Client) run() {
 		} else if resp != nil && resp.StatusCode == http.StatusConflict {
 			c.setPhase(PhaseFull)
 			wait = time.Minute
+		} else if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
+			// Connecting too often from here: as long as the relay says.
+			c.setPhase(PhaseOffline)
+			wait = retryAfter(resp, time.Minute)
 		} else {
 			c.setPhase(PhaseOffline)
 		}
@@ -359,8 +370,13 @@ type relayMessage struct {
 	V int `json:"v"`
 	// Rate is how many messages a member may send in 10 s (0: 120), and
 	// Bytes how many characters in a minute (0: not told).
-	Rate    int `json:"rate"`
-	Bytes   int `json:"bytes"`
+	Rate  int `json:"rate"`
+	Bytes int `json:"bytes"`
+	// Limits tells the rest: how far apart a slot of the store may be
+	// written (ms).
+	Limits struct {
+		StoreEvery int `json:"storeEvery"`
+	} `json:"limits"`
 	Members []struct {
 		ID   string `json:"id"`
 		Last string `json:"last"`
@@ -411,6 +427,7 @@ func (c *Client) serve(conn *websocket.Conn) {
 			c.drawing = m.V >= 2
 			c.rate = m.Rate
 			c.bytes = m.Bytes
+			c.storeEvery = time.Duration(m.Limits.StoreEvery) * time.Millisecond
 			c.members = map[string]Report{}
 			for _, other := range m.Members {
 				if r, ok := c.openReport(other.Last); ok {

@@ -30,7 +30,7 @@ const BYTES_WINDOW_MS = 60_000;
 // lines as they are drawn and its position twenty times a second, as
 // multiplayer tools send a cursor (the app keeps to five sixths of the rate
 // told in the welcome).
-const SQUAD = { members: 10, message: 4096, rate: 480, bytes: 4 * 1024 * 1024, replay: true };
+const SQUAD = { members: 10, message: 4096, rate: 480, bytes: 4 * 1024 * 1024, storeEvery: 5000, replay: true };
 // The relay's version, told in the welcome: 2 takes the squad pen's
 // ephemeral messages at the rate above (the app draws only with it).
 const VERSION = 2;
@@ -40,7 +40,24 @@ const STORE = { slot: 512 * 1024, slots: 24, keepMs: 7 * 24 * 60 * 60 * 1000 };
 // A link: the Host and its Clients (a few, and room for a dropped socket the
 // relay has not noticed yet); an item's details can be large, and a burst of
 // recognitions comes quickly.
-const LINK = { members: 10, message: 131072, rate: 120, replay: false };
+const LINK = { members: 10, message: 131072, rate: 120, bytes: 16 * 1024 * 1024, replay: false };
+
+// What a member is told of the limits in its welcome, so that the app keeps
+// under them (to five sixths) rather than finding them: messages per
+// rateWindow, characters per bytesWindow, and for a squad how far apart one
+// slot of its store may be written.
+const told = (limits) => ({
+  rate: limits.rate,
+  rateWindow: RATE_WINDOW_MS,
+  bytes: limits.bytes,
+  bytesWindow: BYTES_WINDOW_MS,
+  ...(limits.storeEvery ? { storeEvery: limits.storeEvery } : {}),
+});
+
+// A client connects (or reads the store) so often a minute from one address
+// at most (the RELAY_CONNECTS rate limit in wrangler.jsonc): a client stuck
+// reconnecting is told to wait (429 with Retry-After) before a room wakes.
+const RETRY_AFTER_S = 60;
 
 function text(body, status) {
   return new Response(body, { status, headers: { 'content-type': 'text/plain', 'cache-control': 'no-store' } });
@@ -88,7 +105,15 @@ class Room {
     server.serializeAttachment(member);
     const others = this.members(server).map(({ member: m }) => ({ id: m.id, last: this.limits.replay ? m.last : '' }));
     server.send(
-      JSON.stringify({ t: 'welcome', id: member.id, members: others, v: VERSION, rate: this.limits.rate, ...(this.limits.bytes ? { bytes: this.limits.bytes } : {}) }),
+      JSON.stringify({
+        t: 'welcome',
+        id: member.id,
+        members: others,
+        v: VERSION,
+        rate: this.limits.rate,
+        bytes: this.limits.bytes,
+        limits: told(this.limits),
+      }),
     );
     this.broadcast(server, { t: 'join', id: member.id });
     return new Response(null, { status: 101, webSocket: client });
@@ -150,6 +175,8 @@ class Room {
 export class SquadRoom extends Room {
   constructor(state) {
     super(state, SQUAD);
+    // When each slot was last written (while the room is awake).
+    this.puts = new Map();
   }
 
   // Joining keeps the store another week; the store itself is plain HTTP
@@ -170,6 +197,15 @@ export class SquadRoom extends Room {
       return new Response(JSON.stringify(out), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
     }
     if (request.method === 'PUT' && slot) {
+      // A slot is written storeEvery apart at most (the app is told so and
+      // waits; the pen's lines are kept a while after they change).
+      const now = Date.now();
+      const last = this.puts.get(slot) || 0;
+      if (now - last < SQUAD.storeEvery) {
+        const wait = Math.ceil((SQUAD.storeEvery - (now - last)) / 1000);
+        return new Response('slow down', { status: 429, headers: { 'retry-after': String(wait), 'cache-control': 'no-store' } });
+      }
+      this.puts.set(slot, now);
       const body = await request.text();
       if (body.length > STORE.slot || !/^[A-Za-z0-9_-]*$/.test(body)) return text('bad slot', 400);
       const key = 'slot:' + slot;
@@ -211,6 +247,17 @@ export default {
     const url = new URL(request.url);
     const match = url.pathname.match(/^\/(squad|link)\/([0-9a-f]{64})(\/store(\/[0-9a-f]{64})?)?$/);
     if (!match || (match[3] && match[1] !== 'squad')) return text('not found', 404);
+    // Joining and reading the store count against the address's connects;
+    // writing the store has its own pace (storeEvery).
+    if (env.RELAY_CONNECTS && request.method === 'GET') {
+      const address = request.headers.get('cf-connecting-ip') || '';
+      const { success } = await env.RELAY_CONNECTS.limit({ key: address });
+      if (!success)
+        return new Response('too many connections', {
+          status: 429,
+          headers: { 'retry-after': String(RETRY_AFTER_S), 'cache-control': 'no-store' },
+        });
+    }
     const rooms = match[1] === 'squad' ? env.SQUAD : env.LINK;
     const room = rooms.get(rooms.idFromName(match[2]));
     return room.fetch(request);

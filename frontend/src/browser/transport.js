@@ -15,6 +15,35 @@
 const LINK_RELAY = 'wss://mayak-relay.ich.sh/link/'
 const displayEvents = ['browser:task', 'browser:map', 'browser:position', 'browser:item']
 const MAX_MESSAGE = 65536
+// The relay's limits for a member of a link (told in its welcome: limits):
+// messages per rateWindow and characters per bytesWindow. The link keeps to
+// five sixths of them (paced), so the relay never has to close it; these are
+// taken until a welcome tells.
+const LINK_LIMITS = { rate: 120, rateWindow: 10000, bytes: 16 * 1024 * 1024, bytesWindow: 60000 }
+// limitsOf reads a welcome's limits, anything missing or odd as the default.
+export function limitsOf(told) {
+  const out = { ...LINK_LIMITS }
+  if (told && typeof told === 'object')
+    for (const key of Object.keys(out)) if (Number.isFinite(told[key]) && told[key] > 0) out[key] = told[key]
+  return out
+}
+// paceWait is how long a message of size must wait, given what was sent
+// ({at, n}, oldest first) and the limits, at now (0: it goes).
+export function paceWait(sent, size, limits, now) {
+  const rate = Math.floor((limits.rate * 5) / 6)
+  const bytes = Math.floor((limits.bytes * 5) / 6)
+  const inRate = sent.filter((s) => now - s.at < limits.rateWindow)
+  const inBytes = sent.filter((s) => now - s.at < limits.bytesWindow)
+  let wait = 0
+  if (inRate.length >= rate) wait = inRate[inRate.length - rate].at + limits.rateWindow - now
+  let total = inBytes.reduce((sum, s) => sum + s.n, 0) + size
+  for (const s of inBytes) {
+    if (total <= bytes) break
+    total -= s.n
+    wait = Math.max(wait, s.at + limits.bytesWindow - now)
+  }
+  return Math.max(0, wait)
+}
 
 const utf8 = new TextEncoder()
 const b64 = (bytes) =>
@@ -175,6 +204,7 @@ class MayakLink {
       return
     }
     if (frame.t === 'welcome') {
+      this.limits = limitsOf(frame.limits)
       // Whoever is there already hears who joined by our hello.
       if (frame.members?.length) await this.say(ws, { t: 'hello', fresh: this.fresh, name: this.name })
       return
@@ -251,8 +281,14 @@ class MayakLink {
     const next = this.outbox.then(async () => {
       if (!aes || this.ws !== ws || ws.readyState !== WebSocket.OPEN) return false
       const sealed = await seal(aes, { ...value, r: this.role })
+      // Paced under the relay's limits (paceWait).
+      const limits = this.limits || LINK_LIMITS
+      this.sent = (this.sent || []).filter((x) => Date.now() - x.at < Math.max(limits.rateWindow, limits.bytesWindow))
+      const wait = paceWait(this.sent, sealed.length, limits, Date.now())
+      if (wait > 0) await new Promise((done) => setTimeout(done, wait))
       if (this.ws !== ws || ws.readyState !== WebSocket.OPEN) return false
       ws.send(sealed)
+      this.sent.push({ at: Date.now(), n: sealed.length })
       return true
     })
     this.outbox = next.catch(() => false)

@@ -16,6 +16,7 @@ These changes are planned for the next version.
 
 ### Improved
 
+- The squad and link relay has more limits so it stays clear with many players (how often the store is written, how much a link sends a minute, connecting too often from one place); MAYAK hears them from the relay and paces itself under them.
 - In a squad, heavy things sent one after another (screenshots, snap notes) are held to so much a minute, so the relay is not flooded; over it, they wait a little before going.
 - The sidebar's bookmarks moved to just above the tabs.
 

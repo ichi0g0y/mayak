@@ -25,6 +25,50 @@ const MaxStored = 360 * 1024
 
 var storeClient = &http.Client{Timeout: 20 * time.Second}
 
+// storeEvery is how far apart a slot is written when the relay does not say
+// (its welcome's limits.storeEvery): the relay answers one written sooner
+// with 429, so the client waits rather than finds it.
+var storeEvery = 5 * time.Second
+
+// retryAfter is a 429's Retry-After (seconds), else fallback.
+func retryAfter(res *http.Response, fallback time.Duration) time.Duration {
+	var s int
+	if res != nil {
+		if _, err := fmt.Sscan(res.Header.Get("Retry-After"), &s); err == nil && s > 0 && s <= 600 {
+			return time.Duration(s) * time.Second
+		}
+	}
+	return fallback
+}
+
+// pace waits until slot name may be written again (the relay's storeEvery
+// since it last was), and counts this write. It tells false once the client
+// is closed.
+func (c *Client) pace(name string) bool {
+	c.mu.Lock()
+	every := c.storeEvery
+	c.mu.Unlock()
+	if every <= 0 {
+		every = storeEvery
+	}
+	c.storedMu.Lock()
+	if c.storedAt == nil {
+		c.storedAt = map[string]time.Time{}
+	}
+	wait := every - time.Since(c.storedAt[name])
+	c.storedAt[name] = time.Now().Add(max(wait, 0))
+	c.storedMu.Unlock()
+	if wait <= 0 {
+		return true
+	}
+	select {
+	case <-c.done:
+		return false
+	case <-time.After(wait):
+		return true
+	}
+}
+
 // storeURL is the room's store over HTTP(S): the room's address with http
 // for ws, and /store after it.
 func (c *Client) storeURL() string {
@@ -71,21 +115,34 @@ func (c *Client) StoreIn(kind string, data json.RawMessage) error {
 	if kind != "" {
 		name = slot(key + "\x00" + kind)
 	}
-	req, err := http.NewRequest(http.MethodPut, c.storeURL()+"/"+name, bytes.NewReader([]byte(body)))
-	if err != nil {
-		return err
+	// Once more after a 429 (a write the relay found too soon), when it says.
+	for try := 0; ; try++ {
+		if !c.pace(name) {
+			return errors.New("squad left")
+		}
+		req, err := http.NewRequest(http.MethodPut, c.storeURL()+"/"+name, bytes.NewReader([]byte(body)))
+		if err != nil {
+			return err
+		}
+		req.Header.Set("User-Agent", c.agent)
+		res, err := storeClient.Do(req)
+		if err != nil {
+			return err
+		}
+		_, _ = io.Copy(io.Discard, res.Body)
+		res.Body.Close()
+		if res.StatusCode == http.StatusTooManyRequests && try == 0 {
+			wait := retryAfter(res, storeEvery)
+			c.storedMu.Lock()
+			c.storedAt[name] = time.Now().Add(wait)
+			c.storedMu.Unlock()
+			continue
+		}
+		if res.StatusCode != http.StatusOK {
+			return fmt.Errorf("store: %s", res.Status)
+		}
+		return nil
 	}
-	req.Header.Set("User-Agent", c.agent)
-	res, err := storeClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	_, _ = io.Copy(io.Discard, res.Body)
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("store: %s", res.Status)
-	}
-	return nil
 }
 
 // Stored returns what the members keep in the store (each slot opened with
