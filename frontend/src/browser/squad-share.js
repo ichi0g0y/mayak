@@ -38,11 +38,21 @@ const valid = (url) => {
     return false
   }
 }
+// A member's screenshots are kept apart from the rest: their latest
+// SHOTS_EACH, so screenshots coming often do not push pages and notes out.
+const SHOTS_EACH = 30
 function keep(item) {
   const at = shares.findIndex((s) => s.id === item.id)
   if (at >= 0) shares.splice(at, 1)
   shares.unshift(item)
-  shares.splice(MAX)
+  let others = 0
+  const shots = new Map()
+  for (let i = 0; i < shares.length; i++) {
+    const s = shares[i]
+    const n = s.kind === 'shot' ? (shots.get(s.by) || 0) + 1 : ++others
+    if (s.kind === 'shot') shots.set(s.by, n)
+    if (n > (s.kind === 'shot' ? SHOTS_EACH : MAX)) shares.splice(i--, 1)
+  }
   render()
 }
 const text = (v, max) => String(v || '').slice(0, max)
@@ -79,6 +89,44 @@ squad.onShell('snap', (by, d) => {
     seen: false,
   })
 })
+// Screenshots (app_squad_shot.go SquadShot): one is named by its file's MD5,
+// so the same one is never taken in twice from a member; a small one is
+// replaced by its large one when that comes (asked for, or shared by hand).
+squad.onShell('shot', (by, d) => {
+  if (typeof d.id !== 'string' || !/^[0-9a-f]{32}$/.test(d.hash || '')) return
+  if (typeof d.image !== 'string' || d.image.length > MAX_IMAGE || !/^data:image\/jpeg;base64,/.test(d.image)) return
+  const had = shares.find((s) => s.kind === 'shot' && s.by === by && s.hash === d.hash)
+  if (had) {
+    if (d.large && !had.large) {
+      Object.assign(had, { image: d.image, large: true })
+      if (asking === had.id) asking = ''
+      render()
+    }
+    return
+  }
+  keep({
+    id: d.id,
+    kind: 'shot',
+    by,
+    name: text(d.name, 24),
+    c: text(d.c, 7),
+    hash: d.hash,
+    map: text(d.map, 60),
+    image: d.image,
+    large: !!d.large,
+    at: Date.now(),
+    mine: false,
+    seen: false,
+  })
+})
+// A squadmate asks for a large screenshot of this member's: it goes to
+// everyone (the relay has no way to one member), once a minute at most.
+squad.onShell('shotAsk', (_by, d) => {
+  if (d.to !== squad.myKeyOf() || typeof d.hash !== 'string') return
+  const sent = sentShots.get(sentKey(d.hash))
+  if (sent?.file) void sendShot(sent.file, true)
+})
+
 // The pins on the maps: member key → {id, by, name, c, map, floor, x, z,
 // zoom, at, mine, dropAt (when it last came down: it drops in then; a pin
 // dragged just moves)}.
@@ -268,6 +316,154 @@ export function removePin() {
   pins.delete(pin.by)
   render()
   void squad.sendShell({ t: 'unpin', id: pin.id })
+}
+
+// The screenshots this PC sent: the squad and their file's MD5 (sentKey)
+// → {id, file, at, largeAt}
+// (when the small one and the large one went), kept across restarts so the
+// same screenshot is not sent twice (the latest SENT_KEPT).
+const SENT_KEPT = 500
+const SENT_KEY = 'mayak-squad-shots'
+const sentShots = new Map()
+const sentKey = (hash) => `${state.squadCode || code}|${hash}`
+try {
+  for (const [hash, v] of JSON.parse(localStorage.getItem(SENT_KEY) || '[]'))
+    if (typeof hash === 'string' && v && typeof v === 'object') sentShots.set(hash, v)
+} catch {}
+function rememberSent(hash, v) {
+  sentShots.delete(hash)
+  sentShots.set(hash, v)
+  while (sentShots.size > SENT_KEPT) sentShots.delete(sentShots.keys().next().value)
+  try {
+    localStorage.setItem(SENT_KEY, JSON.stringify([...sentShots]))
+  } catch {}
+}
+// sendShot sends a screenshot of the screenshot folder (its file name),
+// small or large, unless that one went already. It tells whether it went.
+async function sendShot(file, large, onProgress) {
+  const go = window.mayakDesktop?.backend
+  if (!canShare() || !go?.SquadShot) return false
+  let shot
+  try {
+    shot = await go.SquadShot(file, large)
+  } catch {
+    return false
+  }
+  // A small one goes once; a large one again only a minute after it went
+  // (for a squadmate who asks and missed it).
+  const sent = sentShots.get(sentKey(shot.hash))
+  if (!large && sent) return false
+  if (large && Date.now() - (sent?.largeAt || 0) < 60_000) return false
+  const style = squad.myStyle()
+  const id = sent?.id || shot.hash.slice(0, 12)
+  const ok = await squad.sendShell(
+    {
+      t: 'shot',
+      id,
+      hash: shot.hash,
+      map: shot.map || '',
+      image: shot.image,
+      ...(large ? { large: 1 } : {}),
+      ...style,
+    },
+    onProgress,
+  )
+  if (!ok) return false
+  rememberSent(sentKey(shot.hash), {
+    ...sent,
+    id,
+    file,
+    at: sent?.at || Date.now(),
+    ...(large ? { largeAt: Date.now() } : {}),
+  })
+  const had = shares.find((s) => s.mine && s.hash === shot.hash)
+  if (had) Object.assign(had, large ? { image: shot.image, large: true } : {})
+  else
+    keep({
+      id,
+      kind: 'shot',
+      by: squad.myKeyOf(),
+      ...style,
+      hash: shot.hash,
+      map: shot.map || '',
+      image: shot.image,
+      large,
+      at: Date.now(),
+      mine: true,
+      seen: true,
+    })
+  return true
+}
+// shareShot shares a screenshot by hand, large; one already sent large is
+// not sent again. It tells whether it went, and 'dup' for one sent already.
+export async function shareShot(file, onProgress) {
+  const go = window.mayakDesktop?.backend
+  try {
+    const { hash } = await go.SquadShotHash(file)
+    if (sentShots.get(sentKey(hash))?.largeAt) return 'dup'
+  } catch {}
+  return sendShot(file, true, onProgress)
+}
+
+// askShot asks the member who shared a screenshot for its large picture.
+let asking = ''
+export const askingShot = () => asking
+export async function askShot(id) {
+  const s = shares.find((x) => x.id === id && x.kind === 'shot')
+  if (!s || s.large || s.mine || !canShare()) return false
+  asking = id
+  render()
+  setTimeout(() => {
+    if (asking === id) {
+      asking = ''
+      render()
+    }
+  }, 20_000)
+  return squad.sendShell({ t: 'shotAsk', hash: s.hash, to: s.by })
+}
+
+// A screenshot taken while in a squad is shared by itself when the player
+// chose so (state.squadAutoShot; only those with a position unless
+// state.squadShotScope is 'all'): small, at most one every AUTO_GAP, the
+// latest taken meanwhile in place of those before it.
+const AUTO_GAP = 20_000
+let autoLast = 0
+let autoNext = ''
+let autoTimer = 0
+window.addEventListener('mayak:screenshot', (event) => autoShot(/** @type {CustomEvent} */ (event).detail))
+export function autoShot(file) {
+  if (!state.squadAutoShot || !canShare() || !file) return
+  autoNext = file
+  if (autoTimer) return
+  const wait = Math.max(0, autoLast + AUTO_GAP - Date.now())
+  // A moment first: the analysis says what the screenshot is.
+  autoTimer = setTimeout(autoSend, Math.max(wait, 1500))
+}
+async function autoSend() {
+  autoTimer = 0
+  const file = autoNext
+  autoNext = ''
+  if (!file || !state.squadAutoShot || !canShare()) return
+  const go = window.mayakDesktop?.backend
+  try {
+    let shot = await go.SquadShotHash(file)
+    if (sentShots.has(sentKey(shot.hash))) return
+    if (state.squadShotScope !== 'all') {
+      // A screenshot of the position: its name has one (in a raid every
+      // screenshot's does) and the analysis found no screen in it (a task,
+      // an item: those are read, not shown). The analysis may take a while.
+      for (let i = 0; i < 5 && shot.positioned && !shot.kind; i++) {
+        await new Promise((done) => setTimeout(done, 2000))
+        shot = await go.SquadShotHash(file)
+      }
+      if (!shot.positioned || (shot.kind && shot.kind !== 'position')) return
+    }
+  } catch {
+    return
+  }
+  autoLast = Date.now()
+  await sendShot(file, false)
+  if (autoNext) autoShot(autoNext)
 }
 
 export const unseen = () => shares.filter((s) => !s.seen).length

@@ -1,5 +1,6 @@
 import { age } from './item.js'
 import { state, esc, t, icon, action, clickHandlers, render } from './shell-core.js'
+import { canShare, shareShot } from './squad-share.js'
 
 // The screenshots page: the viewer with zoom and drag, the recognition
 // badges and details.
@@ -84,6 +85,14 @@ function shotInfo(meta) {
     row(t('shotInfoError'), esc(meta.error)),
   ].join('')}</dl>${meta.ocr ? `<h4>OCR</h4><pre class="shot-ocr">${esc(meta.ocr)}</pre>` : ''}</aside>`
 }
+// Sharing the screenshot shown with the squad, large (squad-share.js
+// shareShot): its state while it goes, and what came of it, for a while.
+let squadSend = { name: '', text: '' }
+function squadButton(name) {
+  if (!state.squad?.state || !canShare()) return ''
+  const text = squadSend.name === name ? squadSend.text : ''
+  return `<button class="shot-tool shot-to-snap" data-action="shotToSquad" data-id="${esc(name)}" ${text && !squadSend.done ? 'disabled' : ''} title="${esc(t('squadShareShotHint'))}">${icon('squad')}<span>${esc(text || t('squadShareSnap'))}</span></button>`
+}
 function shotViewer() {
   const shots = state.screenshots,
     name = shots?.viewing
@@ -95,7 +104,7 @@ function shotViewer() {
   const image = shots.full || shots.thumbs[name]
   const newer = shots.list[index - 1],
     older = shots.list[index + 1]
-  return `<div class="shot-viewer" role="dialog" aria-label="${esc(name)}"><div class="shot-viewer-head"><span class="shot-viewer-name" title="${esc(name)}">${esc(name)}</span><span class="shot-age">${esc(shot ? age(shot.time, state.language) : '')}</span>${shot?.meta ? `<span class="shot-kind" data-kind="${shotKind(shot.meta)}">${esc(t('shotKind_' + shotKind(shot.meta)))}</span>${shot.meta.match ? `<span class="shot-viewer-match" title="${esc(shot.meta.match)}">${esc(shot.meta.match)}${shot.meta.confidence ? ` · ${Math.round(shot.meta.confidence * 100)}%` : ''}</span>` : ''}` : ''}<div class="shot-zoom"><button class="shot-tool" data-action="shotZoom" data-id="out" title="${esc(t('zoomOut'))}" aria-label="${esc(t('zoomOut'))}">${icon('minus')}</button><span class="shot-zoom-level">${Math.round(shotZoom.scale * 100)}%</span><button class="shot-tool" data-action="shotZoom" data-id="in" title="${esc(t('zoomIn'))}" aria-label="${esc(t('zoomIn'))}">${icon('plus')}</button><button class="shot-tool" data-action="shotZoom" data-id="fit" title="${esc(t('zoomFit'))}" aria-label="${esc(t('zoomFit'))}">${icon('fit')}</button>${state.snapNotes ? `<button class="shot-tool shot-to-snap" data-action="snapFromShot" data-id="${esc(name)}" title="${esc(t('snapFromShotHelp'))}">${icon('snap')}<span>${esc(t('snapFromShot'))}</span></button>` : ''}${shot?.meta ? `<button class="shot-tool shot-info-toggle ${shotInfoOpen ? 'selected' : ''}" data-action="shotInfo" title="${esc(t('shotInfo'))}" aria-label="${esc(t('shotInfo'))}" aria-pressed="${shotInfoOpen}">${icon('info')}</button>` : ''}</div><button class="shot-viewer-close" data-action="screenshotView" data-id="" title="${esc(t('close'))}" aria-label="${esc(t('close'))}">${icon('x')}</button></div><div class="shot-viewer-body">${shot?.meta && shotInfoOpen ? shotInfo(shot.meta) : ''}${image ? `<img src="${image}" alt="" draggable="false" style="transform:${shotTransform()}">` : ''}${newer ? `<button class="shot-nav shot-newer" data-action="screenshotView" data-id="${esc(newer.name)}" title="${esc(t('newerScreenshot'))}" aria-label="${esc(t('newerScreenshot'))}">${icon('back')}</button>` : ''}${older ? `<button class="shot-nav shot-older" data-action="screenshotView" data-id="${esc(older.name)}" title="${esc(t('olderScreenshot'))}" aria-label="${esc(t('olderScreenshot'))}">${icon('forward')}</button>` : ''}</div></div>`
+  return `<div class="shot-viewer" role="dialog" aria-label="${esc(name)}"><div class="shot-viewer-head"><span class="shot-viewer-name" title="${esc(name)}">${esc(name)}</span><span class="shot-age">${esc(shot ? age(shot.time, state.language) : '')}</span>${shot?.meta ? `<span class="shot-kind" data-kind="${shotKind(shot.meta)}">${esc(t('shotKind_' + shotKind(shot.meta)))}</span>${shot.meta.match ? `<span class="shot-viewer-match" title="${esc(shot.meta.match)}">${esc(shot.meta.match)}${shot.meta.confidence ? ` · ${Math.round(shot.meta.confidence * 100)}%` : ''}</span>` : ''}` : ''}<div class="shot-zoom"><button class="shot-tool" data-action="shotZoom" data-id="out" title="${esc(t('zoomOut'))}" aria-label="${esc(t('zoomOut'))}">${icon('minus')}</button><span class="shot-zoom-level">${Math.round(shotZoom.scale * 100)}%</span><button class="shot-tool" data-action="shotZoom" data-id="in" title="${esc(t('zoomIn'))}" aria-label="${esc(t('zoomIn'))}">${icon('plus')}</button><button class="shot-tool" data-action="shotZoom" data-id="fit" title="${esc(t('zoomFit'))}" aria-label="${esc(t('zoomFit'))}">${icon('fit')}</button>${state.snapNotes ? `<button class="shot-tool shot-to-snap" data-action="snapFromShot" data-id="${esc(name)}" title="${esc(t('snapFromShotHelp'))}">${icon('snap')}<span>${esc(t('snapFromShot'))}</span></button>` : ''}${squadButton(name)}${shot?.meta ? `<button class="shot-tool shot-info-toggle ${shotInfoOpen ? 'selected' : ''}" data-action="shotInfo" title="${esc(t('shotInfo'))}" aria-label="${esc(t('shotInfo'))}" aria-pressed="${shotInfoOpen}">${icon('info')}</button>` : ''}</div><button class="shot-viewer-close" data-action="screenshotView" data-id="" title="${esc(t('close'))}" aria-label="${esc(t('close'))}">${icon('x')}</button></div><div class="shot-viewer-body">${shot?.meta && shotInfoOpen ? shotInfo(shot.meta) : ''}${image ? `<img src="${image}" alt="" draggable="false" style="transform:${shotTransform()}">` : ''}${newer ? `<button class="shot-nav shot-newer" data-action="screenshotView" data-id="${esc(newer.name)}" title="${esc(t('newerScreenshot'))}" aria-label="${esc(t('newerScreenshot'))}">${icon('back')}</button>` : ''}${older ? `<button class="shot-nav shot-older" data-action="screenshotView" data-id="${esc(older.name)}" title="${esc(t('olderScreenshot'))}" aria-label="${esc(t('olderScreenshot'))}">${icon('forward')}</button>` : ''}</div></div>`
 }
 
 // The screenshot shown large zooms with the wheel around the pointer, moves
@@ -173,6 +182,28 @@ document.addEventListener('keydown', (event) => {
 })
 
 clickHandlers.push(async (type, id, button, event) => {
+  if (type === 'shotToSquad') {
+    if (!id || (squadSend.name === id && squadSend.text && !squadSend.done)) return true
+    squadSend = { name: id, text: t('squadShareSending').replace('{n}', '0') }
+    render()
+    const ok = await shareShot(id, (done) => {
+      squadSend = { name: id, text: t('squadShareSending').replace('{n}', String(Math.round(done * 100))) }
+      render()
+    })
+    squadSend = {
+      name: id,
+      text: t(ok === 'dup' ? 'squadShotSentAlready' : ok ? 'squadShareDone' : 'snapShareFailed'),
+      done: true,
+    }
+    render()
+    setTimeout(() => {
+      if (squadSend.name === id && squadSend.done) {
+        squadSend = { name: '', text: '' }
+        render()
+      }
+    }, 3000)
+    return true
+  }
   if (type === 'shotInfo') {
     shotInfoOpen = !shotInfoOpen
     render()

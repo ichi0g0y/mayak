@@ -4,6 +4,14 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+These changes are planned for the next version.
+
+### New
+
+- Screenshots can be shared with the squad: "Share with the squad" in the screenshot viewer sends one large. With "Share screenshots with the squad by themselves" on (off at first, on the squad page), those taken while in a squad go to it small (only those with a position at first, or all), one every 20 seconds at most, and the same screenshot (told by its file's MD5) never twice. A squadmate opens one from the squad section or page, can ask its sender for the large picture ("See it large") and keep it as a snap note.
+
 ## v0.1.20 (2026-09-30)
 
 ### Improved

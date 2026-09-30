@@ -530,6 +530,57 @@ export class SnapNoteData {
     }
 }
 
+/**
+ * SquadShot is a screenshot made ready for the squad.
+ */
+export class SquadShot {
+    /**
+     * Hash is the file's MD5 (hex).
+     */
+    "hash": string;
+
+    /**
+     * Image is the picture, a JPEG data URL.
+     */
+    "image": string;
+
+    /**
+     * Positioned tells a screenshot with a position in its name (taken in a
+     * raid with the position shown), and Map the map it was taken on.
+     */
+    "positioned": boolean;
+    "map"?: string;
+
+    /**
+     * Kind is what MAYAK recognized it as (tasks, item, position, profile,
+     * unknown; "" before its analysis).
+     */
+    "kind"?: string;
+
+    /** Creates a new SquadShot instance. */
+    constructor($$source: Partial<SquadShot> = {}) {
+        if (!("hash" in $$source)) {
+            this["hash"] = "";
+        }
+        if (!("image" in $$source)) {
+            this["image"] = "";
+        }
+        if (!("positioned" in $$source)) {
+            this["positioned"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new SquadShot instance from a string or object.
+     */
+    static createFrom($$source: any = {}): SquadShot {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new SquadShot($$parsedSource as Partial<SquadShot>);
+    }
+}
+
 // Private type creation functions
 const $$createType0 = GoonRaid.createFrom;
 const $$createType1 = $Create.Nullable($$createType0);

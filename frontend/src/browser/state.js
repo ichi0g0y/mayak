@@ -253,6 +253,10 @@ function defaults() {
     squadColor: '',
     // Whether the character's picture (the Overall screen's) is shown to the squad.
     squadPicture: true,
+    // Whether a screenshot taken in a squad goes to it by itself (small), and
+    // which: those with a position ('position') or all (squad-share.js).
+    squadAutoShot: false,
+    squadShotScope: 'position',
     squadCode: '',
     squadRecent: [],
     // The mode, the pairing kept (transport.js): its key and which side this
@@ -312,6 +316,8 @@ function restore(raw = {}) {
   state.squadName = typeof raw.squadName === 'string' ? raw.squadName.trim().slice(0, 24) : ''
   state.squadColor = squadColorOf(raw.squadColor)
   state.squadPicture = raw.squadPicture !== false
+  state.squadAutoShot = raw.squadAutoShot === true
+  state.squadShotScope = raw.squadShotScope === 'all' ? 'all' : 'position'
   state.squadCode = typeof raw.squadCode === 'string' && squadCodePattern.test(raw.squadCode) ? raw.squadCode : ''
   state.squadRecent = recentSquadsOf(raw.squadRecent)
   // The LAN receiving mode ("remote") is gone; a browser saved in it starts

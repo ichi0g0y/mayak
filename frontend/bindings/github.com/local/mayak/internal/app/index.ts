@@ -18,5 +18,6 @@ export {
     PopupPage,
     PopupPlace,
     ScreenshotEntry,
-    SnapNoteData
+    SnapNoteData,
+    SquadShot
 } from "./models.js";

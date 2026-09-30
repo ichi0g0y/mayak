@@ -1293,6 +1293,11 @@ div.squad-section{padding:2px 10px 8px}
 .squad-shares-card .squad-share-title{font-size:13px}
 .squad-member-where-note,.squad-member-none{padding:4px 6px;font-size:12px;color:var(--muted)}
 .squad-open{position:relative}
+/* Screenshots shared by themselves: which (squad page, under the switch). */
+.squad-shot-scopes{display:flex;flex-wrap:wrap;gap:4px 16px;margin:4px 0 0 26px;font-size:12.5px}
+.squad-shot-scope{display:inline-flex;align-items:center;gap:6px}
+.squad-shot-scope:has(input:disabled){opacity:.5}
+.squad-shot-viewer .shot-viewer-head .squad-dot{flex:none}
 /* Leaving from the sidebar: pressed once, it asks for a second press. */
 .squad-section-label .squad-leave-quick{display:inline-flex;align-items:center;justify-content:center;gap:4px;width:auto;min-width:26px;margin:0 2px 0 auto}
 .squad-leave-quick:hover,.squad-leave-quick.armed{color:var(--danger,#e5484d)}

@@ -793,11 +793,31 @@ export function SquadSharePicture(on: boolean): $CancellablePromise<void> {
 }
 
 /**
+ * SquadShot reads a screenshot of the screenshot folder (its name) for the
+ * squad: small, or large with full.
+ */
+export function SquadShot(name: string, full: boolean): $CancellablePromise<$models.SquadShot> {
+    return $Call.ByID(1307805452, name, full).then(($result: any) => {
+        return $$createType25($result);
+    });
+}
+
+/**
+ * SquadShotHash tells a screenshot's MD5 and whether it has a position,
+ * without making its picture: to know whether it goes before making it.
+ */
+export function SquadShotHash(name: string): $CancellablePromise<$models.SquadShot> {
+    return $Call.ByID(2001589452, name).then(($result: any) => {
+        return $$createType25($result);
+    });
+}
+
+/**
  * SquadState returns the squad joined, or nil.
  */
 export function SquadState(): $CancellablePromise<squad$0.State | null> {
     return $Call.ByID(2725117137).then(($result: any) => {
-        return $$createType26($result);
+        return $$createType27($result);
     });
 }
 
@@ -865,7 +885,7 @@ export function TrackerDismissTasks(ids: string[]): $CancellablePromise<void> {
  */
 export function VoicePacks(): $CancellablePromise<sound$0.VoicePack[]> {
     return $Call.ByID(2023705626).then(($result: any) => {
-        return $$createType28($result);
+        return $$createType29($result);
     });
 }
 
@@ -895,7 +915,8 @@ const $$createType21 = $Create.Map($Create.Any, $Create.Any);
 const $$createType22 = snapnote$0.Note.createFrom;
 const $$createType23 = $Create.Array($$createType22);
 const $$createType24 = $models.SnapNoteData.createFrom;
-const $$createType25 = squad$0.State.createFrom;
-const $$createType26 = $Create.Nullable($$createType25);
-const $$createType27 = sound$0.VoicePack.createFrom;
-const $$createType28 = $Create.Array($$createType27);
+const $$createType25 = $models.SquadShot.createFrom;
+const $$createType26 = squad$0.State.createFrom;
+const $$createType27 = $Create.Nullable($$createType26);
+const $$createType28 = sound$0.VoicePack.createFrom;
+const $$createType29 = $Create.Array($$createType28);

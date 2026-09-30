@@ -393,6 +393,8 @@ async function persist() {
     squadName,
     squadColor,
     squadPicture,
+    squadAutoShot,
+    squadShotScope,
     squadCode,
     squadRecent,
     bookmarks,
@@ -435,6 +437,8 @@ async function persist() {
       squadName,
       squadColor,
       squadPicture,
+      squadAutoShot,
+      squadShotScope,
       squadCode,
       squadRecent,
       bookmarks,
@@ -1115,7 +1119,11 @@ const ready = (async () => {
     .then(updateChanged)
     .catch(() => {})
   // A new screenshot shows in the sidebar (and on the screenshot page).
-  window.mayakDesktop.on('browser:screenshot', () => void loadShots())
+  // It may go to the squad too (squad-share.js autoShot).
+  window.mayakDesktop.on('browser:screenshot', (name) => {
+    void loadShots()
+    window.dispatchEvent(new CustomEvent('mayak:screenshot', { detail: String(name || '') }))
+  })
   window.mayakDesktop.on('snapnote:changed', () => void loadSnaps())
   window.mayakDesktop.on('menu:choice', (choice) => {
     for (const fn of menuListeners) fn(String(choice?.id || ''))
@@ -1487,6 +1495,13 @@ async function perform(type, data) {
       if (platform === 'windows') await go.TrackerDismissTasks(Array.isArray(data) ? data.map(String) : [])
       break
     // Whether this player's character picture is shown to the squad.
+    // Whether screenshots taken in a squad go to it by themselves, and which.
+    case 'squadAutoShot':
+      state.squadAutoShot = data === true
+      break
+    case 'squadShotScope':
+      state.squadShotScope = data === 'all' ? 'all' : 'position'
+      break
     case 'squadPicture':
       state.squadPicture = data !== false
       void shareSquadPicture()
