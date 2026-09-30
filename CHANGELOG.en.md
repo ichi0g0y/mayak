@@ -16,6 +16,7 @@ These changes are planned for the next version.
 
 ### Improved
 
+- In a squad, heavy things sent one after another (screenshots, snap notes) are held to so much a minute, so the relay is not flooded; over it, they wait a little before going.
 - The sidebar's bookmarks moved to just above the tabs.
 
 ## v0.1.20 (2026-09-30)

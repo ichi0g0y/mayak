@@ -115,6 +115,24 @@ const (
 	sendWindow = 10 * time.Second
 )
 
+// The relay also closes a member that sends more than its bytes (told in
+// its welcome) in bytesWindow: pictures are a hundred messages or more, so
+// heavy things wait for a cooldown. This PC keeps to five sixths of it, and
+// of relayBytes with a relay that did not tell one (the app's own cooldown).
+const (
+	relayBytes  = 4 << 20
+	bytesWindow = time.Minute
+)
+
+// byteLimit is the most characters sent in bytesWindow for a relay taking
+// bytes.
+func byteLimit(bytes int) int {
+	if bytes <= 0 {
+		bytes = relayBytes
+	}
+	return bytes * 5 / 6
+}
+
 // limits are the most messages sent in sendWindow, and the most of them
 // droppable, for a relay taking rate.
 func limits(rate int) (all, droppable int) {
@@ -173,16 +191,20 @@ type Client struct {
 	mine    Report
 	members map[string]Report
 	drawing bool
-	// rate is the relay's (its welcome's), 0 for one that did not say.
-	rate int
+	// rate is the relay's (its welcome's), 0 for one that did not say; bytes
+	// likewise.
+	rate  int
+	bytes int
 	// recheck makes the next connection at once, without the pause.
 	recheck bool
 	done    chan struct{}
 	closed  bool
 
-	// When the messages of the last sendWindow were sent, oldest first.
-	sentMu sync.Mutex
-	sent   []time.Time
+	// When the messages of the last sendWindow were sent, oldest first, and
+	// those of the last bytesWindow with their length.
+	sentMu    sync.Mutex
+	sent      []time.Time
+	sentBytes []sentSize
 }
 
 // Join starts a client for code (canonical, see Normalize) against the
@@ -335,8 +357,10 @@ type relayMessage struct {
 	Data string `json:"data"`
 	// V is the relay's version (2 takes the squad pen's messages).
 	V int `json:"v"`
-	// Rate is how many messages a member may send in 10 s (0: 120).
+	// Rate is how many messages a member may send in 10 s (0: 120), and
+	// Bytes how many characters in a minute (0: not told).
 	Rate    int `json:"rate"`
+	Bytes   int `json:"bytes"`
 	Members []struct {
 		ID   string `json:"id"`
 		Last string `json:"last"`
@@ -386,6 +410,7 @@ func (c *Client) serve(conn *websocket.Conn) {
 			c.phase = PhaseConnected
 			c.drawing = m.V >= 2
 			c.rate = m.Rate
+			c.bytes = m.Bytes
 			c.members = map[string]Report{}
 			for _, other := range m.Members {
 				if r, ok := c.openReport(other.Last); ok {
@@ -449,8 +474,9 @@ func (c *Client) send(conn *websocket.Conn) {
 	if err != nil {
 		return
 	}
-	c.take(false)
-	if c.write(conn, []byte(c.seal.seal(body))) != nil {
+	text := c.seal.seal(body)
+	c.take(false, len(text))
+	if c.write(conn, []byte(text)) != nil {
 		_ = conn.Close()
 	}
 }
@@ -488,7 +514,7 @@ func (c *Client) Send(data json.RawMessage, droppable bool) bool {
 	c.mu.Lock()
 	conn, drawing := c.conn, c.drawing
 	c.mu.Unlock()
-	if conn == nil || !drawing || !c.take(droppable) {
+	if conn == nil || !drawing || !c.take(droppable, len(text)) {
 		return false
 	}
 	if c.write(conn, []byte(text)) != nil {
@@ -498,11 +524,19 @@ func (c *Client) Send(data json.RawMessage, droppable bool) bool {
 	return true
 }
 
-// take counts a message about to be sent against the limits: it tells
-// false for a droppable one over its limit, and waits for room for any other.
-func (c *Client) take(droppable bool) bool {
+// sentSize is a message sent: when, and how long.
+type sentSize struct {
+	at time.Time
+	n  int
+}
+
+// take counts a message about to be sent (size characters long) against
+// the limits: it tells false for a droppable one over them, and waits for
+// room for any other.
+func (c *Client) take(droppable bool, size int) bool {
 	c.mu.Lock()
 	all, few := limits(c.rate)
+	bytes := byteLimit(c.bytes)
 	c.mu.Unlock()
 	limit := all
 	if droppable {
@@ -514,12 +548,27 @@ func (c *Client) take(droppable bool) bool {
 		for len(c.sent) > 0 && now.Sub(c.sent[0]) >= sendWindow {
 			c.sent = c.sent[1:]
 		}
-		if len(c.sent) < limit {
+		total := 0
+		for len(c.sentBytes) > 0 && now.Sub(c.sentBytes[0].at) >= bytesWindow {
+			c.sentBytes = c.sentBytes[1:]
+		}
+		for _, s := range c.sentBytes {
+			total += s.n
+		}
+		roomy := total+size <= bytes || len(c.sentBytes) == 0
+		if len(c.sent) < limit && roomy {
 			c.sent = append(c.sent, now)
+			c.sentBytes = append(c.sentBytes, sentSize{now, size})
 			c.sentMu.Unlock()
 			return true
 		}
-		wait := sendWindow - now.Sub(c.sent[0])
+		var wait time.Duration
+		if len(c.sent) >= limit {
+			wait = sendWindow - now.Sub(c.sent[0])
+		}
+		if !roomy {
+			wait = max(wait, bytesWindow-now.Sub(c.sentBytes[0].at))
+		}
 		c.sentMu.Unlock()
 		if droppable {
 			return false

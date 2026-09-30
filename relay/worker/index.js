@@ -21,11 +21,16 @@
 
 // A member may send so many messages per window before it is dropped.
 const RATE_WINDOW_MS = 10_000;
+// And so many characters per longer window: a picture (a screenshot, a snap
+// note) is a hundred messages or more, so heavy things are held to a
+// cooldown the message rate alone would not give (told in the welcome; the
+// app keeps to five sixths of it).
+const BYTES_WINDOW_MS = 60_000;
 // A squad: ten players' positions, small and seldom, and the squad pen's
 // lines as they are drawn and its position twenty times a second, as
 // multiplayer tools send a cursor (the app keeps to five sixths of the rate
 // told in the welcome).
-const SQUAD = { members: 10, message: 4096, rate: 480, replay: true };
+const SQUAD = { members: 10, message: 4096, rate: 480, bytes: 4 * 1024 * 1024, replay: true };
 // The relay's version, told in the welcome: 2 takes the squad pen's
 // ephemeral messages at the rate above (the app draws only with it).
 const VERSION = 2;
@@ -78,11 +83,13 @@ class Room {
     if (request.headers.get('upgrade')?.toLowerCase() !== 'websocket') return text('websocket only', 426);
     if (this.state.getWebSockets().length >= this.limits.members) return text('full', 409);
     const [client, server] = Object.values(new WebSocketPair());
-    const member = { id: randomID(), last: '', since: Date.now(), count: 0 };
+    const member = { id: randomID(), last: '', since: Date.now(), count: 0, bytesSince: Date.now(), bytes: 0 };
     this.state.acceptWebSocket(server);
     server.serializeAttachment(member);
     const others = this.members(server).map(({ member: m }) => ({ id: m.id, last: this.limits.replay ? m.last : '' }));
-    server.send(JSON.stringify({ t: 'welcome', id: member.id, members: others, v: VERSION, rate: this.limits.rate }));
+    server.send(
+      JSON.stringify({ t: 'welcome', id: member.id, members: others, v: VERSION, rate: this.limits.rate, ...(this.limits.bytes ? { bytes: this.limits.bytes } : {}) }),
+    );
     this.broadcast(server, { t: 'join', id: member.id });
     return new Response(null, { status: 101, webSocket: client });
   }
@@ -103,6 +110,18 @@ class Room {
     if (member.count > this.limits.rate) {
       ws.close(1008, 'too many messages');
       return;
+    }
+    if (this.limits.bytes) {
+      // A member from before the byte count starts one now.
+      if (!(now - member.bytesSince <= BYTES_WINDOW_MS)) {
+        member.bytesSince = now;
+        member.bytes = 0;
+      }
+      member.bytes += message.length;
+      if (member.bytes > this.limits.bytes) {
+        ws.close(1008, 'too much data');
+        return;
+      }
     }
     if (this.limits.replay && !message.startsWith('~')) member.last = message;
     ws.serializeAttachment(member);

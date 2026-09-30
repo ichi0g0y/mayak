@@ -299,16 +299,16 @@ func TestSendKeepsUnderTheRelaysLimit(t *testing.T) {
 		t.Fatalf("limits for an old relay = %d, %d", all, few)
 	}
 	for i := 0; i < few; i++ {
-		if !c.take(true) {
+		if !c.take(true, 100) {
 			t.Fatalf("message %d refused", i)
 		}
 	}
-	if c.take(true) {
+	if c.take(true, 100) {
 		t.Fatal("a droppable message over its limit was taken")
 	}
 	// What must go still has room.
 	for i := few; i < all; i++ {
-		if !c.take(false) {
+		if !c.take(false, 100) {
 			t.Fatalf("message %d refused", i)
 		}
 	}
@@ -316,7 +316,29 @@ func TestSendKeepsUnderTheRelaysLimit(t *testing.T) {
 		t.Fatalf("limits for 240 = %d, %d", all, few)
 	}
 	close(c.done)
-	if c.take(false) {
+	if c.take(false, 100) {
+		t.Fatal("a message waiting for room went after Close")
+	}
+}
+
+func TestSendKeepsUnderTheRelaysBytes(t *testing.T) {
+	c := &Client{done: make(chan struct{}), bytes: 6000}
+	if !c.take(false, 4000) {
+		t.Fatal("the first message refused")
+	}
+	// Over five sixths of the relay's bytes: a droppable one is dropped.
+	if c.take(true, 1500) {
+		t.Fatal("a droppable message over the bytes was taken")
+	}
+	if !c.take(true, 1000) {
+		t.Fatal("a droppable message within the bytes was refused")
+	}
+	if byteLimit(0) != relayBytes*5/6 {
+		t.Fatalf("bytes for an old relay = %d", byteLimit(0))
+	}
+	// One that must go waits for room, until Close.
+	close(c.done)
+	if c.take(false, 1500) {
 		t.Fatal("a message waiting for room went after Close")
 	}
 }
