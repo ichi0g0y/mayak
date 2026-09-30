@@ -722,8 +722,7 @@ function drawPins(map, floor) {
 // Following the squad (the squad's column, mapSquadFit): when a member's
 // position comes anew (a later time than seen) on the map of your raid, and
 // that map shows, the map takes in everyone there (you too). Not while a pen
-// is up or a pin is being put; a position alone is shown at the zoom the map
-// has. seenAt: each member's position time last seen (the first sight of a
+// is up or a pin is being put, nor with no one else there (playing alone). seenAt: each member's position time last seen (the first sight of a
 // member counts as new, once the map has been drawn).
 const seenAt = new Map()
 let fitPrimed = false
@@ -746,14 +745,11 @@ function followSquad(map, members) {
   const mine = raidMap()
   if (!mine || mine !== map.key) return
   const here = placed(members).filter((m) => findMap(state.squad?.maps, m.map)?.key === map.key)
-  if (!here.length) return
-  const points = here.map((m) => L.latLng(m.pos.z, m.pos.x))
-  if (points.length === 1) lm.map.setView(points[0], lm.map.getZoom())
-  else
-    lm.map.fitBounds(L.latLngBounds(points), {
-      padding: [90, 90],
-      maxZoom: Math.max(lm.map.getMinZoom() + 2, (map.maxZoom || 6) - 1),
-    })
+  if (here.length < 2) return
+  lm.map.fitBounds(L.latLngBounds(here.map((m) => L.latLng(m.pos.z, m.pos.x))), {
+    padding: [90, 90],
+    maxZoom: Math.max(lm.map.getMinZoom() + 2, (map.maxZoom || 6) - 1),
+  })
 }
 // raidMap is the map of your raid: the Host's own while in one, else where
 // your last position was.

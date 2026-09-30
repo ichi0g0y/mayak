@@ -563,14 +563,14 @@ const onScreen = (l) =>
     return [q.x, q.y]
   })
 // nameTip names the drawer of the squad line under the pointer (p), next to
-// it; your own pen's lines have no name.
+// it, while the squad pen is up; your own lines have no name.
 let tipFrame = 0
 function nameTip(el, p) {
   cancelAnimationFrame(tipFrame)
   tipFrame = requestAnimationFrame(() => {
     let tip = el.querySelector('.map-line-name')
     const line =
-      p && at.map
+      p && at.map && squadMode()
         ? squad
             .shownLines(at.key)
             .filter((l) => l.floor === at.floor && l.by !== squad.myKeyOf())

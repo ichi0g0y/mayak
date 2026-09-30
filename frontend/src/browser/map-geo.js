@@ -151,7 +151,7 @@ export const defaultMapSettings = {
   markerEffect: 'none',
   markerColor: '',
   markerShape: 'arrow',
-  squadFit: false,
+  squadFit: true,
 }
 // The shapes the arrows on the map can take (drawn pointing up in a 24 px
 // box, the member's place at its middle, turned to where they look): an
@@ -201,9 +201,9 @@ export function mapSettingsOf(saved) {
       typeof s.markerColor === 'string' && /^#[0-9a-f]{6}$/i.test(s.markerColor) ? s.markerColor.toLowerCase() : '',
     // The arrows' shape.
     markerShape: Object.hasOwn(markerShapes, s.markerShape) ? s.markerShape : 'arrow',
-    // Following the squad: a position updated on your raid's map brings the
-    // whole squad there into view.
-    squadFit: s.squadFit === true,
+    // Following the squad (on unless turned off): a position updated on your
+    // raid's map brings the whole squad there into view.
+    squadFit: s.squadFit !== false,
   }
 }
 
