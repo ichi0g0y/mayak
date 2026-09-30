@@ -553,7 +553,7 @@ function hostStatus(s) {
 // setting on the Host, else this browser's choice or the one the item came with.
 function itemSite() {
   if (state.connection.mode === 'local') return hostQuestSite
-  return state.questSite === 'host' ? item?.questSite || 'tarkov-dev' : state.questSite
+  return state.questSite === 'host' ? remoteHost?.questSite || item?.questSite || 'tarkov-dev' : state.questSite
 }
 // Views are placed in whole pixels.
 const anchorY = (data) => Math.round(Number.isFinite(data?.anchor) ? data.anchor : innerHeight / 2)
@@ -792,7 +792,11 @@ const peer = new /** @type {any} */ (globalThis).MayakLink({
       if (state.connection.mode === 'local' && squad.available)
         peer.sendSquad({ code: state.squadCode, name: state.squadName, color: state.squadColor, initial: true })
       // The map view's filters and settings: the Host's for its Clients.
-      if (state.connection.mode === 'local') shareMap(true)
+      if (state.connection.mode === 'local') {
+        shareMap(true)
+        sharePrefs()
+        shareBookmarks(true)
+      }
       if (state.connection.mode === 'local') void shareHostInfo()
     }
     update()
@@ -801,6 +805,8 @@ const peer = new /** @type {any} */ (globalThis).MayakLink({
   onSquad: (s) => void enqueue(() => receiveSquad(s)),
   onHost: (h) => void enqueue(() => receiveHost(h)),
   onMap: (m) => void enqueue(() => receiveMapView(m)),
+  onPrefs: (p) => void enqueue(() => receivePrefs(p)),
+  onBookmarks: (b) => void enqueue(() => receiveBookmarks(b)),
   // The Host ended the pairing: this Client forgets it too.
   onUnpair: () => void enqueue(() => unpair(false)),
 })
@@ -838,6 +844,7 @@ async function shareHostInfo() {
   try {
     peer.sendHost({
       mode: String((await go.BrowserCatalogMode()) || ''),
+      questSite: hostQuestSite,
       map: host?.map || '',
       raid: !!host?.raid,
       position: host?.position || null,
@@ -847,9 +854,9 @@ async function shareHostInfo() {
 const hostPlace = () => JSON.stringify([host?.map || '', !!host?.raid, host?.position || null])
 let hostMode = ''
 let remoteHost = null
-async function receiveHost({ mode, map, raid, position }) {
+async function receiveHost({ mode, questSite, map, raid, position }) {
   if (state.connection.mode !== 'client') return
-  remoteHost = { map, raid, position }
+  remoteHost = { mode, questSite, map, raid, position }
   update()
   if (mode === hostMode) return
   hostMode = mode
@@ -866,6 +873,13 @@ async function receiveSquad({ code, name, initial, color }) {
   if (!squad.available) return
   // The squad colour follows the other PC's too (the Host reports it).
   const recolor = color !== undefined && color !== state.squadColor && (color === '' || squadColorOf(color) === color)
+  // The display name follows the other PC's too (the Host's when they
+  // connect): both are the same player.
+  const rename = typeof name === 'string' && name && name !== state.squadName
+  if (rename) {
+    state.squadName = name
+    if (state.squadCode) await go.SquadRename(name).catch(() => {})
+  }
   if (recolor) {
     state.squadColor = color
     await go.SquadSetColor(color)
@@ -881,7 +895,7 @@ async function receiveSquad({ code, name, initial, color }) {
     state.squadCode = ''
   } else if (code !== state.squadCode) {
     await squadJoin(code, state.squadName || name, false)
-  } else if (!recolor) return
+  } else if (!recolor && !rename) return
   // The Host passes a Client's word on to its other Clients.
   if (state.connection.mode === 'local') shareSquad()
   await changed()
@@ -896,6 +910,65 @@ async function receiveMapView({ hidden, collapsed, settings }) {
   state.mapHidden = hiddenOf(hidden)
   state.mapCollapsed = hiddenOf(collapsed)
   state.mapSettings = mapSettingsOf(settings)
+  // The Host passes a Client's on to its other Clients.
+  if (state.connection.mode === 'local') shareMap()
+  update()
+  await persist()
+}
+
+// The preferences both PCs share (sharedPrefs): language, theme, clock, how
+// tasks open, translating the wiki, the bosses' mode; and the task site
+// (the Host's setting: a Client choosing one sets the Host's). The Host's
+// win when they connect; a change on either PC goes to the other (perform
+// compares them before and after), and one taken is not told back.
+const sharedPrefs = () => ({
+  language: state.language,
+  theme: state.theme,
+  clock: state.clock,
+  taskMode: state.taskMode,
+  translateWiki: state.translateWiki,
+  bossMode: state.bossMode,
+})
+const sharePrefs = () =>
+  peer.sendPrefs({ ...sharedPrefs(), ...(state.connection.mode === 'local' ? { questSite: hostQuestSite } : {}) })
+async function receivePrefs(p) {
+  const keys = Object.keys(sharedPrefs())
+  const next = restore({ ...state, ...Object.fromEntries(keys.filter((k) => k in p).map((k) => [k, p[k]])) })
+  const before = JSON.stringify(sharedPrefs())
+  for (const k of keys) state[k] = next[k]
+  if (before !== JSON.stringify(sharedPrefs())) void loadBosses()
+  // A Client's choice of task site is the Host's setting.
+  const site = ['tarkov-dev', 'official-wiki', 'japanese-wiki'].includes(p.questSite) ? p.questSite : ''
+  if (state.connection.mode === 'local' && platform === 'windows' && site && site !== hostQuestSite) {
+    try {
+      const s = await go.GetSettings()
+      s.questSite = site
+      await go.PersistSettings(s)
+      hostQuestSite = site
+      void shareHostInfo()
+    } catch {}
+  }
+  if (state.connection.mode === 'local') sharePrefs()
+  update()
+  await persist()
+}
+// The bookmarks: the Host's and a Client's put together when they connect
+// (the Host's win for one both have; the Client's own join them and go back
+// to the Host), then the list as changed on either PC.
+const shareBookmarks = (initial = false) => peer.sendBookmarks({ list: state.bookmarks, initial })
+async function receiveBookmarks({ list, initial }) {
+  const theirs = restore({ bookmarks: list, bookmarkRevision: state.bookmarkRevision }).bookmarks
+  let next = theirs
+  if (initial && state.connection.mode === 'client') {
+    const ids = new Set(theirs.map((b) => b.id))
+    next = [...theirs, ...state.bookmarks.filter((b) => !ids.has(b.id))]
+  }
+  const changed = JSON.stringify(next) !== JSON.stringify(state.bookmarks)
+  state.bookmarks = next
+  if (initial && next.length > theirs.length) shareBookmarks()
+  if (!initial && state.connection.mode === 'local') shareBookmarks()
+  if (!changed) return
+  preloadIcons(state.bookmarks.filter((b) => b.sidebar))
   update()
   await persist()
 }
@@ -1247,7 +1320,31 @@ const ready = (async () => {
   void show().catch(messageError)
   return snapshot()
 })()
+// perform runs an action; what both PCs share that it changed (the
+// preferences, the bookmarks; a Client's choice of task site) goes to the
+// other PC (receivePrefs, receiveBookmarks).
 async function perform(type, data) {
+  const prefs = JSON.stringify(sharedPrefs())
+  const marks = JSON.stringify(state.bookmarks)
+  const site = state.questSite
+  try {
+    return await performOne(type, data)
+  } finally {
+    if (JSON.stringify(sharedPrefs()) !== prefs) sharePrefs()
+    if (JSON.stringify(state.bookmarks) !== marks) shareBookmarks()
+    // A Client choosing a task site chooses the Host's, and follows it.
+    if (
+      state.connection.mode === 'client' &&
+      state.questSite !== site &&
+      state.questSite !== 'host' &&
+      peer.connected
+    ) {
+      peer.sendPrefs({ questSite: state.questSite })
+      state.questSite = 'host'
+    }
+  }
+}
+async function performOne(type, data) {
   const tab = state.tabs.find((t) => t.id === state.active)
   switch (type) {
     case 'state':
@@ -1591,6 +1688,7 @@ async function perform(type, data) {
       if (!name) return snapshot()
       state.squadName = name
       await go.SquadRename(name)
+      shareSquad()
       break
     }
     case 'squadCopy':
@@ -1872,7 +1970,12 @@ async function perform(type, data) {
       const id = String(data?.id || '')
       const urls = id ? await go.QuestSiteURLs(id, '') : null
       if (!urls || !Object.keys(urls).length) return snapshot()
-      const site = state.connection.mode === 'local' ? hostQuestSite : 'tarkov-dev'
+      const site =
+        state.connection.mode === 'local'
+          ? hostQuestSite
+          : state.questSite === 'host'
+            ? remoteHost?.questSite || 'tarkov-dev'
+            : state.questSite
       if (!receiveTask(state, { id, name: String(data?.name || id).slice(0, 200), site, urls })) return snapshot()
       break
     }
@@ -1943,6 +2046,7 @@ async function perform(type, data) {
       await go.PersistSettings(s)
       hostQuestSite = data
       state.questSite = 'host'
+      void shareHostInfo()
       break
     }
     case 'itemClose':

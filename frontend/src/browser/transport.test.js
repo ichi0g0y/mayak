@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { limitsOf, paceWait } from './transport.js'
+import { hostInfoOf, limitsOf, paceWait } from './transport.js'
 
 const { linkSecrets, newLinkKey, validLinkKey } = /** @type {any} */ (globalThis)
 
@@ -37,4 +37,23 @@ test('the link keeps to five sixths of the limits the relay tells', () => {
   assert.equal(paceWait(heavy, 400, limits, 200), 0)
   assert.equal(paceWait(heavy, 450, limits, 200), 4800)
   assert.equal(paceWait(heavy, 450, limits, 6000), 0)
+})
+
+test('the Host info keeps what is sound: mode, task site, map, raid and position', () => {
+  const h = hostInfoOf({
+    mode: 'pve',
+    questSite: 'japanese-wiki',
+    map: 'the-lab',
+    raid: true,
+    position: { x: 1, y: 2, z: 3, rot: 90, at: 'now' },
+  })
+  assert.deepEqual(h, {
+    mode: 'pve',
+    questSite: 'japanese-wiki',
+    map: 'the-lab',
+    raid: true,
+    position: { x: 1, y: 2, z: 3, rot: 90, at: 'now' },
+  })
+  const bad = hostInfoOf({ mode: 'pvp', questSite: 'host', map: 'The Lab!', raid: 'yes', position: { x: 'a' } })
+  assert.deepEqual(bad, { mode: 'pvp', questSite: '', map: '', raid: false, position: null })
 })

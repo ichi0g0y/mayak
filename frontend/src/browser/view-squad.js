@@ -302,6 +302,8 @@ function colorPicker() {
 // pictureSetting: whether the character's picture from the Overall screen
 // goes to the squad (to the others' cards).
 function pictureSetting() {
+  // The Host's alone: it reads the character screen (a Client follows it).
+  if (state.platform !== 'windows' || state.connection?.mode !== 'local') return ''
   return `<label class="squad-picture-setting"><input type="checkbox" data-squad-picture ${state.squadPicture !== false ? 'checked' : ''}><span>${esc(t('squadPictureShare'))}<small>${esc(t('squadPictureHint'))}</small></span></label>`
 }
 document.addEventListener('change', (event) => {

@@ -159,7 +159,7 @@ function itemPageLink(item) {
     state.localHost && state.connection.mode === 'local'
       ? state.hostQuestSite
       : state.questSite === 'host'
-        ? item.questSite
+        ? state.hostView?.questSite || item.questSite
         : state.questSite
   const url = itemPageURL(item, site)
   const label = siteChoices().find(([key]) => key === site)?.[1] || 'tarkov.dev'

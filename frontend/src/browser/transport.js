@@ -31,6 +31,7 @@ export function hostInfoOf(h) {
       : null
   return {
     mode: String(h.mode || '').slice(0, 20),
+    questSite: ['tarkov-dev', 'official-wiki', 'japanese-wiki'].includes(h.questSite) ? h.questSite : '',
     map: typeof h.map === 'string' && /^[a-z0-9-]{0,60}$/.test(h.map) ? h.map : '',
     raid: h.raid === true,
     position,
@@ -116,9 +117,13 @@ class MayakLink {
     onUnpair = () => {},
     onHost = /** @type {(host:{mode:string})=>void} */ (() => {}),
     onMap = /** @type {(map:{hidden:any[],collapsed:any[],settings:object,initial:boolean})=>void} */ (() => {}),
+    onPrefs = /** @type {(prefs:object)=>void} */ (() => {}),
+    onBookmarks = /** @type {(list:{list:any[],initial:boolean})=>void} */ (() => {}),
     relay = LINK_RELAY,
   } = {}) {
     this.onMap = onMap
+    this.onPrefs = onPrefs
+    this.onBookmarks = onBookmarks
     this.onState = onState
     this.onMessage = onMessage
     this.onHost = onHost
@@ -293,6 +298,20 @@ class MayakLink {
         })
       return
     }
+    // The preferences both PCs share (language, theme, the task site…) and
+    // the bookmarks go both ways as well (sendPrefs, sendBookmarks; checked
+    // where they are taken).
+    if (message.event === 'prefs:sync') {
+      const p = message.args?.[0]
+      if (p && typeof p === 'object') this.onPrefs(p)
+      return
+    }
+    if (message.event === 'bookmarks:sync') {
+      const b = message.args?.[0]
+      if (b && typeof b === 'object' && Array.isArray(b.list))
+        this.onBookmarks({ list: b.list.slice(0, 500), initial: b.initial === true })
+      return
+    }
     // What the Host is (its game mode), for its Clients to follow.
     if (message.event === 'host:info' && this.role === 'client' && message.r === 'host') {
       const h = message.args?.[0]
@@ -355,6 +374,18 @@ class MayakLink {
   sendSquad(squad) {
     if (!this.connected) return false
     void this.say(this.ws, { event: 'squad:sync', args: [squad] }).catch(() => {})
+    return true
+  }
+  // sendPrefs tells the other PC the preferences both share; sendBookmarks
+  // the bookmarks (initial: the Host's when they connect).
+  sendPrefs(prefs) {
+    if (!this.connected) return false
+    void this.say(this.ws, { event: 'prefs:sync', args: [prefs] }).catch(() => {})
+    return true
+  }
+  sendBookmarks(bookmarks) {
+    if (!this.connected || JSON.stringify(bookmarks).length > 100_000) return false
+    void this.say(this.ws, { event: 'bookmarks:sync', args: [bookmarks] }).catch(() => {})
     return true
   }
   // sendMap tells the other PC the map view's filters and settings;

@@ -202,7 +202,13 @@ function indicators() {
 // the setting it comes from (Recognition), as the connection's opens
 // Connection.
 function gameModeBadge() {
-  const mode = { pvp: 'regular', pve: 'pve', seasonal: 'pvp-season' }[state.host?.mode || '']
+  // A Client shows its Host's (the catalog's mode, as the Host told it).
+  const told = state.hostView?.mode
+  const mode = state.host
+    ? { pvp: 'regular', pve: 'pve', seasonal: 'pvp-season' }[state.host.mode || '']
+    : ['regular', 'pve', 'pvp-season'].includes(told)
+      ? told
+      : ''
   if (!mode) return ''
   const name = t('gameMode_' + mode)
   return `<span class="game-mode-badge" data-mode="${mode}" tabindex="0" role="button" data-action="settingsAt" data-id="recognition" title="${esc(t('gameModeNow'))}: ${esc(name)}">${esc(name)}</span>`

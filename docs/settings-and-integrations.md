@@ -313,6 +313,14 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - **入力欄**: Client の接続コードは 1 桁ずつの 8 つの枠（4 桁ずつ。`code-boxes.js`、分隊コードと同じ部品）に打ちます。打つと次の枠へ進み、Backspace で前の枠に戻り、貼り付けると枠を埋めます。8 桁目を打つと、そのままつなぎます。
 - **Host のゲームモード**: Host は、つながったときとゲームモード（TarkovTracker やログから判断したもの）が変わったときに、自分のモードを Client に送ります（`host:info`、`BrowserCatalogMode`）。Client の Go 側はそれを `BrowserSetHostMode` で受け取り、ボスと Goons、マップの印、アイテムの検索を Host と同じモードで読みます（`effectiveCatalogMode`。Client にはゲームのログが無いので、自分では判断しない）。Host が最新の状態を持ち、Client はそれを受け取って見る、という考え方です。
 - **マップのフィルターと設定**: マップのフィルター（`mapHidden`）、畳んだまとまり（`mapCollapsed`）、マップの設定（`mapSettings`）は、両方向にそろえます（`map:sync`）。つながったときは Host のものを Client が受け取って復元し（`initial`）、どちらかで変えると、そのたびに相手に送ります（`shareMap`。受けた側は `receiveMapView` で入れ替えて保存し、送り返さない）。
+- **共有する設定**: 基本は「Client は Host の設定を引き継ぎ、Client で変えた共有すべきものは Host にも伝える」です。そろえるのは次のとおりです。
+  - **好み**（`prefs:sync`）: 言語、テーマ、時計、タスクの開き方（`taskMode`）、公式 Wiki の翻訳（`translateWiki`）、ボスのモード（`bossMode`）。つながったときは Host のものを Client が受け、どちらかで変えると（`perform` が前後を比べる）相手に送ります（`receivePrefs`。受けたものは送り返さず、Host はほかの Client に回す）。
+  - **タスクの表示先**: Host の設定（`questSite`）を `host:info` で Client に知らせ、Client は「Host の設定」のときタスク・アイテム欄・マップのタスクの印でそれを使います。Client で表示先を選ぶと、それが Host の設定になり（`prefs:sync` の `questSite`。Host は `PersistSettings` して知らせ直す）、Client は「Host の設定」に戻ります。
+  - **ブックマーク**（`bookmarks:sync`）: つながったときは Host の一覧に Client だけのものを足して（同じ id は Host のもの）、足したものがあれば Host に返し、その後はどちらかで変えた一覧を送ります（100 KB まで）。
+  - **分隊**（`squad:sync`）: 分隊コード・分隊カラーに加えて表示名も（同じプレイヤーなので）。キャラクター画像を見せるかどうかは Host だけの設定です（Client には出さない）。
+  - **マップ**（`map:sync`）: 下記。Host は Client から受けた変更をほかの Client にも回します。
+  - **この PC のもの**: 配置・サイドバーの幅や畳み方・タブ・ウインドウ、接続の設定、更新チャンネル、フォルダ・OCR・通知音・TarkovTracker のキーなど Host だけが使うものは、そろえません。
+  - Client のゲームモードの表示は、Host が知らせたモードで出します。
 - **Host のマップと位置**: 同じ `host:info` に、Host が遊んでいるマップ（`map`）、レイド中か（`raid`）、最後の位置（`position`: `x`・`y`・`z`・`rot`・`at`）も載せ、どれかが変わるたびに送り直します（`shareHostInfo`。受ける側は `transport.js` の `hostInfoOf` で確かめる）。Client はそれを `hostView` に持ち、マップ画面は Host 自身と同じように、そのマップを出し（自動のとき）、分隊に入っていなければ Host の位置を自分の矢印として出します（`view-map.js` の `hostOf`。分隊では Host は仲間の 1 人として出るので出さない）。
 - **お互いの PC の名前**: つながると、お互いのコンピューター名（`BrowserHostname`、`os.Hostname`）を出します。Client には「Host の PC」、Host には「つながっている PC」（Client ごと）、両方に「この PC」です。名前はリンクの `hello` に入れて送ります（暗号化される。名前のない古い版の相手は出さない）。
 - **伏せ字**: 8 桁の接続コード、長い招待コード、Client の入力欄は「•」で出し、横の目のボタンで表示します（[browser-shell.md](browser-shell.md#マップ) の分隊コードと同じ `revealButton`）。コピーのボタンは伏せ字のままでも本当のコードをコピーします。
