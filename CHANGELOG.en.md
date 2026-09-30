@@ -46,6 +46,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### Fixed
 
+- An item's picture that does not load (the dogtag case's, say) is asked for once more, and shows as a "?" when it still fails, instead of a broken image.
+
 - Squads: after leaving a raid, your squad colour no longer turns back to automatic and your pen lines, pins and shares still reach the squad (nightly). Starting a new raid takes your last raid's position off the maps.
 - Squads: on start-up or joining again, the squadmates already there no longer go missing from the list until someone else joins or leaves (nightly).
 - Closing settings did nothing when there was no tab to go back to; a new tab opens instead.

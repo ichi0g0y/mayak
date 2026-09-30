@@ -467,6 +467,8 @@ button.need-row:hover .need-name{color:var(--accent)}
 .monitor-toggle:hover{color:var(--text)}
 /* TarkovTracker's state (trackerIndicator): green in use, amber on its way,
    red missing or failing, grey off. */
+/* An item's picture that did not load. */
+.item-icon-missing{display:grid;place-items:center;background:var(--surface-2,#2a2d33);border-radius:6px;color:var(--muted);font-weight:700}
 .tracker-status{position:relative;flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--muted);cursor:pointer}
 /* The tasks to complete on TarkovTracker, counted on its indicator. */
 .tracker-count{position:absolute;top:-3px;right:-5px;min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:var(--accent);color:var(--bg);font:700 9.5px/15px system-ui,sans-serif;text-align:center}
@@ -496,7 +498,7 @@ body[data-item=left] .item-resizer::after{left:auto;right:0}
 .item-results{list-style:none;margin:6px 0 0;padding:0;max-height:min(420px,calc(100vh - 140px));overflow:auto;scrollbar-width:thin}
 .item-search-pop .item-empty{margin:8px 4px 2px}
 .item-results button{display:flex;align-items:center;justify-content:flex-start;gap:9px;width:100%;padding:5px 6px;border:0;border-radius:6px;font-weight:400;text-align:left}
-.item-results img,.result-icon{width:30px;height:30px;flex:none;object-fit:contain;display:grid;place-items:center;color:var(--muted)}
+.item-results img,.item-results .item-icon-missing,.result-icon{width:30px;height:30px;flex:none;object-fit:contain;display:grid;place-items:center;color:var(--muted)}
 .item-start{margin:8px 2px;color:var(--muted);font-size:12.5px;line-height:1.7}
 /* While prices load the refresh button spins in full color. */
 .item-refresh[aria-busy=true]{color:var(--accent);cursor:progress}

@@ -31,6 +31,39 @@ import (
 // listMatchMin is how sure a row's match must be.
 const listMatchMin = .85
 
+// Tasks screenshots come one after another while the lists are gone
+// through, and a new screenshot stops the last one's analysis. So a Tasks
+// screenshot's list is queued (queueTaskList) as soon as it is found to be
+// one, and read in turn, whatever comes next.
+type taskListJob struct {
+	path     string
+	settings config.Settings
+}
+
+// queueTaskList queues path's list for reading.
+func (a *App) queueTaskList(path string, settings config.Settings) {
+	a.taskListOnce.Do(func() {
+		a.taskLists = make(chan taskListJob, 256)
+		go func() {
+			for job := range a.taskLists {
+				if a.quitting.Load() {
+					return
+				}
+				ctx := a.ctx
+				if ctx == nil {
+					ctx = context.Background()
+				}
+				a.scanTaskList(ctx, job.path, job.settings)
+			}
+		}()
+	})
+	select {
+	case a.taskLists <- taskListJob{path, settings}:
+	default:
+		a.addLog("Warn", "TarkovTracker", "Too many Tasks screenshots waiting; this one's list is skipped")
+	}
+}
+
 func completablePath() string {
 	p, _ := appdir.Path("completable-tasks.json")
 	return p

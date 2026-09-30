@@ -98,6 +98,9 @@ type App struct {
 	faviconOnce   sync.Once
 	favicons      *faviconCache
 	trackerClient *tracker.Client
+	// taskLists: Tasks screenshots whose list waits to be read (app_task_list.go).
+	taskLists    chan taskListJob
+	taskListOnce sync.Once
 	// completable: tasks done in the game, not on TarkovTracker, per EFT
 	// profile (app_task_list.go); nil until read.
 	completable map[string]map[string]model.CompletableTask

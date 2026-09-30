@@ -194,10 +194,11 @@ func (a *App) handleCoordinateScreenshot(ctx context.Context, sequence uint64, p
 	}
 	detected, detectErr := taskdetect.AnalyzeFile(path, taskdetect.Preset2560)
 	if detectErr == nil && detected.IsTasks {
+		// The list goes in its own queue first (app_task_list.go).
+		a.queueTaskList(path, settings)
 		analysis, analysisErr := a.recognizeQuest(ctx, settings, detected.Crop)
 		if analysisErr == nil && topConfidence(analysis.matches) >= .78 {
 			a.handleTaskAnalysis(ctx, sequence, path, settings, detected, &analysis)
-			a.scanTaskList(ctx, path, settings)
 			return
 		}
 		a.addLog("Debug", "Recognition", fmt.Sprintf("Rejected Tasks-like raid image (layout=%s score=%.2f)", detected.Layout, detected.Score))

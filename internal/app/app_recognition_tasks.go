@@ -37,10 +37,12 @@ func (a *App) handleTaskScreenshot(ctx context.Context, sequence uint64, path st
 		a.updateAnalysisError(sequence, path, err)
 		return
 	}
-	a.handleTaskAnalysis(ctx, sequence, path, settings, detected, nil)
+	// The list goes in its own queue first: a next screenshot may stop this
+	// analysis before its end.
 	if detected.IsTasks {
-		a.scanTaskList(ctx, path, settings)
+		a.queueTaskList(path, settings)
 	}
+	a.handleTaskAnalysis(ctx, sequence, path, settings, detected, nil)
 }
 
 type questRecognition struct {

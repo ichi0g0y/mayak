@@ -1,6 +1,28 @@
 import { price, chartSeries, chartPath, itemPanelHeights, itemPanelWidths, itemPageURL, bestSale, age } from './item.js'
 import { t, state, esc, icon, siteChoices, render, action, clickHandlers } from './shell-core.js'
 
+// An item's picture that did not load (a failed download the page's cache
+// keeps, say) is asked for once more under another address (a query the
+// server ignores, so the cache does not answer), then shows as a "?". The
+// failures are remembered by address, as each render sets the picture again.
+const brokenIcons = new Map() // address → 'retry' | 'gone'
+function itemIconHTML(url, cls, extra = '') {
+  const broken = brokenIcons.get(url)
+  if (broken === 'gone') return `<span class="${cls} item-icon-missing" aria-hidden="true">?</span>`
+  const src = broken === 'retry' ? url + (url.includes('?') ? '&' : '?') + 'mayak-retry=1' : url
+  return `<img class="${cls}" data-item-icon="${esc(url)}" src="${esc(src)}" alt="" referrerpolicy="no-referrer" ${extra}>`
+}
+document.addEventListener(
+  'error',
+  (event) => {
+    const url = /** @type {HTMLElement} */ (event.target)?.dataset?.itemIcon
+    if (!url) return
+    brokenIcons.set(url, brokenIcons.get(url) === 'retry' ? 'gone' : 'retry')
+    render()
+  },
+  true,
+)
+
 // The item panel: details, prices and the price chart, the item search.
 
 // The chart's range is a per-viewer convenience, remembered in this browser.
@@ -121,7 +143,7 @@ function itemSearchPopup() {
   const search = state.itemSearch || { query: '', results: [] }
   const results = search.query.trim()
     ? search.results.length
-      ? `<ul class="item-results">${search.results.map((r) => `<li><button data-action="itemSelect" data-id="${esc(r.id)}" title="${esc(r.name)}">${r.iconUrl ? `<img src="${esc(r.iconUrl)}" alt="" referrerpolicy="no-referrer" loading="lazy">` : `<span class="result-icon">${icon('package')}</span>`}<span class="need-name">${esc(itemName(r))}<small>${esc(r.shortName)}</small></span></button></li>`).join('')}</ul>`
+      ? `<ul class="item-results">${search.results.map((r) => `<li><button data-action="itemSelect" data-id="${esc(r.id)}" title="${esc(r.name)}">${r.iconUrl ? itemIconHTML(r.iconUrl, 'result-img', 'loading="lazy"') : `<span class="result-icon">${icon('package')}</span>`}<span class="need-name">${esc(itemName(r))}<small>${esc(r.shortName)}</small></span></button></li>`).join('')}</ul>`
       : `<p class="item-empty">${esc(t('itemNoResults'))}</p>`
     : ''
   return `<div class="item-search-pop" role="dialog" aria-label="${esc(t('itemSearch'))}"><label class="item-search">${icon('search')}<input id="item-search" type="search" autocomplete="off" spellcheck="false" placeholder="${esc(t('itemSearch'))}" aria-label="${esc(t('itemSearch'))}" value="${esc(search.query)}"></label>${results}</div>`
@@ -169,7 +191,7 @@ function itemDetails() {
   return `
  <div class="item-head">${(() => {
    const link = itemPageLink(item),
-     inner = `${item.iconUrl ? `<img class="item-icon" src="${esc(item.iconUrl)}" alt="" referrerpolicy="no-referrer">` : `<span class="item-icon">${icon('package')}</span>`}<span class="item-title"><h2 title="${esc(item.name)}">${esc(itemName(item))}</h2><span>${esc(localName(item.shortNames, item.shortName))} · ${item.width}×${item.height} · ${esc(modeNames[item.mode] || item.mode)}</span></span>`
+     inner = `${item.iconUrl ? itemIconHTML(item.iconUrl, 'item-icon') : `<span class="item-icon">${icon('package')}</span>`}<span class="item-title"><h2 title="${esc(item.name)}">${esc(itemName(item))}</h2><span>${esc(localName(item.shortNames, item.shortName))} · ${item.width}×${item.height} · ${esc(modeNames[item.mode] || item.mode)}</span></span>`
    return link
      ? `<button class="item-page-link ${state.popup?.key === 'item:' + item.id ? 'popup-source' : ''}" data-action="itemPage" data-id="${esc(link.url)}" title="${esc(link.label)}">${inner}</button>`
      : `<div class="item-page-link">${inner}</div>`
