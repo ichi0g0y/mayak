@@ -148,13 +148,14 @@ export const defaultMapSettings = {
 }
 // The shapes the arrows on the map can take (drawn pointing up in a 24 px
 // box, the member's place at its middle, turned to where they look): an
-// arrowhead, a triangle, a dot with a cone ahead (as map apps show you) and
-// a drop.
+// arrowhead, tarkov.dev's (a disc with a white rim and a white arrow on it)
+// and a dot with a cone ahead (as map apps show you). The member's colour
+// fills what has no colour of its own.
 export const markerShapes = {
   arrow: '<path d="M12 2 19 21 12 16.5 5 21z"/>',
-  triangle: '<path d="M12 2.5 20.5 20.5H3.5z"/>',
+  tarkov:
+    '<circle cx="12" cy="12" r="11"/><circle cx="12" cy="12" r="9.6" fill="none" stroke="#fff" stroke-width="1.2"/><path d="M12 18V9.5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><path d="M12 4.6 7.8 10.6h8.4z" fill="#fff" stroke="none"/>',
   dot: '<path d="M12 0 18.2 9.5H5.8z"/><circle cx="12" cy="13" r="6"/>',
-  drop: '<path d="M12 1.5C12 1.5 19 10.2 19 14.5a7 7 0 0 1-14 0C5 10.2 12 1.5 12 1.5z"/>',
 }
 // The effects the arrows on the map can wear, and the colours to draw them
 // in ('' is each member's squad colour).

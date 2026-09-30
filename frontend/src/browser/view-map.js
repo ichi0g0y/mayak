@@ -640,7 +640,6 @@ function drawSquad(map, floor, members) {
     if (age === 'gone') continue
     const id = m.me ? 'me' : m.id
     seen.add(id)
-    const dim = age === 'stale' || floorFor(map, m.pos) !== floor
     const html = squadHTML(m)
     const at = L.latLng(m.pos.z, m.pos.x)
     let marker = lm.squad.get(id)
@@ -654,7 +653,6 @@ function drawSquad(map, floor, members) {
       marker._html = html
       marker.setIcon(L.divIcon({ className: 'squad-marker-icon', html, iconSize: [28, 28], iconAnchor: [14, 14] }))
     }
-    marker.setOpacity(dim ? 0.45 : 1)
   }
   for (const [id, marker] of lm.squad)
     if (!seen.has(id)) {
