@@ -3,7 +3,7 @@ import { Reveal } from '@/components/Reveal'
 import { useT } from '@/i18n'
 import { Section } from './Section'
 
-const icons = [MapIcon, Users, MonitorSmartphone, Target, Globe, StickyNote]
+const icons = [MapIcon, Users, Target, Globe, StickyNote, MonitorSmartphone]
 
 /** What this version brought: the larger changes for someone who used MAYAK before, and the way to the changelog. */
 export function WhatsNew() {
