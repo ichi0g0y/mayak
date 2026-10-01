@@ -23,7 +23,7 @@ export const en: Messages = {
       { title: 'TarkovTracker, more exactly', body: 'Screenshot the character screen’s Overall tab and your level is read and TarkovTracker’s is raised to it. Screenshot the Tasks screen with completed tasks shown and the ones TarkovTracker still has open are listed, to check and then complete all at once.' },
       { title: 'Built-in browser', body: 'Keep tarkov.dev, TarkovTracker and the wiki side by side in tabs, and pin the sites you use most to the sidebar. A page already open in a tab is switched to instead of opened again. The translate button (through Google Translate) translates the page into Japanese or English, and ads are blocked on the Mac too.' },
       { title: 'Snap notes', body: 'A note now opens for viewing first, and “Edit” lets you draw on it. Notes can be made from the map as well, and a note from your squad shows who sent it.' },
-      { title: 'Check the map and tasks on another PC', body: 'Enter the 8-character code shown on the PC you play Tarkov on (the Host) into MAYAK on another computer (a Mac works too) and they connect. Once linked, they connect by themselves from then on, and one Host takes any number of them. The old answer code and STUN setting are no longer needed.' },
+      { title: 'Check the map and tasks on another PC', body: 'Enter the 8-character code shown on the PC you play Tarkov on (the Host) into MAYAK on another computer (a Mac works too) and they connect. Once linked, the position, tasks and items the Host reads show on that PC too. From then on they connect by themselves, and one Host takes any number of them.' },
     ],
     changelog: 'See the whole changelog',
   },
