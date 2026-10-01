@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAtom } from 'jotai'
 import { Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { isLang, languages, useT } from '@/i18n'
 import { langAtom, REPOSITORY } from '@/state'
 import { useDirectDownload } from '@/hooks/useDirectDownload'
@@ -49,10 +49,13 @@ export function Header({ home = true }: { home?: boolean }) {
           </a>
         </nav>
         <div className="flex items-center gap-2">
+          <Button asChild size="sm" className="font-semibold">
+            <a href={direct.asset ? direct.href : `${prefix}#download`} download={direct.download}>{t.nav.downloadButton}</a>
+          </Button>
           <Select value={lang} onValueChange={(value) => isLang(value) && setLang(value)}>
-            <SelectTrigger size="sm" className="bg-transparent" aria-label={t.nav.language}>
-              <Globe className="size-4" />
-              <SelectValue />
+            <SelectTrigger size="sm" chevron={false} className="relative size-8 justify-center bg-transparent p-0" aria-label={t.nav.language}>
+              <Globe className="size-5" />
+              <span className="bg-background absolute right-0 bottom-0 rounded-sm px-0.5 font-mono text-[9px] leading-tight font-bold">{lang.charAt(0).toUpperCase() + lang.slice(1)}</span>
             </SelectTrigger>
             <SelectContent align="end">
               {languages.map((language) => (
@@ -62,9 +65,6 @@ export function Header({ home = true }: { home?: boolean }) {
               ))}
             </SelectContent>
           </Select>
-          <Button asChild size="sm" className="font-semibold">
-            <a href={direct.asset ? direct.href : `${prefix}#download`} download={direct.download}>{t.nav.downloadButton}</a>
-          </Button>
         </div>
       </div>
     </header>
