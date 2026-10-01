@@ -77,6 +77,14 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+  /* Everything that can be pressed shows the pointing hand (Tailwind resets buttons to the arrow). */
+  button:not(:disabled),
+  [role='button'],
+  [role='combobox'],
+  [role='option'],
+  summary {
+    cursor: pointer;
+  }
   ::selection {
     background: var(--primary);
     color: var(--primary-foreground);
