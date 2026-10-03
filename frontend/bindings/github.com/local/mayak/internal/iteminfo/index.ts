@@ -5,6 +5,7 @@ export {
     Flea,
     HideoutNeed,
     Info,
+    Lock,
     PricePoint,
     TaskNeed,
     TraderPrice

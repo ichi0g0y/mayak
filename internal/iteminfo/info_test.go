@@ -27,6 +27,7 @@ func testSnapshot() *catalog.Snapshot {
 		"tasks_ja":   `{"data":{"t1 name":"農業 4"}}`,
 		"hideout":    `{"data":{"s":{"id":"s","name":"s name","levels":[{"id":"s-2","level":2,"itemRequirements":[{"item":"gpu","count":1,"attributes":{"foundInRaid":true}}]}]}}}`,
 		"hideout_en": `{"data":{"s name":"Bitcoin farm"}}`,
+		"maps":       `{"data":{"maps":{"m1":{"normalizedName":"customs","locks":[{"key":"gpu","position":{"x":10,"y":2,"z":-5}},{"key":"other","position":{"x":1,"y":1,"z":1}}]},"m2":{"normalizedName":"bigmap-none","locks":[]}}}}`,
 	}
 	snapshot := &catalog.Snapshot{Resources: map[string]json.RawMessage{}}
 	for name, data := range raw {
@@ -54,6 +55,9 @@ func TestCatalogInfo(t *testing.T) {
 	}
 	if len(info.Hideout) != 1 || info.Hideout[0].Station != "Bitcoin farm" || info.Hideout[0].Level != 2 || info.Hideout[0].LevelID != "s-2" {
 		t.Fatalf("hideout = %+v", info.Hideout)
+	}
+	if len(info.Locks) != 1 || info.Locks[0] != (Lock{Map: "customs", X: 10, Y: 2, Z: -5}) {
+		t.Fatalf("locks = %+v", info.Locks)
 	}
 }
 

@@ -10,6 +10,7 @@ import {
   markerFloor,
   onFloor,
   labelOff,
+  nearestLabel,
   floorOrder,
   markerGroups,
   markerColors,
@@ -59,7 +60,9 @@ import { askShot, bubbles, canShare, dropPin, mapFresh, pinsOn, removePin, share
 // The map and floor chosen ('auto' follows the players), the open panel and
 // the search; focus is a member to centre the map on once their map shows
 // ({map, x, z}).
-const view = { map: 'auto', floor: 'auto', panel: '', search: '', focus: null }
+// spot is a key's lock to make stand out (the item panel's "Used at"): its
+// map and the key's item id.
+const view = { map: 'auto', floor: 'auto', panel: '', search: '', focus: null, spot: null }
 
 // word is a shell word, or '' when there is none for key.
 const word = (key) => {
@@ -133,6 +136,22 @@ const layerLabel = (l) => word('layer_' + l.key) || l.name || l.key
 // floors start at the second (The Lab, Factory, Interchange).
 const baseName = (map) => word('floorBase_' + (map?.key || '')) || t('mapGround')
 const floorName = (map, floor) => (floor ? map?.layers?.find((l) => l.id === floor)?.name || floor : baseName(map))
+
+// lockPlace says where a key's lock is, for the item panel: the map, its
+// floor and the nearest place name ("Customs · 2F · near Dorms"); the map's
+// key and the floor are where the map view goes to show it.
+export function lockPlace(lock) {
+  const map = findMap(state.squad?.maps, lock.map)
+  if (!map) return { key: lock.map, floor: '', text: mapName(lock.map) }
+  const floor = floorFor(map, lock)
+  const near = nearestLabel(map, lock)
+  const parts = [
+    mapName(map.key),
+    map.layers?.length ? floorName(map, floor) : '',
+    near ? t('itemLockNear').replace('%s', near) : '',
+  ]
+  return { key: map.key, floor, text: parts.filter(Boolean).join(' · ') }
+}
 
 // The icon buttons in a column under the zoom buttons: map, filters,
 // search and settings (the squad is in the sidebar and on its page), each opening its panel beside the column,
@@ -526,12 +545,14 @@ function drawThings(map, floor, data) {
   const hidden = state.mapHidden || []
   const settings = state.mapSettings || {}
   const terms = searchTerms(view.search)
+  const spot = view.spot?.map === map.key ? view.spot.id : ''
   const key = [
     map.key,
     floor,
     hidden.join(','),
     [settings.snipers, settings.extracts, settings.activeTasks, settings.fade].join(),
     terms.join(','),
+    spot,
     data?.markers?.length || 0,
     state.language,
   ].join('|')
@@ -556,11 +577,14 @@ function drawThings(map, floor, data) {
       }).addTo(lm.things)
     }
   for (const m of data?.markers || []) {
-    if (!shows(m, hidden)) continue
+    // The lock of the key shown from the item panel stands out, whatever
+    // the filters and the search.
+    const spotted = !!spot && m.layer === 'lock' && m.id === spot
+    if (!spotted && !shows(m, hidden)) continue
     if (settings.activeTasks && m.detail && m.detail.taskId && !m.detail.active) continue
     if ((m.layer.startsWith('spawn') || m.layer.startsWith('loose')) && !inBounds(map, m.x, m.z)) continue
     const hit = terms.length > 0 && found(m, terms)
-    if (terms.length && !hit) continue
+    if (terms.length && !hit && !spotted) continue
     // Off the floor shown, a marker fades behind the others (tarkov.dev),
     // snipers and extracts unless kept by the settings.
     const floorOf = markerFloor(map, m)
@@ -571,7 +595,7 @@ function drawThings(map, floor, data) {
     const size = m.iconSize?.[0] ? m.iconSize : [24, 24]
     // A single loose item shows its own picture, outlined (tarkov.dev).
     const single = m.layer.startsWith('loose') && m.detail?.items?.length === 1
-    const cls = `${hit ? 'map-found' : ''} ${single ? 'map-loot-outline' : ''}`
+    const cls = `${hit || spotted ? 'map-found' : ''} ${spotted ? 'map-spot' : ''} ${single ? 'map-loot-outline' : ''}`
     const icon = named
       ? L.divIcon({
           className: `map-thing-icon ${cls}`,
@@ -586,17 +610,19 @@ function drawThings(map, floor, data) {
           popupAnchor: [0, -size[1] / 2],
           className: `map-thing-img ${cls}`,
         })
-    const zIndexOffset = off
-      ? -9999
-      : m.layer === 'extract_pmc'
-        ? 150
-        : m.layer === 'extract_shared'
-          ? 125
-          : named
-            ? 100
-            : m.layer.startsWith('hazard')
-              ? -100
-              : 0
+    const zIndexOffset = spotted
+      ? 2000
+      : off
+        ? -9999
+        : m.layer === 'extract_pmc'
+          ? 150
+          : m.layer === 'extract_shared'
+            ? 125
+            : named
+              ? 100
+              : m.layer.startsWith('hazard')
+                ? -100
+                : 0
     const marker = L.marker([m.z, m.x], {
       icon,
       keyboard: false,
@@ -1202,6 +1228,7 @@ window.addEventListener('mayak:map-show', (event) => {
   if (!findMap(state.squad?.maps, key)) return
   view.map = key
   view.floor = 'auto'
+  view.spot = d.spot ? { map: key, id: String(d.spot) } : null
   // A view shared: its floor, centre and zoom too.
   if (Number.isFinite(d.x) && Number.isFinite(d.z)) {
     view.floor = typeof d.floor === 'string' ? d.floor : 'auto'
@@ -1213,4 +1240,5 @@ window.addEventListener('mayak:map-show', (event) => {
 window.addEventListener('mayak:map-follow', () => {
   view.map = 'auto'
   view.floor = 'auto'
+  view.spot = null
 })

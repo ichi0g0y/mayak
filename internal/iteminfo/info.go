@@ -38,6 +38,9 @@ type Info struct {
 	Traders []TraderPrice `json:"traders"`
 	Tasks   []TaskNeed    `json:"tasks"`
 	Hideout []HideoutNeed `json:"hideout"`
+	// Locks are the doors and containers a key opens (none for an item that
+	// is not a key, or one tarkov.dev has not placed).
+	Locks []Lock `json:"locks,omitempty"`
 	// Live is true when the prices came from the GraphQL API just now; the
 	// catalog snapshot is at most catalog.RefreshInterval old otherwise.
 	Live bool `json:"live"`
@@ -45,6 +48,15 @@ type Info struct {
 	QuestSite string `json:"questSite,omitempty"`
 	PricedAt  string `json:"pricedAt"`
 	FetchedAt string `json:"fetchedAt"`
+}
+
+// Lock is where a key is used: a map (tarkov.dev's normalizedName) and a
+// place on it in game coordinates.
+type Lock struct {
+	Map string  `json:"map"`
+	X   float64 `json:"x"`
+	Y   float64 `json:"y"`
+	Z   float64 `json:"z"`
 }
 
 type Flea struct {
@@ -272,6 +284,7 @@ type index struct {
 	traders   map[string]string
 	tasks     map[string][]TaskNeed
 	hideout   map[string][]HideoutNeed
+	locks     map[string][]Lock
 }
 
 func build(snapshot *catalog.Snapshot) (*index, error) {
@@ -339,7 +352,7 @@ func build(snapshot *catalog.Snapshot) (*index, error) {
 		}
 		return key
 	}
-	ix := &index{snapshot: snapshot, items: items.Data.Items, text: text.Data, languages: languages, traders: make(map[string]string), tasks: make(map[string][]TaskNeed), hideout: make(map[string][]HideoutNeed)}
+	ix := &index{snapshot: snapshot, items: items.Data.Items, text: text.Data, languages: languages, traders: make(map[string]string), tasks: make(map[string][]TaskNeed), hideout: make(map[string][]HideoutNeed), locks: make(map[string][]Lock)}
 	for id, trader := range traders.Data {
 		ix.traders[id] = localized(traderText.Data, trader.Name)
 	}
@@ -374,6 +387,43 @@ func build(snapshot *catalog.Snapshot) (*index, error) {
 				ix.hideout[r.Item] = append(ix.hideout[r.Item], HideoutNeed{LevelID: level.ID, Station: localized(hideoutText.Data, station.Name), Level: level.Level, Count: int(r.Count), FoundInRaid: r.Attributes.FoundInRaid})
 			}
 		}
+	}
+	// The maps are optional: without them a key only has no places.
+	var maps struct {
+		Data struct {
+			Maps map[string]struct {
+				NormalizedName string `json:"normalizedName"`
+				Locks          []struct {
+					Key      string `json:"key"`
+					Position struct {
+						X float64 `json:"x"`
+						Y float64 `json:"y"`
+						Z float64 `json:"z"`
+					} `json:"position"`
+				} `json:"locks"`
+			} `json:"maps"`
+		} `json:"data"`
+	}
+	if decode("maps", &maps) == nil {
+		for _, m := range maps.Data.Maps {
+			for _, l := range m.Locks {
+				if l.Key != "" && m.NormalizedName != "" {
+					ix.locks[l.Key] = append(ix.locks[l.Key], Lock{Map: m.NormalizedName, X: l.Position.X, Y: l.Position.Y, Z: l.Position.Z})
+				}
+			}
+		}
+	}
+	for _, locks := range ix.locks {
+		sort.Slice(locks, func(i, j int) bool {
+			a, b := locks[i], locks[j]
+			if a.Map != b.Map {
+				return a.Map < b.Map
+			}
+			if a.X != b.X {
+				return a.X < b.X
+			}
+			return a.Z < b.Z
+		})
 	}
 	for _, needs := range ix.tasks {
 		sort.Slice(needs, func(i, j int) bool { return needs[i].Name < needs[j].Name })
@@ -424,6 +474,7 @@ func (ix *index) info(id string) (Info, bool) {
 	sortTraders(info.Traders)
 	info.Tasks = append([]TaskNeed(nil), ix.tasks[id]...)
 	info.Hideout = append([]HideoutNeed(nil), ix.hideout[id]...)
+	info.Locks = append([]Lock(nil), ix.locks[id]...)
 	return info, true
 }
 

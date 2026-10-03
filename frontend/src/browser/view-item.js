@@ -1,5 +1,6 @@
 import { price, chartSeries, chartPath, itemPanelHeights, itemPanelWidths, itemPageURL, bestSale, age } from './item.js'
 import { t, state, esc, icon, siteChoices, render, action, clickHandlers } from './shell-core.js'
+import { lockPlace } from './view-map.js'
 
 // An item's picture that did not load (a failed download the page's cache
 // keeps, say) is asked for once more under another address (a query the
@@ -165,6 +166,17 @@ function itemPageLink(item) {
   const label = siteChoices().find(([key]) => key === site)?.[1] || 'tarkov.dev'
   return url ? { url, label: `${t('openItemPage')} · ${label}` } : null
 }
+// A key's locks, one row each (night Factory and Ground Zero 21 share their
+// map's), where the map view shows them.
+function itemLocks(item) {
+  const seen = new Set()
+  return (item.locks || [])
+    .map((l) => ({ ...l, place: lockPlace(l) }))
+    .filter((l) => {
+      const k = `${l.place.key}|${Math.round(l.x)}|${Math.round(l.z)}`
+      return !seen.has(k) && seen.add(k)
+    })
+}
 function itemDetails() {
   const item = state.item
   const lang = state.language,
@@ -198,6 +210,17 @@ function itemDetails() {
  })()}</div>
  <p class="item-fresh ${item.live ? 'live' : ''}"><span class="fresh-dot"></span>${esc(item.live ? t('itemLive') : t('itemCatalog'))} · ${esc(t('itemPriced'))} <span class="item-age" data-time="${esc(item.pricedAt)}">${esc(age(item.pricedAt, lang))}</span><button class="item-refresh" data-action="itemRefresh" title="${esc(t('itemRefresh'))}" aria-label="${esc(t('itemRefresh'))}" aria-busy="${!!state.itemBusy}">${icon('reload', state.itemBusy ? 'icon spin' : 'icon')}</button></p>
  ${best ? `<div class="item-best"><span>${esc(t('bestSale'))} · ${esc(best.where === 'flea' ? t('flea') : best.where)}</span><strong>${money(best.priceRub)}</strong><small>${money(best.priceRub / slots)} / ${esc(t('perSlot'))}</small></div>` : ''}
+ ${(() => {
+   const locks = itemLocks(item)
+   return locks.length
+     ? `<section class="item-section"><h3>${esc(t('itemLocks'))}<span class="count">${locks.length}</span></h3><ul class="item-needs">${locks
+         .map(
+           (l, i) =>
+             `<li><button class="need-row" data-action="itemLock" data-id="${i}" title="${esc(t('itemLockShow'))}">${icon('map')}<span class="need-name">${esc(l.place.text)}</span></button></li>`,
+         )
+         .join('')}</ul></section>`
+     : ''
+ })()}
  ${itemChart(item)}
  <section class="item-section"><h3>${esc(t('flea'))}</h3>${flea ? row(t('fleaLow'), money(flea.lastLow)) + row(t('fleaAvg'), money(flea.avg24h)) + (flea.low24h && flea.high24h ? row(t('fleaRange'), `${money(flea.low24h)} – ${money(flea.high24h)}`) : '') + row(t('fleaChange'), `${change > 0 ? '+' : ''}${change.toFixed(1)}%`, change > 0 ? 'up' : change < 0 ? 'down' : '') + row(t('fleaOffers'), flea.offers.toLocaleString()) + (flea.minLevel ? row(t('fleaLevel'), 'Lv.' + flea.minLevel) : '') : `<p class="item-empty">${t('noFlea')}</p>`}</section>
  <section class="item-section"><h3>${esc(t('traders'))}</h3>${item.traders.map((s, i) => row(s.trader, s.currency === 'RUB' ? money(s.price) : `${money(s.price, s.currency)} <small>(${money(s.priceRub)})</small>`, i === 0 ? 'best' : '')).join('') || `<p class="item-empty">${t('noNeeds')}</p>`}</section>
@@ -273,6 +296,17 @@ clickHandlers.push(async (type, id, button, event) => {
     const r = button.getBoundingClientRect()
     const at = { anchor: r.top + r.height / 2 }
     void action(type, type === 'itemTask' ? { id, ...at } : { url: id, ...at })
+    return true
+  }
+  // A key's lock: the map view goes there and makes it stand out.
+  if (type === 'itemLock') {
+    const l = state.item && itemLocks(state.item)[Number(id)]
+    if (l)
+      window.dispatchEvent(
+        new CustomEvent('mayak:map-show', {
+          detail: { map: l.place.key, x: l.x, z: l.z, floor: l.place.floor, c: '#ffd166', spot: state.item.id },
+        }),
+      )
     return true
   }
   if (type === 'itemSearchToggle') {

@@ -1161,6 +1161,7 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-label{position:absolute;display:block;width:200px;text-align:center;font-weight:800;color:#e8c26a;-webkit-text-stroke:.5px #000;text-shadow:0 0 3px #000;white-space:normal;pointer-events:none}
 .subtle-labels .map-label{opacity:.75;color:#d9d2bd;-webkit-text-stroke:0;text-shadow:0 0 2px #0009;font-weight:600}
 .map-found{animation:map-pulse .75s ease-in-out infinite alternate}
+.map-spot{filter:drop-shadow(0 0 3px #ffd166) drop-shadow(0 0 8px #ffd166)}
 @keyframes map-pulse{from{opacity:.75;filter:drop-shadow(0 0 0 #ffd54a)}to{opacity:1;filter:drop-shadow(0 0 6px #ffd54a)}}
 .map-loot-outline{filter:drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)}
 .map-popup-wrap .leaflet-popup-content-wrapper,.map-popup-wrap .leaflet-popup-tip{background:rgb(45,45,47);color:#e8d9a8}

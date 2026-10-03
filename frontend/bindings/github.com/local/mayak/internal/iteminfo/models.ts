@@ -124,6 +124,12 @@ export class Info {
     "hideout": HideoutNeed[];
 
     /**
+     * Locks are the doors and containers a key opens (none for an item that
+     * is not a key, or one tarkov.dev has not placed).
+     */
+    "locks"?: Lock[];
+
+    /**
      * Live is true when the prices came from the GraphQL API just now; the
      * catalog snapshot is at most catalog.RefreshInterval old otherwise.
      */
@@ -203,6 +209,7 @@ export class Info {
         const $$createField13_0 = $$createType4;
         const $$createField14_0 = $$createType6;
         const $$createField15_0 = $$createType8;
+        const $$createField16_0 = $$createType10;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("names" in $$parsedSource) {
             $$parsedSource["names"] = $$createField4_0($$parsedSource["names"]);
@@ -222,7 +229,47 @@ export class Info {
         if ("hideout" in $$parsedSource) {
             $$parsedSource["hideout"] = $$createField15_0($$parsedSource["hideout"]);
         }
+        if ("locks" in $$parsedSource) {
+            $$parsedSource["locks"] = $$createField16_0($$parsedSource["locks"]);
+        }
         return new Info($$parsedSource as Partial<Info>);
+    }
+}
+
+/**
+ * Lock is where a key is used: a map (tarkov.dev's normalizedName) and a
+ * place on it in game coordinates.
+ */
+export class Lock {
+    "map": string;
+    "x": number;
+    "y": number;
+    "z": number;
+
+    /** Creates a new Lock instance. */
+    constructor($$source: Partial<Lock> = {}) {
+        if (!("map" in $$source)) {
+            this["map"] = "";
+        }
+        if (!("x" in $$source)) {
+            this["x"] = 0;
+        }
+        if (!("y" in $$source)) {
+            this["y"] = 0;
+        }
+        if (!("z" in $$source)) {
+            this["z"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Lock instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Lock {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new Lock($$parsedSource as Partial<Lock>);
     }
 }
 
@@ -368,3 +415,5 @@ const $$createType5 = TaskNeed.createFrom;
 const $$createType6 = $Create.Array($$createType5);
 const $$createType7 = HideoutNeed.createFrom;
 const $$createType8 = $Create.Array($$createType7);
+const $$createType9 = Lock.createFrom;
+const $$createType10 = $Create.Array($$createType9);

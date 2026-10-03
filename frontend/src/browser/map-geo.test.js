@@ -189,6 +189,25 @@ test('a place name with no height fades on a floor, one with a height where it i
   assert.equal(labelOff(map, office, 'second'), false)
 })
 
+test('the place name nearest a spot is one on its floor', async () => {
+  const { nearestLabel } = await import('./map-geo.js')
+  const map = {
+    heightRange: [-10, 10],
+    bounds: [
+      [-100, -100],
+      [100, 100],
+    ],
+    layers: [{ id: 'second', extents: [{ height: [10, 15] }] }],
+    labels: [
+      { text: 'Gas\nStation', x: 50, z: 50, y: 0, top: 1000, bottom: -1000, ground: true },
+      { text: 'Office', x: 5, z: 5, y: 12, top: 15, bottom: 10 },
+    ],
+  }
+  assert.equal(nearestLabel(map, { x: 0, y: 0, z: 0 }), 'Gas Station')
+  assert.equal(nearestLabel(map, { x: 0, y: 12, z: 0 }), 'Office')
+  assert.equal(nearestLabel({ labels: [] }, { x: 0, y: 0, z: 0 }), '')
+})
+
 test('floors go from the lowest up with the ground among them', async () => {
   const { floorOrder } = await import('./map-geo.js')
   const floor = (id, ...heights) => ({ id, extents: heights.map((height) => ({ height })) })

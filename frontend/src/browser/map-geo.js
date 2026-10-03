@@ -300,6 +300,25 @@ export function tarkovTime(now, left) {
   return t.toISOString().slice(11, 19)
 }
 
+// nearestLabel is the place name nearest to pos (game coordinates) among
+// those on its floor, to say roughly where something is: '' when the map
+// has none there.
+export function nearestLabel(map, pos) {
+  if (!map || !pos) return ''
+  const floor = floorFor(map, pos)
+  let best = '',
+    far = Infinity
+  for (const l of map.labels || []) {
+    if (!l.text || labelOff(map, l, floor)) continue
+    const d = (l.x - pos.x) ** 2 + (l.z - pos.z) ** 2
+    if (d < far) {
+      far = d
+      best = l.text
+    }
+  }
+  return best.replace(/\s+/g, ' ').trim()
+}
+
 // labelOff reports whether a place name is off the floor shown, to be drawn
 // faded as the markers there are. A name given no height (ground) names a
 // place on the ground: off any floor shown over a faded ground.

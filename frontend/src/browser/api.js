@@ -728,6 +728,8 @@ async function loadBosses() {
 async function loadHistory(again = false) {
   const { id, mode } = item || {}
   if (!id) return
+  // A key's places are told with the maps' floors and place names.
+  if (item.locks?.length) void loadSquadMaps()
   if (!again && itemHistory?.id === id && itemHistory.mode === mode) return
   if (!itemHistory || itemHistory.id !== id || itemHistory.mode !== mode)
     itemHistory = { id, mode, points: [], loading: true }
