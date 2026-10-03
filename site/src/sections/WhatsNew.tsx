@@ -1,9 +1,9 @@
-import { ArrowRight, Check, Globe, MapIcon, MonitorSmartphone, StickyNote, Target, Users } from 'lucide-react'
+import { ArrowRight, Check, Globe, KeyRound, MapIcon, MonitorSmartphone, Target, Users } from 'lucide-react'
 import { Reveal } from '@/components/Reveal'
 import { useT } from '@/i18n'
 import { Section } from './Section'
 
-const icons = [MapIcon, Users, Target, Globe, StickyNote, MonitorSmartphone]
+const icons = [KeyRound, MapIcon, Users, Target, Globe, MonitorSmartphone]
 
 /** What this version brought: the larger changes for someone who used MAYAK before, and the way to the changelog. */
 export function WhatsNew() {
