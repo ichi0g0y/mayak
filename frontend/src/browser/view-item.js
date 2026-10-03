@@ -216,7 +216,7 @@ function itemDetails() {
      ? `<section class="item-section"><h3>${esc(t('itemLocks'))}<span class="count">${locks.length}</span></h3><ul class="item-needs">${locks
          .map(
            (l, i) =>
-             `<li><button class="need-row" data-action="itemLock" data-id="${i}" title="${esc(t('itemLockShow'))}">${icon('map')}<span class="need-name">${esc(l.place.text)}</span></button></li>`,
+             `<li><button class="need-row lock-row" data-action="itemLock" data-id="${i}" title="${esc(t('itemLockShow'))}">${icon('map')}<span class="need-name lock-place">${esc(l.place.text)}</span></button></li>`,
          )
          .join('')}</ul></section>`
      : ''
