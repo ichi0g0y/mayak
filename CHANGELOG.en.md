@@ -4,6 +4,13 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## v0.1.24 (2026-10-04)
+
+### Fixed
+
+- A transit between maps no longer plays the back-from-raid alert. EFT logs a transit the way it logs the way back from a raid, so the alert now waits 10 seconds and stays silent once the log shows a transit; it also stays silent when the transit fails and the game drops back to the menu.
+- Going back to the menu from an aborted matching no longer plays the game-start alert.
+
 ## v0.1.23 (2026-10-04)
 
 ### New
