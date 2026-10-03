@@ -137,20 +137,16 @@ const layerLabel = (l) => word('layer_' + l.key) || l.name || l.key
 const baseName = (map) => word('floorBase_' + (map?.key || '')) || t('mapGround')
 const floorName = (map, floor) => (floor ? map?.layers?.find((l) => l.id === floor)?.name || floor : baseName(map))
 
-// lockPlace says where a key's lock is, for the item panel: the map, its
-// floor and the nearest place name ("Customs · 2F · near Dorms"); the map's
-// key and the floor are where the map view goes to show it, name the map's.
+// lockPlace says where a key's lock is, for the item panel: the map's name
+// and, on it, the floor and the nearest place name ("2F · near Dorms"); the
+// map's key and the floor are where the map view goes to show it.
 export function lockPlace(lock) {
   const map = findMap(state.squad?.maps, lock.map)
-  if (!map) return { key: lock.map, floor: '', name: mapName(lock.map), text: mapName(lock.map) }
+  if (!map) return { key: lock.map, floor: '', name: mapName(lock.map), where: '' }
   const floor = floorFor(map, lock)
   const near = nearestLabel(map, lock)
-  const parts = [
-    mapName(map.key),
-    map.layers?.length ? floorName(map, floor) : '',
-    near ? t('itemLockNear').replace('%s', near) : '',
-  ]
-  return { key: map.key, floor, name: mapName(map.key), text: parts.filter(Boolean).join(' · ') }
+  const parts = [map.layers?.length ? floorName(map, floor) : '', near ? t('itemLockNear').replace('%s', near) : '']
+  return { key: map.key, floor, name: mapName(map.key), where: parts.filter(Boolean).join(' · ') }
 }
 
 // The icon buttons in a column under the zoom buttons: map, filters,

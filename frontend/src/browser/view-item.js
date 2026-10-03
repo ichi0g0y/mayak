@@ -166,9 +166,9 @@ function itemPageLink(item) {
   const label = siteChoices().find(([key]) => key === site)?.[1] || 'tarkov.dev'
   return url ? { url, label: `${t('openItemPage')} · ${label}` } : null
 }
-// A key's locks, one row per map (night Factory and Ground Zero 21 share
-// their map's, so the same lock comes once): a single lock says its floor
-// and the place near it, several say how many.
+// A key's locks by map (night Factory and Ground Zero 21 share their
+// map's, so the same lock comes once), each lock with its floor and the
+// place near it.
 function itemLocks(item) {
   const seen = new Set()
   const maps = new Map()
@@ -177,12 +177,28 @@ function itemLocks(item) {
     const k = `${place.key}|${Math.round(l.x)}|${Math.round(l.z)}`
     if (seen.has(k)) continue
     seen.add(k)
-    if (!maps.has(place.key))
-      maps.set(place.key, { key: place.key, floor: place.floor, name: place.name, text: place.text, locks: [] })
-    maps.get(place.key).locks.push(l)
+    if (!maps.has(place.key)) maps.set(place.key, { key: place.key, name: place.name, locks: [] })
+    maps.get(place.key).locks.push({ ...l, floor: place.floor, where: place.where })
   }
-  return [...maps.values()].map((m) =>
-    m.locks.length > 1 ? { ...m, text: `${m.name} · ${t('itemLockCount').replace('%d', String(m.locks.length))}` } : m,
+  return [...maps.values()]
+}
+// showLocks brings the map view to a map's locks: one, centred with a ring,
+// or all of them in view; the key's locks there stand out either way.
+function showLocks(key, locks) {
+  const [first] = locks
+  if (!first || !state.item) return
+  window.dispatchEvent(
+    new CustomEvent('mayak:map-show', {
+      detail: {
+        map: key,
+        x: first.x,
+        z: first.z,
+        floor: first.floor,
+        c: '#ffd166',
+        spot: state.item.id,
+        points: locks.map((l) => [l.x, l.z]),
+      },
+    }),
   )
 }
 function itemDetails() {
@@ -221,10 +237,15 @@ function itemDetails() {
  ${(() => {
    const locks = itemLocks(item)
    return locks.length
-     ? `<section class="item-section"><h3>${esc(t('itemLocks'))}<span class="count">${locks.reduce((n, m) => n + m.locks.length, 0)}</span></h3><ul class="item-needs">${locks
+     ? `<section class="item-section"><h3>${esc(t('itemLocks'))}<span class="count">${locks.reduce((n, m) => n + m.locks.length, 0)}</span></h3><ul class="item-locks">${locks
          .map(
-           (l, i) =>
-             `<li><button class="need-row lock-row" data-action="itemLock" data-id="${i}" title="${esc(t('itemLockShow'))}">${icon('map')}<span class="need-name lock-place">${esc(l.text)}</span></button></li>`,
+           (m, i) =>
+             `<li class="lock-map"><button class="lock-map-name" data-action="itemLockMap" data-id="${i}" title="${esc(t('itemLockShowAll'))}">${icon('map')}<span>${esc(m.name)}</span>${m.locks.length > 1 ? `<small>${esc(t('itemLockCount').replace('%d', String(m.locks.length)))}</small>` : ''}</button>${m.locks
+               .map(
+                 (l, j) =>
+                   `<button class="need-row lock-row" data-action="itemLock" data-id="${i}:${j}" title="${esc(t('itemLockShow'))}">${icon('mapPin')}<span class="need-name lock-place">${esc(l.where || t('itemLockSpot').replace('%d', String(j + 1)))}</span></button>`,
+               )
+               .join('')}</li>`,
          )
          .join('')}</ul></section>`
      : ''
@@ -308,22 +329,16 @@ clickHandlers.push(async (type, id, button, event) => {
   }
   // A key's lock: the map view goes there and makes it stand out.
   if (type === 'itemLock') {
+    const [i, j] = String(id).split(':').map(Number)
+    const m = state.item && itemLocks(state.item)[i]
+    const l = m?.locks[j]
+    if (l) showLocks(m.key, [l])
+    return true
+  }
+  // A map's name: all of its locks.
+  if (type === 'itemLockMap') {
     const m = state.item && itemLocks(state.item)[Number(id)]
-    const first = m?.locks[0]
-    if (first)
-      window.dispatchEvent(
-        new CustomEvent('mayak:map-show', {
-          detail: {
-            map: m.key,
-            x: first.x,
-            z: first.z,
-            floor: m.floor,
-            c: '#ffd166',
-            spot: state.item.id,
-            points: m.locks.map((l) => [l.x, l.z]),
-          },
-        }),
-      )
+    if (m) showLocks(m.key, m.locks)
     return true
   }
   if (type === 'itemSearchToggle') {
