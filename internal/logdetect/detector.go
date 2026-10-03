@@ -174,6 +174,11 @@ const (
 	MenuReached EventKind = "menuReached"
 )
 
+// menuHold is how long a return to the menu from a raid is held back: a
+// transit to another map loads the profile too, and says so (Transit
+// matching) a few seconds later.
+const menuHold = 10 * time.Second
+
 type EventParser struct {
 	gameStarting time.Time
 	raidActive   bool
@@ -182,6 +187,12 @@ type EventParser struct {
 	atMenu bool
 	// fromRaid is set when a raid ended, until the menu is reported.
 	fromRaid bool
+	// started is set once the game was seen at the menu or in a match: a
+	// later profile load with no raid before it (a matching aborted) is not
+	// the game's start.
+	started bool
+	// held is a return to the menu from a raid not reported yet (Due).
+	held *Event
 }
 
 type Snapshot struct {
@@ -308,7 +319,11 @@ func (d *Detector) loop(ctx context.Context) {
 					d.mapCallback(mapName)
 				}
 			}
-			events := eventParser.Parse(text)
+			events := append(eventParser.Parse(text), eventParser.Due(now)...)
+			// What the log held before MAYAK looked is not announced.
+			if !initialized {
+				eventParser.held = nil
+			}
 			if initialized && d.eventCallback != nil {
 				for _, event := range events {
 					d.eventCallback(event)
@@ -335,15 +350,25 @@ func (p *EventParser) Parse(text string) []Event {
 				seconds, _ = strconv.ParseFloat(strings.ReplaceAll(match[1], ",", "."), 64)
 			}
 			stamp, _ := parseLogTime(line)
-			events = append(events, Event{Kind: MatchFound, OccurredAt: stamp, QueueSeconds: seconds})
+			events = append(p.release(events), Event{Kind: MatchFound, OccurredAt: stamp, QueueSeconds: seconds})
 			p.atMenu = false
+			p.started = true
 		case strings.Contains(lower, "|application|gamestarted:"):
 			started, ok := parseLogTime(line)
 			eligible := ok && !p.gameStarting.IsZero() && started.Sub(p.gameStarting) > 3*time.Second
-			events = append(events, Event{Kind: RaidStarted, RunThroughEligible: eligible, OccurredAt: started})
+			events = append(p.release(events), Event{Kind: RaidStarted, RunThroughEligible: eligible, OccurredAt: started})
 			p.gameStarting = time.Time{}
 			p.raidActive = true
 			p.atMenu = false
+			p.started = true
+		// A transit: the profile loaded just before was not a return to the
+		// menu. If the trip fails, the game drops back to the menu (and on
+		// 2026-10-04 crashed right after): that is no welcome back either.
+		case strings.Contains(lower, "|application|transit matching type:"):
+			p.held = nil
+			p.atMenu = false
+			p.fromRaid = false
+			p.started = true
 		case isRaidEndLine(lower):
 			stamp, _ := parseLogTime(line)
 			if p.raidActive {
@@ -352,13 +377,42 @@ func (p *EventParser) Parse(text string) []Event {
 				p.fromRaid = true
 			}
 			if !p.atMenu && strings.Contains(lower, "|application|completeselectedprofile profileid:") {
-				events = append(events, Event{Kind: MenuReached, OccurredAt: stamp, FromRaid: p.fromRaid})
+				switch {
+				case p.fromRaid:
+					at := stamp
+					if at.IsZero() {
+						at = time.Now()
+					}
+					p.held = &Event{Kind: MenuReached, OccurredAt: at, FromRaid: true}
+				case !p.started:
+					events = append(events, Event{Kind: MenuReached, OccurredAt: stamp})
+				}
 				p.atMenu = true
 				p.fromRaid = false
+				p.started = true
 			}
 		}
 	}
 	return events
+}
+
+// release puts a held return to the menu before what comes after it.
+func (p *EventParser) release(events []Event) []Event {
+	if p.held == nil {
+		return events
+	}
+	events = append(events, *p.held)
+	p.held = nil
+	return events
+}
+
+// Due reports a return to the menu from a raid once menuHold has passed
+// with no transit.
+func (p *EventParser) Due(now time.Time) []Event {
+	if p.held == nil || now.Sub(p.held.OccurredAt) < menuHold {
+		return nil
+	}
+	return p.release(nil)
 }
 
 func parseLogTime(line string) (time.Time, bool) {

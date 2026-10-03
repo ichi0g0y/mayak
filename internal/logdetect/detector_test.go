@@ -172,8 +172,12 @@ func TestEventParserReportsRaidExitOnlyOnce(t *testing.T) {
 	_ = parser.Parse("2026-09-10 15:43:38.370|x|Info|application|GameStarted:68.86\n")
 	got := parser.Parse("2026-09-10 16:11:24.788|x|Info|application|PrepareSelectedProfileLocally ProfileId:abc AccountId:123\n" +
 		"2026-09-10 16:11:25.106|x|Info|application|CompleteSelectedProfile ProfileId:abc AccountId:123\n")
-	if len(got) != 2 || got[0].Kind != RaidExited || got[1].Kind != MenuReached {
+	if len(got) != 1 || got[0].Kind != RaidExited {
 		t.Fatalf("unexpected events: %v", got)
+	}
+	// The menu comes once the transit check has passed.
+	if menu := parser.Due(time.Date(2026, 9, 10, 16, 11, 40, 0, time.Local)); len(menu) != 1 || menu[0].Kind != MenuReached || !menu[0].FromRaid {
+		t.Fatalf("menu: %v", menu)
 	}
 	if repeated := parser.Parse("2026-09-10 16:11:52.015|x|Info|application|PrepareSelectedProfileLocally ProfileId:abc AccountId:123\n"); len(repeated) != 0 {
 		t.Fatalf("duplicate exit events: %v", repeated)
@@ -261,7 +265,50 @@ func TestEventParserReportsMenuOncePerReturn(t *testing.T) {
 		t.Fatalf("second load: %v", got)
 	}
 	_ = parser.Parse("2026-09-10 16:20:00.000|x|Info|application|MatchingCompleted:0 real:1.2 diff:1\n2026-09-10 16:21:00.000|x|Info|application|GameStarted:68.86\n")
-	if got := parser.Parse(complete); len(got) != 2 || got[1].Kind != MenuReached || !got[1].FromRaid {
+	if got := parser.Parse(complete); len(got) != 1 || got[0].Kind != RaidExited {
 		t.Fatalf("after raid: %v", got)
+	}
+	back := time.Date(2026, 9, 10, 16, 11, 25, 106e6, time.Local)
+	if got := parser.Due(back.Add(time.Second)); len(got) != 0 {
+		t.Fatalf("held back: %v", got)
+	}
+	if got := parser.Due(back.Add(menuHold)); len(got) != 1 || got[0].Kind != MenuReached || !got[0].FromRaid {
+		t.Fatalf("back from raid: %v", got)
+	}
+	if got := parser.Due(back.Add(2 * menuHold)); len(got) != 0 {
+		t.Fatalf("reported twice: %v", got)
+	}
+}
+
+// A transit loads the profile as a return to the menu would, then says it is
+// a transit: no welcome back, nor when the transit fails and the game drops
+// back to the menu; nor is that the game's start.
+func TestEventParserTransitIsNoReturn(t *testing.T) {
+	parser := &EventParser{}
+	line := func(clock, text string) string {
+		return "2026-10-04 " + clock + "|1.1.5.1.47510|Info|application|" + text + "\n"
+	}
+	_ = parser.Parse(line("06:06:47.455", "CompleteSelectedProfile ProfileId:abc AccountId:123"))
+	_ = parser.Parse(line("07:43:24.641", "MatchingCompleted:16.3 real:28.43 diff:12.13") + line("07:44:28.606", "GameStarting:73.84(1.69)") + line("07:44:40.632", "GameStarted:85.22(11.38)"))
+	if got := parser.Parse(line("07:56:35.957", "PrepareSelectedProfileLocally ProfileId:abc AccountId:123") + line("07:56:35.957", "CompleteSelectedProfile ProfileId:abc AccountId:123")); len(got) != 1 || got[0].Kind != RaidExited {
+		t.Fatalf("raid end: %v", got)
+	}
+	_ = parser.Parse(line("07:56:38.937", "Transit matching type:Single groupId: players:1"))
+	if got := parser.Due(time.Date(2026, 10, 4, 7, 57, 0, 0, time.Local)); len(got) != 0 {
+		t.Fatalf("transit: %v", got)
+	}
+	got := parser.Parse(line("07:57:06.845", "MatchingCompleted:3.89 real:8 diff:4.1") + line("07:57:26.494", "CompleteSelectedProfile ProfileId:abc AccountId:123"))
+	if len(got) != 1 || got[0].Kind != MatchFound {
+		t.Fatalf("transit matching: %v", got)
+	}
+	if got := parser.Due(time.Date(2026, 10, 4, 7, 57, 40, 0, time.Local)); len(got) != 0 {
+		t.Fatalf("back after the transit failed: %v", got)
+	}
+	// Back at the menu from a matching aborted, with no raid: nothing.
+	if got := parser.Parse(line("08:10:00.000", "MatchingCompleted:3 real:4 diff:1") + line("08:10:20.000", "CompleteSelectedProfile ProfileId:abc AccountId:123")); len(got) != 1 || got[0].Kind != MatchFound {
+		t.Fatalf("matching aborted: %v", got)
+	}
+	if got := parser.Due(time.Date(2026, 10, 4, 8, 11, 0, 0, time.Local)); len(got) != 0 {
+		t.Fatalf("matching aborted, later: %v", got)
 	}
 }
