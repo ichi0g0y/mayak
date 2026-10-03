@@ -139,10 +139,10 @@ const floorName = (map, floor) => (floor ? map?.layers?.find((l) => l.id === flo
 
 // lockPlace says where a key's lock is, for the item panel: the map, its
 // floor and the nearest place name ("Customs · 2F · near Dorms"); the map's
-// key and the floor are where the map view goes to show it.
+// key and the floor are where the map view goes to show it, name the map's.
 export function lockPlace(lock) {
   const map = findMap(state.squad?.maps, lock.map)
-  if (!map) return { key: lock.map, floor: '', text: mapName(lock.map) }
+  if (!map) return { key: lock.map, floor: '', name: mapName(lock.map), text: mapName(lock.map) }
   const floor = floorFor(map, lock)
   const near = nearestLabel(map, lock)
   const parts = [
@@ -150,7 +150,7 @@ export function lockPlace(lock) {
     map.layers?.length ? floorName(map, floor) : '',
     near ? t('itemLockNear').replace('%s', near) : '',
   ]
-  return { key: map.key, floor, text: parts.filter(Boolean).join(' · ') }
+  return { key: map.key, floor, name: mapName(map.key), text: parts.filter(Boolean).join(' · ') }
 }
 
 // The icon buttons in a column under the zoom buttons: map, filters,
@@ -1013,14 +1013,20 @@ function drawMap() {
   lm.map.getContainer().classList.toggle('map-pinning', pinning)
   followSquad(map, members)
   if (view.focus?.map === map.key) {
-    const { x, z, zoom, pulse, keep, rings } = view.focus
+    const { x, z, zoom, pulse, keep, rings, points } = view.focus
     view.focus = null
     const near = Number.isFinite(zoom)
       ? zoom
       : keep
         ? lm.map.getZoom()
         : Math.max(lm.map.getZoom(), ((map.minZoom || 2) + Math.max(7, map.maxZoom || 6)) / 2)
-    lm.map.setView(L.latLng(z, x), near)
+    // Several places (a key's locks on one map) all come into view.
+    if (points?.length > 1)
+      lm.map.fitBounds(
+        points.map(([px, pz]) => [pz, px]),
+        { padding: [60, 60], maxZoom: near },
+      )
+    else lm.map.setView(L.latLng(z, x), near)
     // A view shared: a ring in the sharer's colour where they looked.
     if (pulse) {
       const ring = L.marker(L.latLng(z, x), {
@@ -1232,7 +1238,8 @@ window.addEventListener('mayak:map-show', (event) => {
   // A view shared: its floor, centre and zoom too.
   if (Number.isFinite(d.x) && Number.isFinite(d.z)) {
     view.floor = typeof d.floor === 'string' ? d.floor : 'auto'
-    view.focus = { map: key, x: d.x, z: d.z, zoom: d.zoom, pulse: d.c || '#ffd166' }
+    const points = Array.isArray(d.points) ? d.points.filter((p) => p.every(Number.isFinite)) : null
+    view.focus = { map: key, x: d.x, z: d.z, zoom: d.zoom, pulse: points?.length > 1 ? '' : d.c || '#ffd166', points }
   }
   if (state.tabs.find((tab) => tab.id === state.active)?.kind !== 'livemap') void action('livemap')
   else render()

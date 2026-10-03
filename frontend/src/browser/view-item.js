@@ -166,16 +166,24 @@ function itemPageLink(item) {
   const label = siteChoices().find(([key]) => key === site)?.[1] || 'tarkov.dev'
   return url ? { url, label: `${t('openItemPage')} · ${label}` } : null
 }
-// A key's locks, one row each (night Factory and Ground Zero 21 share their
-// map's), where the map view shows them.
+// A key's locks, one row per map (night Factory and Ground Zero 21 share
+// their map's, so the same lock comes once): a single lock says its floor
+// and the place near it, several say how many.
 function itemLocks(item) {
   const seen = new Set()
-  return (item.locks || [])
-    .map((l) => ({ ...l, place: lockPlace(l) }))
-    .filter((l) => {
-      const k = `${l.place.key}|${Math.round(l.x)}|${Math.round(l.z)}`
-      return !seen.has(k) && seen.add(k)
-    })
+  const maps = new Map()
+  for (const l of item.locks || []) {
+    const place = lockPlace(l)
+    const k = `${place.key}|${Math.round(l.x)}|${Math.round(l.z)}`
+    if (seen.has(k)) continue
+    seen.add(k)
+    if (!maps.has(place.key))
+      maps.set(place.key, { key: place.key, floor: place.floor, name: place.name, text: place.text, locks: [] })
+    maps.get(place.key).locks.push(l)
+  }
+  return [...maps.values()].map((m) =>
+    m.locks.length > 1 ? { ...m, text: `${m.name} · ${t('itemLockCount').replace('%d', String(m.locks.length))}` } : m,
+  )
 }
 function itemDetails() {
   const item = state.item
@@ -213,10 +221,10 @@ function itemDetails() {
  ${(() => {
    const locks = itemLocks(item)
    return locks.length
-     ? `<section class="item-section"><h3>${esc(t('itemLocks'))}<span class="count">${locks.length}</span></h3><ul class="item-needs">${locks
+     ? `<section class="item-section"><h3>${esc(t('itemLocks'))}<span class="count">${locks.reduce((n, m) => n + m.locks.length, 0)}</span></h3><ul class="item-needs">${locks
          .map(
            (l, i) =>
-             `<li><button class="need-row lock-row" data-action="itemLock" data-id="${i}" title="${esc(t('itemLockShow'))}">${icon('map')}<span class="need-name lock-place">${esc(l.place.text)}</span></button></li>`,
+             `<li><button class="need-row lock-row" data-action="itemLock" data-id="${i}" title="${esc(t('itemLockShow'))}">${icon('map')}<span class="need-name lock-place">${esc(l.text)}</span></button></li>`,
          )
          .join('')}</ul></section>`
      : ''
@@ -300,11 +308,20 @@ clickHandlers.push(async (type, id, button, event) => {
   }
   // A key's lock: the map view goes there and makes it stand out.
   if (type === 'itemLock') {
-    const l = state.item && itemLocks(state.item)[Number(id)]
-    if (l)
+    const m = state.item && itemLocks(state.item)[Number(id)]
+    const first = m?.locks[0]
+    if (first)
       window.dispatchEvent(
         new CustomEvent('mayak:map-show', {
-          detail: { map: l.place.key, x: l.x, z: l.z, floor: l.place.floor, c: '#ffd166', spot: state.item.id },
+          detail: {
+            map: m.key,
+            x: first.x,
+            z: first.z,
+            floor: m.floor,
+            c: '#ffd166',
+            spot: state.item.id,
+            points: m.locks.map((l) => [l.x, l.z]),
+          },
         }),
       )
     return true
