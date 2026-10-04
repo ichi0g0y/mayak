@@ -66,8 +66,8 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 |---|---|---|
 | `language` | `"ja"` | Host UI とトレイメニューの言語。`ja` / `en` 以外は `ja` |
 | `gameLanguage` | `""`（→ `"auto"`） | OCR に使うゲーム言語。`auto`、`en`、または `internal/locale` の言語のみ |
-| `questSites` | `[]`（→ `["tarkov-dev","official-wiki","japanese-wiki"]`） | タスクを開くサイトの順番。ページがある最初のサイトで開く（[tasks-and-maps.md](tasks-and-maps.md)） |
-| `questSite` | `""`（→ `"tarkov-dev"`） | `questSites` の 1 番目（古い版向け）。これだけが変わったときは、そのサイトを `questSites` の先頭へ移す |
+| `questSites` | `[]`（→ `["official-wiki","japanese-wiki","tarkov-dev"]`） | タスクを開くサイトの順番。ページがある最初のサイトで開く（[tasks-and-maps.md](tasks-and-maps.md)） |
+| `questSite` | `""`（→ `"official-wiki"`） | `questSites` の 1 番目（古い版向け）。これだけが変わったときは、そのサイトを `questSites` の先頭へ移す |
 | `screenshotDirectory` | `""` | EFT の Screenshots フォルダ（`filepath.Clean` 済み） |
 | `logsDirectory` | `""` | EFT の Logs フォルダ |
 | `remoteId` | `""` | 旧形式の Remote Control ID。互換用 |

@@ -86,7 +86,7 @@ export function itemInfo(raw) {
     locks: list(raw.locks, 40)
       .map((l) => ({ map: text(l.map, 40), x: l.x, y: l.y, z: l.z }))
       .filter((l) => l.map && [l.x, l.y, l.z].every(Number.isFinite)),
-    questSite: sites.includes(raw.questSite) ? raw.questSite : 'tarkov-dev',
+    questSite: siteOrder(raw.questSites, raw.questSite)[0],
     questSites: siteOrder(raw.questSites, raw.questSite),
     live: !!raw.live,
     pricedAt: time(raw.pricedAt),

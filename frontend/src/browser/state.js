@@ -7,7 +7,9 @@ function randomUUID() {
 }
 import { clampItemPanel, clampItemPanelHeight } from './item.js'
 import { defaultMapSettings, hiddenOf, mapSettingsOf, squadColorOf, squadColors } from './map-geo.js'
-const sites = ['tarkov-dev', 'official-wiki', 'japanese-wiki']
+// The task sites, in their default order: the wikis first, as they have the
+// tasks tarkov.dev does not have yet.
+const sites = ['official-wiki', 'japanese-wiki', 'tarkov-dev']
 // siteOrder is the task sites in the order set: each once, the ones left out
 // after in their default order. first, a site told alone (by a version that
 // knows one site only), goes first. The Go side has the same
@@ -444,7 +446,7 @@ function validTask(task) {
 function receiveTask(state, task) {
   if (!validTask(task)) return null
   // The site is chosen before (the first in the Host's order with the page).
-  const site = sites.includes(task.site) ? task.site : 'tarkov-dev'
+  const site = sites.includes(task.site) ? task.site : sites[0]
   // The official wiki (English) opens translated when asked to.
   const url =
     site === 'official-wiki' && state.translateWiki

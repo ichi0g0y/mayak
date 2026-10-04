@@ -14,8 +14,9 @@ import (
 	"github.com/local/mayak/internal/version"
 )
 
-// questSiteKeys are the task sites, in their default order.
-var questSiteKeys = []string{"tarkov-dev", "official-wiki", "japanese-wiki"}
+// questSiteKeys are the task sites, in their default order: the wikis
+// first, as they have the tasks tarkov.dev does not have yet.
+var questSiteKeys = []string{"official-wiki", "japanese-wiki", "tarkov-dev"}
 
 // normalizeQuestSites is the task sites in the order set: every site once,
 // the ones left out after in their default order. first, a site set alone

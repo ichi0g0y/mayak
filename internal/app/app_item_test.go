@@ -12,7 +12,7 @@ import (
 func TestWithTaskURLs(t *testing.T) {
 	info := withTaskURLs(iteminfo.Info{Tasks: []iteminfo.TaskNeed{{ID: "t", Name: "Half-Empty", Trader: "Prapor", NormalizedName: "half-empty", WikiLink: "https://escapefromtarkov.fandom.com/wiki/Half-Empty"}}}, []string{"official-wiki"})
 	urls := info.Tasks[0].URLs
-	if info.QuestSite != "official-wiki" || !slices.Equal(info.QuestSites, []string{"official-wiki", "tarkov-dev", "japanese-wiki"}) || urls["tarkov-dev"] != "https://tarkov.dev/task/half-empty" || urls["official-wiki"] != "https://escapefromtarkov.fandom.com/wiki/Half-Empty" || urls["japanese-wiki"] != "https://wikiwiki.jp/eft/Prapor/Half-Empty" {
+	if info.QuestSite != "official-wiki" || !slices.Equal(info.QuestSites, []string{"official-wiki", "japanese-wiki", "tarkov-dev"}) || urls["tarkov-dev"] != "https://tarkov.dev/task/half-empty" || urls["official-wiki"] != "https://escapefromtarkov.fandom.com/wiki/Half-Empty" || urls["japanese-wiki"] != "https://wikiwiki.jp/eft/Prapor/Half-Empty" {
 		t.Fatalf("info = %+v", info)
 	}
 	if got := questPageURL("japanese-wiki", "Camera, Action!", "Mechanic", ""); got != "https://wikiwiki.jp/eft/Mechanic/Camera%20Action%21" {

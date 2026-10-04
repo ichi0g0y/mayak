@@ -725,13 +725,13 @@ test('a Client takes all of its Host detections unless it turns some off', () =>
 
 import { siteOrder } from './state.js'
 test('the task sites keep a whole order, a site told alone first', () => {
-  assert.deepEqual(siteOrder(), ['tarkov-dev', 'official-wiki', 'japanese-wiki'])
+  assert.deepEqual(siteOrder(), ['official-wiki', 'japanese-wiki', 'tarkov-dev'])
   assert.deepEqual(siteOrder(['japanese-wiki', 'bogus', 'japanese-wiki']), [
     'japanese-wiki',
-    'tarkov-dev',
     'official-wiki',
+    'tarkov-dev',
   ])
-  assert.deepEqual(siteOrder(null, 'official-wiki'), ['official-wiki', 'tarkov-dev', 'japanese-wiki'])
+  assert.deepEqual(siteOrder(null, 'tarkov-dev'), ['tarkov-dev', 'official-wiki', 'japanese-wiki'])
   assert.deepEqual(siteOrder(['japanese-wiki', 'official-wiki'], 'tarkov-dev'), [
     'tarkov-dev',
     'japanese-wiki',

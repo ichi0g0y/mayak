@@ -22,7 +22,7 @@ const HELD_MS = 60_000
 // five sixths of them (paced), so the relay never has to close it; these are
 // taken until a welcome tells.
 const LINK_LIMITS = { rate: 120, rateWindow: 10000, bytes: 16 * 1024 * 1024, bytesWindow: 60000 }
-const questSites = ['tarkov-dev', 'official-wiki', 'japanese-wiki']
+const questSites = ['official-wiki', 'japanese-wiki', 'tarkov-dev']
 // hostInfoOf keeps what is sound of the Host's info: its game mode, the
 // map it plays (a map key), whether in a raid, and its last position (game
 // coordinates and facing, when it was taken), else null.

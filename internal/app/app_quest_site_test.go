@@ -38,10 +38,11 @@ func TestNormalizeQuestSites(t *testing.T) {
 		first string
 		want  []string
 	}{
-		{nil, "", []string{"tarkov-dev", "official-wiki", "japanese-wiki"}},
+		{nil, "", []string{"official-wiki", "japanese-wiki", "tarkov-dev"}},
 		// Settings from before the order: the one site goes first.
-		{nil, "japanese-wiki", []string{"japanese-wiki", "tarkov-dev", "official-wiki"}},
-		{[]string{"official-wiki", "x", "official-wiki"}, "", []string{"official-wiki", "tarkov-dev", "japanese-wiki"}},
+		{nil, "japanese-wiki", []string{"japanese-wiki", "official-wiki", "tarkov-dev"}},
+		{nil, "tarkov-dev", []string{"tarkov-dev", "official-wiki", "japanese-wiki"}},
+		{[]string{"tarkov-dev", "x", "tarkov-dev"}, "", []string{"tarkov-dev", "official-wiki", "japanese-wiki"}},
 		{[]string{"japanese-wiki", "official-wiki", "tarkov-dev"}, "japanese-wiki", []string{"japanese-wiki", "official-wiki", "tarkov-dev"}},
 		// A version that knows one site sets it alone.
 		{[]string{"japanese-wiki", "official-wiki", "tarkov-dev"}, "tarkov-dev", []string{"tarkov-dev", "japanese-wiki", "official-wiki"}},

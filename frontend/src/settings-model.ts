@@ -194,7 +194,7 @@ export const SOUND_DELAY_DEFAULTS: Record<string, number> = { questItems: 3, tas
 
 export const defaults: Settings = {
   gameLanguage: 'auto',
-  questSite: 'tarkov-dev',
+  questSite: 'official-wiki',
   language: 'ja',
   screenshotDirectory: '',
   logsDirectory: '',

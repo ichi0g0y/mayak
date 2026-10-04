@@ -27,7 +27,7 @@ Host 設定の「タスクを開く」（`OpenQuestPage`）は、最後に認識
 
 | サイト | URL |
 |---|---|
-| `tarkov-dev`（既定） | `QuestURL`。なければ `https://tarkov.dev/tasks/` |
+| `tarkov-dev` | `QuestURL`。なければ `https://tarkov.dev/tasks/` |
 | `official-wiki` | `QuestWikiURL`（`https://escapefromtarkov.fandom.com/wiki/...` の形式のときだけ）。それ以外は名前の空白を `_` にしてパスエスケープした `https://escapefromtarkov.fandom.com/wiki/<name>` |
 | `japanese-wiki` | トレーダーがあれば `https://wikiwiki.jp/eft/<trader>/<name>`（どちらもパスエスケープ）。なければストーリー章として `https://wikiwiki.jp/eft/ストーリータスク/<name>` |
 
@@ -38,12 +38,12 @@ Host 設定の「タスクを開く」（`OpenQuestPage`）は、最後に認識
 
 ### サイトの順番とフォールバック
 
-設定 `QuestSites` は 3 サイトの順番です（既定は tarkov.dev → 公式 Wiki → 日本語 Wiki）。タスクは上から順に見て、そのタスクのページがある最初のサイトで開きます（`questSiteFor`）。どのサイトにも無ければ 1 番目のサイトで開きます。
+設定 `QuestSites` は 3 サイトの順番です（既定は公式 Wiki → 日本語 Wiki → tarkov.dev。Wiki は tarkov.dev にまだ無いタスクも載せるため）。タスクは上から順に見て、そのタスクのページがある最初のサイトで開きます（`questSiteFor`）。どのサイトにも無ければ 1 番目のサイトで開きます。
 
 - **tarkov.dev**: URL が `/task/…`（カタログにあるタスク）ならページあり。問い合わせはしません。
 - **公式 Wiki・日本語 Wiki**: URL に `HEAD` を送り、404 か 410 ならページ無しです。応答が無い・5xx のときはページありとみなします（Wiki が落ちていても別サイトへ移さないため）。結果は URL ごとに、ありは 12 時間、無しは 30 分覚えます。
 - 開く場所ごとの判定: 認識したタスクと「タスクを開く」は Go 側の `showBrowserTask` が判定してから `browser:task` を出します（Remote Control への送信はこの判定を待ちません）。マップのタスクの印とアイテム欄のタスクは、シェルが `QuestSiteFor(order, urls)` を呼んで決めます。
-- 設定 `QuestSite` には 1 番目のサイトを入れます。サイトを 1 つしか知らない古い版が `QuestSite` だけを変えた場合は、そのサイトを先頭に移します（`normalizeQuestSites`）。
+- 設定 `QuestSite` には 1 番目のサイトを入れます。サイトを 1 つしか知らない古い版が `QuestSite` だけを変えた場合や、順番を持たない古い設定を読んだ場合は、`QuestSite` のサイトを先頭に移します（`normalizeQuestSites`）。
 
 ## ブラウザでのタスクタブ
 
