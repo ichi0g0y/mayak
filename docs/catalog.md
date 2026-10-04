@@ -133,8 +133,8 @@ tarkov.dev の公開カタログに載る前の新タスクを、コードに直
 公式 Wiki（`escapefromtarkov.fandom.com`）は tarkov.dev より先に新タスクを載せるため、名前だけでも照合できるようにします。
 
 - MediaWiki API（`https://escapefromtarkov.fandom.com/api.php`）で `Category:Quests` のメンバー（名前空間 0、500 件ずつ最大 10 ページ、追加日時付き）を取得します。
-- `Category:Event content` と `Category:Historical content` に属するページ（過去イベント）は除外します。
-- カテゴリへの追加が **直近 180 日**以内のものだけを採用します（Arena や過去イベントによる誤一致を避けるため）。
+- `Category:Historical content` に属するページ（終了したイベントなど、ゲームに無いもの）は除外します。`Category:Event content` だけに属するページは開催中のイベントのタスクで、ゲームにあり tarkov.dev にまだ無いことが多いため採用します（例: All-Inclusive Support）。
+- ページの古さでは絞りません。古いページのタスクが後からゲームに入ることがあるためです（To the Light - Getting Acquainted は 2023 年作成）。
 - `Category:Story chapters`（ストーリー章。tarkov.dev のカタログに無い）は追加日時にかかわらず採用します。
 - 取得はバックグラウンドで行います。アプリは起動時に `WarmWiki()` で取得を始めます。
 - 手元に一覧があれば、タスク一覧の構築は Wiki を待ちません（古ければ裏で取り直します）。起動後の最初のタスク一覧だけは、まだ一覧が無く取得中なら、その完了を最大 **10 秒**（または照合の context が終わるまで）待ちます（`awaitFirstWiki`。クライアントのロックを持たずに待つ）。待つのは 1 回だけで、Wiki が応答しなくても以後のタスク一覧は待ちません。ストーリー章は Wiki にしか無いため、起動直後の最初の認識で一覧に章が無いと、1 回目だけ失敗して 2 回目に一致することになるからです。

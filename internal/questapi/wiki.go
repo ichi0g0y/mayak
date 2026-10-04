@@ -139,16 +139,16 @@ func (c *Client) fetchWikiQuestTitles(ctx context.Context) ([]wikiQuest, error) 
 	if err != nil {
 		return nil, err
 	}
-	// Past events' tasks are marked on the wiki; they are not in the game.
+	// Past events' tasks are marked Historical content on the wiki; they are
+	// not in the game. Event content alone is an event under way (its tasks,
+	// "All-Inclusive Support", are in the game and not on tarkov.dev yet).
 	past := map[string]bool{}
-	for _, category := range []string{"Event content", "Historical content"} {
-		members, err := c.wikiCategory(ctx, category)
-		if err != nil {
-			return nil, err
-		}
-		for _, member := range members {
-			past[member.title] = true
-		}
+	historical, err := c.wikiCategory(ctx, "Historical content")
+	if err != nil {
+		return nil, err
+	}
+	for _, member := range historical {
+		past[member.title] = true
 	}
 	// Every task in the game counts, however old its page: a task can come
 	// to the game long after its page was made ("To the Light - Getting
