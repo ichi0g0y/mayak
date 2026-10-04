@@ -4,7 +4,7 @@ export const de: Messages = {
   nav: { features: 'Funktionen', start: 'Erste Schritte', squad: 'Trupp', safety: 'Sicherheit', download: 'Download', faq: 'FAQ', github: 'GitHub', language: 'Sprache', downloadButton: 'Download', changelog: 'Änderungen' },
   hero: {
     tagline: 'Escape from Tarkov companion',
-    lead: 'MAYAK ist ein Begleiter für Escape from Tarkov. Allein aus den Screenshots, die du im Spiel machst, und den Logs des Spiels zeigt er deine Position auf der Karte, deine Aufgaben und Item-Infos in der App. Mit deinem Trupp kannst du außerdem Positionen und Zeichnungen auf der Karte teilen. Prozess und Speicher des Spiels rührt er nie an.',
+    lead: 'MAYAK ist ein Begleiter für Escape from Tarkov. Allein aus den Bildern, die die Screenshot-Funktion von Tarkov selbst speichert, und den Logs des Spiels zeigt er deine Position auf der Karte, deine Aufgaben und Item-Infos in der App. Mit deinem Trupp kannst du außerdem Positionen und Zeichnungen auf der Karte teilen. Er nimmt nie deinen Bildschirm auf und rührt Prozess und Speicher des Spiels nie an.',
     installLabel: (version: string, os: string) => `MAYAK ${version} für ${os} installieren`,
     hints: { windows: 'Der Windows-Installer. Einfach ausführen, keine Administratorrechte nötig.', mac: 'dmg öffnen und Mayak.app nach Applications ziehen. Beim ersten Mal Rechtsklick → „Öffnen“. Vorschau-Build.', linux: 'tar.gz entpacken und ./Mayak starten (benötigt WebKitGTK). Vorschau-Build.' },
     otherPlatforms: 'Andere Plattformen →',
@@ -30,7 +30,7 @@ export const de: Messages = {
   features: {
     kicker: 'Funktionen',
     title: 'Ein Screenshot.\nAlles, was du brauchst.',
-    lead: 'Drücke einfach die Screenshot-Taste von EFT. MAYAK liest die gespeicherte Datei und zeigt in der App, was du brauchst.',
+    lead: 'Drück einfach die Taste der Screenshot-Funktion, die Tarkov selbst mitbringt. MAYAK liest das Bild, das das Spiel speichert, und zeigt in der App, was du brauchst.',
     items: [
       { title: 'Deine Position auf der Karte', reads: 'Koordinaten im Dateinamen', body: 'Liest die im Dateinamen des Screenshots eingebetteten Koordinaten und die Blickrichtung und zeigt dich als Pfeil auf MAYAKs Karte, gezeichnet aus den Karten und Daten von tarkov.dev. Karte und Etage ergeben sich aus Logs und Koordinaten. Filter zeigen Ausgänge, Bosse, Schlüssel, Aufgabenziele und mehr, und du kannst mit deinem eigenen Stift darauf zeichnen.' },
       { title: 'Mit dem Trupp teilen', reads: 'Aufnahmeorte (mit dem Trupp-Code verschlüsselt)', body: 'Alle, die einen Trupp-Code teilen, sehen sich gegenseitig auf der Karte, mit Name, Trupp-Farbe und Blickrichtung. Zeichnet gleichzeitig mit dem Trupp-Stift, setzt eine Stecknadel für „schau hier“ und schickt Seiten und Snap-Notizen. Der Name eines Mitspielers öffnet seine Karte; Level, K/D und Ähnliches samt Bild erscheinen dort aber erst, wenn er selbst den Reiter „Overall“ seines Charakterbildschirms per Screenshot erfasst hat.' },
@@ -103,6 +103,7 @@ export const de: Messages = {
     lead: 'MAYAK liest nur die Screenshots und Logs, die das Spiel speichert, lokale Einstellungsdateien und öffentliche Web-APIs.',
     items: [
       'Kein Auslesen des Prozessspeichers, keine DLL-Injection, keine Hooks, kein Mitschneiden von Paketen',
+      'Keine Bildschirmaufnahme, kein Mitschnitt, kein Overlay; gelesen werden nur die Bilder, die die Screenshot-Funktion des Spiels speichert',
       'Keine automatisierten Tastatur- oder Mauseingaben ins Spiel',
       'Screenshots werden nie hochgeladen; OCR und Bildanalyse laufen lokal (nur eine mit dem Trupp geteilte Snap-Notiz und dein Charakterbild gehen verschlüsselt an deinen Trupp)',
       'TarkovTracker-API-Schlüssel werden mit Windows DPAPI verschlüsselt gespeichert',
@@ -141,7 +142,7 @@ export const de: Messages = {
     title: 'Fragen',
     items: [
       { q: 'Wie spricht man MAYAK aus und was heißt es?', a: 'Ma-JAK. Es ist das russische Wort für Leuchtturm (маяк), deshalb zeigt das Logo einen.' },
-      { q: 'Kann ich dafür gebannt werden?', a: 'MAYAK rührt den Spielprozess nie an; es liest nur Dateien, die das Spiel selbst speichert (Screenshots und Logs). Es tut nichts, wonach ein Anti-Cheat sucht, etwa Speicher auslesen oder Eingaben automatisieren. Ob du überhaupt ein Begleitprogramm nutzt, bleibt deine Entscheidung.' },
+      { q: 'Kann ich dafür gebannt werden?', a: 'MAYAK rührt den Spielprozess nie an; es liest nur Dateien, die das Spiel selbst speichert (Screenshots und Logs). Auch die Screenshots macht nicht MAYAK: Es sind die, die die Screenshot-Funktion von Tarkov speichert. Es tut nichts, wonach ein Anti-Cheat sucht, etwa Speicher auslesen oder Eingaben automatisieren. Ob du überhaupt ein Begleitprogramm nutzt, bleibt deine Entscheidung.' },
       { q: 'Werden meine Screenshots irgendwohin gesendet?', a: 'Die Screenshots selbst nicht. OCR und Bildanalyse laufen lokal mit dem mitgelieferten Tesseract oder Windows OCR. Nur solange du in einem Trupp bist, gehen deine Position, die Snap-Notizen, die du teilst, und das aus deinem Charakterbildschirm ausgeschnittene Bild an deinen Trupp, verschlüsselt mit dem Trupp-Code. Die übrigen Dienste stehen unter Sicherheit, und an sie geht kein Bild.' },
       { q: 'Welche Auflösungen und Sprachen werden unterstützt?', a: 'Die Position auf der Karte funktioniert bei jeder Auflösung. Die Erkennung von Aufgabenbildschirm und Items ist auf 2560×1440 abgestimmt und unterstützt gängige 16:9- und 16:10-Auflösungen. Das Spiel kann auf Englisch oder Japanisch laufen.' },
       { q: 'Warum warnt SmartScreen vor dem Installer?', a: 'MAYAK ist eine unsignierte Open-Source-App, deshalb warnt SmartScreen einmal. Klicke auf „Weitere Informationen“ und „Trotzdem ausführen“, dann läuft die Installation durch; spätere Starts und automatische Updates zeigen keine Warnung. Code-Signierung kostet Geld und verlangt eine Identitätsprüfung, deshalb gibt es sie noch nicht.' },

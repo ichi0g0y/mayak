@@ -4,7 +4,7 @@ export const en: Messages = {
   nav: { features: 'Features', start: 'Getting started', squad: 'Squad', safety: 'Safety', download: 'Download', faq: 'FAQ', github: 'GitHub', language: 'Language', downloadButton: 'Download', changelog: 'Changelog' },
   hero: {
     tagline: 'Escape from Tarkov companion',
-    lead: 'MAYAK is a companion for Escape from Tarkov. Just by reading the screenshots you take in the game and the game’s logs, it shows your position on the map, your tasks and item info in the app. With your squad, you can also share positions and drawings on the map. It never touches the game’s process or memory.',
+    lead: 'MAYAK is a companion for Escape from Tarkov. Just by reading the pictures Tarkov’s own screenshot feature saves and the game’s logs, it shows your position on the map, your tasks and item info in the app. With your squad, you can also share positions and drawings on the map. It never captures your screen, and never touches the game’s process or memory.',
     installLabel: (version: string, os: string) => `Install MAYAK ${version} for ${os}`,
     hints: { windows: 'The Windows installer. Just run it; no administrator rights needed.', mac: 'Open the dmg and drag Mayak.app to Applications. The first time, right-click → Open. A preview build.', linux: 'Extract the tar.gz and run ./Mayak (needs WebKitGTK). A preview build.' },
     otherPlatforms: 'Other platforms →',
@@ -30,7 +30,7 @@ export const en: Messages = {
   features: {
     kicker: 'Features',
     title: 'One screenshot.\nEverything you need.',
-    lead: 'Just press EFT’s screenshot key. MAYAK reads the saved file and shows what you need in the app.',
+    lead: 'Just press the key of Tarkov’s own screenshot feature. MAYAK reads the picture the game saves and shows what you need in the app.',
     items: [
       { title: 'Your position on the map', reads: 'Coordinates in the file name', body: 'Reads the coordinates and heading embedded in the screenshot file name and shows you as an arrow on MAYAK’s map, drawn from tarkov.dev’s maps and data. Map and floor follow from the logs and the coordinates. Filters switch extracts, bosses, keys, task objectives and more on and off, and you can draw on it with your own pen.' },
       { title: 'Share with your squad', reads: 'Where you took a screenshot (encrypted with the squad code)', body: 'Everyone who shares a squad code sees each other on the map, with name, squad colour and heading. Draw on the same map at once with the squad pen, drop a pin to say “look here”, or send pages and snap notes. A squadmate’s name opens their card, but their level, K/D and the like, and the picture, only appear once they have screenshotted their own character screen’s Overall tab.' },
@@ -103,6 +103,7 @@ export const en: Messages = {
     lead: 'MAYAK reads only the screenshots and logs the game saves, local settings files and public web APIs.',
     items: [
       'No process memory reads, DLL injection, hooks or packet capture',
+      'No screen capture, recording or overlay; the only pictures read are those the game’s own screenshot feature saves',
       'No automated keyboard or mouse input to the game',
       'Screenshots are never uploaded; OCR and image analysis run locally (only a snap note you share with your squad and your character picture go to your squad, encrypted)',
       'TarkovTracker API keys are stored encrypted with Windows DPAPI',
@@ -141,7 +142,7 @@ export const en: Messages = {
     title: 'Questions',
     items: [
       { q: 'How do you say MAYAK, and what does it mean?', a: 'Ma-YAK. It is the Russian word for lighthouse (маяк), which is why the logo is one.' },
-      { q: 'Can this get me banned?', a: 'MAYAK never touches the game process; it only reads files the game saves itself (screenshots and logs). It does nothing an anti-cheat looks for, such as reading memory or automating input. Whether you use a companion tool at all is still your own decision.' },
+      { q: 'Can this get me banned?', a: 'MAYAK never touches the game process; it only reads files the game saves itself (screenshots and logs). Even the screenshots are not taken by MAYAK: they are the ones Tarkov’s own screenshot feature saves. It does nothing an anti-cheat looks for, such as reading memory or automating input. Whether you use a companion tool at all is still your own decision.' },
       { q: 'Are my screenshots sent anywhere?', a: 'The screenshots themselves are not. OCR and image analysis run locally with the bundled Tesseract or Windows OCR. Only while you are in a squad do your position, the snap notes you share and the picture cut from your character screen go to your squad, encrypted with the squad code. The other services are listed under Safety, and no image goes to them.' },
       { q: 'Which resolutions and languages are supported?', a: 'Your position on the map works at any resolution. Tasks screen and item recognition are tuned for 2560×1440 and support common 16:9 and 16:10 resolutions. The game can be in English or Japanese.' },
       { q: 'Why does SmartScreen warn about the installer?', a: 'MAYAK is an unsigned open-source app, so SmartScreen warns once. Click "More info", then "Run anyway" and setup completes; later starts and automatic updates show no warning. Code signing needs money and identity checks, so it is not in place yet.' },
