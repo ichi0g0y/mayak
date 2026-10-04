@@ -4,6 +4,16 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## v0.1.26 (2026-10-05)
+
+### New
+
+- The sites tasks open on now have an order. In the browser settings, under "Opening tasks", drag the official wiki, the Japanese wiki and tarkov.dev into the order you want in "Site order". A task opens on the first site from the top that has its page, and on the first site when none has it. Recognized tasks and tasks opened from the item sidebar or the map all follow the order. A new install starts with the official wiki, the Japanese wiki, then tarkov.dev; if you had chosen a site before, it comes first. Another PC (Client) uses the Host's order, and reordering on a Client changes the Host's setting.
+
+### Fixed
+
+- Tasks of an event under way (All-Inclusive Support and others) were not recognized from a screenshot of the Tasks screen. Tasks tarkov.dev does not have yet are filled in from the official wiki, and that left out the tasks of an event under way as if the event were over.
+
 ## v0.1.25 (2026-10-04)
 
 ### Fixed
