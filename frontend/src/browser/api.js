@@ -518,8 +518,10 @@ function hostStatus(s) {
   if ('monitoring' in s) out.monitoring = !!s.monitoring
   if ('currentMap' in s) out.map = String(s.currentMap || '')
   if ('raidActive' in s) out.raid = !!s.raidActive
-  // The last position screenshot, for the map view (in game coordinates).
-  if ('position' in s) {
+  // The last position screenshot, for the map view (in game coordinates). A
+  // status leaves it out when there is none (a raid started, a map changed):
+  // every status is whole (it has raidActive), so none clears the last one.
+  if ('position' in s || 'raidActive' in s) {
     const p = s.position
     out.position =
       p && [p.x, p.y, p.z].every(Number.isFinite)

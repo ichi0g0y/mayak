@@ -82,6 +82,10 @@ func (a *App) handleMap(mapName string) {
 		a.mu.Unlock()
 		return
 	}
+	// The last position was on the map played before.
+	if a.status.CurrentMap != mapName {
+		a.status.Position = nil
+	}
 	a.status.CurrentMap = mapName
 	a.status.RaidActive = active
 	status := a.status
@@ -127,6 +131,9 @@ func (a *App) handleLogEvent(event logdetect.Event) {
 		a.mu.Lock()
 		a.status.RaidStartedAt = started.Format(time.RFC3339)
 		a.status.RunThroughAt = ""
+		// The last raid's position is not where the player is now; the new
+		// one comes with the raid's first position screenshot.
+		a.status.Position = nil
 		if runThrough {
 			a.status.RunThroughAt = started.Add(time.Duration(settings.RunThroughSeconds) * time.Second).Format(time.RFC3339)
 		}
@@ -149,6 +156,7 @@ func (a *App) handleLogEvent(event logdetect.Event) {
 		a.status.RaidActive = false
 		a.status.RaidStartedAt = ""
 		a.status.RunThroughAt = ""
+		a.status.Position = nil
 		status := a.status
 		a.mu.Unlock()
 		a.emitEvent("status:update", status)
