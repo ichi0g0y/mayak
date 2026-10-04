@@ -507,6 +507,14 @@ export function PreviewSound(kind: string, path: string, voice: string, volume: 
 }
 
 /**
+ * QuestSiteFor is the site a task opens on, for the shell: the first in order
+ * that has the task's page (urls, as QuestSiteURLs gives them).
+ */
+export function QuestSiteFor(order: string[], urls: { [_ in string]?: string }): $CancellablePromise<string> {
+    return $Call.ByID(83629594, order, urls);
+}
+
+/**
  * QuestSiteURLs is a task's page on each task site, from the task list at
  * hand: a task tab kept from before keeps the pages it opened with, which a
  * newer list may know better (a trader read since, for the Japanese wiki).

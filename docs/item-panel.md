@@ -152,9 +152,9 @@
 - 各行: 名前（タスクは言語別の名前とトレーダー名、ハイドアウトは施設名と `Lv.N`）、`FIR` バッジ、`×個数`、完了ならチェック。
 - 完了済み（タスクは `completed`、ハイドアウトは `complete===true`）は末尾に並べ、`done` クラスを付けます。見出しの数字は未完了の件数です。
 - `itemInfo()` はタスク・ハイドアウトとも最大 80 件まで受け付けます。
-- **タスクを押す**と、そのタスクのページをポップアップウインドウで開きます（`itemTask`、ウインドウは [browser-shell.md](browser-shell.md)、タスク表示は [tasks-and-maps.md](tasks-and-maps.md)）。サイトは押した時点の設定で決まります（`itemSite()`）。
-  - ローカル接続（Host 上）: Host の設定 `questSite`。
-  - それ以外: ブラウザ設定の `questSite`。`host`（Hostの設定に従う）のときは、アイテムと一緒に届いた `questSite`（なければ `tarkov-dev`）。
+- **タスクを押す**と、そのタスクのページをポップアップウインドウで開きます（`itemTask`、ウインドウは [browser-shell.md](browser-shell.md)、タスク表示は [tasks-and-maps.md](tasks-and-maps.md)）。サイトは押した時点のサイトの順番で、ページがある最初のサイトに決まります（`pickSite` → Go 側 `QuestSiteFor`、[tasks-and-maps.md](tasks-and-maps.md) の「サイトの順番とフォールバック」）。
+  - ローカル接続（Host 上）: Host の設定 `questSites`。
+  - Client: Host から届いた `questSites`（古い Host なら `questSite` を先頭にした順番）。届いていなければアイテムと一緒に届いた `questSites`。
 
 ## アイテム検索
 
@@ -179,7 +179,7 @@
 
 ### タスクページ（`withTaskURLs`、`app_item.go`）
 
-アイテムを送る直前に、各タスクの 3 サイト分の URL を `urls` に付け、Host の設定サイトを `questSite` に入れます。URL は認識したタスクと同じ `questStatusURL` で作ります（`app_quest_site.go`）。
+アイテムを送る直前に、各タスクの 3 サイト分の URL を `urls` に付け、Host のサイトの順番を `questSites`、その 1 番目を `questSite` に入れます。URL は認識したタスクと同じ `questStatusURL` で作ります（`app_quest_site.go`）。
 
 | サイト | URL |
 | --- | --- |
@@ -195,4 +195,4 @@
 | `japanese-wiki` | `https://wikiwiki.jp/eft/{英語名}` |
 | それ以外・該当なし | `link`（tarkov.dev）、なければ `wikiLink` |
 
-ヘッダーのサイト選択は、Host 上のローカル接続なら Host の設定、それ以外はブラウザ設定（`host` ならアイテムの `questSite`）です。ボタンの `title` は「アイテムのページを開く · サイト名」です。
+ヘッダーのリンク先は、サイトの順番の 1 番目です（アイテムのページは有無を確かめません）。Host 上のローカル接続なら Host の設定、Client なら Host から届いた順番（無ければアイテムの `questSites`）を使います。ボタンの `title` は「アイテムのページを開く · サイト名」です。

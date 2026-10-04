@@ -22,6 +22,7 @@ const HELD_MS = 60_000
 // five sixths of them (paced), so the relay never has to close it; these are
 // taken until a welcome tells.
 const LINK_LIMITS = { rate: 120, rateWindow: 10000, bytes: 16 * 1024 * 1024, bytesWindow: 60000 }
+const questSites = ['tarkov-dev', 'official-wiki', 'japanese-wiki']
 // hostInfoOf keeps what is sound of the Host's info: its game mode, the
 // map it plays (a map key), whether in a raid, and its last position (game
 // coordinates and facing, when it was taken), else null.
@@ -33,7 +34,10 @@ export function hostInfoOf(h) {
       : null
   return {
     mode: String(h.mode || '').slice(0, 20),
-    questSite: ['tarkov-dev', 'official-wiki', 'japanese-wiki'].includes(h.questSite) ? h.questSite : '',
+    questSite: questSites.includes(h.questSite) ? h.questSite : '',
+    // The order the Host tries the task sites in (none from a version that
+    // knows one site only; state.js siteOrder makes it whole).
+    questSites: Array.isArray(h.questSites) ? h.questSites.filter((s) => questSites.includes(s)).slice(0, 3) : null,
     map: typeof h.map === 'string' && /^[a-z0-9-]{0,60}$/.test(h.map) ? h.map : '',
     raid: h.raid === true,
     position,

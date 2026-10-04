@@ -19,28 +19,37 @@
 
 座標付きのスクリーンショットでも、アイテム画面でなくタスク画面らしければ先に照合します。一致度が 0.78 以上ならタスクとして扱い、座標は送りません。
 
-Host 設定の「タスクを開く」（`OpenQuestPage`）は、最後に認識したタスクを現在のサイト設定でもう一度開きます。まだ認識したタスクがなければエラー（`no recognized task`）です。
+Host 設定の「タスクを開く」（`OpenQuestPage`）は、最後に認識したタスクを現在のサイトの順番でもう一度開きます。まだ認識したタスクがなければエラー（`no recognized task`）です。
 
 ## タスクサイトと URL（`app_quest_site.go`）
 
-`browser:task` には `id`・`name`・`site`（Host の設定）と、3 サイトすべての URL（`urls`）が入ります。
+`browser:task` には `id`・`name`・`site`（開くサイト。下の「サイトの順番とフォールバック」で決める）と、3 サイトすべての URL（`urls`）が入ります。
 
-| サイト（`QuestSite`） | URL |
+| サイト | URL |
 |---|---|
 | `tarkov-dev`（既定） | `QuestURL`。なければ `https://tarkov.dev/tasks/` |
 | `official-wiki` | `QuestWikiURL`（`https://escapefromtarkov.fandom.com/wiki/...` の形式のときだけ）。それ以外は名前の空白を `_` にしてパスエスケープした `https://escapefromtarkov.fandom.com/wiki/<name>` |
-| `japanese-wiki` | トレーダーがあれば `https://wikiwiki.jp/eft/<trader>/<name>`（どちらもパスエスケープ）。なければ `https://wikiwiki.jp/eft/?cmd=search&word=<name>` |
+| `japanese-wiki` | トレーダーがあれば `https://wikiwiki.jp/eft/<trader>/<name>`（どちらもパスエスケープ）。なければストーリー章として `https://wikiwiki.jp/eft/ストーリータスク/<name>` |
 
 - 日本語 Wiki はページ名にカンマと ` [PVE ZONE]` 接尾辞を含まないため、名前からカンマを除き、末尾の ` [PVE ZONE]` を取り除きます（例: `Camera, Action!` → `Camera Action!`）。
 - 不明なサイト値は `tarkov-dev` に正規化されます（`normalizeQuestSite`）。
-- 補足タスクや公式 Wiki 由来のタスクは `normalizedName` を持たないため、tarkov.dev ではタスク一覧ページにフォールバックします。Wiki 由来のタスクはトレーダーもないため、日本語 Wiki では検索ページを開きます。
+- 補足タスクや公式 Wiki 由来のタスクは `normalizedName` を持たないため、tarkov.dev の URL はタスク一覧ページになります（この場合 tarkov.dev には「ページが無い」と判定します）。
 - アイテム欄の「必要なタスク」にも同じ 3 つの URL が付きます（`withTaskURLs`、[アイテム欄](item-panel.md)）。
+
+### サイトの順番とフォールバック
+
+設定 `QuestSites` は 3 サイトの順番です（既定は tarkov.dev → 公式 Wiki → 日本語 Wiki）。タスクは上から順に見て、そのタスクのページがある最初のサイトで開きます（`questSiteFor`）。どのサイトにも無ければ 1 番目のサイトで開きます。
+
+- **tarkov.dev**: URL が `/task/…`（カタログにあるタスク）ならページあり。問い合わせはしません。
+- **公式 Wiki・日本語 Wiki**: URL に `HEAD` を送り、404 か 410 ならページ無しです。応答が無い・5xx のときはページありとみなします（Wiki が落ちていても別サイトへ移さないため）。結果は URL ごとに、ありは 12 時間、無しは 30 分覚えます。
+- 開く場所ごとの判定: 認識したタスクと「タスクを開く」は Go 側の `showBrowserTask` が判定してから `browser:task` を出します（Remote Control への送信はこの判定を待ちません）。マップのタスクの印とアイテム欄のタスクは、シェルが `QuestSiteFor(order, urls)` を呼んで決めます。
+- 設定 `QuestSite` には 1 番目のサイトを入れます。サイトを 1 つしか知らない古い版が `QuestSite` だけを変えた場合は、そのサイトを先頭に移します（`normalizeQuestSites`）。
 
 ## ブラウザでのタスクタブ
 
 `receiveTask`（`frontend/src/browser/state.js`）の動作です。
 
-- **開くサイト**: ブラウザ側の `questSite` が `host`（既定）なら Host から届いた `site`、そうでなければブラウザ側の選択を使います。
+- **開くサイト**: 届いた `site` を使います（Host が順番とページの有無で決めたもの）。
 - **同じタスクのタブ**: 同じタスク ID・同じページのタブが既にあれば、そのタブをアクティブにします。無ければ、同じページを開いているタブ（ブックマークやリンクから開いたもの。翻訳しているかどうか、`#` 以降、末尾の `/` は見ない: `samePage`）をそのタスクのタブにします。スクリーンショットを繰り返し撮ってもタブは増えません。
 - **`taskMode`**: 既定の `new` は新しいタブを追加します。`reuse` は固定（ピン留め）されていない最初のタスクタブを更新します。
 - **上限**: タブが 80 個に達していれば開きません。
@@ -50,9 +59,9 @@ Host 設定の「タスクを開く」（`OpenQuestPage`）は、最後に認識
 
 ### Host のサイト設定との関係
 
-- **Host モード（このPCで検出）**: ブラウザ設定「タスク」の「表示するサイト」は Host の `QuestSite` そのものを変更します（`PersistSettings`）。ブラウザ側の `questSite` は `host` に固定されます。以前ブラウザ側で別のサイトを選んでいた場合は、起動時にその値を Host 設定へ移します。
-- **別の PC の Host に接続（Client）**: Host からリンクで届いた `browser:task` を受け取り（この PC に出すものでタスクを外していなければ）、「Hostの設定に従う」か、自分のサイト選択を使います。
-- アイテム欄から開くタスクページも同じ規則です。Host モードでは Host の設定、クライアントではブラウザの選択またはアイテム情報に付いたサイトを使います。
+- **Host モード（このPCで検出）**: ブラウザ設定「タスク」の「開くサイトの順番」は Host の `QuestSites` そのものを変更します（`questSites` アクション → `PersistSettings`）。行をドラッグするか、行にフォーカスして Alt+↑/↓ で並べ替えます。以前ブラウザ側でサイトを選んでいた場合は、起動時にそのサイトを Host の順番の先頭へ移し、ブラウザ側の `questSite` を `host` に戻します。
+- **別の PC の Host に接続（Client）**: Host からリンクで届いた `browser:task` を受け取り（この PC に出すものでタスクを外していなければ）、その `site` で開きます。設定の並びは Host の順番（`host:info` の `questSites`）で、並べ替えると Host の設定が変わります（`prefs:sync` で `questSites` と `questSite` を送る）。Host につながっていないあいだは並べ替えられません。
+- アイテム欄やマップから開くタスクページも同じ順番で決めます。Host モードでは Host の設定、Client では Host から届いた順番（古い Host なら `questSite` を先頭にした順番、それも無ければアイテム情報に付いた順番）を使います。
 
 ## Remote Control（tarkov.dev）
 

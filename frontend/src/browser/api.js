@@ -31,6 +31,7 @@ import {
   openLocal,
   tabAt,
   cycleTab,
+  siteOrder,
 } from './state.js'
 import { encode, decode, MAX_AGE, PAIR_RELAY } from './peer-code.js'
 import { hiddenOf, mapSettingsOf, squadColorOf } from './map-geo.js'
@@ -45,7 +46,7 @@ let state,
   platform,
   returnTo = '',
   host = null,
-  hostQuestSite = 'tarkov-dev',
+  hostQuestSites = siteOrder(),
   updateChannel = 'stable',
   popup = null,
   item = null,
@@ -232,7 +233,7 @@ const snapshot = () => ({
   // A Client's view of its Host (receiveHost): the map played, whether in a
   // raid, the last position, for the map view.
   hostView: state.connection.mode === 'client' ? remoteHost : null,
-  hostQuestSite,
+  hostQuestSites,
   item,
   itemOpen,
   itemSearch,
@@ -551,11 +552,35 @@ function hostStatus(s) {
   if ('profile' in s) out.profileAt = String(s.profile?.at || '')
   return out
 }
-// The task site for pages opened from the item sidebar: the Host's current
-// setting on the Host, else this browser's choice or the one the item came with.
-function itemSite() {
-  if (state.connection.mode === 'local') return hostQuestSite
-  return state.questSite === 'host' ? remoteHost?.questSite || item?.questSite || 'tarkov-dev' : state.questSite
+// The task sites in the order the Host tries them: its current setting on
+// the Host, else as the Host tells it (or the item came with it).
+function taskSites() {
+  if (state.connection.mode === 'local') return hostQuestSites
+  const from = remoteHost?.questSites ? remoteHost : item || remoteHost || {}
+  return siteOrder(from.questSites, from.questSite)
+}
+// pickSite is the site a task opens on: the first in the order with the
+// task's page (the Go side asks the wikis), else the first.
+async function pickSite(urls) {
+  const order = taskSites()
+  try {
+    const site = await go.QuestSiteFor(order, urls)
+    if (order.includes(site)) return site
+  } catch {}
+  return order[0]
+}
+// setHostSites makes order the Host's setting (on the Host) and tells it.
+async function setHostSites(order) {
+  order = siteOrder(order)
+  if (platform !== 'windows' || JSON.stringify(order) === JSON.stringify(hostQuestSites)) return
+  try {
+    const s = await go.GetSettings()
+    s.questSites = order
+    s.questSite = order[0]
+    await go.PersistSettings(s)
+    hostQuestSites = order
+    void shareHostInfo()
+  } catch {}
 }
 // Views are placed in whole pixels.
 const anchorY = (data) => Math.round(Number.isFinite(data?.anchor) ? data.anchor : innerHeight / 2)
@@ -848,7 +873,8 @@ async function shareHostInfo() {
   try {
     peer.sendHost({
       mode: String((await go.BrowserCatalogMode()) || ''),
-      questSite: hostQuestSite,
+      questSite: hostQuestSites[0],
+      questSites: hostQuestSites,
       map: host?.map || '',
       raid: !!host?.raid,
       position: host?.position || null,
@@ -858,9 +884,9 @@ async function shareHostInfo() {
 const hostPlace = () => JSON.stringify([host?.map || '', !!host?.raid, host?.position || null])
 let hostMode = ''
 let remoteHost = null
-async function receiveHost({ mode, questSite, map, raid, position }) {
+async function receiveHost({ mode, questSite, questSites, map, raid, position }) {
   if (state.connection.mode !== 'client') return
-  remoteHost = { mode, questSite, map, raid, position }
+  remoteHost = { mode, questSite, questSites, map, raid, position }
   update()
   if (mode === hostMode) return
   hostMode = mode
@@ -934,24 +960,20 @@ const sharedPrefs = () => ({
   bossMode: state.bossMode,
 })
 const sharePrefs = () =>
-  peer.sendPrefs({ ...sharedPrefs(), ...(state.connection.mode === 'local' ? { questSite: hostQuestSite } : {}) })
+  peer.sendPrefs({
+    ...sharedPrefs(),
+    ...(state.connection.mode === 'local' ? { questSite: hostQuestSites[0], questSites: hostQuestSites } : {}),
+  })
 async function receivePrefs(p) {
   const keys = Object.keys(sharedPrefs())
   const next = restore({ ...state, ...Object.fromEntries(keys.filter((k) => k in p).map((k) => [k, p[k]])) })
   const before = JSON.stringify(sharedPrefs())
   for (const k of keys) state[k] = next[k]
   if (before !== JSON.stringify(sharedPrefs())) void loadBosses()
-  // A Client's choice of task site is the Host's setting.
-  const site = ['tarkov-dev', 'official-wiki', 'japanese-wiki'].includes(p.questSite) ? p.questSite : ''
-  if (state.connection.mode === 'local' && platform === 'windows' && site && site !== hostQuestSite) {
-    try {
-      const s = await go.GetSettings()
-      s.questSite = site
-      await go.PersistSettings(s)
-      hostQuestSite = site
-      void shareHostInfo()
-    } catch {}
-  }
+  // A Client's order of task sites is the Host's setting; a version that
+  // knows one site sends that one, which goes first.
+  if (state.connection.mode === 'local' && (Array.isArray(p.questSites) || typeof p.questSite === 'string'))
+    await setHostSites(siteOrder(Array.isArray(p.questSites) ? p.questSites : hostQuestSites, p.questSite))
   if (state.connection.mode === 'local') sharePrefs()
   update()
   await persist()
@@ -1165,17 +1187,14 @@ const ready = (async () => {
     try {
       host = hostStatus(await go.GetStatus())
       const s = await go.GetSettings()
-      hostQuestSite = s.questSite || 'tarkov-dev'
+      hostQuestSites = siteOrder(s.questSites, s.questSite)
     } catch {}
-    // On the Host the task site is one setting, the Host's; a site chosen in
-    // the browser before becomes that setting once.
+    // On the Host the task sites are one setting, the Host's; a site chosen in
+    // the browser before goes first in it, once.
     if (state.connection.mode === 'local' && state.questSite !== 'host') {
+      await setHostSites(siteOrder(hostQuestSites, state.questSite))
+      state.questSite = 'host'
       try {
-        const s = await go.GetSettings()
-        s.questSite = state.questSite
-        await go.PersistSettings(s)
-        hostQuestSite = state.questSite
-        state.questSite = 'host'
         await persist()
       } catch {}
     }
@@ -1325,27 +1344,16 @@ const ready = (async () => {
   return snapshot()
 })()
 // perform runs an action; what both PCs share that it changed (the
-// preferences, the bookmarks; a Client's choice of task site) goes to the
-// other PC (receivePrefs, receiveBookmarks).
+// preferences, the bookmarks) goes to the other PC (receivePrefs,
+// receiveBookmarks).
 async function perform(type, data) {
   const prefs = JSON.stringify(sharedPrefs())
   const marks = JSON.stringify(state.bookmarks)
-  const site = state.questSite
   try {
     return await performOne(type, data)
   } finally {
     if (JSON.stringify(sharedPrefs()) !== prefs) sharePrefs()
     if (JSON.stringify(state.bookmarks) !== marks) shareBookmarks()
-    // A Client choosing a task site chooses the Host's, and follows it.
-    if (
-      state.connection.mode === 'client' &&
-      state.questSite !== site &&
-      state.questSite !== 'host' &&
-      peer.connected
-    ) {
-      peer.sendPrefs({ questSite: state.questSite })
-      state.questSite = 'host'
-    }
   }
 }
 async function performOne(type, data) {
@@ -1788,7 +1796,8 @@ async function performOne(type, data) {
     case 'settingsSection':
       if (data === 'tasks' && platform === 'windows')
         try {
-          hostQuestSite = (await go.GetSettings()).questSite || hostQuestSite
+          const s = await go.GetSettings()
+          hostQuestSites = siteOrder(s.questSites, s.questSite)
         } catch {}
       if (browserSections.includes(data) || (platform === 'windows' && hostSections.includes(data))) section = data
       break
@@ -1974,12 +1983,7 @@ async function performOne(type, data) {
       const id = String(data?.id || '')
       const urls = id ? await go.QuestSiteURLs(id, '') : null
       if (!urls || !Object.keys(urls).length) return snapshot()
-      const site =
-        state.connection.mode === 'local'
-          ? hostQuestSite
-          : state.questSite === 'host'
-            ? remoteHost?.questSite || 'tarkov-dev'
-            : state.questSite
+      const site = await pickSite(urls)
       if (!receiveTask(state, { id, name: String(data?.name || id).slice(0, 200), site, urls })) return snapshot()
       break
     }
@@ -1988,7 +1992,7 @@ async function performOne(type, data) {
     case 'itemTask': {
       const task = item?.tasks.find((t) => t.id === (data?.id ?? data))
       if (!task) return snapshot()
-      const site = itemSite(),
+      const site = await pickSite(task.urls),
         url = webURL(task.urls[site])
       if (!url) return snapshot()
       await openPopup({
@@ -2041,16 +2045,16 @@ async function performOne(type, data) {
       await go.StartMonitoring()
       return snapshot()
     }
-    // The task site is the Host's setting (it also decides what goes to
-    // tarkov.dev Remote Control); the browser follows it.
-    case 'hostQuestSite': {
-      if (platform !== 'windows' || !['tarkov-dev', 'official-wiki', 'japanese-wiki'].includes(data)) return snapshot()
-      const s = await go.GetSettings()
-      s.questSite = data
-      await go.PersistSettings(s)
-      hostQuestSite = data
-      state.questSite = 'host'
-      void shareHostInfo()
+    // The order of task sites is the Host's setting: set on the Host, or
+    // from a Client, which tells its Host (and shows the order at once).
+    case 'questSites': {
+      if (!Array.isArray(data)) return snapshot()
+      const order = siteOrder(data)
+      if (state.connection.mode === 'local') await setHostSites(order)
+      else if (state.connection.mode === 'client' && peer.connected && remoteHost) {
+        peer.sendPrefs({ questSite: order[0], questSites: order })
+        remoteHost = { ...remoteHost, questSite: order[0], questSites: order }
+      }
       break
     }
     case 'itemClose':

@@ -259,7 +259,8 @@ func normalizeSettings(s config.Settings) config.Settings {
 	if s.GameLanguage != "en" && !slices.Contains(locale.Languages, s.GameLanguage) {
 		s.GameLanguage = "auto"
 	}
-	s.QuestSite = normalizeQuestSite(s.QuestSite)
+	s.QuestSites = normalizeQuestSites(s.QuestSites, s.QuestSite)
+	s.QuestSite = s.QuestSites[0]
 	if s.UpdateChannel != update.ChannelNightly {
 		s.UpdateChannel = update.ChannelStable
 	}

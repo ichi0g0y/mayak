@@ -59,10 +59,10 @@ test('curated bookmarks merge once and preserve user choices', () => {
   }))
   assert.deepEqual(restore({ bookmarks: full }).bookmarks, full)
 })
-const task = (id) => ({
+const task = (id, site = 'official-wiki') => ({
   id,
   name: id,
-  site: 'official-wiki',
+  site,
   urls: {
     'tarkov-dev': `https://tarkov.dev/task/${id}`,
     'official-wiki': `https://escapefromtarkov.fandom.com/wiki/${id}`,
@@ -72,7 +72,6 @@ const task = (id) => ({
 test('a task page translated since is the same task page', () => {
   const s = defaults()
   s.taskMode = 'new'
-  s.questSite = 'official-wiki'
   const first = receiveTask(s, task('Debut'))
   // Translated with the toolbar button (Google adds its own parameters).
   first.url =
@@ -90,7 +89,6 @@ test('a task page translated since is the same task page', () => {
 test('a tab already showing a task page, not opened for the task, becomes its tab', () => {
   const s = defaults()
   s.taskMode = 'new'
-  s.questSite = 'official-wiki'
   // Opened from a bookmark, translated, with a trailing slash.
   const opened = {
     id: 'b1',
@@ -122,9 +120,8 @@ test('reuse preserves pinned tasks and deduplicates repeated detections', () => 
 test('new-tab mode and selected wiki survive restoration', () => {
   const s = defaults()
   s.taskMode = 'new'
-  s.questSite = 'japanese-wiki'
-  const a = receiveTask(s, task('Debut'))
-  const b = receiveTask(s, task('Checking'))
+  const a = receiveTask(s, task('Debut', 'japanese-wiki'))
+  const b = receiveTask(s, task('Checking', 'japanese-wiki'))
   assert.notEqual(a.id, b.id)
   assert.match(b.url, /wikiwiki.jp/)
   assert.deepEqual(
@@ -628,7 +625,6 @@ test("pages translate through Google Translate's proxy and back", () => {
 })
 test('a detected task opens the official wiki translated when asked', () => {
   const s = defaults()
-  s.questSite = 'official-wiki'
   s.translateWiki = true
   const tab = receiveTask(s, task('Debut'))
   assert.equal(
@@ -641,8 +637,7 @@ test('a detected task opens the official wiki translated when asked', () => {
   assert.equal(receiveTask(s, task('Debut')).url, tab.url)
   assert.equal(receiveTask(s, task('Checking')).url, 'https://escapefromtarkov.fandom.com/wiki/Checking')
   s.translateWiki = true
-  s.questSite = 'japanese-wiki'
-  assert.equal(receiveTask(s, task('Debut')).url, 'https://wikiwiki.jp/eft/Prapor/Debut')
+  assert.equal(receiveTask(s, task('Debut', 'japanese-wiki')).url, 'https://wikiwiki.jp/eft/Prapor/Debut')
   assert.equal(restore({ translateWiki: true }).translateWiki, true)
   assert.equal(restore({}).translateWiki, false)
 })
@@ -726,4 +721,25 @@ test('a Client takes all of its Host detections unless it turns some off', () =>
   assert.deepEqual(s.connection.receive, { task: false, map: true, item: true })
   assert.equal(linkKind('browser:position'), 'map')
   assert.equal(linkKind('browser:item'), 'item')
+})
+
+import { siteOrder } from './state.js'
+test('the task sites keep a whole order, a site told alone first', () => {
+  assert.deepEqual(siteOrder(), ['tarkov-dev', 'official-wiki', 'japanese-wiki'])
+  assert.deepEqual(siteOrder(['japanese-wiki', 'bogus', 'japanese-wiki']), [
+    'japanese-wiki',
+    'tarkov-dev',
+    'official-wiki',
+  ])
+  assert.deepEqual(siteOrder(null, 'official-wiki'), ['official-wiki', 'tarkov-dev', 'japanese-wiki'])
+  assert.deepEqual(siteOrder(['japanese-wiki', 'official-wiki'], 'tarkov-dev'), [
+    'tarkov-dev',
+    'japanese-wiki',
+    'official-wiki',
+  ])
+})
+test('a task opens on the site chosen for it, whatever the browser chose before', () => {
+  const s = defaults()
+  s.questSite = 'japanese-wiki'
+  assert.match(receiveTask(s, task('Debut', 'tarkov-dev')).url, /tarkov.dev/)
 })

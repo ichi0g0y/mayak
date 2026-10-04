@@ -16,6 +16,7 @@ import {
   clampSidebar,
   toolOrderOf,
   mergeToolOrder,
+  siteOrder,
 } from './state.js'
 import { Window, Browser } from '@wailsio/runtime'
 import morphdom from 'morphdom'
@@ -503,6 +504,22 @@ function settingsSidebar() {
     })
     .join('')}`
 }
+// siteOrderField lists the task sites in the order they are tried, to be
+// dragged into place: the Host's setting, on a Client as its Host tells it
+// (fixed while no Host is connected).
+function siteOrderField(local) {
+  const view = state.hostView
+  const order = local ? siteOrder(state.hostQuestSites) : siteOrder(view?.questSites, view?.questSite)
+  const fixed = !local && !view
+  const names = Object.fromEntries(siteChoices())
+  const items = order
+    .map(
+      (site, i) =>
+        `<li class="site-order-item" data-site="${esc(site)}" ${fixed ? '' : `draggable="true" tabindex="0" title="${esc(t('questSitesDrag'))}"`}><span class="site-rank">${i + 1}</span><span class="site-name">${esc(names[site] || site)}</span>${fixed ? '' : icon('grip', 'site-grip')}</li>`,
+    )
+    .join('')
+  return `<div class="field"><span id="site-order-label">${esc(t('questSites'))}</span><ol class="site-order ${fixed ? 'fixed' : ''}" aria-labelledby="site-order-label">${items}</ol>${fixed ? `<small class="hint">${esc(t('questSitesNoHost'))}</small>` : ''}</div>`
+}
 function settings() {
   const key = browserSections.includes(state.settingsSection) ? state.settingsSection : 'appearance'
   const tutorial =
@@ -607,14 +624,10 @@ function browserSettings(key) {
         state.itemDock,
       )}</div></section>`
     case 'tasks': {
-      // On the Host the site is its setting; a receiving computer may follow it.
+      // The order of task sites is the Host's setting, on the Host and on a
+      // Client alike (a Client's change goes to its Host).
       const local = state.localHost && state.connection.mode === 'local'
-      const site = local
-        ? `<label class="field"><span>${esc(t('questSite'))}</span><select id="host-quest-site">${siteChoices()
-            .map(([v, l]) => option(v, l, state.hostQuestSite))
-            .join('')}</select></label>`
-        : select('questSite', t('questSite'), [['host', t('hostChoice')], ...siteChoices()], state.questSite)
-      return `<section class="panel"><div class="fields">${site}${select(
+      return `<section class="panel"><div class="fields">${siteOrderField(local)}${select(
         'taskMode',
         t('taskMode'),
         [
@@ -622,7 +635,7 @@ function browserSettings(key) {
           ['reuse', t('reuse')],
         ],
         state.taskMode,
-      )}</div><p class="hint">${esc(t(local ? 'taskSiteHelp' : 'taskSiteClientHelp'))} ${t('taskHelp')}</p><label class="check"><input type="checkbox" data-action="translateWiki" ${state.translateWiki ? 'checked' : ''}>${esc(t('translateWiki'))}</label><p class="hint">${esc(t('translateWikiHelp'))}</p></section>`
+      )}</div><p class="hint">${esc(t('taskSiteHelp'))}${local ? '' : ' ' + esc(t('taskSiteClientHelp'))} ${t('taskHelp')}</p><label class="check"><input type="checkbox" data-action="translateWiki" ${state.translateWiki ? 'checked' : ''}>${esc(t('translateWiki'))}</label><p class="hint">${esc(t('translateWikiHelp'))}</p></section>`
     }
     case 'adblock':
       return `<section class="panel"><label class="check"><input type="checkbox" data-action="adblock" ${state.adblock ? 'checked' : ''}>${t('adblockEnable')}</label><p class="hint">${t('adblockHelp')}</p></section>`
@@ -1116,7 +1129,6 @@ document.addEventListener('change', (event) => {
   if (input.closest('#bookmark-form') && editingBookmark) editingBookmark[input.name] = input.value
   if (input.dataset.scope) void action(input.dataset.scope, { [input.dataset.key]: input.value })
   else if (input.id === 'task-site') void action('site', input.value)
-  else if (input.id === 'host-quest-site') void action('hostQuestSite', input.value)
   else if (input.dataset.action === 'adblock') void action('preferences', { adblock: input.checked })
   if (input.dataset.action === 'translateWiki') void action('preferences', { translateWiki: input.checked })
   if (input.dataset.action === 'linkReceive')
@@ -1454,6 +1466,69 @@ document.addEventListener('keydown', (event) => {
 window.addEventListener('blur', closeContextMenu)
 window.addEventListener('blur', closePlaceMenu)
 window.addEventListener('resize', closePlaceMenu)
+
+// The task sites' order is dragged into place in the settings (Alt+Up and
+// Alt+Down move the one focused); a line marks where the site will land.
+const siteType = 'text/mayak-site'
+function siteDropBefore(list, y) {
+  return [...list.querySelectorAll('.site-order-item')].find((item) => {
+    const r = item.getBoundingClientRect()
+    return y < r.top + r.height / 2
+  })
+}
+function moveSite(site, before) {
+  const order = [...document.querySelectorAll('.site-order-item')].map((item) => item.dataset.site)
+  if (!order.includes(site) || site === before) return
+  const rest = order.filter((s) => s !== site)
+  const at = before ? rest.indexOf(before) : rest.length
+  rest.splice(at < 0 ? rest.length : at, 0, site)
+  if (rest.join() === order.join()) return
+  void action('questSites', rest).then(() =>
+    document.querySelector(`.site-order-item[data-site="${CSS.escape(site)}"]`)?.focus(),
+  )
+}
+document.addEventListener('dragstart', (event) => {
+  const item = event.target.closest?.('.site-order-item[draggable="true"]')
+  if (!item) return
+  event.dataTransfer.setData(siteType, item.dataset.site)
+  event.dataTransfer.effectAllowed = 'move'
+  item.classList.add('dragging')
+})
+document.addEventListener('dragend', () => {
+  document.querySelectorAll('.site-order .dragging').forEach((el) => el.classList.remove('dragging'))
+  clearBookmarkDrop()
+})
+document.addEventListener('dragover', (event) => {
+  if (!event.dataTransfer.types.includes(siteType)) return
+  const list = event.target.closest?.('.site-order')
+  clearBookmarkDrop()
+  if (!list) return
+  event.preventDefault()
+  event.dataTransfer.dropEffect = 'move'
+  const before = siteDropBefore(list, event.clientY)
+  if (before) before.classList.add('drop-before')
+  else list.classList.add('drop-end')
+})
+document.addEventListener('drop', (event) => {
+  if (!event.dataTransfer.types.includes(siteType)) return
+  const list = event.target.closest?.('.site-order')
+  clearBookmarkDrop()
+  if (!list) return
+  event.preventDefault()
+  moveSite(event.dataTransfer.getData(siteType), siteDropBefore(list, event.clientY)?.dataset.site)
+})
+document.addEventListener('keydown', (event) => {
+  const item = event.target.closest?.('.site-order-item[draggable="true"]')
+  if (!item || !event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return
+  event.preventDefault()
+  const up = event.key === 'ArrowUp'
+  if (!(up ? item.previousElementSibling : item.nextElementSibling)) return
+  // Up: before the one above; down: before the one after the next (the end).
+  moveSite(
+    item.dataset.site,
+    (up ? item.previousElementSibling : item.nextElementSibling.nextElementSibling)?.dataset.site,
+  )
+})
 
 // Dragging bookmarks onto the sidebar's bookmark section pins them there; a
 // line marks where the bookmark will land.

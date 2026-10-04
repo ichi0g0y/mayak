@@ -129,7 +129,7 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 | `theme` | `mayak-dark`（既定）。`system` と 12 種のテーマ |
 | `adblock` | `true` |
 | `taskMode` | `new`（既定）/ `reuse` |
-| `questSite` | `host`（既定）/ `tarkov-dev` / `official-wiki` / `japanese-wiki` |
+| `questSite` | 以前のサイト選択（`host` が既定）。Host で起動したときに Host の順番の先頭へ移す。タスクを開くサイトは Host の `questSites` で決まる |
 | `bookmarks` | 最大 100 件 |
 | `tabs`, `active` | タブ一覧とアクティブなタブ |
 | `mapHidden`, `mapSettings`, `mapCollapsed`, `squadName`, `squadColor`, `squadCollapsed`, `squadCode`, `squadRecent` | マップの隠した層・設定・畳んだまとまり、分隊の表示名・分隊カラー・サイドバーのセクションを畳んだか・参加中のコード・最近の分隊（[マップ](#マップ)、[user-data.md](user-data.md)） |

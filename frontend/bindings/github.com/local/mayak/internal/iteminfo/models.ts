@@ -136,9 +136,11 @@ export class Info {
     "live": boolean;
 
     /**
-     * QuestSite is the Host's preferred site for opening tasks.
+     * QuestSite is the Host's preferred site for opening tasks, QuestSites
+     * the order it tries them in.
      */
     "questSite"?: string;
+    "questSites"?: string[];
     "pricedAt": string;
     "fetchedAt": string;
 
@@ -210,6 +212,7 @@ export class Info {
         const $$createField14_0 = $$createType6;
         const $$createField15_0 = $$createType8;
         const $$createField16_0 = $$createType10;
+        const $$createField19_0 = $$createType11;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("names" in $$parsedSource) {
             $$parsedSource["names"] = $$createField4_0($$parsedSource["names"]);
@@ -231,6 +234,9 @@ export class Info {
         }
         if ("locks" in $$parsedSource) {
             $$parsedSource["locks"] = $$createField16_0($$parsedSource["locks"]);
+        }
+        if ("questSites" in $$parsedSource) {
+            $$parsedSource["questSites"] = $$createField19_0($$parsedSource["questSites"]);
         }
         return new Info($$parsedSource as Partial<Info>);
     }
@@ -417,3 +423,4 @@ const $$createType7 = HideoutNeed.createFrom;
 const $$createType8 = $Create.Array($$createType7);
 const $$createType9 = Lock.createFrom;
 const $$createType10 = $Create.Array($$createType9);
+const $$createType11 = $Create.Array($Create.Any);

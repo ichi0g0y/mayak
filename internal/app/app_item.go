@@ -71,7 +71,7 @@ func (a *App) latestItemID() string {
 func (a *App) itemProgress(info iteminfo.Info) iteminfo.Info {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	info = withTaskURLs(info, a.settings.QuestSite)
+	info = withTaskURLs(info, a.settings.QuestSites)
 	if catalogMode(a.status.Tracker.Mode) != info.Mode || a.status.Tracker.Connection != "connected" {
 		return iteminfo.Progress(info, nil, nil)
 	}
@@ -106,19 +106,16 @@ func (a *App) BrowserItemHistory(mode, id string) ([]iteminfo.PricePoint, error)
 
 // withTaskURLs adds each task's page on every quest site, the same pages a
 // recognized task opens.
-func withTaskURLs(info iteminfo.Info, site string) iteminfo.Info {
-	info.QuestSite = normalizeQuestSite(site)
+func withTaskURLs(info iteminfo.Info, order []string) iteminfo.Info {
+	info.QuestSites = normalizeQuestSites(order, "")
+	info.QuestSite = info.QuestSites[0]
 	info.Tasks = append([]iteminfo.TaskNeed(nil), info.Tasks...)
 	for i, task := range info.Tasks {
 		status := model.Status{LastQuest: task.Name, QuestTrader: task.Trader, QuestWikiURL: task.WikiLink}
 		if task.NormalizedName != "" {
 			status.QuestURL = "https://tarkov.dev/task/" + task.NormalizedName
 		}
-		urls := map[string]string{}
-		for _, s := range []string{"tarkov-dev", "official-wiki", "japanese-wiki"} {
-			urls[s] = questStatusURL(s, status)
-		}
-		info.Tasks[i].URLs = urls
+		info.Tasks[i].URLs = questSiteURLs(status)
 	}
 	return info
 }

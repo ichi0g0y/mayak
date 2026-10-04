@@ -43,6 +43,7 @@ test('the Host info keeps what is sound: mode, task site, map, raid and position
   const h = hostInfoOf({
     mode: 'pve',
     questSite: 'japanese-wiki',
+    questSites: ['japanese-wiki', 'bogus', 'tarkov-dev'],
     map: 'the-lab',
     raid: true,
     position: { x: 1, y: 2, z: 3, rot: 90, at: 'now' },
@@ -50,12 +51,13 @@ test('the Host info keeps what is sound: mode, task site, map, raid and position
   assert.deepEqual(h, {
     mode: 'pve',
     questSite: 'japanese-wiki',
+    questSites: ['japanese-wiki', 'tarkov-dev'],
     map: 'the-lab',
     raid: true,
     position: { x: 1, y: 2, z: 3, rot: 90, at: 'now' },
   })
   const bad = hostInfoOf({ mode: 'pvp', questSite: 'host', map: 'The Lab!', raid: 'yes', position: { x: 'a' } })
-  assert.deepEqual(bad, { mode: 'pvp', questSite: '', map: '', raid: false, position: null })
+  assert.deepEqual(bad, { mode: 'pvp', questSite: '', questSites: null, map: '', raid: false, position: null })
 })
 
 test('the Host keeps what it detected while no Client was there, the latest of each kind', () => {

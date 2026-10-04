@@ -1,4 +1,4 @@
-import { webURL, sites } from './state.js'
+import { webURL, sites, siteOrder } from './state.js'
 
 // Width of the item sidebar beside the page views; the user can drag it
 // between min and max.
@@ -87,6 +87,7 @@ export function itemInfo(raw) {
       .map((l) => ({ map: text(l.map, 40), x: l.x, y: l.y, z: l.z }))
       .filter((l) => l.map && [l.x, l.y, l.z].every(Number.isFinite)),
     questSite: sites.includes(raw.questSite) ? raw.questSite : 'tarkov-dev',
+    questSites: siteOrder(raw.questSites, raw.questSite),
     live: !!raw.live,
     pricedAt: time(raw.pricedAt),
     fetchedAt: time(raw.fetchedAt),

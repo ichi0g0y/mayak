@@ -44,10 +44,12 @@ type Info struct {
 	// Live is true when the prices came from the GraphQL API just now; the
 	// catalog snapshot is at most catalog.RefreshInterval old otherwise.
 	Live bool `json:"live"`
-	// QuestSite is the Host's preferred site for opening tasks.
-	QuestSite string `json:"questSite,omitempty"`
-	PricedAt  string `json:"pricedAt"`
-	FetchedAt string `json:"fetchedAt"`
+	// QuestSite is the Host's preferred site for opening tasks, QuestSites
+	// the order it tries them in.
+	QuestSite  string   `json:"questSite,omitempty"`
+	QuestSites []string `json:"questSites,omitempty"`
+	PricedAt   string   `json:"pricedAt"`
+	FetchedAt  string   `json:"fetchedAt"`
 }
 
 // Lock is where a key is used: a map (tarkov.dev's normalizedName) and a

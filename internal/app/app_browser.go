@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/local/mayak/internal/appdir"
 
@@ -268,12 +269,14 @@ func (a *App) BrowserView(command string, v browserview.Options) error {
 	}
 	return err
 }
-func (a *App) showBrowserTask(status model.Status, site string) {
-	urls := map[string]string{}
-	for _, s := range []string{"tarkov-dev", "official-wiki", "japanese-wiki"} {
-		urls[s] = questStatusURL(s, status)
-	}
-	a.emitEvent("browser:task", map[string]interface{}{"id": status.QuestID, "name": status.LastQuest, "site": normalizeQuestSite(site), "urls": urls})
+
+// showBrowserTask opens a recognized task in the shell, on the first site in
+// order that has its page.
+func (a *App) showBrowserTask(status model.Status, order []string) {
+	urls := questSiteURLs(status)
+	ctx, cancel := context.WithTimeout(a.parentContext(), 8*time.Second)
+	defer cancel()
+	a.emitEvent("browser:task", map[string]interface{}{"id": status.QuestID, "name": status.LastQuest, "site": questSiteFor(ctx, order, urls), "urls": urls})
 }
 
 // browserShortcutKey is the set of keys the shell takes from a page: Chrome's

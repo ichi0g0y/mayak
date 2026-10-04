@@ -170,6 +170,21 @@ h3{font-size:12px;font-weight:500;color:var(--muted);margin:0 0 10px}
 .field>span{font-size:12.5px;color:var(--text-2)}
 .field input,.field select{width:100%;height:36px}
 .field textarea{min-height:64px}
+/* The task sites in the order they are tried, dragged into place. */
+.site-order{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.site-order-item{position:relative;display:flex;align-items:center;gap:10px;height:36px;padding:0 10px 0 12px;color:var(--text);background:var(--surface-2);border:1px solid var(--border-strong);border-radius:8px;font-size:13px;cursor:grab;user-select:none}
+.site-order-item:hover{border-color:color-mix(in srgb,var(--border-strong),var(--text) 18%)}
+.site-order-item:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.site-order-item.dragging{opacity:.5;cursor:grabbing}
+.site-order.fixed .site-order-item{cursor:default;color:var(--text-2)}
+.site-rank{width:16px;color:var(--muted);font-variant-numeric:tabular-nums}
+.site-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.site-grip{width:16px;height:16px;color:var(--muted)}
+.site-order-item.drop-before::before,.site-order.drop-end::after{content:"";position:absolute;left:4px;right:4px;height:2px;border-radius:1px;background:var(--accent)}
+.site-order-item.drop-before::before{top:-4px}
+.site-order.drop-end{position:relative}
+.site-order.drop-end::after{bottom:-4px}
+.site-order+.hint{margin:0}
 .panel .hint{margin:0 0 14px}
 .panel>:last-child,.panel>.fields:last-child>.field{margin-bottom:0}
 .panel>.fields:last-child{row-gap:16px}

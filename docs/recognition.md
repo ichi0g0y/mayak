@@ -221,7 +221,7 @@ Screenshots/*.png|jpg ─▶ watcher ─▶ processScreenshot(sequence++、前�
 - **タスク**(≥ .78):
   - `LastQuest`、トレーダー、マップ、目標、`https://tarkov.dev/task/<normalizedName>`、Wiki の URL を設定します。
   - 認識音を鳴らします(同じキーは `recognitionSoundCooldown` の間は鳴らさない)。一致しなかった場合はエラー音を鳴らします。
-  - `showBrowserTask` が設定 `QuestSite`(tarkov-dev / official-wiki / japanese-wiki)のページを `browser:task` で開きます。
+  - `showBrowserTask` が設定 `QuestSites`（tarkov-dev / official-wiki / japanese-wiki の順番）を上から見て、ページがある最初のサイトを `browser:task` で開きます（[tasks-and-maps.md](tasks-and-maps.md)）。
   - `tasks` の役割を持つ Remote Control ターゲットには `task/<slug>` を送ります。slug がなければ `map/<QuestMap>` を送ります。詳しくは [tasks-and-maps.md](tasks-and-maps.md) と [settings-and-integrations.md](settings-and-integrations.md) を参照してください。
 - **レイド状態**: 各分析では `logdetect.RaidState` で `RaidActive` を更新します。位置情報を使うのはレイド中だけです。
 - エラー時は `updateAnalysisError` が「解析エラー」を設定し、ログとエラー音で知らせます。

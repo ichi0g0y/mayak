@@ -66,7 +66,8 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 |---|---|---|
 | `language` | `"ja"` | Host UI とトレイメニューの言語。`ja` / `en` 以外は `ja` |
 | `gameLanguage` | `""`（→ `"auto"`） | OCR に使うゲーム言語。`auto`、`en`、または `internal/locale` の言語のみ |
-| `questSite` | `""`（→ `"tarkov-dev"`） | タスクを開くサイト。`tarkov-dev` / `official-wiki` / `japanese-wiki` |
+| `questSites` | `[]`（→ `["tarkov-dev","official-wiki","japanese-wiki"]`） | タスクを開くサイトの順番。ページがある最初のサイトで開く（[tasks-and-maps.md](tasks-and-maps.md)） |
+| `questSite` | `""`（→ `"tarkov-dev"`） | `questSites` の 1 番目（古い版向け）。これだけが変わったときは、そのサイトを `questSites` の先頭へ移す |
 | `screenshotDirectory` | `""` | EFT の Screenshots フォルダ（`filepath.Clean` 済み） |
 | `logsDirectory` | `""` | EFT の Logs フォルダ |
 | `remoteId` | `""` | 旧形式の Remote Control ID。互換用 |
@@ -146,7 +147,7 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | `itemPanelWidth` / `itemPanel` | `320` / `{open:false,id:"",mode:""}` | アイテム欄の幅と、再起動後に復元する状態（[item-panel.md](item-panel.md)） |
 | `adblock` | `true` | 広告ブロック。切り替えると表示中のページを再読み込みする |
 | `taskMode` | `"new"` | 検出したタスクの開き方。`new`（新しいタブを追加）/ `reuse`（固定していないタスクタブを更新） |
-| `questSite` | `"host"` | `host`（Host の設定に従う）/ `tarkov-dev` / `official-wiki` / `japanese-wiki` |
+| `questSite` | `"host"` | 以前のブラウザ側のサイト選択。Host で起動したときに Host の順番の先頭へ移して `host` に戻す。今は使わない |
 | `connection` | `{mode:"local", link:null, receive:{task:true, map:true, item:true}}` | 接続方法、ペアリングの鍵と役割、Client で出すもの（[Host / Client モード](#host--client-モード)） |
 | `mapHidden` / `mapSettings` / `mapCollapsed` / `squadName` / `squadColor` / `squadCollapsed` / `squadCode` / `squadRecent` | `[]` / 下記 / `[]` / `""` / `""` / `false` / `""` / `[]` | マップと分隊（[browser-shell.md](browser-shell.md#マップ)、[ユーザーデータの保存](user-data.md)）。`mapSettings` の既定は `{snipers:true, extracts:false, activeTasks:false, subtleLabels:false, extractText:100, labelText:100, fade:20, style:"svg", mode:"auto"}` |
 | `bookmarks` / `bookmarkRevision` | 既定のブックマーク / `3` | 最大 100 件。revision 1 でブックマークを追加し、revision 2 で TarkovTracker を `.org` に移行、revision 3 で tarkov.dev と TarkovTracker をサイドバーにピン留めしたブックマークにする（以前の固定タブの代わり） |
@@ -160,12 +161,12 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | セクション | 内容 |
 |---|---|
 | `appearance` | 表示言語、テーマ、時刻表示、タブとアイテム情報の位置、「チュートリアルを表示」 |
-| `tasks` | Host 上（`local`）では Host の `questSite` を直接編集する（`hostQuestSite` アクション。シェルの `questSite` は `host` に戻る）。Client では `questSite`（「Host の設定に従う」を含む）。どちらでも `taskMode` を設定する |
+| `tasks` | 開くサイトの順番（Host の `questSites`）をドラッグで並べ替える（`questSites` アクション）。Host 上（`local`）では Host の設定を直接変え、Client では Host へ送る。どちらでも `taskMode` を設定する |
 | `adblock` | 有効化のチェックボックス。EasyList、EasyPrivacy、AdGuard 日本語フィルタを使う。tarkov.dev は対象外 |
 | `connection` | 接続方法（`local` は Windows のみ / `client`。前の版の `off` は `client` に読み替える）。Host では接続コードの発行（ペアリング済みなら「別の PC を追加」）とすべての PC との解除、Client では接続コードの入力（長いコードの貼り付けも可）、この PC に出すもの（`connection.receive`）、この PC の解除 |
 | `about` | 名前とバージョン（`GetVersion`。開発ビルドでは「開発ビルド」）、公式サイト・ソースコード・変更履歴へのリンク、ライセンスとクレジット、アップデート（現在の版・最新の版・最終確認、「更新を確認」`CheckForUpdates`、「ダウンロード」`DownloadUpdate`、「再起動して適用」`InstallUpdate`）。タスクトレイの右クリックにも「更新を確認」がある |
 
-- 以前、ブラウザ側で `questSite` を選んでいた場合は、Windows の Host で起動したときに一度だけ Host の `questSite` へ移し、ブラウザ側を `host` に戻します。
+- 以前、ブラウザ側で `questSite` を選んでいた場合は、Windows の Host で起動したときに一度だけそのサイトを Host の `questSites` の先頭へ移し、ブラウザ側を `host` に戻します。
 - タブの配置は、ツールバーのボタン（`toggleLayout`）でも切り替えられます。
 
 ## 監視
@@ -317,7 +318,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - **眠りから覚めたとき**: macOS は裏にあるアプリのタイマーを止める（App Nap）ので、Mac 版は `Info.plist` の `NSAppSleepDisabled` で止めさせません。それでもウインドウが前に出たり見えるようになったりしたときは、リンクをすぐ確かめ、しばらく何も聞こえていなければつなぎ直し、つなぎ直しを待っていれば今つなぎます（`wake`）。
 - **共有する設定**: 基本は「Client は Host の設定を引き継ぎ、Client で変えた共有すべきものは Host にも伝える」です。そろえるのは次のとおりです。
   - **好み**（`prefs:sync`）: 言語、テーマ、時計、タスクの開き方（`taskMode`）、公式 Wiki の翻訳（`translateWiki`）、ボスのモード（`bossMode`）。つながったときは Host のものを Client が受け、どちらかで変えると（`perform` が前後を比べる）相手に送ります（`receivePrefs`。受けたものは送り返さず、Host はほかの Client に回す）。
-  - **タスクの表示先**: Host の設定（`questSite`）を `host:info` で Client に知らせ、Client は「Host の設定」のときタスク・アイテム欄・マップのタスクの印でそれを使います。Client で表示先を選ぶと、それが Host の設定になり（`prefs:sync` の `questSite`。Host は `PersistSettings` して知らせ直す）、Client は「Host の設定」に戻ります。
+  - **タスクの表示先**: Host のサイトの順番（`questSites` と、その 1 番目の `questSite`）を `host:info` で Client に知らせ、Client はタスク・アイテム欄・マップのタスクの印でそれを使います。Client で並べ替えると、それが Host の設定になります（`prefs:sync` の `questSites` と `questSite`。Host は `PersistSettings` して知らせ直す）。古い Client が `questSite` だけを送ってきたときは、そのサイトを先頭へ移します。
   - **ブックマーク**（`bookmarks:sync`）: つながったときは Host の一覧に Client だけのものを足して（同じ id は Host のもの）、足したものがあれば Host に返し、その後はどちらかで変えた一覧を送ります（100 KB まで）。
   - **分隊**（`squad:sync`）: 分隊コード・分隊カラーに加えて表示名も（同じプレイヤーなので）。キャラクター画像を見せるかどうかは Host だけの設定です（Client には出さない）。
   - **マップ**（`map:sync`）: 下記。Host は Client から受けた変更をほかの Client にも回します。

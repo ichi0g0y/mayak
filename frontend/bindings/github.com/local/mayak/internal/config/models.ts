@@ -41,6 +41,13 @@ export class RemoteTarget {
 export class Settings {
     "gameLanguage": string;
     "questSite": string;
+
+    /**
+     * QuestSites is the task sites in the order they are tried: a task opens
+     * on the first that has its page. QuestSite is the first, for the
+     * versions that know one site only.
+     */
+    "questSites": string[];
     "language": string;
     "screenshotDirectory": string;
     "logsDirectory": string;
@@ -167,6 +174,9 @@ export class Settings {
         }
         if (!("questSite" in $$source)) {
             this["questSite"] = "";
+        }
+        if (!("questSites" in $$source)) {
+            this["questSites"] = [];
         }
         if (!("language" in $$source)) {
             this["language"] = "";
@@ -371,29 +381,34 @@ export class Settings {
      * Creates a new Settings instance from a string or object.
      */
     static createFrom($$source: any = {}): Settings {
-        const $$createField6_0 = $$createType1;
-        const $$createField33_0 = $$createType2;
+        const $$createField2_0 = $$createType0;
+        const $$createField7_0 = $$createType2;
         const $$createField34_0 = $$createType3;
-        const $$createField35_0 = $$createType3;
+        const $$createField35_0 = $$createType4;
+        const $$createField36_0 = $$createType4;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("questSites" in $$parsedSource) {
+            $$parsedSource["questSites"] = $$createField2_0($$parsedSource["questSites"]);
+        }
         if ("remoteTargets" in $$parsedSource) {
-            $$parsedSource["remoteTargets"] = $$createField6_0($$parsedSource["remoteTargets"]);
+            $$parsedSource["remoteTargets"] = $$createField7_0($$parsedSource["remoteTargets"]);
         }
         if ("soundVoices" in $$parsedSource) {
-            $$parsedSource["soundVoices"] = $$createField33_0($$parsedSource["soundVoices"]);
+            $$parsedSource["soundVoices"] = $$createField34_0($$parsedSource["soundVoices"]);
         }
         if ("soundVolumeOffsets" in $$parsedSource) {
-            $$parsedSource["soundVolumeOffsets"] = $$createField34_0($$parsedSource["soundVolumeOffsets"]);
+            $$parsedSource["soundVolumeOffsets"] = $$createField35_0($$parsedSource["soundVolumeOffsets"]);
         }
         if ("soundDelays" in $$parsedSource) {
-            $$parsedSource["soundDelays"] = $$createField35_0($$parsedSource["soundDelays"]);
+            $$parsedSource["soundDelays"] = $$createField36_0($$parsedSource["soundDelays"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }
 }
 
 // Private type creation functions
-const $$createType0 = RemoteTarget.createFrom;
-const $$createType1 = $Create.Array($$createType0);
-const $$createType2 = $Create.Map($Create.Any, $Create.Any);
+const $$createType0 = $Create.Array($Create.Any);
+const $$createType1 = RemoteTarget.createFrom;
+const $$createType2 = $Create.Array($$createType1);
 const $$createType3 = $Create.Map($Create.Any, $Create.Any);
+const $$createType4 = $Create.Map($Create.Any, $Create.Any);

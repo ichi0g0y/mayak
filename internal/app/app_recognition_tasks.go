@@ -181,8 +181,10 @@ func (a *App) handleTaskAnalysis(ctx context.Context, sequence uint64, path stri
 	} else {
 		a.notifyOnce(sound.TaskNotMatched, raw)
 	}
+	// Which site has the page may take a wiki's answer: the Remote Control
+	// targets do not wait for it.
 	if status.MatchConfidence >= .78 {
-		a.showBrowserTask(status, settings.QuestSite)
+		go a.showBrowserTask(status, settings.QuestSites)
 	}
 	// Sending to Remote Control follows each target's tasks role alone; the
 	// quest site only decides where tasks open.

@@ -8,6 +8,16 @@ function randomUUID() {
 import { clampItemPanel, clampItemPanelHeight } from './item.js'
 import { defaultMapSettings, hiddenOf, mapSettingsOf, squadColorOf, squadColors } from './map-geo.js'
 const sites = ['tarkov-dev', 'official-wiki', 'japanese-wiki']
+// siteOrder is the task sites in the order set: each once, the ones left out
+// after in their default order. first, a site told alone (by a version that
+// knows one site only), goes first. The Go side has the same
+// (normalizeQuestSites).
+function siteOrder(order, first) {
+  const out = []
+  for (const site of Array.isArray(order) ? order : []) if (sites.includes(site) && !out.includes(site)) out.push(site)
+  for (const site of sites) if (!out.includes(site)) out.push(site)
+  return sites.includes(first) ? [first, ...out.filter((site) => site !== first)] : out
+}
 function webURL(value) {
   try {
     const url = new URL(value)
@@ -433,7 +443,8 @@ function validTask(task) {
 }
 function receiveTask(state, task) {
   if (!validTask(task)) return null
-  const site = state.questSite === 'host' ? (sites.includes(task.site) ? task.site : 'tarkov-dev') : state.questSite
+  // The site is chosen before (the first in the Host's order with the page).
+  const site = sites.includes(task.site) ? task.site : 'tarkov-dev'
   // The official wiki (English) opens translated when asked to.
   const url =
     site === 'official-wiki' && state.translateWiki
@@ -687,6 +698,7 @@ export {
   goHome,
   openLocal,
   sites,
+  siteOrder,
   translatedURL,
   originalURL,
   samePage,

@@ -1,5 +1,6 @@
 import { price, chartSeries, chartPath, itemPanelHeights, itemPanelWidths, itemPageURL, bestSale, age } from './item.js'
 import { t, state, esc, icon, siteChoices, render, action, clickHandlers } from './shell-core.js'
+import { siteOrder } from './state.js'
 import { lockPlace } from './view-map.js'
 
 // An item's picture that did not load (a failed download the page's cache
@@ -156,12 +157,12 @@ const localName = (names, english) => names?.[state.language] || english
 const itemName = (item) => localName(item.names, item.name)
 // The item's icon and name open its page, in the popup.
 function itemPageLink(item) {
-  const site =
+  // The first of the Host's task sites: item pages are not looked for.
+  const from = state.hostView?.questSites ? state.hostView : item
+  const [site] =
     state.localHost && state.connection.mode === 'local'
-      ? state.hostQuestSite
-      : state.questSite === 'host'
-        ? state.hostView?.questSite || item.questSite
-        : state.questSite
+      ? siteOrder(state.hostQuestSites)
+      : siteOrder(from.questSites, from.questSite)
   const url = itemPageURL(item, site)
   const label = siteChoices().find(([key]) => key === site)?.[1] || 'tarkov.dev'
   return url ? { url, label: `${t('openItemPage')} · ${label}` } : null

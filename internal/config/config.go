@@ -15,8 +15,12 @@ import (
 var saveMu sync.Mutex
 
 type Settings struct {
-	GameLanguage        string         `json:"gameLanguage"`
-	QuestSite           string         `json:"questSite"`
+	GameLanguage string `json:"gameLanguage"`
+	QuestSite    string `json:"questSite"`
+	// QuestSites is the task sites in the order they are tried: a task opens
+	// on the first that has its page. QuestSite is the first, for the
+	// versions that know one site only.
+	QuestSites          []string       `json:"questSites"`
 	Language            string         `json:"language"`
 	ScreenshotDirectory string         `json:"screenshotDirectory"`
 	LogsDirectory       string         `json:"logsDirectory"`
