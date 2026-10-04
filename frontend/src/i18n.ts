@@ -38,7 +38,7 @@ const messages = {
     analysisStage9: '解析エラー',
 
     trackerKeyNamesHelp:
-      '名前はTarkovTrackerから取得します。TarkovTrackerで変更すると、この設定画面を開いたとき・戻ったとき・表示中は約1分ごとに反映されます。',
+      '名前はTarkovTrackerから取得します。TarkovTrackerで変更すると、この設定画面を開いたときと戻ったときに反映されます。表示している間も約1分ごとに反映されます。',
     trackerTokenLabel: 'APIキー',
     trackerUnassignBeforeRemove: 'プロフィールへの割り当てを解除してから削除してください',
     hideoutSource: 'TarkovTrackerに登録された施設レベルを表示',
@@ -140,7 +140,7 @@ const messages = {
     screenshotCleanupHelp: 'Screenshots直下の画像だけを対象にします。解析データは削除しません',
     retainCount: '保持する最大枚数',
     retainHours: '保持時間（時間）',
-    zeroDisables: '0でこの条件を使用しません',
+    zeroDisables: '0にするとこの条件を使用しません',
     trackerTitle: 'TarkovTracker同期',
     trackerDescription: 'EFTログからタスクの開始・失敗・完了を検出し、選択中のプロフィールへ同期します',
     trackerEnable: 'TarkovTrackerと同期',
@@ -165,7 +165,7 @@ const messages = {
       'TarkovTrackerの設定ページで作ったAPIトークンを貼り付けます（PvP・Season・PvEはそれぞれ別のキー）。追加したキーは、Step 2 でプロフィールに割り当てるまでこの下に表示されます。',
     trackerProfilesTitle: 'キーをEFTプロフィールに割り当てる',
     trackerProfilesHelp:
-      'EFTのログで見つかったプロフィール（アカウントとモード）ごとに、Step 1 で追加したキーを1つ選びます。割り当てると、そのプロフィールの過去ログ（EFTのログに残っているタスクの完了・失敗）をすぐTarkovTrackerへ同期し、以後はMAYAKの起動中に進んだタスクを自動で同期します。MAYAKを起動していなかった間にプレイした分は、各行の「過去ログを再チェック」で取り込めます。キーを追加したとき、そのモードで最新のプロフィールが1つならそこへ自動で割り当て済みです。同じアカウントの古いプロフィール（過去のワイプ）は同期に使われないので出しません（キーが付いているものだけ畳んで残します）。',
+      'EFTのログで見つかったプロフィール（アカウントとモード）ごとに、Step 1 で追加したキーを1つ選びます。割り当てると、そのプロフィールの過去ログ（EFTのログに残っているタスクの完了・失敗）をすぐTarkovTrackerへ同期し、以後はMAYAKの起動中に進んだタスクを自動で同期します。MAYAKを起動していなかった間にプレイした分は、各行の「過去ログを再チェック」で取り込めます。キーを追加したとき、そのモードの最新プロフィールが1つだけなら、そのプロフィールへ自動で割り当てます。同じアカウントの古いプロフィール（過去のワイプ）は同期に使われないので表示しません。キーが付いているものだけは、畳んだ状態で残します。',
     trackerLastSeen: '最終',
     trackerChooseKey: 'キーを選ぶ',
     trackerNoKeyForMode: 'このモードのキーがありません。上で追加してください',
@@ -304,7 +304,7 @@ const messages = {
     autoUpdateHelp: 'GitHub Releases の新しい版を自動でダウンロードし、終了時に適用します',
     keepPriority: 'ウィンドウの優先度を通常に保つ',
     keepPriorityHelp:
-      'Process Lasso などの優先度管理ツールが、起動直後のCPU使用でMAYAKの優先度を下げると、ウィンドウ（WebView2）が低い優先度のまま残って固まって見えることがあります。オンにすると10秒ごとに確認して通常に戻します。',
+      'Process Lasso などの優先度管理ツールが、起動直後のCPU使用でMAYAKの優先度を下げると、ウィンドウ（WebView2）が低い優先度のまま残り、固まって見えることがあります。オンにすると10秒ごとに確認して通常に戻します。',
     startupTitle: '起動とウィンドウ',
     startupDescription: '起動時と最小化時の動作',
     launchAtStartup: 'Windows起動時にMAYAKを起動',
@@ -316,7 +316,7 @@ const messages = {
     minimizeToTray: '最小化時はタスクバーから消す',
     minimizeToTrayHelp: '最小化するとトレイアイコンだけになります。オフのときはタスクバーに残ります',
     closeToTray: '閉じてもトレイに残す',
-    closeToTrayHelp: '閉じるボタンで終了せず、トレイアイコンから開き直せます。終了はトレイのメニューから',
+    closeToTrayHelp: '閉じるボタンを押しても終了せず、トレイアイコンから開き直せます。終了はトレイのメニューから',
     startMonitoring: '監視開始',
     stopMonitoring: '監視停止',
     monitoringStarted: '監視を開始しました',
@@ -331,7 +331,7 @@ const messages = {
     remoteConnected: 'tarkov.dev Remoteへ接続しました',
     foldersDetected: 'EFTフォルダを自動検出しました',
     latestAnalyzed: '最新スクリーンショットを再解析しました',
-    backendWait: 'Wailsバックエンドを待機しています。アプリを再起動してください。',
+    backendWait: 'Wailsバックエンドを待っています。アプリを再起動してください。',
     initError: '初期化エラー',
     currentMap: '現在のマップ',
     raidState: 'レイド状態',

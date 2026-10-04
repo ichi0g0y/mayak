@@ -164,7 +164,7 @@ export const words = {
     squadMemberMore: 'この人が共有したこの種類のものをすべて見る',
     mapSquadFit: '分隊を自動で表示',
     mapSquadFitOn:
-      '分隊を自動で表示する（誰かの位置が更新されたとき、自分の出撃マップなら、そこにいる分隊全員が入るように地図を合わせる）',
+      '分隊を自動で表示する（自分の出撃マップで誰かの位置が更新されたら、そこにいる分隊全員が入るように地図を合わせる）',
     mapSquadFitOff: '分隊の自動表示をやめる',
     settingShape: '矢印の形',
     settingShape_arrow: '矢じり',
@@ -417,16 +417,16 @@ export const words = {
     tutOpenFolders: 'フォルダの設定を開く',
     tutKeyTitle: 'スクリーンショットキーを押しやすい場所に',
     tutKey:
-      'EFT の Settings → Controls → Screenshot。既定は PrintScreen ですが戦闘中に届きにくいので、マウスのサイドボタンや左手で届く空きキーへの割り当てをおすすめします。',
+      'EFT の Settings → Controls → Screenshot。既定は PrintScreen ですが、戦闘中は手が届きにくいので、マウスのサイドボタンや左手で届く空きキーに割り当てるのがおすすめです。',
     tutKeyNote:
       '座標が入るのは EFT 自身のスクリーンショット機能で保存したファイルだけです。Steam や Windows のスクリーンショットは対象外です。',
     tutMapTitle: 'レイド中はそのキーを押すだけ',
     tutMap:
-      'このウインドウのマップタブは、設定なしで現在地に追従します。タスク一覧で該当のタスクを開いた状態か、アイテム詳細を撮れば、それぞれの情報も表示されます（一覧だけの画面ではどのタスクか分かりません）。1 台の PC でマルチモニタなら、これで完結です。',
+      'このウインドウのマップタブは、設定なしで現在地に追従します。タスク一覧で該当のタスクを開いた画面か、アイテム詳細を撮れば、それぞれの情報も表示されます（一覧だけの画面ではどのタスクか分かりません）。1 台の PC でマルチモニタなら、これで完結です。',
     tutOpenMap: 'マップを開く',
     tutRemoteTitle: '別の PC や普段のブラウザで見るなら（任意）',
     tutRemote:
-      'そのブラウザで tarkov.dev のマップを開き、左下の接続ボタンを押します。同じ PC の Chrome / Edge / Brave なら Remote ID は自動検出、別の PC やタブレットなら ID を入力します。別の PC で MAYAK 自体を動かすなら、設定 → 他のPCとの接続 の 8 桁の接続コードで繋がります。',
+      'そのブラウザで tarkov.dev のマップを開き、左下の接続ボタンを押します。同じ PC の Chrome / Edge / Brave なら Remote ID は自動検出、別の PC やタブレットなら ID を入力します。別の PC で MAYAK 自体を動かすなら、設定 → 他のPCとの接続 の 8 桁の接続コードでつながります。',
     tutOpenRemote: 'tarkov.dev 連携の設定を開く',
     tutTrackerTitle: 'TarkovTracker で進捗を自動記録（任意）',
     tutTracker:
@@ -732,7 +732,7 @@ export const words = {
     chartEmpty: 'この期間の履歴はありません',
     chartNow: '現在',
     // Popup window and api.js messages
-    popupPin: 'ピン留め (ほかをクリックしても閉じない)',
+    popupPin: 'ピン留め（ほかをクリックしても閉じない）',
     popupUnpin: 'ピン留めを外す',
     openInTab: 'タブで開く',
     openExternalBrowser: '外部ブラウザで開く',
