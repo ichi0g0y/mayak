@@ -87,10 +87,11 @@ export const option = (value, label, current) =>
 export function select(key, label, choices, value, scope = 'preferences') {
   return `<label class="field"><span>${esc(label)}</span><select data-scope="${scope}" data-key="${key}">${choices.map(([v, l]) => option(v, l, value)).join('')}</select></label>`
 }
+// The task sites in their default order (state.js sites), as menus list them.
 export const siteChoices = () => [
-  ['tarkov-dev', 'tarkov.dev'],
   ['official-wiki', t('official')],
   ['japanese-wiki', t('japanese')],
+  ['tarkov-dev', 'tarkov.dev'],
 ]
 
 export async function action(type, data) {
