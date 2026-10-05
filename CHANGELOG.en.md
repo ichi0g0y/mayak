@@ -9,7 +9,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 ### Fixed
 
 - Opening the official wiki translated could stop at a "too many redirects" page. When Google Translate asks for a robot check, the page it returns to once the check is passed redirects to itself without end (Google's side). The tab now opens the translated page again without the part that loops. Only when Google asks for the check again right after does the page open untranslated, and recognized tasks then open untranslated for an hour.
-- Tasks finished in the game sometimes did not sync to TarkovTracker. EFT writes a task's notification in two places of its log, a session can have it in only one, and MAYAK read only the other. It now reads both. Tasks that did not sync can be sent with "Re-check past logs" under TarkovTracker in the settings once EFT is closed.
+- Tasks finished in the game sometimes did not sync to TarkovTracker. EFT writes a task's notification in two places of its log, a session can have it in only one, and MAYAK read only the other. It now reads both. Tasks that did not sync can be sent with "Recheck past logs" under TarkovTracker in the settings once EFT is closed.
 
 ## v0.1.26 (2026-10-05)
 
