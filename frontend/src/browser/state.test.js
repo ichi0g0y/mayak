@@ -744,22 +744,23 @@ test('a task opens on the site chosen for it, whatever the browser chose before'
   assert.match(receiveTask(s, task('Debut', 'tarkov-dev')).url, /tarkov.dev/)
 })
 
-import { translateDetour } from './state.js'
-test("Google's robot check in front of a translated page leads to the page untranslated", () => {
-  const page = 'https://escapefromtarkov.fandom.com/wiki/They_Are_Already_Here'
+import { translateCheck } from './state.js'
+test("Google's robot check in front of a translated page leads back to the translated page", () => {
+  const page =
+    'https://escapefromtarkov-fandom-com.translate.goog/wiki/They_Are_Already_Here?_x_tr_sl=auto&_x_tr_tl=ja&_x_tr_hl=ja'
   const sorry =
     'https://www.google.com/sorry/index?continue=https://escapefromtarkov-fandom-com.translate.goog/wiki/They_Are_Already_Here%3F_x_tr_sl%3Dauto%26_x_tr_tl%3Dja%26_x_tr_hl%3Dja&q=EgT'
-  assert.equal(translateDetour(sorry), page)
+  assert.deepEqual(translateCheck(sorry), { step: 'check', url: page })
   const loop =
     'https://escapefromtarkov-fandom-com.translate.goog/wiki/They_Are_Already_Here?google_abuse=GOOGLE_ABUSE_EXEMPTION%3DID%3Dcd6a%3A%2Bpath%3D%2F&_x_tr_sl=auto&_x_tr_tl=ja&_x_tr_hl=ja'
-  assert.equal(translateDetour(loop), page)
+  assert.deepEqual(translateCheck(loop), { step: 'passed', url: page })
   // A robot check for something else, and translated pages, are left alone.
   assert.equal(
-    translateDetour('https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dx'),
+    translateCheck('https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dx'),
     null,
   )
-  assert.equal(translateDetour(translatedURL(page, 'ja')), null)
-  assert.equal(translateDetour(page), null)
+  assert.equal(translateCheck(page), null)
+  assert.equal(translateCheck('https://escapefromtarkov.fandom.com/wiki/Debut'), null)
 })
 test('pages open untranslated while Google refuses the translation', () => {
   const s = defaults()

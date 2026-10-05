@@ -8,7 +8,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### Fixed
 
-- Opening the official wiki translated could stop at a "too many redirects" page. When Google Translate asks for a robot check, the page after it redirects to itself without end (Google's side). The tab now opens the page untranslated as soon as the check shows, and the error bar says why; recognized tasks open untranslated for an hour after that.
+- Opening the official wiki translated could stop at a "too many redirects" page. When Google Translate asks for a robot check, the page it returns to once the check is passed redirects to itself without end (Google's side). The tab now opens the translated page again without the part that loops. Only when Google asks for the check again right after does the page open untranslated, and recognized tasks then open untranslated for an hour.
 
 ## v0.1.26 (2026-10-05)
 

@@ -21,7 +21,7 @@ import {
   linkKind,
   translatedURL,
   originalURL,
-  translateDetour,
+  translateCheck,
   samePage,
   isTranslated,
   moveTab,
@@ -294,8 +294,20 @@ const statusRows = () => (updateBarVisible() ? 1 : 0) + (error ? 1 : 0)
 // which added the Host's Remote Control ID, is gone: map detections show on
 // the map view, view-map.js.)
 const viewURL = (tab) => tab.url
-// How long pages open untranslated after Google refused a translation.
-const translatePause = 60 * 60 * 1000
+// How long pages open untranslated after Google refused a translation, and
+// how soon after a robot check passed a new one means it refuses.
+const translatePause = 60 * 60 * 1000,
+  checkAgain = 2 * 60 * 1000
+// When a robot check was passed, by the page it was for (untranslated).
+const checkPassed = new Map()
+// openInTab moves a tab's page to url at once (the tab need not be active).
+function openInTab(tab, url) {
+  tab.url = url
+  views.set(tab.id, url)
+  void native('navigate', { id: tab.id, url })
+  update()
+  void enqueue(persist)
+}
 // The theme background fills a tab until its page paints, instead of white.
 const pageBackground = () => getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()
 // Pages opened from the item sidebar show in a popup window of their own
@@ -1326,19 +1338,20 @@ const ready = (async () => {
     }
     const tab = state.tabs.find((t) => t.id === event.id)
     if (!tab || !webURL(event.url)) return
-    // Google's robot check in front of a translated page leads, once passed,
-    // to a page that redirects to itself without end: the page opens
-    // untranslated instead, and pages open untranslated for a while.
-    const plain = translateDetour(event.url)
-    if (plain) {
+    // Google's robot check in front of a translated page sends the page,
+    // once passed, with a google_abuse parameter the proxy redirects to
+    // itself without end: the page opens again without it. A check asked
+    // again right after means the translation is refused for now: the page
+    // opens untranslated, and pages open so for a while.
+    const check = translateCheck(event.url)
+    if (check?.step === 'passed') {
+      checkPassed.set(originalURL(check.url), Date.now())
+      return void openInTab(tab, check.url)
+    }
+    if (check?.step === 'check' && Date.now() - (checkPassed.get(originalURL(check.url)) || 0) < checkAgain) {
       state.translatePausedUntil = Date.now() + translatePause
       error = t(state.language, 'translateRefused')
-      tab.url = plain
-      views.set(tab.id, plain)
-      void native('navigate', { id: tab.id, url: plain })
-      update()
-      void enqueue(persist)
-      return
+      return void openInTab(tab, originalURL(check.url))
     }
     tab.url = pageURL(event.url)
     tab.title = String(event.title || tab.title || tab.url).slice(0, 160)

@@ -186,21 +186,23 @@ function originalURL(value) {
   for (const key of [...u.searchParams.keys()]) if (key.startsWith('_x_tr_')) u.searchParams.delete(key)
   return u.href
 }
-// translateDetour tells Google's robot check in front of a translated page
-// (google.com/sorry, continue= the page) and the proxy's page after it
-// (google_abuse=…, which redirects to itself until the browser gives up):
-// the page untranslated, else null.
-function translateDetour(value) {
+// translateCheck tells the pages of Google's robot check in front of a
+// translated page: "check", the check itself (google.com/sorry, continue=
+// the page), and "passed", where it sends the page once passed (the page
+// with google_abuse=…, which the proxy redirects to itself until the browser
+// gives up, blocked or not). url is the translated page, without
+// google_abuse; null for any other page.
+function translateCheck(value) {
   const url = webURL(value)
   if (!url) return null
   const u = new URL(url)
   if (/^(www\.)?google\.[a-z.]+$/.test(u.hostname) && u.pathname.startsWith('/sorry/')) {
     const next = webURL(u.searchParams.get('continue') || '')
-    return next && isTranslated(next) ? originalURL(next) : null
+    return next && isTranslated(next) ? { step: 'check', url: next } : null
   }
   if (!isTranslated(url) || !u.searchParams.has('google_abuse')) return null
   u.searchParams.delete('google_abuse')
-  return originalURL(u.href)
+  return { step: 'passed', url: u.href }
 }
 // The task site a page is on, by its host (translated pages by the
 // original): the page a task opened may have moved on (a redirect, a link
@@ -465,7 +467,7 @@ function receiveTask(state, task) {
   const site = sites.includes(task.site) ? task.site : sites[0]
   // The official wiki (English) opens translated when asked to.
   const url =
-    // Not while Google refuses the translation (translateDetour).
+    // Not while Google refuses the translation (api.js translateRefused).
     site === 'official-wiki' && state.translateWiki && !(state.translatePausedUntil > Date.now())
       ? translatedURL(task.urls[site], state.language)
       : webURL(task.urls[site])
@@ -720,7 +722,7 @@ export {
   siteOrder,
   translatedURL,
   originalURL,
-  translateDetour,
+  translateCheck,
   samePage,
   siteOfURL,
   isTranslated,
