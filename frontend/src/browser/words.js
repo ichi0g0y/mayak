@@ -576,6 +576,8 @@ export const words = {
     translatePage: 'このページを翻訳（Google 翻訳）',
     translateOff: '翻訳をやめて元のページに戻る',
     translateWiki: '公式 Wiki（英語）を翻訳して開く',
+    translateRefused:
+      'Google 翻訳でロボットの確認が出たため、翻訳せずに開きました。1 時間は翻訳せずに開きます（翻訳ボタンでは翻訳できます）。',
     translateWikiHelp:
       'タスクの検出で開く公式 Wiki のページを、Google 翻訳（translate.goog）経由で表示します。Chrome の「ページを翻訳」は WebView2 に無いため、その代わりです。ツールバーの翻訳ボタンでどのページでも同じことができます。',
     homeHelp: '最初のページに戻る',
@@ -1319,6 +1321,8 @@ export const words = {
     translatePage: 'Translate this page (Google Translate)',
     translateOff: 'Stop translating, back to the page itself',
     translateWiki: 'Open the official wiki (English) translated',
+    translateRefused:
+      'Google Translate asked for a robot check, so the page opened untranslated. Pages open untranslated for an hour (the translate button still translates).',
     translateWikiHelp:
       'Task pages on the official wiki open through Google Translate (translate.goog). WebView2 has no page translation of its own, so this stands in for it. The translate button in the toolbar does the same for any page.',
     homeHelp: 'Back to the start page',

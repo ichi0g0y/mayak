@@ -331,6 +331,7 @@ Web ページのツールバー右側のアイコン（翻訳、スナップノ�
   - タブを切り替えたあとのキーボードフォーカスは、Web タブならそのページ、シェルのページ（設定など）ならシェルに移します（`BrowserView` の `focus` コマンド。ID `shell` はウインドウの `Focus()`、それ以外はビューの `MoveFocus`）。ページビューはネイティブのウインドウなので、シェルからは `focus()` だけでは移せません。
 - **翻訳ボタン**（`translate-page`、Web タブだけ）: Fandom の Wiki（公式 Wiki を含む `*.fandom.com` と、その翻訳ページ）では、右側の欄（`.page__right-rail`。サインアウト中は「Fandom は初めてですか？」の欄と広告）を `sites.js` で隠します。翻訳しているかどうか、サインインしているかどうかによらず、Windows と Mac で同じです。Chrome の「ページを翻訳」は WebView2 に無いので、代わりに Google 翻訳のプロキシで開き直します（`state.js` の `translatedURL`）。ホスト名のドットをハイフンに（元のハイフンは `--` に）して `.translate.goog` を付け、`_x_tr_sl=auto`・`_x_tr_tl`・`_x_tr_hl`（表示言語: ja / en）を付けます。翻訳中はボタンが点灯し、もう一度押すと元の URL に戻します（`originalURL`。`_x_tr_*` を外してホスト名を戻す）。プロキシは別オリジンなので、ログインが要るページや tarkov.dev の Remote Control には向きません。タスクのサイト選択は翻訳前の URL で判定します（`sitesForURL`）。
 - 設定 → タスク の「公式 Wiki（英語）を翻訳して開く」（`translateWiki`、`browser.json`）をオンにすると、タスク検出で開く公式 Wiki のページを最初から翻訳版で開きます（`receiveTask`）。日本語 Wiki と tarkov.dev には掛かりません。
+- Google が翻訳プロキシの前にロボットの確認（`google.com/sorry`、`continue=` に翻訳ページ）を出すことがあります。確認を通すと、プロキシのページ（`google_abuse=…` 付き）が自分自身へのリダイレクトを繰り返し、WebView は「リダイレクトが多すぎます」で止まります（Google 側の動き）。タブがこのどちらかのページに移ったら（`translateDetour`）、翻訳しない元のページを開き直し、エラーバーに理由を出します。その後 1 時間は、タスク検出でも公式 Wiki を翻訳せずに開きます（`translatePausedUntil`、保存しない）。翻訳ボタンはその間も使えます。
 - 戻る・進むのボタンは、ナビゲーションイベントの `canBack` / `canForward` に合わせて有効・無効が切り替わります。
 - 再読み込みは Ctrl+Shift+R と同じくキャッシュを無視します。DevTools プロトコルの `Page.reload`（`ignoreCache: true`）を使い、失敗した場合だけ通常の再読み込みになります（`browser_tabs.go` の `BrowserCommand`）。キャッシュが壊れたときも再読み込みで回復させるためです。
 

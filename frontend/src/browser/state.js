@@ -186,6 +186,22 @@ function originalURL(value) {
   for (const key of [...u.searchParams.keys()]) if (key.startsWith('_x_tr_')) u.searchParams.delete(key)
   return u.href
 }
+// translateDetour tells Google's robot check in front of a translated page
+// (google.com/sorry, continue= the page) and the proxy's page after it
+// (google_abuse=…, which redirects to itself until the browser gives up):
+// the page untranslated, else null.
+function translateDetour(value) {
+  const url = webURL(value)
+  if (!url) return null
+  const u = new URL(url)
+  if (/^(www\.)?google\.[a-z.]+$/.test(u.hostname) && u.pathname.startsWith('/sorry/')) {
+    const next = webURL(u.searchParams.get('continue') || '')
+    return next && isTranslated(next) ? originalURL(next) : null
+  }
+  if (!isTranslated(url) || !u.searchParams.has('google_abuse')) return null
+  u.searchParams.delete('google_abuse')
+  return originalURL(u.href)
+}
 // The task site a page is on, by its host (translated pages by the
 // original): the page a task opened may have moved on (a redirect, a link
 // followed) and still be on that site. null for another site.
@@ -449,7 +465,8 @@ function receiveTask(state, task) {
   const site = sites.includes(task.site) ? task.site : sites[0]
   // The official wiki (English) opens translated when asked to.
   const url =
-    site === 'official-wiki' && state.translateWiki
+    // Not while Google refuses the translation (translateDetour).
+    site === 'official-wiki' && state.translateWiki && !(state.translatePausedUntil > Date.now())
       ? translatedURL(task.urls[site], state.language)
       : webURL(task.urls[site])
   // Reconnect/repeated screenshots focus the same task, without a tab explosion.
@@ -703,6 +720,7 @@ export {
   siteOrder,
   translatedURL,
   originalURL,
+  translateDetour,
   samePage,
   siteOfURL,
   isTranslated,

@@ -21,6 +21,7 @@ import {
   linkKind,
   translatedURL,
   originalURL,
+  translateDetour,
   samePage,
   isTranslated,
   moveTab,
@@ -293,6 +294,8 @@ const statusRows = () => (updateBarVisible() ? 1 : 0) + (error ? 1 : 0)
 // which added the Host's Remote Control ID, is gone: map detections show on
 // the map view, view-map.js.)
 const viewURL = (tab) => tab.url
+// How long pages open untranslated after Google refused a translation.
+const translatePause = 60 * 60 * 1000
 // The theme background fills a tab until its page paints, instead of white.
 const pageBackground = () => getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()
 // Pages opened from the item sidebar show in a popup window of their own
@@ -1323,6 +1326,20 @@ const ready = (async () => {
     }
     const tab = state.tabs.find((t) => t.id === event.id)
     if (!tab || !webURL(event.url)) return
+    // Google's robot check in front of a translated page leads, once passed,
+    // to a page that redirects to itself without end: the page opens
+    // untranslated instead, and pages open untranslated for a while.
+    const plain = translateDetour(event.url)
+    if (plain) {
+      state.translatePausedUntil = Date.now() + translatePause
+      error = t(state.language, 'translateRefused')
+      tab.url = plain
+      views.set(tab.id, plain)
+      void native('navigate', { id: tab.id, url: plain })
+      update()
+      void enqueue(persist)
+      return
+    }
     tab.url = pageURL(event.url)
     tab.title = String(event.title || tab.title || tab.url).slice(0, 160)
     // A new page drops the old favicon until its own one is known.

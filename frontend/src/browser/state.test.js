@@ -743,3 +743,29 @@ test('a task opens on the site chosen for it, whatever the browser chose before'
   s.questSite = 'japanese-wiki'
   assert.match(receiveTask(s, task('Debut', 'tarkov-dev')).url, /tarkov.dev/)
 })
+
+import { translateDetour } from './state.js'
+test("Google's robot check in front of a translated page leads to the page untranslated", () => {
+  const page = 'https://escapefromtarkov.fandom.com/wiki/They_Are_Already_Here'
+  const sorry =
+    'https://www.google.com/sorry/index?continue=https://escapefromtarkov-fandom-com.translate.goog/wiki/They_Are_Already_Here%3F_x_tr_sl%3Dauto%26_x_tr_tl%3Dja%26_x_tr_hl%3Dja&q=EgT'
+  assert.equal(translateDetour(sorry), page)
+  const loop =
+    'https://escapefromtarkov-fandom-com.translate.goog/wiki/They_Are_Already_Here?google_abuse=GOOGLE_ABUSE_EXEMPTION%3DID%3Dcd6a%3A%2Bpath%3D%2F&_x_tr_sl=auto&_x_tr_tl=ja&_x_tr_hl=ja'
+  assert.equal(translateDetour(loop), page)
+  // A robot check for something else, and translated pages, are left alone.
+  assert.equal(
+    translateDetour('https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dx'),
+    null,
+  )
+  assert.equal(translateDetour(translatedURL(page, 'ja')), null)
+  assert.equal(translateDetour(page), null)
+})
+test('pages open untranslated while Google refuses the translation', () => {
+  const s = defaults()
+  s.translateWiki = true
+  s.translatePausedUntil = Date.now() + 60000
+  assert.equal(receiveTask(s, task('Debut')).url, 'https://escapefromtarkov.fandom.com/wiki/Debut')
+  s.translatePausedUntil = Date.now() - 1
+  assert.match(receiveTask(s, task('Checking')).url, /translate\.goog/)
+})
