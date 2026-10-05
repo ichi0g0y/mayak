@@ -70,9 +70,11 @@ func ProfileTaskHistory(root, accountID, profileID, mode string) (map[string]str
 func sessionTaskStates(sessions []historySession) map[string]string {
 	states := make(map[string]string)
 	for _, session := range sessions {
-		path := findLog(session.path, "push-notifications")
+		// The output log has the notifications both ways (TaskParser); the
+		// push-notifications log only one, which a session may lack.
+		path := findLog(session.path, "output")
 		if path == "" {
-			path = findLog(session.path, "output")
+			path = findLog(session.path, "push-notifications")
 		}
 		data, err := os.ReadFile(path)
 		if err != nil {

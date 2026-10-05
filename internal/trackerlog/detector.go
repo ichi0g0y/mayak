@@ -215,34 +215,54 @@ func normalizeMode(value string) string {
 	}
 }
 
-const notificationMarker = "Got notification | ChatMessageReceived"
+// EFT writes a chat notification (a task started, failed or completed) in
+// two places of the output log: "Got notification | ChatMessageReceived"
+// and the message on the lines after it (push-notifications), and
+// "WebSocketSharp - message received: NOTIFICATION <id> new_message
+// [{…}]" on one line (backend). A session may have only the second, when
+// the push notifier keeps reconnecting (2026-10-05). Both carry the same
+// eventId, so a notification written twice counts once.
+const pushMarker = "Got notification | ChatMessageReceived"
+const backendMarker = "message received: NOTIFICATION"
 
 type TaskParser struct {
 	buffer  string
 	pending bool
-	seen    map[string]bool
-	order   []string
+	// inline: the pending notification is a backend one, with its message
+	// on the marker's line.
+	inline bool
+	seen   map[string]bool
+	order  []string
 }
 
 func (p *TaskParser) Feed(text string) []Event {
 	p.buffer += text
-	if len(p.buffer) > 2<<20 {
-		p.buffer = p.buffer[len(p.buffer)-(1<<20):]
-	}
 	var events []Event
 	for {
 		if !p.pending {
-			marker := strings.Index(p.buffer, notificationMarker)
-			if marker < 0 {
-				if len(p.buffer) > len(notificationMarker) {
-					p.buffer = p.buffer[len(p.buffer)-len(notificationMarker):]
+			push, backend := strings.Index(p.buffer, pushMarker), strings.Index(p.buffer, backendMarker)
+			if push < 0 && backend < 0 {
+				if len(p.buffer) > len(pushMarker) {
+					p.buffer = p.buffer[len(p.buffer)-len(pushMarker):]
 				}
 				break
 			}
-			p.buffer = p.buffer[marker+len(notificationMarker):]
+			if backend >= 0 && (push < 0 || backend < push) {
+				p.buffer, p.inline = p.buffer[backend+len(backendMarker):], true
+			} else {
+				p.buffer, p.inline = p.buffer[push+len(pushMarker):], false
+			}
 			p.pending = true
 		}
 		start := strings.IndexByte(p.buffer, '{')
+		if p.inline {
+			// A backend notification without a message on its line (another
+			// kind) is skipped, not read from the lines after it.
+			if end := strings.IndexByte(p.buffer, '\n'); end >= 0 && (start < 0 || start > end) {
+				p.buffer, p.pending = p.buffer[end:], false
+				continue
+			}
+		}
 		if start < 0 {
 			break
 		}
@@ -265,6 +285,13 @@ func (p *TaskParser) Feed(text string) []Event {
 			continue
 		}
 		events = append(events, Event{Kind: TaskChanged, TaskID: taskID[0], TaskState: state})
+	}
+	// What is left is a message not yet whole (or the end of the text,
+	// for a marker split across reads); one that never ends is let go. The
+	// cap comes after reading, so a whole log read at once (history.go)
+	// keeps its first notifications.
+	if len(p.buffer) > 2<<20 {
+		p.buffer = p.buffer[len(p.buffer)-(1<<20):]
 	}
 	return events
 }

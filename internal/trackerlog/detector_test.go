@@ -69,3 +69,17 @@ func TestDiscoverProfilesAcrossExistingSessions(t *testing.T) {
 		t.Fatalf("unexpected modes: %+v", modes)
 	}
 }
+
+// A session whose push notifier keeps reconnecting has the notifications in
+// the backend's lines only (2026-10-05, Hot Wheels); one written both ways
+// counts once, and other backend notifications are skipped.
+func TestTaskParserReadsBackendNotifications(t *testing.T) {
+	parser := &TaskParser{}
+	text := "2026-10-05 10:54:25.269|1.1.5.1.47510|Info|output|backend|WebSocketSharp - message received: NOTIFICATION ping ping\n" +
+		"2026-10-05 10:54:25.269|1.1.5.1.47510|Info|output|backend|WebSocketSharp - message received: NOTIFICATION 6ac303516dc0f646b92094b5 new_message [{\"type\":\"new_message\",\"eventId\":\"6ac303516dc0f646b92094b5\",\"dialogId\":\"656f0f98d80a697f855d34b1\",\"message\":{\"_id\":\"6ac3035134d96b91751ff742\",\"type\":12,\"text\":\"quest started\",\"templateId\":\"673f4e956f1b89c7bc0f56ef successMessageText\",\"hasRewards\":false}}]\n" +
+		"2026-10-05 10:54:25.270|1.1.5.1.47510|Info|output|push-notifications|Got notification | ChatMessageReceived\n{\n  \"type\": \"new_message\",\n  \"eventId\": \"6ac303516dc0f646b92094b5\",\n  \"message\": {\"type\": 12, \"templateId\": \"673f4e956f1b89c7bc0f56ef successMessageText\"}\n}\n"
+	got := parser.Feed(text)
+	if len(got) != 1 || got[0].TaskID != "673f4e956f1b89c7bc0f56ef" || got[0].TaskState != "completed" {
+		t.Fatalf("events %+v", got)
+	}
+}
