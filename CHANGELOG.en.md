@@ -4,6 +4,12 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### Fixed
+
+- Opening the official wiki translated could stop at a "too many redirects" page. When Google Translate asks for a robot check, the page after it redirects to itself without end (Google's side). The tab now opens the page untranslated as soon as the check shows, and the error bar says why; recognized tasks open untranslated for an hour after that.
+
 ## v0.1.26 (2026-10-05)
 
 ### New
