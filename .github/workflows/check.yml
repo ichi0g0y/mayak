@@ -42,6 +42,29 @@ jobs:
         with:
           install_args: go bun task
 
+      # Go's build and module caches, kept between runs: without them every
+      # run compiled everything (and the go run tools: wails3, staticcheck)
+      # from nothing. One cache per target and commit, restored from the
+      # latest of the same go.sum, else of any; check, nightly and release
+      # share them (a release on a tag reads main's).
+      - name: Go cache paths
+        id: go-cache
+        shell: bash
+        run: |
+          echo "build=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+          echo "mod=$(go env GOMODCACHE)" >> "$GITHUB_OUTPUT"
+
+      - name: Go cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.go-cache.outputs.build }}
+            ${{ steps.go-cache.outputs.mod }}
+          key: go-${{ matrix.target }}-${{ hashFiles('go.sum') }}-${{ github.sha }}
+          restore-keys: |
+            go-${{ matrix.target }}-${{ hashFiles('go.sum') }}-
+            go-${{ matrix.target }}-
+
       - name: Install GTK and WebKitGTK
         if: runner.os == 'Linux'
         run: |
