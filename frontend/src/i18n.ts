@@ -193,6 +193,11 @@ const messages = {
       'プレステージすると同じプロフィールの進捗がリセットされるので、過去ログの再チェック（キーを割り当てたときの自動の同期も）は、EFT のログに残っている最後のプレステージより前のタスクを送りません。別の PC でプレステージしたときなど、ログにプレステージが残っていない場合は、ここにその日を入れてください。この日より前のログを読まなくなります。空欄なら、このプロフィールの最初のプレイから読みます。',
     trackerHistoryFromSaved: '過去ログを読み始める日を保存しました',
     trackerHistoryFromCleared: '過去ログを最初のプレイから読むようにしました',
+    trackerPrestigePending:
+      '{at} のプレステージを EFT のログで見つけました。TarkovTracker でもプレステージ（進捗のリセット）をしてください。TarkovTracker の API ではリセットできないため、サイトの設定画面で行います。リセットを確かめたら、プレステージ後に終えたタスクを TarkovTracker に送り直します（EFT の起動中は閉じてから）。リセットは数分おきに確かめますが、すぐ送り直したいときは「リセットした」を押してください。',
+    trackerPrestigeOpen: 'TarkovTracker の設定を開く',
+    trackerPrestigeDone: 'リセットした',
+    trackerPrestigeConfirmed: 'プレステージ後の進捗を TarkovTracker に送り直します',
     trackerHistoryFailed: '過去ログの同期に失敗しました:',
     trackerHistoryNever:
       'まだ一度も過去ログを再チェックしていません。押すと、EFT のログに残っているこのプロフィールのタスクの完了・失敗を TarkovTracker に送ります。',
@@ -567,6 +572,11 @@ const messages = {
       "A Prestige resets the same profile's progress, so rechecking past logs (and the sync when a key is assigned) skips the tasks before the last Prestige the EFT logs hold. When the logs hold none (it was taken on another PC), enter its day here: the logs before it are skipped. Empty: from the profile's first session.",
     trackerHistoryFromSaved: 'Saved the day past logs are read from.',
     trackerHistoryFromCleared: 'Past logs are read from the first session again.',
+    trackerPrestigePending:
+      'The EFT logs show a Prestige at {at}. Take the Prestige on TarkovTracker too (it resets the progress there): its API cannot, so it is done on its website\'s settings. Once the reset is seen, the tasks done since the Prestige are sent again (after EFT closes). MAYAK checks for the reset every few minutes; press "Reset done" to send them now.',
+    trackerPrestigeOpen: 'Open TarkovTracker settings',
+    trackerPrestigeDone: 'Reset done',
+    trackerPrestigeConfirmed: 'Sending the progress since the Prestige to TarkovTracker again.',
     trackerHistoryFailed: 'Syncing the past logs failed:',
     trackerHistoryNever:
       'The past logs of this profile have never been rechecked. Pressing it sends the task completions and failures the EFT logs hold to TarkovTracker.',

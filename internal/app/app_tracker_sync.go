@@ -101,7 +101,7 @@ func (a *App) applyTrackerTokenFlagsLocked() {
 				break
 			}
 		}
-		a.status.Tracker.Profiles = append(a.status.Tracker.Profiles, model.TrackerProfileSummary{AccountID: profile.AccountID, ProfileID: profile.ProfileID, Mode: profile.Mode, FirstSeen: profile.FirstSeen, LastSeen: profile.LastSeen, BoundKeyID: boundID, HistorySyncedAt: profile.HistorySyncedAt, HistoryFrom: profile.HistoryFrom, Current: a.status.Tracker.AccountID == profile.AccountID && a.status.Tracker.ProfileID == profile.ProfileID && a.status.Tracker.Mode == profile.Mode})
+		a.status.Tracker.Profiles = append(a.status.Tracker.Profiles, model.TrackerProfileSummary{AccountID: profile.AccountID, ProfileID: profile.ProfileID, Mode: profile.Mode, FirstSeen: profile.FirstSeen, LastSeen: profile.LastSeen, BoundKeyID: boundID, HistorySyncedAt: profile.HistorySyncedAt, HistoryFrom: profile.HistoryFrom, PrestigeAt: profile.PrestigeAt, PrestigePending: profile.PrestigePending, Current: a.status.Tracker.AccountID == profile.AccountID && a.status.Tracker.ProfileID == profile.ProfileID && a.status.Tracker.Mode == profile.Mode})
 	}
 }
 
@@ -130,9 +130,17 @@ func (a *App) handleTrackerLogEvent(event trackerlog.Event) {
 	}
 	switch event.Kind {
 	case trackerlog.PrestigeTaken:
-		// The live sync goes on as it is; a recheck of past logs reads them
-		// from this Prestige on (trackerlog.ProfileTaskHistory).
-		a.addLog("Info", "TarkovTracker", fmt.Sprintf("Prestige taken (%s) at %s: past logs are read from here on", event.Mode, event.At.Format("2006-01-02 15:04:05")))
+		// The profile played in that mode; the live sync goes on as it is,
+		// and a recheck of past logs reads them from this Prestige on
+		// (trackerlog.ProfileTaskHistory).
+		a.mu.RLock()
+		tr := a.status.Tracker
+		a.mu.RUnlock()
+		if tr.Mode != event.Mode || tr.ProfileID == "" {
+			a.addLog("Warn", "TarkovTracker", fmt.Sprintf("Prestige taken (%s) at %s, for no profile detected in that mode", event.Mode, event.At.Format("2006-01-02 15:04:05")))
+			return
+		}
+		a.notePrestige(tr.AccountID, tr.ProfileID, event.Mode, event.At)
 		return
 	case trackerlog.ProfileDetected:
 		a.rememberTrackerProfile(event)
@@ -305,6 +313,7 @@ func (a *App) refreshTrackerIdentity(mode, profileID, accountID string) error {
 	a.mu.Unlock()
 	a.emitStatus(status)
 	a.addLog("Info", "TarkovTracker", fmt.Sprintf("Progress loaded for %s: %d completed", mode, completed))
+	a.checkPrestigeReset(accountID, profileID, mode, completed)
 	a.squadUpdateTracker()
 	a.publishCompletable()
 	return nil

@@ -97,6 +97,10 @@ export type TrackerProfile = {
   historySyncedAt?: string
   // The day its past logs are read from (YYYY-MM-DD; after a Prestige), "" for all.
   historyFrom?: string
+  // Its last Prestige seen in the EFT logs, and whether TarkovTracker still
+  // waits for its reset.
+  prestigeAt?: string
+  prestigePending?: boolean
 }
 export type CatalogStatus = {
   state: string

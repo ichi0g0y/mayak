@@ -9,6 +9,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 ### Improved
 
 - After a Prestige (in PvE too since 1.2.0.0), rechecking past logs and the sync when a key is assigned no longer send the tasks done before it to TarkovTracker. The profile stays the same through a Prestige, so MAYAK finds when it was taken in the EFT logs and skips the logs before it. For a Prestige the logs do not hold (taken on another PC), each TarkovTracker profile also gains "Logs from".
+- When MAYAK finds a Prestige, the profile under TarkovTracker in the settings asks for the Prestige on TarkovTracker too: its progress can be reset on its website only. Once the reset is seen (checked every few minutes, or told with "Reset done"), the tasks done since the Prestige are sent again, so the reset does not drop them.
 
 ### Fixed
 

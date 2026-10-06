@@ -41,6 +41,7 @@ export const {
   RemoveTrackerKey,
   RefreshTrackerKeyNames,
   SaveSettings,
+  ConfirmTrackerPrestigeReset,
   SetTrackerHistoryFrom,
   SetTrackerProfileKey,
   StartMonitoring,

@@ -84,6 +84,8 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 	states, sessions, prestige := trackerlog.ProfileTaskHistory(root, accountID, profileID, mode, from)
 	if !prestige.IsZero() {
 		a.addLog("Info", "TarkovTracker", fmt.Sprintf("Past logs of %s (%s) are read from its Prestige at %s", maskProfileID(profileID), mode, prestige.Format("2006-01-02 15:04:05")))
+		// One taken while MAYAK was not running is known from here.
+		a.notePrestige(accountID, profileID, mode, prestige)
 	}
 	if sessions == 0 {
 		return 0, errNoTrackerHistory
@@ -190,7 +192,12 @@ func (a *App) watchGame() {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 	first := true
+	lastPrestigeRefresh := time.Now()
 	for {
+		if time.Since(lastPrestigeRefresh) >= prestigeRefreshEvery {
+			lastPrestigeRefresh = time.Now()
+			go a.refreshPendingPrestige()
+		}
 		running := eftdetect.GameRunning()
 		a.mu.Lock()
 		changed := a.status.Tracker.GameRunning != running

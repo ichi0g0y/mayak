@@ -367,6 +367,15 @@ export function ClearLogs(): $CancellablePromise<void> {
 }
 
 /**
+ * ConfirmTrackerPrestigeReset is the settings page telling that TarkovTracker
+ * has been reset after a profile's Prestige: what was done since is sent
+ * again (once EFT has closed).
+ */
+export function ConfirmTrackerPrestigeReset(accountID: string, profileID: string, mode: string): $CancellablePromise<void> {
+    return $Call.ByID(1985396390, accountID, profileID, mode);
+}
+
+/**
  * DevInstance tells the shell whether this is the `task dev` build.
  */
 export function DevInstance(): $CancellablePromise<boolean> {
@@ -895,6 +904,13 @@ export function TrackerCompleteTasks(ids: string[]): $CancellablePromise<number>
  */
 export function TrackerDismissTasks(ids: string[]): $CancellablePromise<void> {
     return $Call.ByID(1947200664, ids);
+}
+
+/**
+ * TrackerPrestigeURL is where TarkovTracker is reset after a Prestige.
+ */
+export function TrackerPrestigeURL(): $CancellablePromise<string> {
+    return $Call.ByID(2048265720);
 }
 
 /**

@@ -165,6 +165,10 @@ type TrackerProfileSummary struct {
 	HistorySyncedAt string `json:"historySyncedAt"`
 	// HistoryFrom is the day its past logs are read from, empty for all.
 	HistoryFrom string `json:"historyFrom"`
+	// PrestigeAt is its last Prestige seen in the EFT logs (RFC 3339);
+	// PrestigePending: TarkovTracker waits for its reset.
+	PrestigeAt      string `json:"prestigeAt"`
+	PrestigePending bool   `json:"prestigePending"`
 }
 
 type ItemCandidate struct {

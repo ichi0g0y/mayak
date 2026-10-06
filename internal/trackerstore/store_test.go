@@ -185,3 +185,32 @@ func TestStoreKeepsItsFileAfterTheFolderChanges(t *testing.T) {
 		t.Fatalf("saved into the new folder: %v", entries)
 	}
 }
+
+// A Prestige is marked once: the same one read again (the live log, then
+// the past logs, to the millisecond) does not make the profile wait again
+// after TarkovTracker was reset; a later one does.
+func TestMarkPrestige(t *testing.T) {
+	d := Empty()
+	d.Profiles = append(d.Profiles, Profile{AccountID: "1", ProfileID: "p", Mode: "pve"})
+	if !d.MarkPrestige("1", "p", "pve", "2026-10-06T23:27:10.296Z", 353) {
+		t.Fatal("first Prestige not marked")
+	}
+	if before, pending := d.PrestigePending("1", "p", "pve"); !pending || before != 353 {
+		t.Fatalf("pending %v, %d", pending, before)
+	}
+	if !d.ClearPrestigePending("1", "p", "pve") || d.ClearPrestigePending("1", "p", "pve") {
+		t.Fatal("the reset is recorded once")
+	}
+	if d.MarkPrestige("1", "p", "pve", "2026-10-06T23:27:10.296Z", 3) {
+		t.Fatal("the same Prestige marked again")
+	}
+	if _, pending := d.PrestigePending("1", "p", "pve"); pending {
+		t.Fatal("waits again for the same Prestige")
+	}
+	if !d.MarkPrestige("1", "p", "pve", "2026-11-01T10:00:00Z", 120) {
+		t.Fatal("a later Prestige not marked")
+	}
+	if d.MarkPrestige("1", "other", "pve", "2026-11-02T10:00:00Z", 0) {
+		t.Fatal("an unknown profile marked")
+	}
+}

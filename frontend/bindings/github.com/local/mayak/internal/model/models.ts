@@ -710,6 +710,13 @@ export class TrackerProfileSummary {
      */
     "historyFrom": string;
 
+    /**
+     * PrestigeAt is its last Prestige seen in the EFT logs (RFC 3339);
+     * PrestigePending: TarkovTracker waits for its reset.
+     */
+    "prestigeAt": string;
+    "prestigePending": boolean;
+
     /** Creates a new TrackerProfileSummary instance. */
     constructor($$source: Partial<TrackerProfileSummary> = {}) {
         if (!("accountId" in $$source)) {
@@ -738,6 +745,12 @@ export class TrackerProfileSummary {
         }
         if (!("historyFrom" in $$source)) {
             this["historyFrom"] = "";
+        }
+        if (!("prestigeAt" in $$source)) {
+            this["prestigeAt"] = "";
+        }
+        if (!("prestigePending" in $$source)) {
+            this["prestigePending"] = false;
         }
 
         Object.assign(this, $$source);

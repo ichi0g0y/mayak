@@ -30,6 +30,13 @@ type Profile struct {
 	// tasks done before it must not go to TarkovTracker again. Empty: from
 	// the profile's first session.
 	HistoryFrom string `json:"historyFrom,omitempty"`
+	// PrestigeAt is the last Prestige of the profile seen in the EFT logs
+	// (RFC 3339). PrestigePending: TarkovTracker has not been reset for it
+	// yet; PrestigeCompleted is how many tasks TarkovTracker had completed
+	// then (0 when unknown), to see the reset by their drop.
+	PrestigeAt        string `json:"prestigeAt,omitempty"`
+	PrestigePending   bool   `json:"prestigePending,omitempty"`
+	PrestigeCompleted int    `json:"prestigeCompleted,omitempty"`
 }
 
 type Key struct {
@@ -169,6 +176,50 @@ func (d *Document) MarkHistorySynced(accountID, profileID, mode, at string) bool
 		}
 	}
 	return false
+}
+
+// MarkPrestige records a profile's Prestige at at (RFC 3339) and that
+// TarkovTracker waits for its reset, unless the Prestige is not newer than
+// the one known.
+func (d *Document) MarkPrestige(accountID, profileID, mode, at string, completed int) bool {
+	for index := range d.Profiles {
+		p := &d.Profiles[index]
+		if p.AccountID != accountID || p.ProfileID != profileID || p.Mode != mode {
+			continue
+		}
+		if known, err := time.Parse(time.RFC3339, p.PrestigeAt); err == nil {
+			if next, err := time.Parse(time.RFC3339, at); err != nil || !next.After(known) {
+				return false
+			}
+		}
+		p.PrestigeAt, p.PrestigePending, p.PrestigeCompleted = at, true, completed
+		return true
+	}
+	return false
+}
+
+// ClearPrestigePending records that TarkovTracker was reset for a profile's
+// Prestige.
+func (d *Document) ClearPrestigePending(accountID, profileID, mode string) bool {
+	for index := range d.Profiles {
+		p := &d.Profiles[index]
+		if p.AccountID == accountID && p.ProfileID == profileID && p.Mode == mode && p.PrestigePending {
+			p.PrestigePending = false
+			return true
+		}
+	}
+	return false
+}
+
+// PrestigePending tells whether a profile waits for its TarkovTracker reset,
+// and how many tasks TarkovTracker had completed at its Prestige.
+func (d Document) PrestigePending(accountID, profileID, mode string) (int, bool) {
+	for _, p := range d.Profiles {
+		if p.AccountID == accountID && p.ProfileID == profileID && p.Mode == mode {
+			return p.PrestigeCompleted, p.PrestigePending
+		}
+	}
+	return 0, false
 }
 
 // SetHistoryFrom sets the day a profile's past logs are read from ("" for

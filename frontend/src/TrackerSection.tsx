@@ -1,6 +1,7 @@
 import { CloudSync, ExternalLink, History, KeyRound, RefreshCw, Trash2 } from 'lucide-react'
 import {
   BrowserOpenURL,
+  ConfirmTrackerPrestigeReset,
   DiscoverTrackerProfiles,
   ImportTrackerToken,
   RemoveTrackerKey,
@@ -165,6 +166,29 @@ export function TrackerSection({
             </Button>
           )}
         </div>
+        {profile.prestigePending && (
+          <div className="tracker-prestige-note" role="status">
+            <p>
+              {t('trackerPrestigePending').replace(
+                '{at}',
+                profile.prestigeAt ? new Date(profile.prestigeAt).toLocaleString() : '',
+              )}
+            </p>
+            <div className="tracker-prestige-actions">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => BrowserOpenURL('https://tarkovtracker.org/settings')}
+              >
+                <ExternalLink />
+                {t('trackerPrestigeOpen')}
+              </Button>
+              <Button type="button" variant="ghost" disabled={busy} onClick={() => void confirmPrestigeReset(profile)}>
+                {t('trackerPrestigeDone')}
+              </Button>
+            </div>
+          </div>
+        )}
         {key && (status.tracker.gameRunning || !profile.historySyncedAt) && (
           <p className={`tracker-history-note${profile.historySyncedAt ? '' : ' needed'}`}>
             {status.tracker.gameRunning ? t('trackerHistoryGameRunning') : t('trackerHistoryNever')}
@@ -195,6 +219,13 @@ export function TrackerSection({
     run(
       () => SetTrackerHistoryFrom(profile.accountId, profile.profileId, profile.mode, day),
       t(day ? 'trackerHistoryFromSaved' : 'trackerHistoryFromCleared'),
+    )
+  // TarkovTracker was reset on its website after the profile's Prestige:
+  // what was done since is sent again (once EFT has closed).
+  const confirmPrestigeReset = (profile: TrackerProfile) =>
+    run(
+      () => ConfirmTrackerPrestigeReset(profile.accountId, profile.profileId, profile.mode),
+      t('trackerPrestigeConfirmed'),
     )
   const syncProfileHistory = async (profile: TrackerProfile) => {
     setBusy(true)
