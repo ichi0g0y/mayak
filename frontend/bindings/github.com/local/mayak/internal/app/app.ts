@@ -557,6 +557,15 @@ export function SaveSettings(s: config$0.Settings): $CancellablePromise<void> {
     return $Call.ByID(3616322938, s);
 }
 
+/**
+ * SetTrackerHistoryFrom sets the day a profile's past logs are read from
+ * (YYYY-MM-DD; "" for all of them): after a Prestige, its day, so the tasks
+ * done before it are not sent again to the reset progress.
+ */
+export function SetTrackerHistoryFrom(accountID: string, profileID: string, mode: string, $from: string): $CancellablePromise<void> {
+    return $Call.ByID(530286950, accountID, profileID, mode, $from);
+}
+
 export function SetTrackerProfileKey(accountID: string, profileID: string, mode: string, keyID: string): $CancellablePromise<void> {
     return $Call.ByID(3013609958, accountID, profileID, mode, keyID);
 }

@@ -25,6 +25,11 @@ type Profile struct {
 	// HistorySyncedAt is when the profile's past logs were last synced to
 	// TarkovTracker (RFC 3339), empty when never.
 	HistorySyncedAt string `json:"historySyncedAt,omitempty"`
+	// HistoryFrom is the day (YYYY-MM-DD, this PC's time) its past logs are
+	// read from: a Prestige resets the progress of the same profile, and the
+	// tasks done before it must not go to TarkovTracker again. Empty: from
+	// the profile's first session.
+	HistoryFrom string `json:"historyFrom,omitempty"`
 }
 
 type Key struct {
@@ -49,6 +54,16 @@ func Empty() Document { return Document{Version: CurrentVersion, Keys: []Key{}, 
 
 func (d Document) Clone() Document {
 	return Document{Version: d.Version, Keys: append([]Key(nil), d.Keys...), Profiles: append([]Profile(nil), d.Profiles...)}
+}
+
+// HistoryFrom is the day a profile's past logs are read from, "" for all.
+func (d Document) HistoryFrom(accountID, profileID, mode string) string {
+	for _, p := range d.Profiles {
+		if p.AccountID == accountID && p.ProfileID == profileID && p.Mode == mode {
+			return p.HistoryFrom
+		}
+	}
+	return ""
 }
 
 func (d Document) TokenFor(accountID, profileID, mode string) string {
@@ -150,6 +165,19 @@ func (d *Document) MarkHistorySynced(accountID, profileID, mode, at string) bool
 		p := &d.Profiles[index]
 		if p.AccountID == accountID && p.ProfileID == profileID && p.Mode == mode {
 			p.HistorySyncedAt = at
+			return true
+		}
+	}
+	return false
+}
+
+// SetHistoryFrom sets the day a profile's past logs are read from ("" for
+// all of them).
+func (d *Document) SetHistoryFrom(accountID, profileID, mode, from string) bool {
+	for index := range d.Profiles {
+		p := &d.Profiles[index]
+		if p.AccountID == accountID && p.ProfileID == profileID && p.Mode == mode {
+			p.HistoryFrom = from
 			return true
 		}
 	}

@@ -51,8 +51,9 @@ func (a *App) syncAssignedHistory(accountID, profileID, mode string) {
 // one profile, from its first session on, to its TarkovTracker key: what was
 // done before the key was assigned, or while MAYAK was not running (the live
 // sync only follows the logs while it runs). A profile is one wipe, so its
-// first session is where its progress starts. It returns how many task
-// states were sent.
+// first session is where its progress starts, unless a Prestige reset it:
+// then the profile's HistoryFrom day is (SetTrackerHistoryFrom). It returns
+// how many task states were sent.
 // errNoTrackerHistory: the profile's logs hold nothing to send. After an
 // assignment that is no failure, just nothing to report.
 var errNoTrackerHistory = errors.New("the EFT logs of this profile have no task changes")
@@ -72,6 +73,7 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 	root := a.settings.LogsDirectory
 	enabled := a.settings.TarkovTrackerEnabled
 	token := a.trackerData.TokenFor(accountID, profileID, mode)
+	from := historyFromTime(a.trackerData.HistoryFrom(accountID, profileID, mode))
 	a.mu.RUnlock()
 	if !enabled {
 		return 0, errors.New("TarkovTracker sync is disabled")
@@ -79,7 +81,7 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 	if token == "" {
 		return 0, errors.New("no key is assigned to this EFT profile")
 	}
-	states, sessions := trackerlog.ProfileTaskHistory(root, accountID, profileID, mode)
+	states, sessions := trackerlog.ProfileTaskHistory(root, accountID, profileID, mode, from)
 	if sessions == 0 {
 		return 0, errNoTrackerHistory
 	}
@@ -106,6 +108,43 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 		go func() { _ = a.refreshTrackerIdentity(mode, profileID, accountID) }()
 	}
 	return len(updates), nil
+}
+
+// historyFromTime is the start of a HistoryFrom day in this PC's time (the
+// EFT log folders are named in it), zero for none.
+func historyFromTime(day string) time.Time {
+	from, err := time.ParseInLocation(time.DateOnly, day, time.Local)
+	if err != nil {
+		return time.Time{}
+	}
+	return from
+}
+
+// SetTrackerHistoryFrom sets the day a profile's past logs are read from
+// (YYYY-MM-DD; "" for all of them): after a Prestige, its day, so the tasks
+// done before it are not sent again to the reset progress.
+func (a *App) SetTrackerHistoryFrom(accountID, profileID, mode, from string) error {
+	if from != "" && historyFromTime(from).IsZero() {
+		return errors.New("the day must be YYYY-MM-DD")
+	}
+	a.trackerStoreMu.Lock()
+	defer a.trackerStoreMu.Unlock()
+	a.mu.Lock()
+	document := a.trackerData.Clone()
+	a.mu.Unlock()
+	if !document.SetHistoryFrom(accountID, profileID, mode, from) {
+		return errors.New("the EFT profile was not found")
+	}
+	if err := a.trackerStore.Save(document); err != nil {
+		return err
+	}
+	a.mu.Lock()
+	a.trackerData = document
+	a.applyTrackerTokenFlagsLocked()
+	status := a.status
+	a.mu.Unlock()
+	a.emitStatus(status)
+	return nil
 }
 
 // markHistorySynced records that a profile's past logs were synced now, so

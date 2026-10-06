@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestHistoryUsesOnlyExactProfileAndSelectedBreakpoint(t *testing.T) {
@@ -57,14 +58,19 @@ func TestProfileTaskHistoryFromTheFirstSession(t *testing.T) {
 	writeSession(t, root, "log_2026.01.01_10-00-00_1.0.0", "p1", "10", "Pve", `{"eventId":"a","message":{"type":12,"templateId":"cccccccccccccccccccccccc"}}`)
 	writeSession(t, root, "log_2026.01.02_10-00-00_1.0.0", "other", "10", "Pve", `{"eventId":"b","message":{"type":12,"templateId":"bbbbbbbbbbbbbbbbbbbbbbbb"}}`)
 	writeSession(t, root, "log_2026.01.03_10-00-00_1.1.0", "p1", "10", "Pve", `{"eventId":"c","message":{"type":12,"templateId":"aaaaaaaaaaaaaaaaaaaaaaaa"}}`)
-	states, sessions := ProfileTaskHistory(root, "10", "p1", "pve")
+	states, sessions := ProfileTaskHistory(root, "10", "p1", "pve", time.Time{})
 	if sessions != 2 {
 		t.Fatalf("read %d sessions, want the profile's 2", sessions)
 	}
 	if len(states) != 2 || states["cccccccccccccccccccccccc"] != "completed" || states["aaaaaaaaaaaaaaaaaaaaaaaa"] != "completed" {
 		t.Fatalf("unexpected states: %#v", states)
 	}
-	if _, none := ProfileTaskHistory(root, "10", "missing", "pve"); none != 0 {
+	if _, none := ProfileTaskHistory(root, "10", "missing", "pve", time.Time{}); none != 0 {
 		t.Fatalf("an unknown profile read %d sessions", none)
+	}
+	// From a day on (a Prestige): the sessions before it are left out.
+	states, sessions = ProfileTaskHistory(root, "10", "p1", "pve", time.Date(2026, 1, 3, 0, 0, 0, 0, time.Local))
+	if sessions != 1 || len(states) != 1 || states["aaaaaaaaaaaaaaaaaaaaaaaa"] != "completed" {
+		t.Fatalf("from a day: %d sessions, %#v", sessions, states)
 	}
 }

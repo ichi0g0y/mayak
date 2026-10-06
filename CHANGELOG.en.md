@@ -6,6 +6,10 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Nightly
 
+### Improved
+
+- Each TarkovTracker profile gains "Logs from". After a Prestige (in PvE too since 1.2.0.0) resets your progress, enter its day: rechecking past logs, and the sync when a key is assigned, then skip the logs before it, so tasks done before the reset do not go to TarkovTracker.
+
 ### Fixed
 
 - Opening the official wiki translated could stop at a "too many redirects" page. When Google Translate asks for a robot check, the page it returns to once the check is passed redirects to itself without end (Google's side). The tab now opens the translated page again without the part that loops. Only when Google asks for the check again right after does the page open untranslated, and recognized tasks then open untranslated for an hour.

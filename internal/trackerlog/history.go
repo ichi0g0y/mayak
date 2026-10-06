@@ -57,11 +57,21 @@ func TaskHistory(root, breakpointID, accountID, profileID, mode string) (map[str
 }
 
 // ProfileTaskHistory returns the last observed state for every task of a
-// profile, from its first session on, and how many sessions it read. It
+// profile, from its first session on (or the first that starts at from or
+// later, when from is set: a Prestige), and how many sessions it read. It
 // finds the profile's sessions once (HistoryBreakpoints then TaskHistory
 // would read every log twice).
-func ProfileTaskHistory(root, accountID, profileID, mode string) (map[string]string, int) {
+func ProfileTaskHistory(root, accountID, profileID, mode string, from time.Time) (map[string]string, int) {
 	sessions := matchingSessions(root, accountID, profileID, mode)
+	if !from.IsZero() {
+		kept := sessions[:0]
+		for _, session := range sessions {
+			if !session.start.Before(from) {
+				kept = append(kept, session)
+			}
+		}
+		sessions = kept
+	}
 	return sessionTaskStates(sessions), len(sessions)
 }
 

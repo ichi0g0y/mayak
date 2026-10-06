@@ -95,6 +95,8 @@ export type TrackerProfile = {
   boundKeyId: string
   current: boolean
   historySyncedAt?: string
+  // The day its past logs are read from (YYYY-MM-DD; after a Prestige), "" for all.
+  historyFrom?: string
 }
 export type CatalogStatus = {
   state: string

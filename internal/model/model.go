@@ -163,6 +163,8 @@ type TrackerProfileSummary struct {
 	Current    bool   `json:"current"`
 	// HistorySyncedAt is when its past logs were last synced, empty when never.
 	HistorySyncedAt string `json:"historySyncedAt"`
+	// HistoryFrom is the day its past logs are read from, empty for all.
+	HistoryFrom string `json:"historyFrom"`
 }
 
 type ItemCandidate struct {

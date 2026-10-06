@@ -101,7 +101,7 @@ func (a *App) applyTrackerTokenFlagsLocked() {
 				break
 			}
 		}
-		a.status.Tracker.Profiles = append(a.status.Tracker.Profiles, model.TrackerProfileSummary{AccountID: profile.AccountID, ProfileID: profile.ProfileID, Mode: profile.Mode, FirstSeen: profile.FirstSeen, LastSeen: profile.LastSeen, BoundKeyID: boundID, HistorySyncedAt: profile.HistorySyncedAt, Current: a.status.Tracker.AccountID == profile.AccountID && a.status.Tracker.ProfileID == profile.ProfileID && a.status.Tracker.Mode == profile.Mode})
+		a.status.Tracker.Profiles = append(a.status.Tracker.Profiles, model.TrackerProfileSummary{AccountID: profile.AccountID, ProfileID: profile.ProfileID, Mode: profile.Mode, FirstSeen: profile.FirstSeen, LastSeen: profile.LastSeen, BoundKeyID: boundID, HistorySyncedAt: profile.HistorySyncedAt, HistoryFrom: profile.HistoryFrom, Current: a.status.Tracker.AccountID == profile.AccountID && a.status.Tracker.ProfileID == profile.ProfileID && a.status.Tracker.Mode == profile.Mode})
 	}
 }
 

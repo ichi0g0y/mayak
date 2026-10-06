@@ -705,6 +705,11 @@ export class TrackerProfileSummary {
      */
     "historySyncedAt": string;
 
+    /**
+     * HistoryFrom is the day its past logs are read from, empty for all.
+     */
+    "historyFrom": string;
+
     /** Creates a new TrackerProfileSummary instance. */
     constructor($$source: Partial<TrackerProfileSummary> = {}) {
         if (!("accountId" in $$source)) {
@@ -730,6 +735,9 @@ export class TrackerProfileSummary {
         }
         if (!("historySyncedAt" in $$source)) {
             this["historySyncedAt"] = "";
+        }
+        if (!("historyFrom" in $$source)) {
+            this["historyFrom"] = "";
         }
 
         Object.assign(this, $$source);

@@ -4,6 +4,7 @@ import {
   DiscoverTrackerProfiles,
   ImportTrackerToken,
   RemoveTrackerKey,
+  SetTrackerHistoryFrom,
   SetTrackerProfileKey,
   SyncTrackerProfileHistory,
 } from './desktop'
@@ -139,6 +140,18 @@ export function TrackerSection({
         </div>
         <div className="tracker-profile-tools">
           {key && (
+            <label className="tracker-history-from" title={t('trackerHistoryFromHelp')}>
+              <span>{t('trackerHistoryFrom')}</span>
+              <Input
+                type="date"
+                value={profile.historyFrom || ''}
+                disabled={busy}
+                aria-label={t('trackerHistoryFrom')}
+                onChange={(event) => void setHistoryFrom(profile, event.target.value)}
+              />
+            </label>
+          )}
+          {key && (
             <Button
               type="button"
               variant="ghost"
@@ -176,6 +189,13 @@ export function TrackerSection({
   const removeTrackerKey = (keyId: string) => run(() => RemoveTrackerKey(keyId), t('trackerTokenRemoved'))
   // Sends what the profile's EFT logs recorded to its key, from the first
   // session on (SyncTrackerProfileHistory).
+  // The day the profile's past logs are read from: after a Prestige, the
+  // tasks done before it must not go to the reset progress again.
+  const setHistoryFrom = (profile: TrackerProfile, day: string) =>
+    run(
+      () => SetTrackerHistoryFrom(profile.accountId, profile.profileId, profile.mode, day),
+      t(day ? 'trackerHistoryFromSaved' : 'trackerHistoryFromCleared'),
+    )
   const syncProfileHistory = async (profile: TrackerProfile) => {
     setBusy(true)
     setNotice('')

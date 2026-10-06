@@ -528,7 +528,9 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .tracker-profile-info > span:empty { display: none; }
 .tracker-profile-key { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-items: start; }
 .tracker-profile-key .tracker-profile-actions { grid-template-columns: auto; }
-.tracker-profile-tools { display: flex; justify-content: flex-end; }
+.tracker-profile-tools { display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tracker-history-from { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted-foreground); }
+.tracker-history-from input { width: auto; height: 32px; cursor: pointer; }
 @media (max-width: 720px) { .tracker-group-columns { display: none; } .tracker-profile { grid-template-columns: 1fr; } .tracker-profile-tools { justify-content: flex-start; } }
 
 /* An account's earlier profiles of a mode (past wipes) fold away. */
