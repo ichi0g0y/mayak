@@ -722,7 +722,6 @@ export const words = {
     noNeeds: 'なし',
     fir: 'FIR',
     needDone: '完了',
-    progressUnknown: 'TarkovTrackerと同期すると完了済みがわかります',
     // Price chart
     priceHistory: '価格の推移',
     range7d: '7日',
@@ -1467,7 +1466,6 @@ export const words = {
     noNeeds: 'None',
     fir: 'FIR',
     needDone: 'Done',
-    progressUnknown: 'Sync TarkovTracker to see what is done',
     // Price chart
     priceHistory: 'Price history',
     range7d: '7D',

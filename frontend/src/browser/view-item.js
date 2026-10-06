@@ -224,7 +224,6 @@ function itemDetails() {
           .join('')}</ul>`
       : `<p class="item-empty">${t('noNeeds')}</p>`
   const open = (rows) => rows.filter((s) => !done(s)).length
-  const unknown = item.tasks.some((s) => !s.state) || item.hideout.some((s) => s.complete === null)
   return `
  <div class="item-head">${(() => {
    const link = itemPageLink(item),
@@ -256,7 +255,6 @@ function itemDetails() {
  <section class="item-section"><h3>${esc(t('traders'))}</h3>${item.traders.map((s, i) => row(s.trader, s.currency === 'RUB' ? money(s.price) : `${money(s.price, s.currency)} <small>(${money(s.priceRub)})</small>`, i === 0 ? 'best' : '')).join('') || `<p class="item-empty">${t('noNeeds')}</p>`}</section>
  <section class="item-section"><h3>${esc(t('itemTasks'))}<span class="count">${open(item.tasks)}</span></h3>${needs(item.tasks, (s) => `<span class="need-name" title="${esc(s.name)}">${esc(localName(s.names, s.name))}<small>${esc(s.trader)}</small></span>`, 'itemTask')}</section>
  <section class="item-section"><h3>${esc(t('itemHideout'))}<span class="count">${open(item.hideout)}</span></h3>${needs(item.hideout, (s) => `<span class="need-name">${esc(s.station)}<small>Lv.${s.level}</small></span>`)}</section>
- ${unknown && (item.tasks.length || item.hideout.length) ? `<p class="hint item-hint">${esc(t('progressUnknown'))}</p>` : ''}
  `
 }
 export function itemToggle() {

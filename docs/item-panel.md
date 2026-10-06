@@ -145,7 +145,7 @@
 - TarkovTracker が `connected` で、そのゲームモードがアイテムのモードと一致するときだけ進捗を付けます（連携は [settings-and-integrations.md](settings-and-integrations.md)）。
   - タスクの `state` は `completed` / `failed` / `uncompleted`。記録がなければ `uncompleted` です。
   - ハイドアウトの `complete` は `true` / `false`。
-- 条件を満たさないときは状態を空（ハイドアウトは `null`）にし、「TarkovTrackerと同期すると完了済みがわかります」と表示します。
+- 条件を満たさないときは状態を空（ハイドアウトは `null`）にし、完了の印を付けません（案内の文言は出しません）。
 
 ### 表示
 
