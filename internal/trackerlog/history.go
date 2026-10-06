@@ -57,22 +57,46 @@ func TaskHistory(root, breakpointID, accountID, profileID, mode string) (map[str
 }
 
 // ProfileTaskHistory returns the last observed state for every task of a
-// profile, from its first session on (or the first that starts at from or
-// later, when from is set: a Prestige), and how many sessions it read. It
-// finds the profile's sessions once (HistoryBreakpoints then TaskHistory
-// would read every log twice).
-func ProfileTaskHistory(root, accountID, profileID, mode string, from time.Time) (map[string]string, int) {
+// profile, from its first session on, how many sessions it read, and the
+// last Prestige its logs record in mode. A Prestige resets the progress of
+// the same profile (its ID stays), so the task changes before it are left
+// out, and so are those before from (a day set by hand: a Prestige whose
+// logs are not on this PC). It finds the profile's sessions once
+// (HistoryBreakpoints then TaskHistory would read every log twice).
+func ProfileTaskHistory(root, accountID, profileID, mode string, from time.Time) (map[string]string, int, time.Time) {
 	sessions := matchingSessions(root, accountID, profileID, mode)
-	if !from.IsZero() {
-		kept := sessions[:0]
-		for _, session := range sessions {
-			if !session.start.Before(from) {
-				kept = append(kept, session)
+	var prestige time.Time
+	var changes []Event
+	for _, session := range sessions {
+		text := sessionNotifications(session)
+		for _, event := range Prestiges(text) {
+			if event.Mode == mode && event.At.After(prestige) {
+				prestige = event.At
 			}
 		}
-		sessions = kept
+		parser := TaskParser{}
+		for _, event := range parser.Feed(text) {
+			if event.Kind != TaskChanged {
+				continue
+			}
+			// A notification whose line had no stamp is the session's.
+			if event.At.IsZero() {
+				event.At = session.start
+			}
+			changes = append(changes, event)
+		}
 	}
-	return sessionTaskStates(sessions), len(sessions)
+	cutoff := from
+	if prestige.After(cutoff) {
+		cutoff = prestige
+	}
+	states := make(map[string]string)
+	for _, event := range changes {
+		if !event.At.Before(cutoff) {
+			states[event.TaskID] = event.TaskState
+		}
+	}
+	return states, len(sessions), prestige
 }
 
 // sessionTaskStates reads the task changes of sessions, in order: a later
@@ -80,24 +104,30 @@ func ProfileTaskHistory(root, accountID, profileID, mode string, from time.Time)
 func sessionTaskStates(sessions []historySession) map[string]string {
 	states := make(map[string]string)
 	for _, session := range sessions {
-		// The output log has the notifications both ways (TaskParser); the
-		// push-notifications log only one, which a session may lack.
-		path := findLog(session.path, "output")
-		if path == "" {
-			path = findLog(session.path, "push-notifications")
-		}
-		data, err := os.ReadFile(path)
-		if err != nil {
-			continue
-		}
 		parser := TaskParser{}
-		for _, event := range parser.Feed(string(data)) {
+		for _, event := range parser.Feed(sessionNotifications(session)) {
 			if event.Kind == TaskChanged {
 				states[event.TaskID] = event.TaskState
 			}
 		}
 	}
 	return states
+}
+
+// sessionNotifications is the text of a session's log with its
+// notifications: the output log has them both ways (TaskParser) and the
+// Prestiges; the push-notifications log only one way, which a session may
+// lack.
+func sessionNotifications(session historySession) string {
+	path := findLog(session.path, "output")
+	if path == "" {
+		path = findLog(session.path, "push-notifications")
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return string(data)
 }
 
 type historySession struct {

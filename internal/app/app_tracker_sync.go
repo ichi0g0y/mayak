@@ -129,6 +129,11 @@ func (a *App) handleTrackerLogEvent(event trackerlog.Event) {
 		return
 	}
 	switch event.Kind {
+	case trackerlog.PrestigeTaken:
+		// The live sync goes on as it is; a recheck of past logs reads them
+		// from this Prestige on (trackerlog.ProfileTaskHistory).
+		a.addLog("Info", "TarkovTracker", fmt.Sprintf("Prestige taken (%s) at %s: past logs are read from here on", event.Mode, event.At.Format("2006-01-02 15:04:05")))
+		return
 	case trackerlog.ProfileDetected:
 		a.rememberTrackerProfile(event)
 		a.mu.Lock()

@@ -8,7 +8,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### Improved
 
-- Each TarkovTracker profile gains "Logs from". After a Prestige (in PvE too since 1.2.0.0) resets your progress, enter its day: rechecking past logs, and the sync when a key is assigned, then skip the logs before it, so tasks done before the reset do not go to TarkovTracker.
+- After a Prestige (in PvE too since 1.2.0.0), rechecking past logs and the sync when a key is assigned no longer send the tasks done before it to TarkovTracker. The profile stays the same through a Prestige, so MAYAK finds when it was taken in the EFT logs and skips the logs before it. For a Prestige the logs do not hold (taken on another PC), each TarkovTracker profile also gains "Logs from".
 
 ### Fixed
 

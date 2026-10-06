@@ -18,6 +18,9 @@ type EventKind string
 const (
 	ProfileDetected EventKind = "profileDetected"
 	TaskChanged     EventKind = "taskChanged"
+	// PrestigeTaken: a Prestige was taken in Mode at At (it resets the
+	// progress of the same profile, whose ID stays).
+	PrestigeTaken EventKind = "prestigeTaken"
 )
 
 type Event struct {
@@ -28,6 +31,9 @@ type Event struct {
 	TaskID    string    `json:"taskId,omitempty"`
 	TaskState string    `json:"taskState,omitempty"`
 	SeenAt    time.Time `json:"-"`
+	// At is when the log line was written (this PC's time), zero when its
+	// line was not at hand.
+	At time.Time `json:"-"`
 }
 
 type ObservedProfile struct {
@@ -158,6 +164,9 @@ func (d *Detector) loop(ctx context.Context) {
 				for _, event := range tasks.Feed(text) {
 					d.emit(event)
 				}
+				for _, prestige := range Prestiges(text) {
+					d.emit(prestige)
+				}
 			}
 		}
 	}
@@ -228,6 +237,8 @@ const backendMarker = "message received: NOTIFICATION"
 type TaskParser struct {
 	buffer  string
 	pending bool
+	// at is when the pending notification's marker line was written.
+	at time.Time
 	// inline: the pending notification is a backend one, with its message
 	// on the marker's line.
 	inline bool
@@ -247,7 +258,12 @@ func (p *TaskParser) Feed(text string) []Event {
 				}
 				break
 			}
+			marker := push
 			if backend >= 0 && (push < 0 || backend < push) {
+				marker = backend
+			}
+			p.at = lineTime(p.buffer[:marker])
+			if marker == backend {
 				p.buffer, p.inline = p.buffer[backend+len(backendMarker):], true
 			} else {
 				p.buffer, p.inline = p.buffer[push+len(pushMarker):], false
@@ -284,7 +300,7 @@ func (p *TaskParser) Feed(text string) []Event {
 		if state == "" || len(taskID) == 0 || !validTaskID(taskID[0]) || p.isDuplicate(payload.EventID) {
 			continue
 		}
-		events = append(events, Event{Kind: TaskChanged, TaskID: taskID[0], TaskState: state})
+		events = append(events, Event{Kind: TaskChanged, TaskID: taskID[0], TaskState: state, At: p.at})
 	}
 	// What is left is a message not yet whole (or the end of the text,
 	// for a marker split across reads); one that never ends is let go. The
@@ -294,6 +310,57 @@ func (p *TaskParser) Feed(text string) []Event {
 		p.buffer = p.buffer[len(p.buffer)-(1<<20):]
 	}
 	return events
+}
+
+// logTimeLayout is how EFT stamps a log line, in this PC's time.
+const logTimeLayout = "2006-01-02 15:04:05.000"
+
+// lineTime is the stamp of the last line before (the text up to a marker),
+// zero when the line's start is not in it.
+func lineTime(before string) time.Time {
+	line := before[strings.LastIndexByte(before, '\n')+1:]
+	if len(line) < len(logTimeLayout) {
+		return time.Time{}
+	}
+	at, err := time.ParseInLocation(logTimeLayout, line[:len(logTimeLayout)], time.Local)
+	if err != nil {
+		return time.Time{}
+	}
+	return at
+}
+
+// prestigePattern finds a Prestige taken: the response to
+// /client/prestige/obtain from a mode's gateway (gw-pve, gw-pvp,
+// gw-pvp-season), in the backend's lines of the output log (EFT 1.2.0.0,
+// 2026-10-07). The profile keeps its ID; its progress starts again.
+var prestigePattern = regexp.MustCompile(`(?m)^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\|[^\n]*<--- Response HTTPS[^\n]*https://gw-([a-z-]+)\.escapefromtarkov\.com/client/prestige/obtain`)
+
+// Prestiges returns the Prestiges a log text records, with their mode and
+// time.
+func Prestiges(text string) []Event {
+	var events []Event
+	for _, match := range prestigePattern.FindAllStringSubmatch(text, -1) {
+		mode := gatewayMode(match[2])
+		at, err := time.ParseInLocation(logTimeLayout, match[1], time.Local)
+		if mode == "" || err != nil {
+			continue
+		}
+		events = append(events, Event{Kind: PrestigeTaken, Mode: mode, At: at})
+	}
+	return events
+}
+
+// gatewayMode is the mode of an EFT gateway (gw-<name>.escapefromtarkov.com).
+func gatewayMode(name string) string {
+	switch name {
+	case "pve":
+		return "pve"
+	case "pvp":
+		return "pvp"
+	case "pvp-season":
+		return "seasonal"
+	}
+	return ""
 }
 
 func (p *TaskParser) isDuplicate(eventID string) bool {

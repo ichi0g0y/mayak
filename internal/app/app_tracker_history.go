@@ -81,7 +81,10 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 	if token == "" {
 		return 0, errors.New("no key is assigned to this EFT profile")
 	}
-	states, sessions := trackerlog.ProfileTaskHistory(root, accountID, profileID, mode, from)
+	states, sessions, prestige := trackerlog.ProfileTaskHistory(root, accountID, profileID, mode, from)
+	if !prestige.IsZero() {
+		a.addLog("Info", "TarkovTracker", fmt.Sprintf("Past logs of %s (%s) are read from its Prestige at %s", maskProfileID(profileID), mode, prestige.Format("2006-01-02 15:04:05")))
+	}
 	if sessions == 0 {
 		return 0, errNoTrackerHistory
 	}

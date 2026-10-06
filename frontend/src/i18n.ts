@@ -190,7 +190,7 @@ const messages = {
     trackerHistorySynced: '{mode}: EFTの過去ログから {n} 件のタスク状態をTarkovTrackerへ同期しました',
     trackerHistoryFrom: 'この日以降のログだけ',
     trackerHistoryFromHelp:
-      'プレステージで進捗をリセットしたら、その日を入れてください。過去ログの再チェック（キーを割り当てたときの自動の同期も）は、この日より前のログを読まなくなり、リセット前に終えたタスクを TarkovTracker に送りません。空欄なら、このプロフィールの最初のプレイから読みます。',
+      'プレステージすると同じプロフィールの進捗がリセットされるので、過去ログの再チェック（キーを割り当てたときの自動の同期も）は、EFT のログに残っている最後のプレステージより前のタスクを送りません。別の PC でプレステージしたときなど、ログにプレステージが残っていない場合は、ここにその日を入れてください。この日より前のログを読まなくなります。空欄なら、このプロフィールの最初のプレイから読みます。',
     trackerHistoryFromSaved: '過去ログを読み始める日を保存しました',
     trackerHistoryFromCleared: '過去ログを最初のプレイから読むようにしました',
     trackerHistoryFailed: '過去ログの同期に失敗しました:',
@@ -564,7 +564,7 @@ const messages = {
     trackerHistorySynced: '{mode}: synced {n} task states from the past EFT logs to TarkovTracker.',
     trackerHistoryFrom: 'Logs from',
     trackerHistoryFromHelp:
-      "After a Prestige resets your progress, enter its day. Rechecking past logs (and the sync when a key is assigned) then skips the logs before it, so tasks done before the reset do not go to TarkovTracker. Empty: from the profile's first session.",
+      "A Prestige resets the same profile's progress, so rechecking past logs (and the sync when a key is assigned) skips the tasks before the last Prestige the EFT logs hold. When the logs hold none (it was taken on another PC), enter its day here: the logs before it are skipped. Empty: from the profile's first session.",
     trackerHistoryFromSaved: 'Saved the day past logs are read from.',
     trackerHistoryFromCleared: 'Past logs are read from the first session again.',
     trackerHistoryFailed: 'Syncing the past logs failed:',
