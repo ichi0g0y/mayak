@@ -14,7 +14,11 @@ type Rect struct{ X, Y, W, H int }
 type Preset struct {
 	Width, Height                                int
 	Anchor, CharacterAnchor, RaidCharacterAnchor Rect
-	LeftPanel, RightPanel, Title                 Rect
+	// MenuCharacterAnchor is the character screen's Tasks tab out of a raid
+	// since EFT 1.2.0.0, right of where it was (CharacterAnchor): Customization
+	// and Prestige tabs came before and after it.
+	MenuCharacterAnchor          Rect
+	LeftPanel, RightPanel, Title Rect
 	// StoryAnchor is the "Story" tab of the character's Tasks screen, lit
 	// when a story chapter is shown; StoryTitle is the chapter's name under
 	// the "Chapter" label, at a fixed place (the chapter page has no list).
@@ -22,7 +26,7 @@ type Preset struct {
 	MinScore                float64
 }
 
-var Preset2560 = Preset{Width: 2560, Height: 1440, Anchor: Rect{150, 18, 240, 55}, CharacterAnchor: Rect{1430, 5, 300, 60}, RaidCharacterAnchor: Rect{1170, 5, 260, 60}, LeftPanel: Rect{10, 410, 740, 950}, RightPanel: Rect{770, 410, 1750, 950}, Title: Rect{810, 315, 720, 85}, StoryAnchor: Rect{28, 66, 228, 52}, StoryTitle: Rect{224, 211, 620, 70}, MinScore: .42}
+var Preset2560 = Preset{Width: 2560, Height: 1440, Anchor: Rect{150, 18, 240, 55}, CharacterAnchor: Rect{1430, 5, 300, 60}, RaidCharacterAnchor: Rect{1170, 5, 260, 60}, MenuCharacterAnchor: Rect{1540, 5, 240, 60}, LeftPanel: Rect{10, 410, 740, 950}, RightPanel: Rect{770, 410, 1750, 950}, Title: Rect{810, 315, 720, 85}, StoryAnchor: Rect{28, 66, 228, 52}, StoryTitle: Rect{224, 211, 620, 70}, MinScore: .42}
 
 // storyTabBright is the share of bright pixels the lit "Story" tab has at
 // least (.87 measured; the "Side" list lit next to it gives it .06–.14).
@@ -92,6 +96,7 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 	anchor := stats(px, p.Anchor)
 	characterAnchor := stats(px, p.CharacterAnchor)
 	raidCharacterAnchor := stats(px, p.RaidCharacterAnchor)
+	menuCharacterAnchor := stats(px, p.MenuCharacterAnchor)
 	traderScore := imaging.Clamp01(anchor.bright*.72 + (left.edges+right.edges)*1.2 + (left.dark+right.dark)*.08)
 	characterScore := imaging.Clamp01(characterAnchor.bright*.9 + (left.edges+right.edges)*.8 + (left.dark+right.dark)*.05)
 	raidCharacterScore := imaging.Clamp01(raidCharacterAnchor.bright*.9 + (left.edges+right.edges)*.8 + (left.dark+right.dark)*.05)
@@ -99,6 +104,10 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 	if raidCharacterScore > characterScore {
 		characterScore = raidCharacterScore
 		characterTabBright = raidCharacterAnchor.bright
+	}
+	if menuCharacterScore := imaging.Clamp01(menuCharacterAnchor.bright*.9 + (left.edges+right.edges)*.8 + (left.dark+right.dark)*.05); menuCharacterScore > characterScore {
+		characterScore = menuCharacterScore
+		characterTabBright = menuCharacterAnchor.bright
 	}
 	score, layout, cropRect := traderScore, "trader-tasks", p.Title
 	if characterScore > traderScore {
@@ -120,6 +129,10 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 	}
 	return result, nil
 }
+
+// rowLight is the share of the band's light a line of the selected row keeps
+// at least; the rows next to it are darker.
+const rowLight = .75
 
 func selectedCharacterTitle(px imaging.Pixels) Rect {
 	// Search only the task-name column. Location, progress, objective and reward
@@ -164,6 +177,19 @@ func selectedCharacterTitle(px imaging.Pixels) Rect {
 		last++
 	}
 	bestIndex := (first+last)/2 + bandSamples/2
+	// The row reaches as far as it stays light; its middle is the title's
+	// line. Rows are taller since EFT 1.2.0.0, and the band, avoiding the
+	// title's dark letters, settled above it.
+	top, bottom := bestIndex, bestIndex
+	for top > 0 && averages[top-1] >= best*rowLight {
+		top--
+	}
+	for bottom+1 < len(averages) && averages[bottom+1] >= best*rowLight {
+		bottom++
+	}
+	if (bottom-top)*2 <= 160 {
+		bestIndex = (top + bottom) / 2
+	}
 	centerY := y0 + bestIndex*2
 	y := centerY - 48
 	if y < y0 {

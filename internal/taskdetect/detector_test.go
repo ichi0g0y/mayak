@@ -201,3 +201,32 @@ func TestStoryTitleStopsBeforeThePicture(t *testing.T) {
 		t.Fatalf("title area %+v, want it to end after the text (about 275 px)", got)
 	}
 }
+
+// Since EFT 1.2.0.0 the Tasks tab of the character screen out of a raid sits
+// further right (Customization and Prestige tabs came): lit there, the list
+// is the character's, not a trader's.
+func TestMenuTasksTabSince120(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 2560, 1440))
+	for y := 0; y < 1440; y++ {
+		for x := 0; x < 2560; x++ {
+			img.Set(x, y, color.RGBA{18, 20, 19, 255})
+		}
+	}
+	for _, r := range []Rect{Preset2560.LeftPanel, Preset2560.RightPanel} {
+		for y := r.Y; y < r.Y+r.H; y += 20 {
+			for x := r.X; x < r.X+r.W; x++ {
+				img.Set(x, y, color.RGBA{180, 180, 170, 255})
+			}
+		}
+	}
+	r := Preset2560.MenuCharacterAnchor
+	for y := r.Y; y < r.Y+r.H; y++ {
+		for x := r.X; x < r.X+r.W; x++ {
+			img.Set(x, y, color.RGBA{210, 210, 205, 255})
+		}
+	}
+	got, err := Analyze(img, Preset2560)
+	if err != nil || !got.IsTasks || got.Layout != "character-tasks" {
+		t.Fatalf("result=%+v err=%v", got, err)
+	}
+}
