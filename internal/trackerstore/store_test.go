@@ -201,6 +201,15 @@ func TestMarkPrestige(t *testing.T) {
 	if !d.ClearPrestigePending("1", "p", "pve") || d.ClearPrestigePending("1", "p", "pve") {
 		t.Fatal("the reset is recorded once")
 	}
+	// The reset leaves the progress since the Prestige to send again, until
+	// a sync of the past logs.
+	if !d.PrestigeResync("1", "p", "pve") {
+		t.Fatal("no resend after the reset")
+	}
+	d.MarkHistorySynced("1", "p", "pve", "2026-10-07T00:05:00Z")
+	if d.PrestigeResync("1", "p", "pve") {
+		t.Fatal("still to resend after a sync of the past logs")
+	}
 	if d.MarkPrestige("1", "p", "pve", "2026-10-06T23:27:10.296Z", 3) {
 		t.Fatal("the same Prestige marked again")
 	}

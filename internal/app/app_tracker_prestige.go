@@ -3,6 +3,7 @@ package app
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -55,17 +56,38 @@ func (a *App) notePrestige(accountID, profileID, mode string, at time.Time) {
 // just read: the tasks completed there fell to under half of those at the
 // Prestige. The profile then waits no more, and what was done since the
 // Prestige is sent again.
+// A resend still due (one a restart cut short) starts again here, as the
+// progress is read at every start.
 func (a *App) checkPrestigeReset(accountID, profileID, mode string, completed int) {
 	a.mu.RLock()
 	before, pending := a.trackerData.PrestigePending(accountID, profileID, mode)
+	resync := a.trackerData.PrestigeResync(accountID, profileID, mode)
 	a.mu.RUnlock()
-	if !pending || !trackerWasReset(before, completed) {
+	if pending && trackerWasReset(before, completed) {
+		a.addLog("Info", "TarkovTracker", fmt.Sprintf("TarkovTracker was reset after the Prestige (%d completed, %d before)", completed, before))
+		resync = a.clearPrestigePending(accountID, profileID, mode)
+	}
+	if resync {
+		a.startPrestigeResync(accountID, profileID, mode)
+	}
+}
+
+// prestigeResyncs are the profiles whose progress since their Prestige is
+// being sent again, so a refresh meanwhile does not start it twice.
+var prestigeResyncs sync.Map
+
+// startPrestigeResync sends again what was done since a profile's Prestige
+// (syncAssignedHistory, which waits for EFT to close); the profile's
+// PrestigeResync stays until it succeeds (markHistorySynced).
+func (a *App) startPrestigeResync(accountID, profileID, mode string) {
+	key := accountID + "/" + profileID + "/" + mode
+	if _, running := prestigeResyncs.LoadOrStore(key, true); running {
 		return
 	}
-	a.addLog("Info", "TarkovTracker", fmt.Sprintf("TarkovTracker was reset after the Prestige (%d completed, %d before)", completed, before))
-	if a.clearPrestigePending(accountID, profileID, mode) {
-		go a.syncAssignedHistory(accountID, profileID, mode)
-	}
+	go func() {
+		defer prestigeResyncs.Delete(key)
+		a.syncAssignedHistory(accountID, profileID, mode)
+	}()
 }
 
 // trackerWasReset tells a TarkovTracker reset by its completed tasks: under
@@ -82,7 +104,7 @@ func (a *App) ConfirmTrackerPrestigeReset(accountID, profileID, mode string) err
 	if !a.clearPrestigePending(accountID, profileID, mode) {
 		return errors.New("this EFT profile is not waiting for a TarkovTracker reset")
 	}
-	go a.syncAssignedHistory(accountID, profileID, mode)
+	a.startPrestigeResync(accountID, profileID, mode)
 	return nil
 }
 

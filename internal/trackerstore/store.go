@@ -37,6 +37,10 @@ type Profile struct {
 	PrestigeAt        string `json:"prestigeAt,omitempty"`
 	PrestigePending   bool   `json:"prestigePending,omitempty"`
 	PrestigeCompleted int    `json:"prestigeCompleted,omitempty"`
+	// PrestigeResync: TarkovTracker was reset, and what was done since the
+	// Prestige is still to be sent again (a sync of the past logs clears it,
+	// so a restart meanwhile does not lose it).
+	PrestigeResync bool `json:"prestigeResync,omitempty"`
 }
 
 type Key struct {
@@ -166,12 +170,13 @@ func (d *Document) RemoveKey(id string) error {
 	return errors.New("the TarkovTracker key was not found")
 }
 
-// MarkHistorySynced records that a profile's past logs were synced at at.
+// MarkHistorySynced records that a profile's past logs were synced at at,
+// which also sends again what was done since its Prestige.
 func (d *Document) MarkHistorySynced(accountID, profileID, mode, at string) bool {
 	for index := range d.Profiles {
 		p := &d.Profiles[index]
 		if p.AccountID == accountID && p.ProfileID == profileID && p.Mode == mode {
-			p.HistorySyncedAt = at
+			p.HistorySyncedAt, p.PrestigeResync = at, false
 			return true
 		}
 	}
@@ -199,13 +204,24 @@ func (d *Document) MarkPrestige(accountID, profileID, mode, at string, completed
 }
 
 // ClearPrestigePending records that TarkovTracker was reset for a profile's
-// Prestige.
+// Prestige: what was done since is then to be sent again (PrestigeResync).
 func (d *Document) ClearPrestigePending(accountID, profileID, mode string) bool {
 	for index := range d.Profiles {
 		p := &d.Profiles[index]
 		if p.AccountID == accountID && p.ProfileID == profileID && p.Mode == mode && p.PrestigePending {
-			p.PrestigePending = false
+			p.PrestigePending, p.PrestigeResync = false, true
 			return true
+		}
+	}
+	return false
+}
+
+// PrestigeResync tells whether what was done since a profile's Prestige is
+// still to be sent again to the reset TarkovTracker.
+func (d Document) PrestigeResync(accountID, profileID, mode string) bool {
+	for _, p := range d.Profiles {
+		if p.AccountID == accountID && p.ProfileID == profileID && p.Mode == mode {
+			return p.PrestigeResync
 		}
 	}
 	return false
