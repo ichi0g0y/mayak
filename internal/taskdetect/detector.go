@@ -14,10 +14,11 @@ type Rect struct{ X, Y, W, H int }
 type Preset struct {
 	Width, Height                                int
 	Anchor, CharacterAnchor, RaidCharacterAnchor Rect
-	// MenuCharacterAnchor is the character screen's Tasks tab out of a raid
-	// since EFT 1.2.0.0, right of where it was (CharacterAnchor): Customization
-	// and Prestige tabs came before and after it.
-	MenuCharacterAnchor          Rect
+	// TasksTabs are the character screen's Tasks tab since EFT 1.2.0.0, out
+	// of a raid and in one, right of where they were (CharacterAnchor,
+	// RaidCharacterAnchor): a Prestige tab came, and out of a raid a
+	// Customization tab too.
+	TasksTabs                    []TasksTab
 	LeftPanel, RightPanel, Title Rect
 	// StoryAnchor is the "Story" tab of the character's Tasks screen, lit
 	// when a story chapter is shown; StoryTitle is the chapter's name under
@@ -26,7 +27,7 @@ type Preset struct {
 	MinScore                float64
 }
 
-var Preset2560 = Preset{Width: 2560, Height: 1440, Anchor: Rect{150, 18, 240, 55}, CharacterAnchor: Rect{1430, 5, 300, 60}, RaidCharacterAnchor: Rect{1170, 5, 260, 60}, MenuCharacterAnchor: Rect{1540, 5, 240, 60}, LeftPanel: Rect{10, 410, 740, 950}, RightPanel: Rect{770, 410, 1750, 950}, Title: Rect{810, 315, 720, 85}, StoryAnchor: Rect{28, 66, 228, 52}, StoryTitle: Rect{224, 211, 620, 70}, MinScore: .42}
+var Preset2560 = Preset{Width: 2560, Height: 1440, Anchor: Rect{150, 18, 240, 55}, CharacterAnchor: Rect{1430, 5, 300, 60}, RaidCharacterAnchor: Rect{1170, 5, 260, 60}, TasksTabs: []TasksTab{{Tab: Rect{1540, 5, 240, 60}, Neighbor: Rect{1290, 5, 200, 60}}, {Tab: Rect{1295, 5, 130, 60}, Neighbor: Rect{1040, 5, 200, 60}}}, LeftPanel: Rect{10, 410, 740, 950}, RightPanel: Rect{770, 410, 1750, 950}, Title: Rect{810, 315, 720, 85}, StoryAnchor: Rect{28, 66, 228, 52}, StoryTitle: Rect{224, 211, 620, 70}, MinScore: .42}
 
 // storyTabBright is the share of bright pixels the lit "Story" tab has at
 // least (.87 measured; the "Side" list lit next to it gives it .06–.14).
@@ -41,6 +42,14 @@ const (
 	storyTabEdges     = .08
 	storyCharacterTab = .2
 )
+
+// TasksTab is where the Tasks tab is lit and, Neighbor, the Map tab left of
+// it, dark then; a raid's bright sky lights both.
+type TasksTab struct{ Tab, Neighbor Rect }
+
+// neighborBright is the share of bright pixels the Map tab next to a lit
+// Tasks tab stays under (unlit tabs are dark).
+const neighborBright = .3
 
 type Result struct {
 	IsTasks            bool
@@ -96,7 +105,6 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 	anchor := stats(px, p.Anchor)
 	characterAnchor := stats(px, p.CharacterAnchor)
 	raidCharacterAnchor := stats(px, p.RaidCharacterAnchor)
-	menuCharacterAnchor := stats(px, p.MenuCharacterAnchor)
 	traderScore := imaging.Clamp01(anchor.bright*.72 + (left.edges+right.edges)*1.2 + (left.dark+right.dark)*.08)
 	characterScore := imaging.Clamp01(characterAnchor.bright*.9 + (left.edges+right.edges)*.8 + (left.dark+right.dark)*.05)
 	raidCharacterScore := imaging.Clamp01(raidCharacterAnchor.bright*.9 + (left.edges+right.edges)*.8 + (left.dark+right.dark)*.05)
@@ -105,9 +113,12 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 		characterScore = raidCharacterScore
 		characterTabBright = raidCharacterAnchor.bright
 	}
-	if menuCharacterScore := imaging.Clamp01(menuCharacterAnchor.bright*.9 + (left.edges+right.edges)*.8 + (left.dark+right.dark)*.05); menuCharacterScore > characterScore {
-		characterScore = menuCharacterScore
-		characterTabBright = menuCharacterAnchor.bright
+	for _, tab := range p.TasksTabs {
+		lit := stats(px, tab.Tab)
+		if tabScore := imaging.Clamp01(lit.bright*.9 + (left.edges+right.edges)*.8 + (left.dark+right.dark)*.05); tabScore > characterScore && stats(px, tab.Neighbor).bright < neighborBright {
+			characterScore = tabScore
+			characterTabBright = lit.bright
+		}
 	}
 	score, layout, cropRect := traderScore, "trader-tasks", p.Title
 	if characterScore > traderScore {
@@ -129,10 +140,6 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 	}
 	return result, nil
 }
-
-// rowLight is the share of the band's light a line of the selected row keeps
-// at least; the rows next to it are darker.
-const rowLight = .75
 
 func selectedCharacterTitle(px imaging.Pixels) Rect {
 	// Search only the task-name column. Location, progress, objective and reward
@@ -177,20 +184,10 @@ func selectedCharacterTitle(px imaging.Pixels) Rect {
 		last++
 	}
 	bestIndex := (first+last)/2 + bandSamples/2
-	// The row reaches as far as it stays light; its middle is the title's
-	// line. Rows are taller since EFT 1.2.0.0, and the band, avoiding the
-	// title's dark letters, settled above it.
-	top, bottom := bestIndex, bestIndex
-	for top > 0 && averages[top-1] >= best*rowLight {
-		top--
-	}
-	for bottom+1 < len(averages) && averages[bottom+1] >= best*rowLight {
-		bottom++
-	}
-	if (bottom-top)*2 <= 160 {
-		bestIndex = (top + bottom) / 2
-	}
-	centerY := y0 + bestIndex*2
+	// The title is cut around its own line of letters: the band, avoiding
+	// their dark strokes, can settle above or below it, more so in the taller
+	// rows since EFT 1.2.0.0.
+	centerY := titleLine(px, y0+bestIndex*2)
 	y := centerY - 48
 	if y < y0 {
 		y = y0
@@ -199,6 +196,51 @@ func selectedCharacterTitle(px imaging.Pixels) Rect {
 		y = px.Height() - 96
 	}
 	return Rect{X: x0, Y: y, W: nameColumnEnd(px, y, x1) - x0, H: 96}
+}
+
+// titleLine returns the middle of the selected row's line of letters near y:
+// lines with a few dark pixels (dark letters on the light row), not many (a
+// separator, or an unselected row's dark background); the run of them
+// nearest y that is as high as a line of text. Without one it returns y.
+func titleLine(px imaging.Pixels, y int) int {
+	const x0, x1, reach = 360, 800, 80
+	text := func(yy int) bool {
+		if yy < 0 || yy >= px.Height() {
+			return false
+		}
+		dark, total := 0, 0
+		for x := x0; x < x1; x += 4 {
+			if px.Luma(x, yy) < 90 {
+				dark++
+			}
+			total++
+		}
+		share := float64(dark) / float64(total)
+		return share >= .03 && share <= .45
+	}
+	best, bestDistance := y, reach+1
+	for start := y - reach; start <= y+reach; {
+		if !text(start) {
+			start++
+			continue
+		}
+		end, gap := start, 0
+		for yy := start + 1; yy <= y+reach+40 && gap <= 4; yy++ {
+			if text(yy) {
+				end, gap = yy, 0
+			} else {
+				gap++
+			}
+		}
+		if height := end - start + 1; height >= 12 && height <= 50 {
+			middle := (start + end) / 2
+			if distance := imaging.Abs(middle - y); distance < bestDistance {
+				best, bestDistance = middle, distance
+			}
+		}
+		start = end + 1
+	}
+	return best
 }
 
 // nameColumnEnd returns the separator line right of the task-name column in

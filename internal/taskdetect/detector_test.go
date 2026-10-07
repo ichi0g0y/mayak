@@ -202,9 +202,9 @@ func TestStoryTitleStopsBeforeThePicture(t *testing.T) {
 	}
 }
 
-// Since EFT 1.2.0.0 the Tasks tab of the character screen out of a raid sits
-// further right (Customization and Prestige tabs came): lit there, the list
-// is the character's, not a trader's.
+// Since EFT 1.2.0.0 the Tasks tab of the character screen sits further
+// right, out of a raid and in one: lit there, the list is the character's,
+// not a trader's.
 func TestMenuTasksTabSince120(t *testing.T) {
 	img := image.NewRGBA(image.Rect(0, 0, 2560, 1440))
 	for y := 0; y < 1440; y++ {
@@ -219,14 +219,20 @@ func TestMenuTasksTabSince120(t *testing.T) {
 			}
 		}
 	}
-	r := Preset2560.MenuCharacterAnchor
-	for y := r.Y; y < r.Y+r.H; y++ {
-		for x := r.X; x < r.X+r.W; x++ {
-			img.Set(x, y, color.RGBA{210, 210, 205, 255})
+	fill := func(r Rect, c color.RGBA) {
+		for y := r.Y; y < r.Y+r.H; y++ {
+			for x := r.X; x < r.X+r.W; x++ {
+				img.Set(x, y, c)
+			}
 		}
 	}
-	got, err := Analyze(img, Preset2560)
-	if err != nil || !got.IsTasks || got.Layout != "character-tasks" {
-		t.Fatalf("result=%+v err=%v", got, err)
+	lit, dark := color.RGBA{210, 210, 205, 255}, color.RGBA{18, 20, 19, 255}
+	for i, tab := range Preset2560.TasksTabs {
+		fill(tab.Tab, lit)
+		got, err := Analyze(img, Preset2560)
+		if err != nil || !got.IsTasks || got.Layout != "character-tasks" {
+			t.Fatalf("tab %d: result=%+v err=%v", i, got, err)
+		}
+		fill(tab.Tab, dark)
 	}
 }

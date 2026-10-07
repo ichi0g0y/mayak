@@ -8,7 +8,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### Fixed
 
-- Since 1.2.0.0, a screenshot of the character screen's Tasks went unrecognized. New tabs moved the Tasks tab, and MAYAK took the screen for a trader's task list.
+- Since 1.2.0.0, a screenshot of the character screen's Tasks went unrecognized, in a raid and out of one. New tabs moved the Tasks tab, and MAYAK did not see a task screen and took it for a position screenshot. The task's name is also cut around its line of letters now, so the taller rows of the new screen do not cut it off.
 
 ## v0.1.27 (2026-10-07)
 
