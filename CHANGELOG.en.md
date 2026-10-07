@@ -4,7 +4,7 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
-## Nightly
+## v0.1.27 (2026-10-07)
 
 ### New
 
@@ -15,8 +15,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 ### Improved
 
 - After a Prestige (in PvE too since 1.2.0.0), rechecking past logs and the sync when a key is assigned no longer send the tasks done before it to TarkovTracker. The profile stays the same through a Prestige, so MAYAK finds when it was taken in the EFT logs and skips the logs before it. For a Prestige the logs do not hold (taken on another PC), each TarkovTracker profile also gains "Logs from".
-- When the level sent to TarkovTracker from the Overall screen goes back, a notice says so: with TarkovTracker's Automatic Level Calculation on, an open TarkovTracker page overwrites it with the level worked out from the XP of your tasks. Turning Automatic Level Calculation off (manual) under Experience & Level in TarkovTracker's settings keeps it; the notice's button opens that setting, and TarkovTracker in the settings explains the same.
 - When MAYAK finds a Prestige, the profile under TarkovTracker in the settings asks for the Prestige on TarkovTracker too: its progress can be reset on its website only. Once the reset is seen (checked every few minutes, or told with "Reset done"), the tasks done since the Prestige are sent again, so the reset does not drop them.
+- When the level sent to TarkovTracker from the Overall screen goes back, a notice says so: with TarkovTracker's Automatic Level Calculation on, an open TarkovTracker page overwrites it with the level worked out from the XP of your tasks. Turning Automatic Level Calculation off (manual) under Experience & Level in TarkovTracker's settings keeps it; the notice's button opens that setting, and TarkovTracker in the settings explains the same.
 
 ### Fixed
 
