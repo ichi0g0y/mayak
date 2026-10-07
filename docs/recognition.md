@@ -103,7 +103,7 @@ Screenshots/*.png|jpg ─▶ watcher ─▶ processScreenshot(sequence++、前�
 - **読み方**: 各部分を「白地に黒・2 倍」(`profiledetect.Ink`)にして、同梱 Tesseract(英語)、Windows OCR(英語)、Windows OCR(日本語)で読み、項目ごとに多数決(`Vote`: 0 や空を除いて、いちばん多くのエンジンが読んだ値。同数なら先のエンジン)で決めます。エンジンごとに読み違える字が違うので(「462」を「46.2」、「533」を「ろろ」、「2226.21h」を「222621h」など)、2 つが一致した値を採ります。整数(レイド・キル)は数字だけを取り出し、生還率は 100 以下の %、K/D は小数点付きの数、時間は「小数点付きの数 + h」です。途中離脱率は「0%」をどのエンジンも読み崩すので読みません。陣営のマークの BEAR / USEC も模様の文字で読めないので読みません。
 - **名前と経験値**: キャラクターの下の行のうち、経験値として読めた(4 桁以上の数字が大半)エンジンがいちばん多い行が経験値、その 1 つ上の行が名前(EFT のニックネームにできる 3–15 文字の英数字・`_`・`-`。先頭のアイコンの読み違いは捨てる)です。
 - **レベルの確かめ**: ゲームデータ(tarkov.dev の `playerLevels`: レベルごとの前のレベルからの経験値。どのモードでも同じなので、遊んでいるモードで読めなければ PvP、PvE のものから)で経験値からレベルを出し(`LevelOf`)、読んだ数字と一致すれば確かとします。数字が読めなければ経験値から出したレベルを使い、食い違えばログに残します。
-- **そのあと**: 結果を `profile.json`、左の欄を幅 360 px の JPEG で `profile.jpg` に保存し([user-data.md](user-data.md))、状態の `profile` に入れます(スクリーンショットの種類は `profile`)。分隊に入っていれば報告の `profile` に要約を載せます。レベルが確かで TarkovTracker のレベルより高ければ、TarkovTracker に書き込みます(`POST /progress/level/<n>`。下げる方向には書きません)。
+- **そのあと**: 結果を `profile.json`、左の欄を幅 360 px の JPEG で `profile.jpg` に保存し([user-data.md](user-data.md))、状態の `profile` に入れます(スクリーンショットの種類は `profile`)。分隊に入っていれば報告の `profile` に要約を載せます。レベルが確かで TarkovTracker のレベルより高ければ、TarkovTracker に書き込みます(`POST /progress/level/<n>`。下げる方向には書きません)。90 秒後に 1 度だけレベルを読み直し(`checkTrackerLevelKept`)、下がっていれば TarkovTracker の自動レベル計算(サイトの設定「経験値とレベル」。開いているページが、完了タスクの XP から計算したレベルを書き戻す)に上書きされたとして、警告のログと消えない通知(`toastLevelOverridden`、ボタンで `https://tarkovtracker.org/settings#progression` を開く)を出します。送り直しはしません(互いに書き換え合うだけなので)。
 
 ### タスク一覧の検出 (`internal/taskdetect`)
 

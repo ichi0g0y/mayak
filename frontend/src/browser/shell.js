@@ -164,18 +164,18 @@ function tabs() {
     )
     .join('')
 }
-// The map view first, then the fixed views (TARKOV.DEV, TarkovTracker), above
-// the sections like nav items.
+// The fixed views (TarkovTracker while its sync is on) above the map view,
+// above the sections like nav items: a row like the map's, its name first and
+// its icon at the end.
 function mapEntry() {
   return (
-    liveMapEntry() +
     state.tabs
       .filter((tab) => tab.fixed)
-      .map(
-        (tab) =>
-          `<div class="tab map-entry ${state.active === tab.id ? 'active' : ''}"><button data-action="activate" data-id="${esc(tab.id)}" class="tab-select" title="${esc(tab.role === 'map' ? t('mapTabHelp') : tabName(tab))}">${tabIcon(tab) ? favicon(tabIcon(tab)) : icon(tab.role === 'map' ? 'map' : 'tracker', 'tab-icon')}<span class="tab-name">${esc(tabName(tab))}</span></button></div>`,
-      )
-      .join('')
+      .map((tab) => {
+        const active = state.active === tab.id
+        return `<div class="tab map-entry live-map-entry ${active ? 'active' : ''}"><button data-action="activate" data-id="${esc(tab.id)}" class="tab-select" title="${esc(tab.role === 'tracker' ? t('trackerTabHelp') : tabName(tab))}" aria-pressed="${active}"><span class="tab-name">${esc(tabName(tab))}</span>${icon(tab.role === 'map' ? 'map' : 'tracker', 'tab-icon live-map-icon')}</button></div>`
+      })
+      .join('') + liveMapEntry()
   )
 }
 function connectionLabel() {
@@ -630,7 +630,15 @@ function browserSettings(key) {
           ['bottom', t('placeBottom')],
         ],
         state.itemDock,
-      )}</div></section>`
+      )}${select(
+        'trackerTab',
+        t('trackerTab'),
+        [
+          ['show', t('trackerTabShow')],
+          ['hide', t('trackerTabHide')],
+        ],
+        state.trackerTab ? 'show' : 'hide',
+      )}</div><p class="hint">${esc(t('trackerTabHint'))}</p></section>`
     case 'tasks': {
       // The order of task sites is the Host's setting, on the Host and on a
       // Client alike (a Client's change goes to its Host).

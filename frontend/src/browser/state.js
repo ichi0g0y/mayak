@@ -94,6 +94,11 @@ const defaultBookmarks = [
 const liveMapTabID = 'livemap'
 const mapTabID = 'map'
 const formerFixedTabIDs = [mapTabID, 'tracker']
+// TarkovTracker's own view, above the map while TarkovTracker sync is on
+// (syncTrackerTab): a fixed tab (not closed, pinned or moved) with a home, its
+// page kept with the tabs.
+const trackerTabID = 'tarkovtracker'
+const isTrackerURL = (url) => hostname(url) === 'tarkovtracker.org'
 // The squads joined lately (this PC's), to join again with a click: the
 // last few, forgotten after a month unused. The relay keeps nothing of a
 // squad; its room is gone once no one is in it, and the code opens it anew.
@@ -263,6 +268,8 @@ function defaults() {
     itemPanelWidth: 320,
     itemPanelHeight: 280,
     itemDock: 'right',
+    // TarkovTracker's view in the sidebar while TarkovTracker sync is on.
+    trackerTab: true,
     itemPanel: { open: false, id: '', mode: '' },
     favicons: {},
     bookmarkView: 'grid',
@@ -334,6 +341,7 @@ function restore(raw = {}) {
   state.itemPanelWidth = clampItemPanel(raw.itemPanelWidth)
   state.itemPanelHeight = clampItemPanelHeight(raw.itemPanelHeight)
   state.itemDock = ['left', 'bottom'].includes(raw.itemDock) ? raw.itemDock : 'right'
+  state.trackerTab = raw.trackerTab !== false && raw.trackerTab !== 'hide'
   state.itemPanel = restoreItemPanel(raw.itemPanel)
   state.bookmarkView = raw.bookmarkView === 'list' ? 'list' : 'grid'
   state.favicons = restoreFavicons(raw.favicons)
@@ -431,6 +439,8 @@ function restore(raw = {}) {
         } else if (t.kind === 'tabs') {
           if (tabsPage) return false
           tabsPage = true
+        } else if (t.id === trackerTabID) {
+          if (t.kind !== 'web' || !isTrackerURL(webURL(t.url))) return false
         } else if (t.kind !== 'blank' && !(t.kind === 'web' && webURL(t.url))) return false
         ids.add(t.id)
         return true
@@ -445,6 +455,7 @@ function restore(raw = {}) {
         favicon: (t.kind === 'web' && webURL(t.favicon)) || undefined,
         role: t.role === 'task' ? 'task' : undefined,
         task: validTask(t.task) ? t.task : undefined,
+        ...(t.id === trackerTabID ? { pinned: false, fixed: true, role: 'tracker', home: trackerHome } : {}),
       }))
     orderTabs(state)
   }
@@ -522,6 +533,28 @@ function orderTabs(state) {
     .map((t, i) => [t, i])
     .sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1])
     .map(([t]) => t)
+}
+// syncTrackerTab adds TarkovTracker's view first, or takes it away (the map
+// then shows if it was open), as on says. It tells whether the tabs changed.
+function syncTrackerTab(state, on) {
+  const at = state.tabs.findIndex((t) => t.id === trackerTabID)
+  if (on && at < 0) {
+    state.tabs.unshift({
+      id: trackerTabID,
+      kind: 'web',
+      url: trackerHome,
+      fixed: true,
+      role: 'tracker',
+      home: trackerHome,
+    })
+    return true
+  }
+  if (on || at < 0) return false
+  state.tabs.splice(at, 1)
+  if (state.active === trackerTabID)
+    state.active =
+      (state.tabs.find((t) => t.kind === 'livemap') || state.tabs.find((t) => t.kind !== 'settings'))?.id || ''
+  return true
 }
 // Pinning moves a tab to the end of the pinned group; unpinning moves it to
 // the top of the other tabs. Only web pages can be pinned.
@@ -699,6 +732,9 @@ export {
   randomUUID,
   mapTabID,
   liveMapTabID,
+  trackerTabID,
+  isTrackerURL,
+  syncTrackerTab,
   themes,
   bookmarkGroups,
   bookmarkGroup,

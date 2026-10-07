@@ -408,6 +408,22 @@ export function TrackerSection({
                   )}
                 </div>
               </section>
+              {/* The level from the Overall screen against TarkovTracker's own
+                  calculation (app_profile.go checkTrackerLevelKept). */}
+              <div className="tracker-level-note">
+                <Label>{t('trackerLevelTitle')}</Label>
+                <p>{t('trackerLevelHelp')}</p>
+                <p className="tracker-links">
+                  <button
+                    type="button"
+                    className="inline-link"
+                    onClick={() => BrowserOpenURL('https://tarkovtracker.org/settings#progression')}
+                  >
+                    <ExternalLink />
+                    {t('trackerLevelOpen')}
+                  </button>
+                </p>
+              </div>
             </div>
           )}
           {/* Turned off, the links under step 1 are hidden: TarkovTracker is

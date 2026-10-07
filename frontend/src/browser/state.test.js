@@ -2,6 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   liveMapTabID,
+  syncTrackerTab,
+  trackerTabID,
   rememberFavicon,
   bookmarkGroup,
   defaults,
@@ -769,4 +771,26 @@ test('pages open untranslated while Google refuses the translation', () => {
   assert.equal(receiveTask(s, task('Debut')).url, 'https://escapefromtarkov.fandom.com/wiki/Debut')
   s.translatePausedUntil = Date.now() - 1
   assert.match(receiveTask(s, task('Checking')).url, /translate\.goog/)
+})
+test("TarkovTracker's view comes first while its sync is on and keeps its page", () => {
+  const s = defaults()
+  assert.equal(syncTrackerTab(s, true), true)
+  assert.equal(syncTrackerTab(s, true), false)
+  assert.deepEqual(
+    s.tabs.map((t) => t.id),
+    [trackerTabID, liveMapTabID, 'settings'],
+  )
+  s.tabs[0].url = 'https://tarkovtracker.org/settings#progression'
+  s.active = trackerTabID
+  const restored = restore(JSON.parse(JSON.stringify(s)))
+  const tab = restored.tabs.find((t) => t.id === trackerTabID)
+  assert.equal(tab.fixed, true)
+  assert.equal(tab.url, 'https://tarkovtracker.org/settings#progression')
+  assert.equal(restored.active, trackerTabID)
+  // Another site under its ID is dropped; turned off, the map shows instead.
+  assert.equal(restore({ tabs: [{ id: trackerTabID, kind: 'web', url: 'https://example.com/' }] }).tabs.length, 0)
+  assert.equal(syncTrackerTab(restored, false), true)
+  assert.equal(restored.active, liveMapTabID)
+  assert.equal(restore({ trackerTab: 'hide' }).trackerTab, false)
+  assert.equal(restore({}).trackerTab, true)
 })

@@ -156,6 +156,10 @@ const messages = {
     trackerRemoveToken: '削除',
     trackerOpenSettings: 'TarkovTrackerでAPIトークンを作成',
     trackerOpenSite: 'TarkovTracker を開く',
+    trackerLevelTitle: 'レベルの同期',
+    trackerLevelHelp:
+      'Overall 画面のスクリーンショットを撮ると、そのレベルを TarkovTracker に送ります。ただし TarkovTracker の「自動レベル計算」がオンだと、TarkovTracker のページを開いている間に、タスクの XP から計算したレベルで上書きされます。TarkovTracker の設定の「経験値とレベル」で自動レベル計算をオフ（手動）にすると、上書きされません。',
+    trackerLevelOpen: 'TarkovTracker の「経験値とレベル」を開く',
     trackerImportToken: 'キーを追加',
     trackerScanLogs: 'ログを再スキャン',
     trackerProfilesScanned: '既存ログからEFTプロフィールを更新しました',
@@ -568,6 +572,10 @@ const messages = {
     trackerRemoveToken: 'Remove',
     trackerOpenSettings: 'Create API tokens on TarkovTracker',
     trackerOpenSite: 'Open TarkovTracker',
+    trackerLevelTitle: 'Level sync',
+    trackerLevelHelp:
+      "A screenshot of the Overall screen sends its level to TarkovTracker. With TarkovTracker's Automatic Level Calculation on, though, an open TarkovTracker page overwrites it with the level worked out from the XP of your tasks. Turn Automatic Level Calculation off (manual) under Experience & Level in TarkovTracker's settings to keep it.",
+    trackerLevelOpen: 'Open Experience & Level on TarkovTracker',
     trackerImportToken: 'Add key',
     trackerScanLogs: 'Rescan logs',
     trackerProfilesScanned: 'EFT profiles updated from existing logs.',

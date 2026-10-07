@@ -272,6 +272,40 @@ func (a *App) trackerRaiseLevel(ctx context.Context, settings config.Settings, l
 	a.addLog("Info", "TarkovTracker", fmt.Sprintf("Level set to %d (from %d) from the Overall screen", level, tr.PlayerLevel))
 	a.toast(Toast{Event: "trackerLevel", Category: ToastTracker, Level: "success", Message: "toastLevelSet", Params: map[string]string{"level": fmt.Sprint(level)}})
 	a.squadUpdateTracker()
+	time.AfterFunc(trackerLevelRecheck, func() { a.checkTrackerLevelKept(tr, token, level) })
+}
+
+// trackerLevelRecheck is how long after setting the level MAYAK reads it back:
+// a TarkovTracker page left open with its Automatic Level Calculation on
+// writes the level its XP gives within moments.
+var trackerLevelRecheck = 90 * time.Second
+
+// checkTrackerLevelKept reads the level back once after MAYAK set it; lower,
+// TarkovTracker's own calculation took it back, and a notice says how to keep
+// the one from the Overall screen. It is not sent again: the two would only
+// take turns.
+func (a *App) checkTrackerLevelKept(tr model.TrackerStatus, token string, level int) {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	progress, err := a.trackerClient.Progress(ctx, token)
+	if err != nil || progress.Data.PlayerLevel >= level {
+		return
+	}
+	now := progress.Data.PlayerLevel
+	a.mu.Lock()
+	if a.status.Tracker.AccountID == tr.AccountID && a.status.Tracker.ProfileID == tr.ProfileID && a.status.Tracker.Mode == tr.Mode {
+		a.status.Tracker.PlayerLevel = now
+	}
+	status := a.status
+	a.mu.Unlock()
+	a.emitStatus(status)
+	a.addLog("Warn", "TarkovTracker", fmt.Sprintf("The level set to %d is %d again: TarkovTracker's Automatic Level Calculation takes it from the XP of the tasks", level, now))
+	a.toast(Toast{
+		Key: "trackerLevelOverride", Event: "trackerLevel", Category: ToastTracker, Level: "warn", Persistent: true,
+		Message: "toastLevelOverridden", Params: map[string]string{"sent": fmt.Sprint(level), "level": fmt.Sprint(now)},
+		Actions: []ToastAction{{ID: "trackerExperience", Label: "toastOpenTrackerExperience"}},
+	})
+	a.squadUpdateTracker()
 }
 
 // squadProfile is this player's Overall screen in short, for the squad.

@@ -90,6 +90,9 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 
 以前はサイドバーの先頭に、閉じられない固定ビュー（TARKOV.DEV・TarkovTracker）がありました。今はどちらもサイドバーにピン留めした既定のブックマーク（`https://tarkov.dev/`、`https://tarkovtracker.org/`）で、開くと普通の `web` タブになります。マップの検出は tarkov.dev のタブではなく [マップ](#マップ) に入ります。
 
+- **TarkovTracker のビュー**: TarkovTracker と同期しているあいだ（Host の状態で、キーが 1 つ以上あり、同期がオフでない）、サイドバーのマップの上に TarkovTracker の固定ビュー（ID `tarkovtracker`、`state.js` の `syncTrackerTab`）を出します。閉じる・ピン留め・移動はできず、ツールバーは戻る・進む・再読み込み・ホーム（`https://tarkovtracker.org/`）・読み取り専用のアドレス欄です。表示中のページは保存タブと一緒に残ります（`tarkovtracker.org` 以外の URL なら捨てます）。外観の「サイドバーの TarkovTracker」（`trackerTab`、既定は表示）で隠せます。同期が止まるか隠すと、ビューを閉じ、開いていればマップに移ります。
+- `openOrFocus` で開く `tarkovtracker.org` のページ（通知のボタン、設定のリンク）は、同じページのタブが無ければこのビューで開きます。ログインがこのビューにあるためです。
+
 - 以前の `browser.json` は、`bookmarkRevision` 3 への移行で 2 つをブックマークに加えてサイドバーにピン留めします（同じ ID か URL のブックマークがあればそれをピン留め）。保存されていた固定ビューのタブ（ID `map`・`tracker`、`formerFixedTabIDs`）は捨てます。
 - tarkov.dev のマップページ（`/map/…`）とマップ一覧（`/maps/`）は、どのタブで開いても Host のドキュメントスクリプトが `?connection=<Remote Control ID>` を付けて Remote Control につなぎます（[tasks-and-maps.md](tasks-and-maps.md#remote-controltarkovdev)）。保存されるタブの URL からは取り除きます（`pageURL()`）。
 

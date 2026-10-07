@@ -546,6 +546,9 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .tracker-prestige-note { grid-column: 1 / -1; display: grid; gap: 8px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--warn) 10%, transparent); font-size: 12.5px; line-height: 1.6; }
 .tracker-prestige-note p { margin: 0; }
 .tracker-prestige-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.tracker-level-note { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 12.5px; line-height: 1.6; color: var(--muted-foreground); }
+.tracker-level-note p { margin: 0; }
+.tracker-level-note label { color: var(--foreground); }
 .tracker-history-note { grid-column: 1 / -1; margin: -4px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted-foreground); }
 .tracker-history-note.needed { color: color-mix(in srgb, var(--danger) 80%, var(--foreground)); }
 

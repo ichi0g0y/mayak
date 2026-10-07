@@ -33,6 +33,9 @@ import {
   tabAt,
   cycleTab,
   siteOrder,
+  syncTrackerTab,
+  trackerTabID,
+  isTrackerURL,
 } from './state.js'
 import { encode, decode, MAX_AGE, PAIR_RELAY } from './peer-code.js'
 import { hiddenOf, mapSettingsOf, squadColorOf } from './map-geo.js'
@@ -434,6 +437,7 @@ async function persist() {
     itemPanelWidth,
     itemPanelHeight,
     itemDock,
+    trackerTab,
     bookmarkView,
     favicons,
     theme,
@@ -476,6 +480,7 @@ async function persist() {
       itemPanelWidth,
       itemPanelHeight,
       itemDock,
+      trackerTab,
       itemPanel,
       bookmarkView,
       favicons,
@@ -499,6 +504,19 @@ async function persist() {
       connection: { mode: state.connection.mode, link: state.connection.link, receive: state.connection.receive },
     }),
   )
+}
+// TarkovTracker's view shows while TarkovTracker sync is on (keys registered
+// and not turned off) and the settings do not hide it; it tells whether the
+// tabs changed.
+async function applyTrackerTab() {
+  const on = state.trackerTab && (host?.trackerKeys || 0) > 0 && !!host?.tracker && host.tracker !== 'disabled'
+  if (!syncTrackerTab(state, on)) return false
+  if (!on) {
+    await native('close', { id: trackerTabID })
+    views.delete(trackerTabID)
+    loadingViews.delete(trackerTabID)
+  }
+  return true
 }
 async function changed() {
   update()
@@ -1239,6 +1257,9 @@ const ready = (async () => {
       const s = await go.GetSettings()
       hostQuestSites = siteOrder(s.questSites, s.questSite)
     } catch {}
+    try {
+      await applyTrackerTab()
+    } catch {}
     // On the Host the task sites are one setting, the Host's; a site chosen in
     // the browser before goes first in it, once.
     if (state.connection.mode === 'local' && state.questSite !== 'host') {
@@ -1254,10 +1275,15 @@ const ready = (async () => {
     window.mayakDesktop.on('status:update', (next) => {
       const profileAt = host?.profileAt,
         tracker = host?.tracker,
+        keys = host?.trackerKeys,
         mode = host?.mode,
         identity = host?.identity,
         place = hostPlace()
       host = { ...host, ...hostStatus(next) }
+      if (host.tracker !== tracker || host.trackerKeys !== keys)
+        void enqueue(async () => {
+          if (await applyTrackerTab()) await changed()
+        })
       if (host.tracker !== tracker || host.mode !== mode) void loadBosses()
       if (host.mode !== mode || hostPlace() !== place) void shareHostInfo()
       if (identity !== undefined && host.identity !== identity) void reloadItem()
@@ -1312,6 +1338,8 @@ const ready = (async () => {
     const act = String(event?.action || '')
     void enqueue(async () => {
       if (act === 'trackerPrestige') await perform('openOrFocus', 'https://tarkovtracker.org/settings#prestige')
+      else if (act === 'trackerExperience')
+        await perform('openOrFocus', 'https://tarkovtracker.org/settings#progression')
       else if (act === 'updateNotes')
         await perform(
           'openOrFocus',
@@ -1907,6 +1935,13 @@ async function performOne(type, data) {
         // The same page (state.js samePage): translated or not, with or
         // without a heading or a trailing slash.
         const same = state.tabs.find((t) => t.kind === 'web' && samePage(t.url, url))
+        // TarkovTracker's pages open in its view, where its login is.
+        const tracker = !same && isTrackerURL(url) && state.tabs.find((t) => t.id === trackerTabID)
+        if (tracker) {
+          tracker.url = url
+          state.active = tracker.id
+          break
+        }
         if (same) {
           state.active = same.id
           break
@@ -1997,6 +2032,8 @@ async function performOne(type, data) {
       state.taskMode = next.taskMode
       state.questSite = next.questSite
       state.translateWiki = next.translateWiki
+      state.trackerTab = next.trackerTab
+      await applyTrackerTab()
       // Blocking applies to new requests; reload so the visible page matches the setting.
       if (next.adblock !== state.adblock) {
         state.adblock = next.adblock

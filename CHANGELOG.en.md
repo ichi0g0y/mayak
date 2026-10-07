@@ -10,14 +10,17 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 - Notices (toasts) show at the bottom middle of the window: what was sent to TarkovTracker, the alerts in words, what a screenshot was read as, the squad coming and going, updates and errors. They show over the pages too and take no focus from the game or the page. Errors, updates and the like stay until closed; the others go after a few seconds. Each kind can be turned off under Notifications in the settings, and the bell at the bottom of the sidebar shows their history (the last 200). The update and error strips along the bottom are now these notices.
 - The Notifications settings are one table of the events (match found, raid started, task read, sent to TarkovTracker, the squad…): each can sound, show as a toast and show as a desktop notification of Windows. The "All" row turns a column on or off at once, and a row opens to set its voice, volume and delay. Desktop notifications show only while MAYAK is not in front by default, or always.
+- While MAYAK syncs with TarkovTracker, TarkovTracker shows in the sidebar above the map: a tab that stays, whose home button goes back to TarkovTracker's start page. The TarkovTracker pages that notices and the settings open open there too. "TarkovTracker in the sidebar" under Appearance in the browser settings hides it.
 
 ### Improved
 
 - After a Prestige (in PvE too since 1.2.0.0), rechecking past logs and the sync when a key is assigned no longer send the tasks done before it to TarkovTracker. The profile stays the same through a Prestige, so MAYAK finds when it was taken in the EFT logs and skips the logs before it. For a Prestige the logs do not hold (taken on another PC), each TarkovTracker profile also gains "Logs from".
+- When the level sent to TarkovTracker from the Overall screen goes back, a notice says so: with TarkovTracker's Automatic Level Calculation on, an open TarkovTracker page overwrites it with the level worked out from the XP of your tasks. Turning Automatic Level Calculation off (manual) under Experience & Level in TarkovTracker's settings keeps it; the notice's button opens that setting, and TarkovTracker in the settings explains the same.
 - When MAYAK finds a Prestige, the profile under TarkovTracker in the settings asks for the Prestige on TarkovTracker too: its progress can be reset on its website only. Once the reset is seen (checked every few minutes, or told with "Reset done"), the tasks done since the Prestige are sent again, so the reset does not drop them.
 
 ### Fixed
 
+- Since 1.2.0.0, a Transit to the next map also played the welcome back from a raid. EFT writes a Transit otherwise in its log, and MAYAK took it for a return to the menu.
 - Opening the official wiki translated could stop at a "too many redirects" page. When Google Translate asks for a robot check, the page it returns to once the check is passed redirects to itself without end (Google's side). The tab now opens the translated page again without the part that loops. Only when Google asks for the check again right after does the page open untranslated, and recognized tasks then open untranslated for an hour.
 - Tasks finished in the game sometimes did not sync to TarkovTracker. EFT writes a task's notification in two places of its log, a session can have it in only one, and MAYAK read only the other. It now reads both. Tasks that did not sync can be sent with "Recheck past logs" under TarkovTracker in the settings once EFT is closed.
 
