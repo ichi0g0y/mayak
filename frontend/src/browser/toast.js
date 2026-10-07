@@ -5,6 +5,7 @@
 import './style.css'
 import { Events } from '@wailsio/runtime'
 import {
+  BrowserDesktopNotify,
   BrowserLoad,
   BrowserToastAction,
   BrowserToastClose,
@@ -55,6 +56,12 @@ async function draw(list) {
 }
 
 Events.On('toast:list', (event) => void draw(event.data))
+// A notice the settings also show as a desktop notification of the OS (while
+// MAYAK is not in front): worded here, as the toast is.
+Events.On('toast:desktop', async (event) => {
+  await look()
+  void BrowserDesktopNotify(toastText(event.data, language)).catch(() => {})
+})
 // Notices sent before this page loaded: ask for them.
 BrowserToastList()
   .then((list) => void draw(list))

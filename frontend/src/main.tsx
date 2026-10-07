@@ -18,6 +18,7 @@ import {
   ScanLine,
   Volume2,
   Bell,
+  ChevronRight,
   Wifi,
   X,
 } from 'lucide-react'
@@ -56,7 +57,7 @@ import { Switch } from './components/ui/switch'
 import { Tabs, TabsContent } from './components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
 import type { VoicePack } from '../bindings/github.com/local/mayak/internal/sound/models'
-import { translate, translateAnalysisStage } from './i18n'
+import { type MessageKey, translate, translateAnalysisStage } from './i18n'
 import {
   RemoteTarget,
   Settings,
@@ -84,6 +85,8 @@ import './style.css'
 function App() {
   const [settings, setSettings] = useState<Settings>(defaults)
   const [activeTab, setActiveTab] = useState<HostSection>(hashSection)
+  // The notification events whose sound details are open (the Notifications table).
+  const [openEvents, setOpenEvents] = useState<string[]>([])
   const [status, setStatus] = useState<Status>(emptyStatus)
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>(emptyUpdate)
   const [notice, setNotice] = useState('')
@@ -599,6 +602,39 @@ function App() {
       pathKey: 'gameExitSoundPath',
     },
   ] as const
+  // The notification events by group (app_notify.go notifyEvents): those with
+  // an alert can sound; all can show as a toast and as a desktop notification.
+  const notifyGroups: { label: MessageKey; events: string[] }[] = [
+    { label: 'notifyGroup_raid', events: ['matchFound', 'raidStart', 'runThrough', 'questItems', 'taskFailed'] },
+    { label: 'notifyGroup_game', events: ['gameStart', 'gameExit'] },
+    {
+      label: 'notifyGroup_screenshot',
+      events: ['quest', 'taskNotMatched', 'item', 'itemNotMatched', 'position', 'profile', 'error'],
+    },
+    {
+      label: 'notifyGroup_tracker',
+      events: ['trackerTask', 'trackerFailed', 'trackerLevel', 'trackerHistory', 'prestige'],
+    },
+    { label: 'notifyGroup_squad', events: ['squadSelf', 'squadMembers', 'squadRelay'] },
+    { label: 'notifyGroup_remote', events: ['remoteError'] },
+  ]
+  const notifyEvents = notifyGroups.flatMap((group) => group.events)
+  const alertOf = (event: string) => soundAlerts.find((alert) => alert.kind === event)
+  const eventLabel = (event: string) => alertOf(event)?.label ?? t(`notifyEvent_${event}` as MessageKey)
+  const toastsOff = settings.toastsOff ?? []
+  const desktopOn = settings.desktopOn ?? []
+  const setToast = (event: string, on: boolean) =>
+    patch({ toastsOff: on ? toastsOff.filter((e) => e !== event) : [...toastsOff.filter((e) => e !== event), event] })
+  const setDesktop = (event: string, on: boolean) =>
+    patch({ desktopOn: on ? [...desktopOn.filter((e) => e !== event), event] : desktopOn.filter((e) => e !== event) })
+  // The "all" row: on when every event is; turning it sets them all.
+  const allSounds = soundAlerts.every((alert) => settings[alert.enabledKey])
+  const allToasts = notifyEvents.every((event) => !toastsOff.includes(event))
+  const allDesktop = notifyEvents.every((event) => desktopOn.includes(event))
+  const setAllSounds = (on: boolean) =>
+    patch(Object.fromEntries(soundAlerts.map((alert) => [alert.enabledKey, on])) as Partial<Settings>)
+  const toggleEvent = (event: string) =>
+    setOpenEvents((open) => (open.includes(event) ? open.filter((e) => e !== event) : [...open, event]))
   const updateStateLabel = (update: UpdateStatus) => {
     switch (update.state) {
       case 'checking':
@@ -1055,48 +1091,13 @@ function App() {
         </TabsContent>
         <TabsContent value="sounds">
           <div className="settings-stack">
-            {/* The notices over the pages (app_toast.go), each optional kind on or off. */}
-            <Card>
-              <CardHeader>
-                <div className="icon-title">
-                  <Bell />
-                  <div>
-                    <CardTitle>{t('toastsTitle')}</CardTitle>
-                    <CardDescription>{t('toastsDescription')}</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="switch-stack">
-                  {(['tracker', 'sound', 'recognition', 'squad'] as const).map((kind) => (
-                    <div className="switch-row" key={kind}>
-                      <div>
-                        <Label htmlFor={`toast-${kind}`}>{t(`toastKind_${kind}`)}</Label>
-                        <p className="help">{t(`toastKindHelp_${kind}`)}</p>
-                      </div>
-                      <Switch
-                        id={`toast-${kind}`}
-                        checked={!(settings.toastsOff || []).includes(kind)}
-                        onCheckedChange={(on) =>
-                          patch({
-                            toastsOff: on
-                              ? (settings.toastsOff || []).filter((k) => k !== kind)
-                              : [...(settings.toastsOff || []).filter((k) => k !== kind), kind],
-                          })
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
             <Card>
               <CardHeader>
                 <div className="icon-title">
                   <Volume2 />
                   <div>
-                    <CardTitle>{t('soundsTitle')}</CardTitle>
-                    <CardDescription>{t('soundsDescription')}</CardDescription>
+                    <CardTitle>{t('notifyAllTitle')}</CardTitle>
+                    <CardDescription>{t('notifyAllDescription')}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -1178,173 +1179,266 @@ function App() {
                         </Button>
                       </div>
                     </div>
-                    {soundAlerts.map((alert) => {
-                      const path = settings[alert.pathKey]
-                      return (
-                        <div className="sound-setting" key={alert.id}>
-                          <div className="switch-row">
-                            <Label htmlFor={alert.id}>{alert.label}</Label>
-                            <Switch
-                              id={alert.id}
-                              checked={settings[alert.enabledKey]}
-                              onCheckedChange={(checked) => patch({ [alert.enabledKey]: checked } as Partial<Settings>)}
-                            />
-                          </div>
-                          <div className="sound-voice-row">
-                            <Select
-                              value={choiceOf(alert.kind, path) === 'beep' ? '__beep' : choiceOf(alert.kind, path)}
-                              onValueChange={(value) => setChoiceOf(alert.kind, alert.pathKey, value)}
-                            >
-                              <SelectTrigger
-                                aria-label={`${alert.label}: ${t('soundVoiceOf')}`}
-                                className="sound-voice"
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="__default">
-                                  {t('soundVoiceDefault')}（{voice ? voiceName(voice) : t('soundVoiceBeep')}）
-                                </SelectItem>
-                                {voicePacks.map((pack) => (
-                                  <SelectItem key={pack.id} value={pack.id}>
-                                    {voiceName(pack)}
-                                  </SelectItem>
-                                ))}
-                                <SelectItem value="__beep">{t('soundVoiceBeep')}</SelectItem>
-                                <SelectItem value="custom">{t('soundVoiceCustom')}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => void previewSound(alert.kind, path)}
-                            >
-                              <Play />
-                              {t('previewSound')}
-                            </Button>
-                          </div>
-                          <div className="volume-offset">
-                            <span className="volume-offset-label">{t('soundVolumeOffset')}</span>
-                            <input
-                              className="range"
-                              type="range"
-                              min="-50"
-                              max="50"
-                              step="1"
-                              aria-label={`${alert.label}: ${t('soundVolumeOffset')}`}
-                              value={offsetOf(alert.kind)}
-                              onChange={(e) => setOffsetOf(alert.kind, Number(e.target.value))}
-                            />
-                            <button
-                              type="button"
-                              className="volume-offset-value"
-                              title={t('soundVolumeReset')}
-                              disabled={offsetOf(alert.kind) === 0}
-                              onClick={() => setOffsetOf(alert.kind, 0)}
-                            >
-                              {offsetLabel(offsetOf(alert.kind))}
-                            </button>
-                            <span className="volume-offset-actual" title={t('soundVolumeActual')}>
-                              → {volumeOf(alert.kind)}%
-                            </span>
-                          </div>
-                          <div className="volume-offset">
-                            <span className="volume-offset-label">{t('soundDelay')}</span>
-                            <input
-                              className="range"
-                              type="range"
-                              min="0"
-                              max={SOUND_DELAY_MAX}
-                              step="1"
-                              aria-label={`${alert.label}: ${t('soundDelay')}`}
-                              value={delayOf(alert.kind)}
-                              onChange={(e) => setDelayOf(alert.kind, Number(e.target.value))}
-                            />
-                            <button
-                              type="button"
-                              className="volume-offset-value"
-                              title={t('soundDelayReset')}
-                              disabled={delayOf(alert.kind) === 0}
-                              onClick={() => setDelayOf(alert.kind, 0)}
-                            >
-                              {t('soundDelaySeconds').replace('{n}', String(delayOf(alert.kind)))}
-                            </button>
-                          </div>
-                          {choiceOf(alert.kind, path) === 'custom' && (
-                            <div className="sound-file-row">
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => void chooseSound(alert.pathKey)}
-                              >
-                                <FolderOpen />
-                                {t('chooseSound')}
-                              </Button>
-                              <span className="sound-file-name" title={path || t('noSoundFile')}>
-                                {path ? soundFileName(path) : t('noSoundFile')}
-                              </span>
-                            </div>
-                          )}
-                          <p className="sound-said" title={saidBy(alert.kind, path)}>
-                            {saidBy(alert.kind, path)}
-                          </p>
-                          {alert.kind === 'runThrough' && settings.runThroughSoundEnabled && (
-                            <div className="field">
-                              <Label>{t('runThroughTime')}</Label>
-                              <div className="time-fields">
-                                <div>
-                                  <Input
-                                    aria-label={t('minutes')}
-                                    type="number"
-                                    min="0"
-                                    max="59"
-                                    value={Math.floor(settings.runThroughSeconds / 60)}
-                                    onChange={(e) =>
-                                      patch({
-                                        runThroughSeconds: Math.max(
-                                          1,
-                                          Math.min(
-                                            3599,
-                                            Number(e.target.value) * 60 + (settings.runThroughSeconds % 60),
-                                          ),
-                                        ),
-                                      })
-                                    }
-                                  />
-                                  <span>{t('minutes')}</span>
-                                </div>
-                                <div>
-                                  <Input
-                                    aria-label={t('seconds')}
-                                    type="number"
-                                    min="0"
-                                    max="59"
-                                    value={settings.runThroughSeconds % 60}
-                                    onChange={(e) =>
-                                      patch({
-                                        runThroughSeconds: Math.max(
-                                          1,
-                                          Math.min(
-                                            3599,
-                                            Math.floor(settings.runThroughSeconds / 60) * 60 + Number(e.target.value),
-                                          ),
-                                        ),
-                                      })
-                                    }
-                                  />
-                                  <span>{t('seconds')}</span>
-                                </div>
-                              </div>
-                              <p className="help">{t('runThroughTimeHelp')}</p>
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+            {/* The notification events × the ways they show (app_notify.go): a
+                sound, a toast over the pages, a desktop notification of the OS. */}
+            <Card>
+              <CardHeader>
+                <div className="icon-title">
+                  <Bell />
+                  <div>
+                    <CardTitle>{t('notifyEventsTitle')}</CardTitle>
+                    <CardDescription>{t('notifyEventsDescription')}</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="notify-table" role="table" aria-label={t('notifyEventsTitle')}>
+                  <div className="notify-row notify-head" role="row">
+                    <span role="columnheader">{t('notifyEvent')}</span>
+                    <span role="columnheader">{t('notifySound')}</span>
+                    <span role="columnheader">{t('notifyToast')}</span>
+                    <span role="columnheader">{t('notifyDesktop')}</span>
+                  </div>
+                  <div className="notify-row notify-all" role="row">
+                    <span role="rowheader">{t('notifyAll')}</span>
+                    <Switch
+                      id={'notify-all-sound'}
+                      aria-label={`${t('notifyAll')}: ${t('notifySound')}`}
+                      checked={allSounds}
+                      onCheckedChange={setAllSounds}
+                      disabled={!settings.soundsEnabled}
+                    />
+                    <Switch
+                      id={'notify-all-toast'}
+                      aria-label={`${t('notifyAll')}: ${t('notifyToast')}`}
+                      checked={allToasts}
+                      onCheckedChange={(on) => patch({ toastsOff: on ? [] : notifyEvents })}
+                    />
+                    <Switch
+                      id={'notify-all-desktop'}
+                      aria-label={`${t('notifyAll')}: ${t('notifyDesktop')}`}
+                      checked={allDesktop}
+                      onCheckedChange={(on) => patch({ desktopOn: on ? notifyEvents : [] })}
+                    />
+                  </div>
+                  {notifyGroups.map((group) => (
+                    <div className="notify-group" role="rowgroup" key={group.label}>
+                      <div className="notify-group-label">{t(group.label)}</div>
+                      {group.events.map((event) => {
+                        const alert = alertOf(event)
+                        const open = !!alert && openEvents.includes(event)
+                        const path = alert ? settings[alert.pathKey] : ''
+                        return (
+                          <div className={`notify-event${open ? ' open' : ''}`} key={event}>
+                            <div className="notify-row" role="row">
+                              <span role="rowheader" className="notify-name">
+                                {alert ? (
+                                  <button
+                                    type="button"
+                                    className="notify-expand"
+                                    aria-expanded={open}
+                                    onClick={() => toggleEvent(event)}
+                                  >
+                                    <ChevronRight />
+                                    {eventLabel(event)}
+                                  </button>
+                                ) : (
+                                  <span className="notify-plain">{eventLabel(event)}</span>
+                                )}
+                              </span>
+                              {alert ? (
+                                <Switch
+                                  aria-label={`${eventLabel(event)}: ${t('notifySound')}`}
+                                  checked={settings[alert.enabledKey]}
+                                  disabled={!settings.soundsEnabled}
+                                  onCheckedChange={(checked) =>
+                                    patch({ [alert.enabledKey]: checked } as Partial<Settings>)
+                                  }
+                                />
+                              ) : (
+                                <span className="notify-none" aria-label={t('notifyNoSound')}>
+                                  —
+                                </span>
+                              )}
+                              <Switch
+                                aria-label={`${eventLabel(event)}: ${t('notifyToast')}`}
+                                checked={!toastsOff.includes(event)}
+                                onCheckedChange={(on) => setToast(event, on)}
+                              />
+                              <Switch
+                                aria-label={`${eventLabel(event)}: ${t('notifyDesktop')}`}
+                                checked={desktopOn.includes(event)}
+                                onCheckedChange={(on) => setDesktop(event, on)}
+                              />
+                            </div>
+                            {open && alert && (
+                              <div className="notify-detail sound-setting">
+                                <div className="sound-voice-row">
+                                  <Select
+                                    value={
+                                      choiceOf(alert.kind, path) === 'beep' ? '__beep' : choiceOf(alert.kind, path)
+                                    }
+                                    onValueChange={(value) => setChoiceOf(alert.kind, alert.pathKey, value)}
+                                  >
+                                    <SelectTrigger
+                                      aria-label={`${alert.label}: ${t('soundVoiceOf')}`}
+                                      className="sound-voice"
+                                    >
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="__default">
+                                        {t('soundVoiceDefault')}（{voice ? voiceName(voice) : t('soundVoiceBeep')}）
+                                      </SelectItem>
+                                      {voicePacks.map((pack) => (
+                                        <SelectItem key={pack.id} value={pack.id}>
+                                          {voiceName(pack)}
+                                        </SelectItem>
+                                      ))}
+                                      <SelectItem value="__beep">{t('soundVoiceBeep')}</SelectItem>
+                                      <SelectItem value="custom">{t('soundVoiceCustom')}</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => void previewSound(alert.kind, path)}
+                                  >
+                                    <Play />
+                                    {t('previewSound')}
+                                  </Button>
+                                </div>
+                                <div className="volume-offset">
+                                  <span className="volume-offset-label">{t('soundVolumeOffset')}</span>
+                                  <input
+                                    className="range"
+                                    type="range"
+                                    min="-50"
+                                    max="50"
+                                    step="1"
+                                    aria-label={`${alert.label}: ${t('soundVolumeOffset')}`}
+                                    value={offsetOf(alert.kind)}
+                                    onChange={(e) => setOffsetOf(alert.kind, Number(e.target.value))}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="volume-offset-value"
+                                    title={t('soundVolumeReset')}
+                                    disabled={offsetOf(alert.kind) === 0}
+                                    onClick={() => setOffsetOf(alert.kind, 0)}
+                                  >
+                                    {offsetLabel(offsetOf(alert.kind))}
+                                  </button>
+                                  <span className="volume-offset-actual" title={t('soundVolumeActual')}>
+                                    → {volumeOf(alert.kind)}%
+                                  </span>
+                                </div>
+                                <div className="volume-offset">
+                                  <span className="volume-offset-label">{t('soundDelay')}</span>
+                                  <input
+                                    className="range"
+                                    type="range"
+                                    min="0"
+                                    max={SOUND_DELAY_MAX}
+                                    step="1"
+                                    aria-label={`${alert.label}: ${t('soundDelay')}`}
+                                    value={delayOf(alert.kind)}
+                                    onChange={(e) => setDelayOf(alert.kind, Number(e.target.value))}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="volume-offset-value"
+                                    title={t('soundDelayReset')}
+                                    disabled={delayOf(alert.kind) === 0}
+                                    onClick={() => setDelayOf(alert.kind, 0)}
+                                  >
+                                    {t('soundDelaySeconds').replace('{n}', String(delayOf(alert.kind)))}
+                                  </button>
+                                </div>
+                                {choiceOf(alert.kind, path) === 'custom' && (
+                                  <div className="sound-file-row">
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="secondary"
+                                      onClick={() => void chooseSound(alert.pathKey)}
+                                    >
+                                      <FolderOpen />
+                                      {t('chooseSound')}
+                                    </Button>
+                                    <span className="sound-file-name" title={path || t('noSoundFile')}>
+                                      {path ? soundFileName(path) : t('noSoundFile')}
+                                    </span>
+                                  </div>
+                                )}
+                                <p className="sound-said" title={saidBy(alert.kind, path)}>
+                                  {saidBy(alert.kind, path)}
+                                </p>
+                                {alert.kind === 'runThrough' && settings.runThroughSoundEnabled && (
+                                  <div className="field">
+                                    <Label>{t('runThroughTime')}</Label>
+                                    <div className="time-fields">
+                                      <div>
+                                        <Input
+                                          aria-label={t('minutes')}
+                                          type="number"
+                                          min="0"
+                                          max="59"
+                                          value={Math.floor(settings.runThroughSeconds / 60)}
+                                          onChange={(e) =>
+                                            patch({
+                                              runThroughSeconds: Math.max(
+                                                1,
+                                                Math.min(
+                                                  3599,
+                                                  Number(e.target.value) * 60 + (settings.runThroughSeconds % 60),
+                                                ),
+                                              ),
+                                            })
+                                          }
+                                        />
+                                        <span>{t('minutes')}</span>
+                                      </div>
+                                      <div>
+                                        <Input
+                                          aria-label={t('seconds')}
+                                          type="number"
+                                          min="0"
+                                          max="59"
+                                          value={settings.runThroughSeconds % 60}
+                                          onChange={(e) =>
+                                            patch({
+                                              runThroughSeconds: Math.max(
+                                                1,
+                                                Math.min(
+                                                  3599,
+                                                  Math.floor(settings.runThroughSeconds / 60) * 60 +
+                                                    Number(e.target.value),
+                                                ),
+                                              ),
+                                            })
+                                          }
+                                        />
+                                        <span>{t('seconds')}</span>
+                                      </div>
+                                    </div>
+                                    <p className="help">{t('runThroughTimeHelp')}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+                <p className="help">{t('notifyEventsHelp')}</p>
               </CardContent>
             </Card>
           </div>

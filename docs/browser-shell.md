@@ -307,10 +307,10 @@ Web ページのツールバー右側のアイコン（翻訳、スナップノ�
 
 ページはシェルより上に重なるネイティブビューなので、シェルが描く通知はページの下に隠れます。通知はメインウインドウをオーナーにした枠なしの小さなウインドウ（`toast.html`、`toast.js`、`app_toast.go`）に、メインウインドウの下の中央へ積み重ねて出します（幅 420px、最大 5 件、高さは通知のページが描いた高さ `BrowserToastReady`）。フォーカスは奪いません。Windows では `WS_EX_NOACTIVATE` で作り、最初の 1 回だけメインウインドウが表示されたときに Wails の手順で表示してすぐ隠し（ページを読み込むため）、以後は `SetWindowPos(SWP_NOACTIVATE|SWP_SHOWWINDOW)` で、メインウインドウの実際の位置と拡大率から置きます（`app_toast_windows.go`）。メインウインドウを動かす・大きさを変える・最小化すると、置き直すか隠します。
 
-- **通知の中身**（`Toast`）: 種類（`category`: `tracker` / `sound` / `recognition` / `squad` / `update` / `error` / `working`）、重さ（`level`: `info` / `success` / `warn` / `error`）、文言のキー（`message`、`words.js`）と値（`params`）、そのまま出す文（`text`、エラーの文など）、進み具合（`progress`）、ボタン（`actions`。押すと `toast:action` でシェルに戻る）。文言は `toast-text.js` が組み立て、トーストのページと通知のページで共通です。
+- **通知の中身**（`Toast`）: イベント（`event`、`notifyEvents`。設定で出す・出さないを決める。無いものは常に出す）、種類（`category`: `tracker` / `sound` / `recognition` / `squad` / `update` / `error` / `working`）、重さ（`level`: `info` / `success` / `warn` / `error`）、文言のキー（`message`、`words.js`）と値（`params`）、そのまま出す文（`text`、エラーの文など）、進み具合（`progress`）、ボタン（`actions`。押すと `toast:action` でシェルに戻る）。文言は `toast-text.js` が組み立て、トーストのページと通知のページで共通です。
 - **消え方**: `persistent` のもの（エラー、アップデート、プレステージの案内、作業中）は閉じるまで残ります。ほかは 5 秒（注意・エラーは 9 秒）で消えます。`key` のある通知は、同じ `key` の新しい通知で置き換わり（アップデートの進み具合など）、履歴でも 1 行のままです。作業中（`working`）は履歴に残しません。
 - **出すもの**: TarkovTracker への送信（タスクの完了・失敗・再開、レベル、過去ログの送り直し、プレステージの案内、送れなかったとき）、音声の通知の文字版（`notify` を通るもの。音を切っていても出す）、スクリーンショットを読んだ結果（タスク・アイテム・位置・Overall 画面、読めなかったとき）、スクワッド（参加・退出、仲間の出入り、中継サーバーとの切断と再接続、満員）、アップデート、シェルのエラー（`messageError` / `errorToast`。以前の下端のエラー行とアップデートバーはこれに置き換わった）。
-- **設定**: `tracker` / `sound` / `recognition` / `squad` を種類ごとにオン・オフできます（Go の設定 `toastsOff`、この PC のもの）。Host では Host の設定の「通知」（音声の通知と同じページ、`main.tsx` の「ページの上の通知」）に、Host の設定が無い Client ではシェルの設定の「通知」（`notifications`）に並びます。どちらの PC でも「通知」は 1 つです。オフにした種類は出さず、履歴にも残しません。エラーとアップデートは常に出します。
+- **設定**: 通知のイベントごとに、トースト・デスクトップ通知（OS の通知、MAYAK が前面にないときだけ）・音声を選べます（Go の設定 `toastsOff` / `desktopOn`、この PC のもの。[settings-and-integrations.md](settings-and-integrations.md) の「イベントごとの通知」）。Host では Host の設定の「通知」の表に、Host の設定が無い Client ではシェルの設定の「通知」に並びます。
 - **履歴**: サイドバー下段のベルのボタンで「通知」のページ（`view-notifications.js`、ローカルのページ）を開き、出した通知を新しい順に見られます。直近 200 件をこの PC だけに保存します（`notifications.json`、同期しない）。「履歴を消す」で空にできます（`BrowserToastHistoryClear`）。
 
 ## ページの上のメニュー

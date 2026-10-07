@@ -16,6 +16,7 @@ import (
 	"github.com/local/mayak/internal/sound"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
+	desktopnotify "github.com/wailsapp/wails/v3/pkg/services/notifications"
 )
 
 // Notices over the pages (toasts): the pages are native views above the
@@ -32,7 +33,10 @@ import (
 // replaces in place (an update's progress, a running job). A persistent one
 // stays until closed or replaced; the others go after a few seconds.
 type Toast struct {
-	ID         string            `json:"id"`
+	ID string `json:"id"`
+	// Event is the notification event (notifyEvents) the settings turn on
+	// and off; none for those that always show (updates, errors, a job).
+	Event      string            `json:"event,omitempty"`
 	Key        string            `json:"key,omitempty"`
 	Category   string            `json:"category"`
 	Level      string            `json:"level"`
@@ -53,8 +57,7 @@ type ToastAction struct {
 	Label string `json:"label"`
 }
 
-// The categories a notice is of. The first ones can be turned off in the
-// settings (config ToastsOff); updates, errors and running jobs always show.
+// The categories a notice is of: its icon, and its kind in the history.
 const (
 	ToastTracker     = "tracker"
 	ToastSound       = "sound"
@@ -64,9 +67,6 @@ const (
 	ToastError       = "error"
 	ToastWorking     = "working"
 )
-
-// toastCategories are the categories the settings turn on and off.
-var toastCategories = []string{ToastTracker, ToastSound, ToastRecognition, ToastSquad}
 
 const (
 	toastShown      = 5 * time.Second
@@ -86,15 +86,22 @@ type toastCenter struct {
 	loaded  bool
 	height  int // the toast page's height, in the shell's pixels
 	saving  bool
+	// The desktop notifications (desktopNotifier), started once.
+	notifyOnce sync.Once
+	notifier   *desktopnotify.NotificationService
+	notifyErr  error
 }
 
-// toast shows a notice and keeps it in the history; a category turned off in
-// the settings is dropped.
+// toast shows a notice and keeps it in the history, as its event's settings
+// say: a toast, a desktop notification of the OS (only while MAYAK is not in
+// front), both or neither.
 func (a *App) toast(t Toast) string {
-	a.mu.RLock()
-	off := a.settings.ToastsOff
-	a.mu.RUnlock()
-	if slices.Contains(toastCategories, t.Category) && slices.Contains(off, t.Category) {
+	show, desktop := true, false
+	if t.Event != "" {
+		show, desktop = a.notifyOn(t.Event)
+		desktop = desktop && !a.appInFront()
+	}
+	if !show && !desktop {
 		return ""
 	}
 	if t.Level == "" {
@@ -104,6 +111,14 @@ func (a *App) toast(t Toast) string {
 		t.ID = toastID()
 	}
 	t.At = time.Now()
+	// The toast page words it (toast-text.js) and sends it (BrowserDesktopNotify).
+	if desktop {
+		a.emitEvent("toast:desktop", t)
+	}
+	if !show {
+		a.keepToast(t)
+		return t.ID
+	}
 	c := &a.toasts
 	c.mu.Lock()
 	c.loadHistoryLocked()
@@ -167,6 +182,20 @@ func (a *App) toast(t Toast) string {
 	return t.ID
 }
 
+// keepToast puts a notice in the history only.
+func (a *App) keepToast(t Toast) {
+	c := &a.toasts
+	c.mu.Lock()
+	c.loadHistoryLocked()
+	c.history = append(c.history, t)
+	if over := len(c.history) - toastHistoryMax; over > 0 {
+		c.history = slices.Delete(c.history, 0, over)
+	}
+	c.mu.Unlock()
+	a.emitEvent("toast:history", t)
+	a.saveToastHistory()
+}
+
 // dropToast takes the notices match picks off the screen (they stay in the
 // history).
 func (a *App) dropToast(match func(Toast) bool) {
@@ -202,6 +231,43 @@ func (a *App) BrowserToast(t Toast) (string, error) {
 		}
 	}
 	return a.toast(t), nil
+}
+
+// BrowserDesktopNotify shows a desktop notification of the OS with text (the
+// toast page words it). The OS's sound stays off: the alerts have their own.
+func (a *App) BrowserDesktopNotify(text string) error {
+	if len(text) > 600 {
+		text = text[:600]
+	}
+	notifier, err := a.desktopNotifier()
+	if err != nil {
+		return err
+	}
+	return notifier.SendNotification(desktopnotify.NotificationOptions{
+		ID: toastID(), Title: "MAYAK", Body: text, Sound: &desktopnotify.NotificationSound{Silent: true},
+	})
+}
+
+// desktopNotifier starts Wails' notifications service on its first use, and
+// asks the OS for leave to notify (macOS).
+func (a *App) desktopNotifier() (*desktopnotify.NotificationService, error) {
+	a.toasts.notifyOnce.Do(func() {
+		notifier := desktopnotify.New()
+		if err := notifier.ServiceStartup(a.parentContext(), application.ServiceOptions{}); err != nil {
+			a.toasts.notifyErr = err
+			a.addLog("Warn", "Notification", "Desktop notifications are unavailable: "+err.Error())
+			return
+		}
+		_, _ = notifier.RequestNotificationAuthorization()
+		a.toasts.notifier = notifier
+	})
+	if a.toasts.notifier == nil {
+		if a.toasts.notifyErr != nil {
+			return nil, a.toasts.notifyErr
+		}
+		return nil, errors.New("desktop notifications are unavailable")
+	}
+	return a.toasts.notifier, nil
 }
 
 // BrowserToastEnd takes the notice with key off the screen.
@@ -351,7 +417,7 @@ func (a *App) toastAlert(kind sound.Kind) {
 	case sound.RemoteError, sound.TaskFailed:
 		level = "warn"
 	}
-	a.toast(Toast{Category: ToastSound, Level: level, Message: "toastAlert_" + string(kind)})
+	a.toast(Toast{Event: string(kind), Category: ToastSound, Level: level, Message: "toastAlert_" + string(kind)})
 }
 
 // taskName is a task's name for a notice, from the task list of mode (its

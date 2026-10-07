@@ -125,7 +125,7 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | `recognition` | `gameMode`, `gameLanguage`（選択肢は「自動」と Go の `GameLanguages()` が返す言語。表示名は `main.tsx` の `languageNames`）, `ocrEngine`, `tesseractPath`（`tesseract` のときのみ表示） | — |
 | `remote` | `remoteTargets`（名前、ID（伏せ字。目のボタンで表示）、役割「マップ」「タスク」）, `map`, `openMapOnRaidStart`, `navigateMapOnPositionScreenshot` | 追加、ブラウザからの ID 自動検出（`AutoDetectRemoteID`）、接続テスト（`TestRemote`） |
 | `tracker` | `tarkovTrackerEnabled`、トークンの取り込み、保存済みキー、既知プロフィールへのキーの割り当て、過去ログの同期 | ログからプロフィールを探す、tarkovtracker.org の API 設定を開く |
-| `sounds` | `soundsEnabled`。オンのとき、各通知（Hideout エラー、クエスト認識成功、認識・接続エラー、マッチ成立、レイド開始、ランスルー終了、タスクアイテム確認、失敗タスクの再開確認）の ON/OFF・音声ファイル・リセット・試聴、ランスルー時間（分・秒。ランスルー終了の通知がオンのときだけ表示）、`soundVolume` | `ChooseSoundFile`, `PreviewSound` |
+| `sounds`（画面の名前は「通知」） | 上の「通知音の全体」に `soundsEnabled`・`soundVolume`・基本の声。下の「イベントごとの通知」は、通知のイベント（`app_notify.go` の `notifyEvents`、レイド・ゲーム・スクリーンショット・TarkovTracker・スクワッド・連携に分けて並べる）× 音声・トースト・デスクトップの表です。先頭の「すべて（一括）」の行で列ごとにまとめてオン・オフでき（列のすべてがオンのときオン）、音声のあるイベントは行を開くと、その声・試聴・音量の差・遅延・ファイル（ランスルーは時間も）を変えられます。音声の列は `soundsEnabled` がオフのあいだ触れません |
 | `startup` | `launchAtStartup`, `startMinimized`, `autoStartMonitoring`, `minimizeToTray`, `closeToTray`, `autoUpdate` | — |
 | `status` | 表示のみ: Remote 接続状態、現在のマップ、レイド状態、スクリーンショット種別、TarkovTracker の状態、最後の検出結果、カタログの状態、アップデートの状態 | 最新スクリーンショットの解析、TarkovTracker の更新、カタログの更新、タスクページを開く、更新の確認・ダウンロード・再起動して更新、リリースノートを開く |
 | `logs` | 表示のみ（[ログ](#ログ) を参照） | フォルダを開く、ログの消去 |
@@ -204,6 +204,14 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | 保存失敗 | `PersistSettings` / `SaveSettings` のエラー | 次の保存が成功するまで残る（× は無い）。「再試行」ボタン付き |
 | 通知（成功） | 各操作の成功メッセージ | 3 秒で消える |
 | 通知（エラー） | 各操作の失敗 | × で閉じるまで残る |
+
+### イベントごとの通知（音声・トースト・デスクトップ）
+
+- 通知のイベントは `app_notify.go` の `notifyEvents` です。音声があるのは今までの通知音の 13 種類で、ほかにトーストだけのイベントがあります（位置・Overall 画面を読んだとき、TarkovTracker への送信・失敗・レベル・過去ログ・プレステージ、スクワッドの自分の参加・退出・仲間の出入り・中継サーバー）。
+- トーストは `toastsOff`（出さないイベント）、デスクトップ通知は `desktopOn`（出すイベント。既定は `matchFound`・`prestige`・`trackerFailed`）で持ちます。以前の種類単位の `toastsOff`（`tracker` / `sound` / `recognition` / `squad`）は、その種類のイベントに置き換えます（`notifyEventList`）。
+- デスクトップ通知は OS の通知（Windows ならアクションセンター）で、MAYAK の窓（メイン・ポップアップ・メニュー）がどれも前面にないときだけ出します（`appInFront`）。文言はトーストと同じで、トーストのページが組み立てて `BrowserDesktopNotify` を呼びます（OS の通知音は鳴らさない）。Wails の通知サービスは、最初のデスクトップ通知のときに起動します（MAYAK を OS に登録するため。使わない PC では何もしない）。
+- トーストもデスクトップもオフのイベントは、通知の履歴にも残しません。アップデートとエラーは、この設定にかかわらずトーストで出します。
+- Client（Host の設定が無い PC）では、シェルの設定「通知」に、Client で起きるイベント（スクワッド）のトーストとデスクトップの切り替えが並びます。
 
 ### 通知音
 

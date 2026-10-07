@@ -357,7 +357,7 @@ func (a *App) syncTrackerTask(mode, profileID, accountID, token, taskID, state s
 	if err := a.trackerClient.SetTask(ctx, token, taskID, state); err != nil {
 		a.setTrackerConnection("error", err.Error())
 		a.addLog("Error", "TarkovTracker", fmt.Sprintf("Task %s sync failed: %s", taskID, err))
-		a.toast(Toast{Category: ToastTracker, Level: "error", Message: "toastTaskSyncFailed", Params: map[string]string{"task": a.taskName(mode, taskID), "error": err.Error()}})
+		a.toast(Toast{Event: "trackerFailed", Category: ToastTracker, Level: "error", Message: "toastTaskSyncFailed", Params: map[string]string{"task": a.taskName(mode, taskID), "error": err.Error()}})
 		return
 	}
 	a.mu.Lock()
@@ -386,7 +386,7 @@ func (a *App) syncTrackerTask(mode, profileID, accountID, token, taskID, state s
 	a.mu.Unlock()
 	a.emitStatus(status)
 	a.addLog("Info", "TarkovTracker", fmt.Sprintf("Synced task %s as %s (%s)", taskID, state, mode))
-	a.toast(Toast{Category: ToastTracker, Level: "success", Message: "toastTaskSynced_" + state, Params: map[string]string{"task": a.taskName(mode, taskID), "mode": mode}})
+	a.toast(Toast{Event: "trackerTask", Category: ToastTracker, Level: "success", Message: "toastTaskSynced_" + state, Params: map[string]string{"task": a.taskName(mode, taskID), "mode": mode}})
 }
 
 func (a *App) setTrackerConnection(connection, message string) {

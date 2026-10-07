@@ -184,7 +184,7 @@ func (a *App) handleProfileScreenshot(ctx context.Context, sequence uint64, path
 	a.mu.Unlock()
 	a.emitStatus(status)
 	a.addLog("Info", "Profile", fmt.Sprintf("Read the Overall screen: %s, level %d (%d exp), %d raids, K/D %.2f", profile.Name, profile.Level, profile.Exp, profile.Raids, profile.KD))
-	a.toast(Toast{Category: ToastRecognition, Level: "success", Message: "toastProfileRead", Params: map[string]string{"name": profile.Name, "level": fmt.Sprint(profile.Level)}})
+	a.toast(Toast{Event: "profile", Category: ToastRecognition, Level: "success", Message: "toastProfileRead", Params: map[string]string{"name": profile.Name, "level": fmt.Sprint(profile.Level)}})
 	a.squadUpdateProfile()
 	if sure {
 		a.trackerRaiseLevel(ctx, settings, profile.Level)
@@ -270,7 +270,7 @@ func (a *App) trackerRaiseLevel(ctx context.Context, settings config.Settings, l
 	a.mu.Unlock()
 	a.emitStatus(status)
 	a.addLog("Info", "TarkovTracker", fmt.Sprintf("Level set to %d (from %d) from the Overall screen", level, tr.PlayerLevel))
-	a.toast(Toast{Category: ToastTracker, Level: "success", Message: "toastLevelSet", Params: map[string]string{"level": fmt.Sprint(level)}})
+	a.toast(Toast{Event: "trackerLevel", Category: ToastTracker, Level: "success", Message: "toastLevelSet", Params: map[string]string{"level": fmt.Sprint(level)}})
 	a.squadUpdateTracker()
 }
 

@@ -74,6 +74,14 @@ export function BrowserCatalogMode(): $CancellablePromise<string> {
 }
 
 /**
+ * BrowserDesktopNotify shows a desktop notification of the OS with text (the
+ * toast page words it). The OS's sound stays off: the alerts have their own.
+ */
+export function BrowserDesktopNotify(text: string): $CancellablePromise<void> {
+    return $Call.ByID(2287958563, text);
+}
+
+/**
  * BrowserFavicon returns the icon at rawURL as a data URL, from the cache
  * unless refresh asks for a current copy.
  */

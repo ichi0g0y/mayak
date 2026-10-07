@@ -647,12 +647,16 @@ function browserSettings(key) {
     }
     // The kinds of notices over the pages, each on or off (this PC's).
     case 'notifications':
-      return `<section class="panel">${['tracker', 'sound', 'recognition', 'squad']
+      return `<section class="panel"><div class="notify-grid"><span></span><span>${esc(t('notifyToast'))}</span><span>${esc(t('notifyDesktop'))}</span>${[
+        'squadSelf',
+        'squadMembers',
+        'squadRelay',
+      ]
         .map(
-          (kind) =>
-            `<label class="check"><input type="checkbox" data-action="toastsOff" data-id="${kind}" ${(state.toastsOff || []).includes(kind) ? '' : 'checked'}>${esc(t('toastKind_' + kind))}</label><p class="hint">${esc(t('toastKindHelp_' + kind))}</p>`,
+          (event) =>
+            `<span>${esc(t('notifyEvent_' + event))}</span><input type="checkbox" data-action="notifyChannel" data-id="${event}" data-channel="toast" aria-label="${esc(t('notifyEvent_' + event) + ': ' + t('notifyToast'))}" ${(state.toastsOff || []).includes(event) ? '' : 'checked'}><input type="checkbox" data-action="notifyChannel" data-id="${event}" data-channel="desktop" aria-label="${esc(t('notifyEvent_' + event) + ': ' + t('notifyDesktop'))}" ${(state.desktopOn || []).includes(event) ? 'checked' : ''}>`,
         )
-        .join('')}<p class="hint">${esc(t('notificationsSettingsHelp'))}</p></section>`
+        .join('')}</div><p class="hint">${esc(t('notificationsSettingsHelp'))}</p></section>`
     case 'adblock':
       return `<section class="panel"><label class="check"><input type="checkbox" data-action="adblock" ${state.adblock ? 'checked' : ''}>${t('adblockEnable')}</label><p class="hint">${t('adblockHelp')}</p></section>`
     default:
@@ -1124,7 +1128,8 @@ document.addEventListener('change', (event) => {
   else if (input.id === 'task-site') void action('site', input.value)
   else if (input.dataset.action === 'adblock') void action('preferences', { adblock: input.checked })
   if (input.dataset.action === 'translateWiki') void action('preferences', { translateWiki: input.checked })
-  if (input.dataset.action === 'toastsOff') void action('toastsOff', { kind: input.dataset.id, on: input.checked })
+  if (input.dataset.action === 'notifyChannel')
+    void action('notifyChannel', { event: input.dataset.id, channel: input.dataset.channel, on: input.checked })
   if (input.dataset.action === 'linkReceive')
     void action('connection', { receive: { ...state.connection.receive, [input.dataset.id]: input.checked } })
 })

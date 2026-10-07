@@ -77,7 +77,8 @@ let updateStatus = null,
 // The notices shown (app_toast.go), for the notifications page, and the kinds
 // turned off in the settings (config ToastsOff, this PC's Go side).
 let toastHistory = [],
-  toastsOff = []
+  toastsOff = [],
+  desktopOn = []
 function updateBarVisible() {
   const u = updateStatus
   return !!(u && ['available', 'downloading', 'ready'].includes(u.state) && u.latest && u.latest !== updateDismissed)
@@ -222,6 +223,7 @@ const snapshot = () => ({
   updateChannel,
   notifications: toastHistory,
   toastsOff,
+  desktopOn,
   goonReport,
   bosses: bosses && { ...bosses, current: (state.connection.mode === 'client' ? remoteHost?.map : host?.map) || '' },
   screenshots: shotsAvailable()
@@ -1329,7 +1331,9 @@ const ready = (async () => {
   })
   try {
     toastHistory = (await go.BrowserToastHistory()) || []
-    toastsOff = (await go.GetSettings()).toastsOff || []
+    const s = await go.GetSettings()
+    toastsOff = s.toastsOff || []
+    desktopOn = s.desktopOn || []
   } catch {}
   go.GetUpdateStatus?.()
     .then(updateChanged)
@@ -2260,16 +2264,26 @@ async function performOne(type, data) {
       await go.BrowserToastHistoryClear()
       toastHistory = []
       return snapshot()
-    case 'toastsOff': {
-      const kind = String(data?.kind || '')
-      if (!['tracker', 'sound', 'recognition', 'squad'].includes(kind)) return snapshot()
+    // A notification event shown as a toast or as a desktop notification, or
+    // not (a Client's Notifications section; the Host's settings page has its own).
+    case 'notifyChannel': {
+      const event = String(data?.event || '')
+      if (!['squadSelf', 'squadMembers', 'squadRelay'].includes(event)) return snapshot()
       const s = await go.GetSettings()
-      const off = new Set(s.toastsOff || [])
-      if (data?.on) off.delete(kind)
-      else off.add(kind)
+      const off = new Set(s.toastsOff || []),
+        desk = new Set(s.desktopOn || [])
+      if (data?.channel === 'toast') {
+        if (data?.on) off.delete(event)
+        else off.add(event)
+      } else if (data?.channel === 'desktop') {
+        if (data?.on) desk.add(event)
+        else desk.delete(event)
+      } else return snapshot()
       s.toastsOff = [...off]
+      s.desktopOn = [...desk]
       await go.PersistSettings(s)
       toastsOff = s.toastsOff
+      desktopOn = s.desktopOn
       return snapshot()
     }
     default:

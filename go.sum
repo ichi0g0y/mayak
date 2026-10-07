@@ -1,3 +1,5 @@
+git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 h1:N3IGoHHp9pb6mj1cbXbuaSXV/UMKwmbKLf53nQmtqMA=
+git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3/go.mod h1:QtOLZGz8olr4qH2vWK0QH0w0O4T9fEIjMuWpKUsH7nc=
 github.com/AdguardTeam/golibs v0.35.13 h1:sflm5/sWhiGwUXNAZObiqVMkdg8HeYVFK2A0oJ27hbU=
 github.com/AdguardTeam/golibs v0.35.13/go.mod h1:8EEGG4auTDd8HV3tBETXLkuxDH9lk9vvFbJn+wbmypg=
 github.com/AdguardTeam/urlfilter v0.23.4 h1:3cwt5xj7lpK2t3sWtr9WI8mmsKP+RtpkdnEy7lrn8cg=

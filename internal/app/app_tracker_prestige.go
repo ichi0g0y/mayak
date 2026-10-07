@@ -52,7 +52,7 @@ func (a *App) notePrestige(accountID, profileID, mode string, at time.Time) {
 	a.addLog("Warn", "TarkovTracker", fmt.Sprintf("Prestige taken (%s) at %s: reset the progress on TarkovTracker too (its settings, Prestige); MAYAK then sends what was done since", mode, at.Local().Format("2006-01-02 15:04:05")))
 	// It stays until TarkovTracker has been reset (clearPrestigePending).
 	a.toast(Toast{
-		Key: prestigeToastKey(accountID, profileID, mode), Category: ToastTracker, Level: "warn", Persistent: true,
+		Key: prestigeToastKey(accountID, profileID, mode), Event: "prestige", Category: ToastTracker, Level: "warn", Persistent: true,
 		Message: "toastPrestige", Params: map[string]string{"mode": mode, "at": at.Local().Format("2006-01-02 15:04")},
 		Actions: []ToastAction{{ID: "trackerPrestige", Label: "toastOpenTrackerPrestige"}},
 	})

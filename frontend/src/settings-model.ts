@@ -7,8 +7,10 @@ export type RemoteTarget = { id: string; name: string; map: boolean; tasks: bool
 export type Settings = {
   gameLanguage: string
   questSite: string
-  // The kinds of notices over the pages turned off (app_toast.go toastCategories).
+  // The notification events (app_notify.go notifyEvents) not shown as toasts,
+  // and those also shown as desktop notifications of the OS.
   toastsOff?: string[]
+  desktopOn?: string[]
   language: Language
   screenshotDirectory: string
   logsDirectory: string

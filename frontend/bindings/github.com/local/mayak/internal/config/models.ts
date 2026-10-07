@@ -50,10 +50,12 @@ export class Settings {
     "questSites": string[];
 
     /**
-     * ToastsOff are the kinds of notices over the pages turned off in the
-     * settings (app.toastCategories: tracker, sound, recognition, squad).
+     * ToastsOff are the notification events (app.notifyEvents) not shown as
+     * notices over the pages; DesktopOn the ones also shown as desktop
+     * notifications of the OS.
      */
     "toastsOff": string[];
+    "desktopOn": string[];
     "language": string;
     "screenshotDirectory": string;
     "logsDirectory": string;
@@ -186,6 +188,9 @@ export class Settings {
         }
         if (!("toastsOff" in $$source)) {
             this["toastsOff"] = [];
+        }
+        if (!("desktopOn" in $$source)) {
+            this["desktopOn"] = [];
         }
         if (!("language" in $$source)) {
             this["language"] = "";
@@ -392,10 +397,11 @@ export class Settings {
     static createFrom($$source: any = {}): Settings {
         const $$createField2_0 = $$createType0;
         const $$createField3_0 = $$createType0;
-        const $$createField8_0 = $$createType2;
-        const $$createField35_0 = $$createType3;
-        const $$createField36_0 = $$createType4;
+        const $$createField4_0 = $$createType0;
+        const $$createField9_0 = $$createType2;
+        const $$createField36_0 = $$createType3;
         const $$createField37_0 = $$createType4;
+        const $$createField38_0 = $$createType4;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("questSites" in $$parsedSource) {
             $$parsedSource["questSites"] = $$createField2_0($$parsedSource["questSites"]);
@@ -403,17 +409,20 @@ export class Settings {
         if ("toastsOff" in $$parsedSource) {
             $$parsedSource["toastsOff"] = $$createField3_0($$parsedSource["toastsOff"]);
         }
+        if ("desktopOn" in $$parsedSource) {
+            $$parsedSource["desktopOn"] = $$createField4_0($$parsedSource["desktopOn"]);
+        }
         if ("remoteTargets" in $$parsedSource) {
-            $$parsedSource["remoteTargets"] = $$createField8_0($$parsedSource["remoteTargets"]);
+            $$parsedSource["remoteTargets"] = $$createField9_0($$parsedSource["remoteTargets"]);
         }
         if ("soundVoices" in $$parsedSource) {
-            $$parsedSource["soundVoices"] = $$createField35_0($$parsedSource["soundVoices"]);
+            $$parsedSource["soundVoices"] = $$createField36_0($$parsedSource["soundVoices"]);
         }
         if ("soundVolumeOffsets" in $$parsedSource) {
-            $$parsedSource["soundVolumeOffsets"] = $$createField36_0($$parsedSource["soundVolumeOffsets"]);
+            $$parsedSource["soundVolumeOffsets"] = $$createField37_0($$parsedSource["soundVolumeOffsets"]);
         }
         if ("soundDelays" in $$parsedSource) {
-            $$parsedSource["soundDelays"] = $$createField37_0($$parsedSource["soundDelays"]);
+            $$parsedSource["soundDelays"] = $$createField38_0($$parsedSource["soundDelays"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }

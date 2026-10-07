@@ -21,9 +21,11 @@ type Settings struct {
 	// on the first that has its page. QuestSite is the first, for the
 	// versions that know one site only.
 	QuestSites []string `json:"questSites"`
-	// ToastsOff are the kinds of notices over the pages turned off in the
-	// settings (app.toastCategories: tracker, sound, recognition, squad).
+	// ToastsOff are the notification events (app.notifyEvents) not shown as
+	// notices over the pages; DesktopOn the ones also shown as desktop
+	// notifications of the OS.
 	ToastsOff           []string       `json:"toastsOff"`
+	DesktopOn           []string       `json:"desktopOn"`
 	Language            string         `json:"language"`
 	ScreenshotDirectory string         `json:"screenshotDirectory"`
 	LogsDirectory       string         `json:"logsDirectory"`
@@ -152,7 +154,7 @@ type WindowState struct {
 }
 
 func defaults() Settings {
-	return Settings{Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: false, QuestSoundEnabled: true, ErrorSoundEnabled: true, TaskNotMatchedSoundEnabled: true, RemoteErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, MatchFoundSound: true, RaidStartSound: true, RunThroughSound: true, AutoUpdate: true}
+	return Settings{DesktopOn: []string{"matchFound", "prestige", "trackerFailed"}, Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: false, QuestSoundEnabled: true, ErrorSoundEnabled: true, TaskNotMatchedSoundEnabled: true, RemoteErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, MatchFoundSound: true, RaidStartSound: true, RunThroughSound: true, AutoUpdate: true}
 }
 func path() (string, error) {
 	d, err := os.UserConfigDir()

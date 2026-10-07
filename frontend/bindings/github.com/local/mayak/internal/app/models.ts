@@ -596,6 +596,12 @@ export class SquadShot {
  */
 export class Toast {
     "id": string;
+
+    /**
+     * Event is the notification event (notifyEvents) the settings turn on
+     * and off; none for those that always show (updates, errors, a job).
+     */
+    "event"?: string;
     "key"?: string;
     "category": string;
     "level": string;
@@ -633,14 +639,14 @@ export class Toast {
      * Creates a new Toast instance from a string or object.
      */
     static createFrom($$source: any = {}): Toast {
-        const $$createField5_0 = $$createType4;
-        const $$createField9_0 = $$createType13;
+        const $$createField6_0 = $$createType4;
+        const $$createField10_0 = $$createType13;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("params" in $$parsedSource) {
-            $$parsedSource["params"] = $$createField5_0($$parsedSource["params"]);
+            $$parsedSource["params"] = $$createField6_0($$parsedSource["params"]);
         }
         if ("actions" in $$parsedSource) {
-            $$parsedSource["actions"] = $$createField9_0($$parsedSource["actions"]);
+            $$parsedSource["actions"] = $$createField10_0($$parsedSource["actions"]);
         }
         return new Toast($$parsedSource as Partial<Toast>);
     }

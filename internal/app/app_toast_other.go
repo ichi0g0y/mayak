@@ -17,3 +17,6 @@ func toastPlace(window, main *application.WebviewWindow, width, height int) {
 	window.SetPosition(x+(w-width)/2, y+h-height-20)
 	window.Show()
 }
+
+// appInFront tells whether MAYAK's main window has the focus.
+func (a *App) appInFront() bool { return a.window != nil && a.window.IsFocused() }

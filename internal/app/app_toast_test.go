@@ -29,12 +29,12 @@ func TestToastReplacesByKey(t *testing.T) {
 	}
 }
 
-// A kind turned off in the settings shows nothing and leaves no history;
-// errors always show; a running job is shown but not kept.
-func TestToastKindsOff(t *testing.T) {
-	a := &App{settings: config.Settings{ToastsOff: []string{ToastSound}}}
-	if id := a.toast(Toast{Category: ToastSound, Message: "toastAlert_raidStart"}); id != "" {
-		t.Fatal("a kind turned off showed")
+// An event turned off (and not a desktop notification) shows nothing and
+// leaves no history; errors always show; a running job is shown but not kept.
+func TestToastEventsOff(t *testing.T) {
+	a := &App{settings: config.Settings{ToastsOff: []string{"raidStart"}}}
+	if id := a.toast(Toast{Event: "raidStart", Category: ToastSound, Message: "toastAlert_raidStart"}); id != "" {
+		t.Fatal("an event turned off showed")
 	}
 	a.toast(Toast{Category: ToastError, Level: "error", Text: "boom"})
 	a.toast(Toast{Key: "history:x", Category: ToastWorking, Persistent: true, Message: "toastHistoryWorking"})
@@ -68,5 +68,20 @@ func TestToastActionNeedsItsButton(t *testing.T) {
 	a.BrowserToastClose(id)
 	if len(a.BrowserToastList()) != 0 {
 		t.Fatal("not closed")
+	}
+}
+
+// The settings keep the known events, each once, in their order; a kind of
+// notices from before the events stands for its events.
+func TestNotifyEventList(t *testing.T) {
+	got := notifyEventList([]string{"squad", "bogus", "quest", "quest", "raidStart"})
+	want := []string{"raidStart", "quest", "squadSelf", "squadMembers", "squadRelay"}
+	if len(got) != len(want) {
+		t.Fatalf("%v", got)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("%v", got)
+		}
 	}
 }

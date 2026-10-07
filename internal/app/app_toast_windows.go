@@ -3,6 +3,8 @@
 package app
 
 import (
+	"os"
+
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/w32"
 )
@@ -38,4 +40,15 @@ func toastPlace(window, main *application.WebviewWindow, width, height int) {
 		y := int(r.Bottom) - ht - gap
 		w32.SetWindowPos(h, 0, x, y, w, ht, w32.SWP_NOACTIVATE|w32.SWP_NOZORDER|w32.SWP_SHOWWINDOW)
 	})
+}
+
+// appInFront tells whether a window of MAYAK is the one in front (the main
+// window, the popup, a menu).
+func (a *App) appInFront() bool {
+	h := w32.GetForegroundWindow()
+	if h == 0 {
+		return false
+	}
+	_, pid := w32.GetWindowThreadProcessId(h)
+	return pid == os.Getpid()
 }

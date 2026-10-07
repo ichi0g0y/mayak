@@ -242,7 +242,7 @@ func (a *App) handleCoordinateScreenshot(ctx context.Context, sequence uint64, p
 		a.addLog("Info", "Raid", fmt.Sprintf("Map refreshed from latest EFT session: %s", latestMap))
 	}
 	a.addLog("Info", "Position", fmt.Sprintf("Detected x=%.2f y=%.2f z=%.2f rotation=%.2f map=%s", parsed.X, parsed.Y, parsed.Z, parsed.Rotation, settings.Map))
-	a.toast(Toast{Category: ToastRecognition, Level: "success", Message: "toastPositionRead", Params: map[string]string{"map": settings.Map}})
+	a.toast(Toast{Event: "position", Category: ToastRecognition, Level: "success", Message: "toastPositionRead", Params: map[string]string{"map": settings.Map}})
 	// The built-in browser brings its map view forward: the last detection
 	// decides the tab shown (a task's page after a task, the map after this).
 	if settings.Map != "" {
@@ -276,6 +276,6 @@ func (a *App) updateAnalysisError(sequence uint64, path string, err error) {
 	a.mu.Unlock()
 	a.emitEvent("status:update", status)
 	a.addLog("Error", "Recognition", err.Error())
-	a.toast(Toast{Category: ToastRecognition, Level: "error", Message: "toastReadFailed", Text: err.Error()})
+	a.toast(Toast{Event: "error", Category: ToastRecognition, Level: "error", Message: "toastReadFailed", Text: err.Error()})
 	a.notifyOnce(sound.Error, err.Error())
 }
