@@ -106,7 +106,11 @@ type App struct {
 	// profile (app_task_list.go); nil until read.
 	completable map[string]map[string]model.CompletableTask
 	// trackerOwners: each TarkovTracker token's user (its /token owner), asked once.
-	trackerOwners  sync.Map
+	trackerOwners sync.Map
+	// levelWarned is the level a notice says TarkovTracker went back from
+	// (checkTrackerLevelKept), 0 without one: a later read at it or above
+	// takes the notice away.
+	levelWarned    atomic.Int64
 	trackerStore   trackerstore.Store
 	trackerStoreMu sync.Mutex
 	// trackerJobs is the work a key assignment starts (a sync of the

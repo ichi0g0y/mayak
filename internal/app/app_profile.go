@@ -200,6 +200,14 @@ func (a *App) handleProfileScreenshot(ctx context.Context, sequence uint64, path
 	}
 }
 
+// levelKept takes away the notice that TarkovTracker's level went back once
+// it reads at the level the notice was about or above.
+func (a *App) levelKept(level int) {
+	if warned := a.levelWarned.Load(); warned > 0 && int64(level) >= warned && a.levelWarned.CompareAndSwap(warned, 0) {
+		a.endToast("trackerLevelOverride")
+	}
+}
+
 // agreeing counts the readings that are v.
 func agreeing(readings []int, v int) int {
 	n := 0
@@ -292,26 +300,40 @@ func (a *App) trackerRaiseLevel(ctx context.Context, settings config.Settings, l
 	a.addLog("Info", "TarkovTracker", fmt.Sprintf("Level set to %d (from %d) from the Overall screen", level, tr.PlayerLevel))
 	a.toast(Toast{Event: "trackerLevel", Category: ToastTracker, Level: "success", Message: "toastLevelSet", Params: map[string]string{"level": fmt.Sprint(level)}})
 	a.squadUpdateTracker()
-	time.AfterFunc(trackerLevelRecheck, func() { a.checkTrackerLevelKept(tr, token, level) })
+	time.AfterFunc(trackerLevelRecheck, func() { a.checkTrackerLevelKept(tr, token, level, false) })
 }
 
-// trackerLevelRecheck is how long after setting the level MAYAK reads it back:
-// a TarkovTracker page left open with its Automatic Level Calculation on
-// writes the level its XP gives within moments.
-var trackerLevelRecheck = 90 * time.Second
+// trackerLevelRecheck is how long after setting the level MAYAK reads it back,
+// and trackerLevelSettle how long after a lower reading it reads again: a
+// TarkovTracker page left open writes back what it holds, its Automatic Level
+// Calculation's level or, for a while, a save queued before MAYAK's (seen
+// 2026-10-07: 15 again after 90 s, 16 later, the page showing 16 all along).
+var (
+	trackerLevelRecheck = 90 * time.Second
+	trackerLevelSettle  = 4 * time.Minute
+)
 
-// checkTrackerLevelKept reads the level back once after MAYAK set it; lower,
-// TarkovTracker's own calculation took it back, and a notice says how to keep
-// the one from the Overall screen. It is not sent again: the two would only
-// take turns.
-func (a *App) checkTrackerLevelKept(tr model.TrackerStatus, token string, level int) {
+// checkTrackerLevelKept reads the level back after MAYAK set it; lower, it
+// reads again later (last false), and lower then too, a notice says so and how
+// to keep the level from the Overall screen. It is not sent again: the two
+// would only take turns.
+func (a *App) checkTrackerLevelKept(tr model.TrackerStatus, token string, level int, last bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	progress, err := a.trackerClient.Progress(ctx, token)
-	if err != nil || progress.Data.PlayerLevel >= level {
+	if err != nil {
 		return
 	}
 	now := progress.Data.PlayerLevel
+	if now >= level {
+		a.levelKept(now)
+		return
+	}
+	if !last {
+		a.addLog("Debug", "TarkovTracker", fmt.Sprintf("The level set to %d reads %d; reading again in %s", level, now, trackerLevelSettle))
+		time.AfterFunc(trackerLevelSettle, func() { a.checkTrackerLevelKept(tr, token, level, true) })
+		return
+	}
 	a.mu.Lock()
 	if a.status.Tracker.AccountID == tr.AccountID && a.status.Tracker.ProfileID == tr.ProfileID && a.status.Tracker.Mode == tr.Mode {
 		a.status.Tracker.PlayerLevel = now
@@ -319,7 +341,8 @@ func (a *App) checkTrackerLevelKept(tr model.TrackerStatus, token string, level 
 	status := a.status
 	a.mu.Unlock()
 	a.emitStatus(status)
-	a.addLog("Warn", "TarkovTracker", fmt.Sprintf("The level set to %d is %d again: TarkovTracker's Automatic Level Calculation takes it from the XP of the tasks", level, now))
+	a.addLog("Warn", "TarkovTracker", fmt.Sprintf("The level set to %d is %d again, minutes later: an open TarkovTracker page wrote it back (its Automatic Level Calculation, or what it held)", level, now))
+	a.levelWarned.Store(int64(level))
 	a.toast(Toast{
 		Key: "trackerLevelOverride", Event: "trackerLevel", Category: ToastTracker, Level: "warn", Persistent: true,
 		Message: "toastLevelOverridden", Params: map[string]string{"sent": fmt.Sprint(level), "level": fmt.Sprint(now)},

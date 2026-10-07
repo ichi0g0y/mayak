@@ -9,6 +9,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 ### Fixed
 
 - The Overall screen of the character sometimes had its level misread and not sent to TarkovTracker: the "1" of level 16 was dropped, 6 was read, and it did not match the 16 the experience makes. The text is now read with room around it, and when the readings differ, the level the experience makes is taken.
+- A notice could say the level sent from the Overall screen went back on TarkovTracker (16 to 15) while it showed 16 all along: a save from an open TarkovTracker page crossing MAYAK's write can put an older level in for a while. The level is now read again minutes later, and only a level still lower gets a notice, worded without blaming the Automatic Level Calculation; once TarkovTracker reads at the level again, the notice goes.
 
 ## v0.1.28 (2026-10-07)
 

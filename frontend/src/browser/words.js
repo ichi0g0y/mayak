@@ -604,7 +604,7 @@ export const words = {
     toastTaskSyncFailed: '{task} を TarkovTracker に送れませんでした: {error}',
     toastLevelSet: 'TarkovTracker のレベルを {level} にしました',
     toastLevelOverridden:
-      'TarkovTracker のレベルが {sent} から {level} に戻りました。TarkovTracker の「自動レベル計算」がタスクの XP からレベルを計算し直しています。Overall 画面のレベルを使うなら、TarkovTracker の設定（経験値とレベル）で自動レベル計算をオフにしてください。',
+      'TarkovTracker のレベルが {sent} から {level} に戻っています。開いている TarkovTracker のページが書き戻した可能性があります。TarkovTracker の「自動レベル計算」がオンなら、設定の「経験値とレベル」でオフ（手動）にしてください。オフなら、TarkovTracker のページを開き直してから、Overall 画面をもう一度撮ってください。',
     toastOpenTrackerExperience: 'TarkovTracker の設定を開く',
     toastHistorySynced: '{mode}: 過去ログから {n} 件を TarkovTracker に送りました',
     toastHistoryFailed: '{mode}: 過去ログを TarkovTracker に送れませんでした: {error}',
@@ -1412,7 +1412,7 @@ export const words = {
     toastTaskSyncFailed: 'Could not send {task} to TarkovTracker: {error}',
     toastLevelSet: 'TarkovTracker level set to {level}',
     toastLevelOverridden:
-      "TarkovTracker's level went back from {sent} to {level}: its Automatic Level Calculation works the level out from the XP of your tasks. To keep the level from the Overall screen, turn Automatic Level Calculation off in TarkovTracker's settings (Experience & Level).",
+      "TarkovTracker's level is back from {sent} to {level}: an open TarkovTracker page may have written it back. If its Automatic Level Calculation is on, turn it off (manual) under Experience & Level in its settings. If it is off, reload the TarkovTracker page and take the Overall screen again.",
     toastOpenTrackerExperience: 'Open TarkovTracker settings',
     toastHistorySynced: '{mode}: sent {n} from the past logs to TarkovTracker',
     toastHistoryFailed: '{mode}: could not send the past logs to TarkovTracker: {error}',
