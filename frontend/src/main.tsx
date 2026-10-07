@@ -1438,6 +1438,21 @@ function App() {
                     </div>
                   ))}
                 </div>
+                <div className="field notify-when">
+                  <Label>{t('notifyDesktopWhen')}</Label>
+                  <Select
+                    value={settings.desktopAlways ? 'always' : 'away'}
+                    onValueChange={(value) => patch({ desktopAlways: value === 'always' })}
+                  >
+                    <SelectTrigger aria-label={t('notifyDesktopWhen')}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="away">{t('notifyDesktopAway')}</SelectItem>
+                      <SelectItem value="always">{t('notifyDesktopAlways')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <p className="help">{t('notifyEventsHelp')}</p>
               </CardContent>
             </Card>

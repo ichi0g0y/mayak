@@ -566,3 +566,4 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .notify-none { color: var(--muted-foreground); }
 .notify-detail { margin: 0 8px 8px 28px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
 @media (max-width: 640px) { .notify-row { grid-template-columns: minmax(0, 1fr) repeat(3, 56px); } }
+.notify-when { margin-top: 14px; max-width: 360px; }

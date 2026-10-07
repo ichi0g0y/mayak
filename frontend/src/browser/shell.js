@@ -656,7 +656,16 @@ function browserSettings(key) {
           (event) =>
             `<span>${esc(t('notifyEvent_' + event))}</span><input type="checkbox" data-action="notifyChannel" data-id="${event}" data-channel="toast" aria-label="${esc(t('notifyEvent_' + event) + ': ' + t('notifyToast'))}" ${(state.toastsOff || []).includes(event) ? '' : 'checked'}><input type="checkbox" data-action="notifyChannel" data-id="${event}" data-channel="desktop" aria-label="${esc(t('notifyEvent_' + event) + ': ' + t('notifyDesktop'))}" ${(state.desktopOn || []).includes(event) ? 'checked' : ''}>`,
         )
-        .join('')}</div><p class="hint">${esc(t('notificationsSettingsHelp'))}</p></section>`
+        .join('')}</div>${select(
+        'desktopAlways',
+        t('notifyDesktopWhen'),
+        [
+          ['away', t('notifyDesktopAway')],
+          ['always', t('notifyDesktopAlways')],
+        ],
+        state.desktopAlways ? 'always' : 'away',
+        'notifyWhen',
+      )}<p class="hint">${esc(t('notificationsSettingsHelp'))}</p></section>`
     case 'adblock':
       return `<section class="panel"><label class="check"><input type="checkbox" data-action="adblock" ${state.adblock ? 'checked' : ''}>${t('adblockEnable')}</label><p class="hint">${t('adblockHelp')}</p></section>`
     default:
@@ -1124,7 +1133,8 @@ document.addEventListener('click', async (event) => {
 document.addEventListener('change', (event) => {
   const input = event.target
   if (input.closest('#bookmark-form') && editingBookmark) editingBookmark[input.name] = input.value
-  if (input.dataset.scope) void action(input.dataset.scope, { [input.dataset.key]: input.value })
+  if (input.dataset.scope === 'notifyWhen') void action('notifyWhen', input.value === 'always')
+  else if (input.dataset.scope) void action(input.dataset.scope, { [input.dataset.key]: input.value })
   else if (input.id === 'task-site') void action('site', input.value)
   else if (input.dataset.action === 'adblock') void action('preferences', { adblock: input.checked })
   if (input.dataset.action === 'translateWiki') void action('preferences', { translateWiki: input.checked })

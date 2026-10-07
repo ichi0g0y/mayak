@@ -78,7 +78,8 @@ let updateStatus = null,
 // turned off in the settings (config ToastsOff, this PC's Go side).
 let toastHistory = [],
   toastsOff = [],
-  desktopOn = []
+  desktopOn = [],
+  desktopAlways = false
 function updateBarVisible() {
   const u = updateStatus
   return !!(u && ['available', 'downloading', 'ready'].includes(u.state) && u.latest && u.latest !== updateDismissed)
@@ -224,6 +225,7 @@ const snapshot = () => ({
   notifications: toastHistory,
   toastsOff,
   desktopOn,
+  desktopAlways,
   goonReport,
   bosses: bosses && { ...bosses, current: (state.connection.mode === 'client' ? remoteHost?.map : host?.map) || '' },
   screenshots: shotsAvailable()
@@ -1334,6 +1336,7 @@ const ready = (async () => {
     const s = await go.GetSettings()
     toastsOff = s.toastsOff || []
     desktopOn = s.desktopOn || []
+    desktopAlways = !!s.desktopAlways
   } catch {}
   go.GetUpdateStatus?.()
     .then(updateChanged)
@@ -2264,6 +2267,14 @@ async function performOne(type, data) {
       await go.BrowserToastHistoryClear()
       toastHistory = []
       return snapshot()
+    // Desktop notifications also while MAYAK is in front, or only while not.
+    case 'notifyWhen': {
+      const s = await go.GetSettings()
+      s.desktopAlways = data === true
+      await go.PersistSettings(s)
+      desktopAlways = s.desktopAlways
+      return snapshot()
+    }
     // A notification event shown as a toast or as a desktop notification, or
     // not (a Client's Notifications section; the Host's settings page has its own).
     case 'notifyChannel': {

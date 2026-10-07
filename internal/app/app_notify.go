@@ -52,9 +52,10 @@ func notifyEventList(list []string) []string {
 }
 
 // notifyOn tells whether an event shows as a toast and as a desktop
-// notification, by the settings.
-func (a *App) notifyOn(event string) (toast, desktop bool) {
+// notification, by the settings; always, whether the desktop one shows also
+// while MAYAK is in front.
+func (a *App) notifyOn(event string) (toast, desktop, always bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return !slices.Contains(a.settings.ToastsOff, event), slices.Contains(a.settings.DesktopOn, event)
+	return !slices.Contains(a.settings.ToastsOff, event), slices.Contains(a.settings.DesktopOn, event), a.settings.DesktopAlways
 }

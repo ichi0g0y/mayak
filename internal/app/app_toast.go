@@ -93,13 +93,14 @@ type toastCenter struct {
 }
 
 // toast shows a notice and keeps it in the history, as its event's settings
-// say: a toast, a desktop notification of the OS (only while MAYAK is not in
-// front), both or neither.
+// say: a toast, a desktop notification of the OS (while MAYAK is not in
+// front, or always: config DesktopAlways), both or neither.
 func (a *App) toast(t Toast) string {
 	show, desktop := true, false
 	if t.Event != "" {
-		show, desktop = a.notifyOn(t.Event)
-		desktop = desktop && !a.appInFront()
+		var always bool
+		show, desktop, always = a.notifyOn(t.Event)
+		desktop = desktop && (always || !a.appInFront())
 	}
 	if !show && !desktop {
 		return ""

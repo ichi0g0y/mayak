@@ -24,8 +24,12 @@ type Settings struct {
 	// ToastsOff are the notification events (app.notifyEvents) not shown as
 	// notices over the pages; DesktopOn the ones also shown as desktop
 	// notifications of the OS.
-	ToastsOff           []string       `json:"toastsOff"`
-	DesktopOn           []string       `json:"desktopOn"`
+	ToastsOff []string `json:"toastsOff"`
+	DesktopOn []string `json:"desktopOn"`
+	// DesktopAlways shows the desktop notifications also while MAYAK is in
+	// front (a second screen it is on but not looked at); off, only while it
+	// is not.
+	DesktopAlways       bool           `json:"desktopAlways"`
 	Language            string         `json:"language"`
 	ScreenshotDirectory string         `json:"screenshotDirectory"`
 	LogsDirectory       string         `json:"logsDirectory"`

@@ -56,6 +56,13 @@ export class Settings {
      */
     "toastsOff": string[];
     "desktopOn": string[];
+
+    /**
+     * DesktopAlways shows the desktop notifications also while MAYAK is in
+     * front (a second screen it is on but not looked at); off, only while it
+     * is not.
+     */
+    "desktopAlways": boolean;
     "language": string;
     "screenshotDirectory": string;
     "logsDirectory": string;
@@ -191,6 +198,9 @@ export class Settings {
         }
         if (!("desktopOn" in $$source)) {
             this["desktopOn"] = [];
+        }
+        if (!("desktopAlways" in $$source)) {
+            this["desktopAlways"] = false;
         }
         if (!("language" in $$source)) {
             this["language"] = "";
@@ -398,10 +408,10 @@ export class Settings {
         const $$createField2_0 = $$createType0;
         const $$createField3_0 = $$createType0;
         const $$createField4_0 = $$createType0;
-        const $$createField9_0 = $$createType2;
-        const $$createField36_0 = $$createType3;
-        const $$createField37_0 = $$createType4;
+        const $$createField10_0 = $$createType2;
+        const $$createField37_0 = $$createType3;
         const $$createField38_0 = $$createType4;
+        const $$createField39_0 = $$createType4;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("questSites" in $$parsedSource) {
             $$parsedSource["questSites"] = $$createField2_0($$parsedSource["questSites"]);
@@ -413,16 +423,16 @@ export class Settings {
             $$parsedSource["desktopOn"] = $$createField4_0($$parsedSource["desktopOn"]);
         }
         if ("remoteTargets" in $$parsedSource) {
-            $$parsedSource["remoteTargets"] = $$createField9_0($$parsedSource["remoteTargets"]);
+            $$parsedSource["remoteTargets"] = $$createField10_0($$parsedSource["remoteTargets"]);
         }
         if ("soundVoices" in $$parsedSource) {
-            $$parsedSource["soundVoices"] = $$createField36_0($$parsedSource["soundVoices"]);
+            $$parsedSource["soundVoices"] = $$createField37_0($$parsedSource["soundVoices"]);
         }
         if ("soundVolumeOffsets" in $$parsedSource) {
-            $$parsedSource["soundVolumeOffsets"] = $$createField37_0($$parsedSource["soundVolumeOffsets"]);
+            $$parsedSource["soundVolumeOffsets"] = $$createField38_0($$parsedSource["soundVolumeOffsets"]);
         }
         if ("soundDelays" in $$parsedSource) {
-            $$parsedSource["soundDelays"] = $$createField38_0($$parsedSource["soundDelays"]);
+            $$parsedSource["soundDelays"] = $$createField39_0($$parsedSource["soundDelays"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }

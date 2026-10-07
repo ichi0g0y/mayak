@@ -9,7 +9,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 ### New
 
 - Notices (toasts) show at the bottom middle of the window: what was sent to TarkovTracker, the alerts in words, what a screenshot was read as, the squad coming and going, updates and errors. They show over the pages too and take no focus from the game or the page. Errors, updates and the like stay until closed; the others go after a few seconds. Each kind can be turned off under Notifications in the settings, and the bell at the bottom of the sidebar shows their history (the last 200). The update and error strips along the bottom are now these notices.
-- The Notifications settings are one table of the events (match found, raid started, task read, sent to TarkovTracker, the squad…): each can sound, show as a toast and show as a desktop notification of Windows. The "All" row turns a column on or off at once, and a row opens to set its voice, volume and delay. Desktop notifications show only while MAYAK is not in front.
+- The Notifications settings are one table of the events (match found, raid started, task read, sent to TarkovTracker, the squad…): each can sound, show as a toast and show as a desktop notification of Windows. The "All" row turns a column on or off at once, and a row opens to set its voice, volume and delay. Desktop notifications show only while MAYAK is not in front by default, or always.
 
 ### Improved
 

@@ -11,6 +11,8 @@ export type Settings = {
   // and those also shown as desktop notifications of the OS.
   toastsOff?: string[]
   desktopOn?: string[]
+  // Desktop notifications also while MAYAK is in front.
+  desktopAlways?: boolean
   language: Language
   screenshotDirectory: string
   logsDirectory: string
