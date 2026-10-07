@@ -304,6 +304,21 @@ func TestEventParserTransitIsNoReturn(t *testing.T) {
 	if got := parser.Due(time.Date(2026, 10, 4, 7, 57, 40, 0, time.Local)); len(got) != 0 {
 		t.Fatalf("back after the transit failed: %v", got)
 	}
+	// EFT 1.2.0.0 says it otherwise (2026-10-07): a PvE hop and an online
+	// reconnect.
+	for _, transit := range []string{
+		"PVE transit hop local:True location:Shoreline side:Pmc onlineToggle:False cachedMode:Local",
+		"Transit reconnect status:Busy raidMode:Online location:TarkovStreets settingsLocal:False",
+	} {
+		_ = parser.Parse(line("07:58:00.000", "GameStarting:64.61(0)") + line("07:58:00.000", "GameStarted:64.61(0)"))
+		if got := parser.Parse(line("07:59:00.000", "CompleteSelectedProfile ProfileId:abc AccountId:123")); len(got) != 1 || got[0].Kind != RaidExited {
+			t.Fatalf("raid end before %q: %v", transit, got)
+		}
+		_ = parser.Parse(line("07:59:03.000", transit))
+		if got := parser.Due(time.Date(2026, 10, 4, 8, 0, 0, 0, time.Local)); len(got) != 0 {
+			t.Fatalf("%q: %v", transit, got)
+		}
+	}
 	// Back at the menu from a matching aborted, with no raid: nothing.
 	if got := parser.Parse(line("08:10:00.000", "MatchingCompleted:3 real:4 diff:1") + line("08:10:20.000", "CompleteSelectedProfile ProfileId:abc AccountId:123")); len(got) != 1 || got[0].Kind != MatchFound {
 		t.Fatalf("matching aborted: %v", got)

@@ -364,7 +364,7 @@ func (p *EventParser) Parse(text string) []Event {
 		// A transit: the profile loaded just before was not a return to the
 		// menu. If the trip fails, the game drops back to the menu (and on
 		// 2026-10-04 crashed right after): that is no welcome back either.
-		case strings.Contains(lower, "|application|transit matching type:"):
+		case isTransitLine(lower):
 			p.held = nil
 			p.atMenu = false
 			p.fromRaid = false
@@ -394,6 +394,18 @@ func (p *EventParser) Parse(text string) []Event {
 		}
 	}
 	return events
+}
+
+// isTransitLine tells a line saying the trip goes on to another map: before
+// EFT 1.2.0.0 "Transit matching type:"; since, "PVE transit hop" (PvE) or
+// "Transit reconnect status:" (online), a few seconds after the profile loads.
+func isTransitLine(lower string) bool {
+	for _, marker := range []string{"|application|transit matching type:", "|application|pve transit hop ", "|application|transit reconnect status:"} {
+		if strings.Contains(lower, marker) {
+			return true
+		}
+	}
+	return false
 }
 
 // release puts a held return to the menu before what comes after it.
