@@ -13,9 +13,6 @@ import (
 // the live sync sent that to the progress before the reset, which the reset
 // dropped.
 
-// trackerPrestigeURL is TarkovTracker's settings page, with its Prestige card.
-const trackerPrestigeURL = "https://tarkovtracker.org/settings"
-
 // prestigeRefreshEvery is how often the progress of a profile waiting for its
 // TarkovTracker reset is read again, to see the reset (1,000 reads a day are
 // free).
@@ -88,9 +85,6 @@ func (a *App) ConfirmTrackerPrestigeReset(accountID, profileID, mode string) err
 	go a.syncAssignedHistory(accountID, profileID, mode)
 	return nil
 }
-
-// TrackerPrestigeURL is where TarkovTracker is reset after a Prestige.
-func (a *App) TrackerPrestigeURL() string { return trackerPrestigeURL }
 
 func (a *App) clearPrestigePending(accountID, profileID, mode string) bool {
 	a.trackerStoreMu.Lock()

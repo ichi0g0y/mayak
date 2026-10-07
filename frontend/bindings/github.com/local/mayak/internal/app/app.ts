@@ -907,13 +907,6 @@ export function TrackerDismissTasks(ids: string[]): $CancellablePromise<void> {
 }
 
 /**
- * TrackerPrestigeURL is where TarkovTracker is reset after a Prestige.
- */
-export function TrackerPrestigeURL(): $CancellablePromise<string> {
-    return $Call.ByID(2048265720);
-}
-
-/**
  * VoicePacks lists the built-in voices the notifications can speak with.
  */
 export function VoicePacks(): $CancellablePromise<sound$0.VoicePack[]> {

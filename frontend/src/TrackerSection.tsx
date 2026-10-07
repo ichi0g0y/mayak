@@ -30,6 +30,7 @@ type Props = {
   setBusy: (busy: boolean) => void
   setNotice: (notice: string) => void
   setNoticeError: (error: boolean) => void
+  setWorking: (working: string) => void
   trackerModeLabel: (mode: string) => string
   trackerToken: string
   setTrackerToken: Dispatch<SetStateAction<string>>
@@ -47,6 +48,7 @@ export function TrackerSection({
   setBusy,
   setNotice,
   setNoticeError,
+  setWorking,
   trackerModeLabel,
   trackerToken,
   setTrackerToken,
@@ -178,7 +180,7 @@ export function TrackerSection({
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => BrowserOpenURL('https://tarkovtracker.org/settings')}
+                onClick={() => BrowserOpenURL('https://tarkovtracker.org/settings#prestige')}
               >
                 <ExternalLink />
                 {t('trackerPrestigeOpen')}
@@ -231,6 +233,7 @@ export function TrackerSection({
     setBusy(true)
     setNotice('')
     setNoticeError(false)
+    setWorking(t('trackerHistoryWorking').replace('{mode}', trackerModeLabel(profile.mode)))
     try {
       const sent = await SyncTrackerProfileHistory(profile.accountId, profile.profileId, profile.mode)
       setNotice(
@@ -242,6 +245,7 @@ export function TrackerSection({
       )
       setNoticeError(true)
     } finally {
+      setWorking('')
       setBusy(false)
     }
   }

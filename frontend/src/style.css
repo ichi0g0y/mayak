@@ -79,7 +79,7 @@ button, input, select { font: inherit; }
 .badge.outline { background: transparent; color: var(--muted-foreground); }
 .connection { height: 36px; flex: 0 0 auto; padding-inline: 13px; border-radius: 999px; text-transform: uppercase; }
 .connection.connected { color: var(--success); border-color: var(--border-strong); background: var(--bg); }
-.connection.error { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--bg)); background: color-mix(in srgb, var(--danger) 10%, var(--bg)); }
+.connection.error { color: var(--danger); border-color: color-mix(in srgb, var(--warn) 55%, var(--bg)); background: color-mix(in srgb, var(--danger) 10%, var(--bg)); }
 .monitoring-button { height: 36px; flex: 0 0 auto; }
 
 .tabs-list {
@@ -455,6 +455,7 @@ select option { background: var(--raised); color: var(--text); }
 .toast svg { width: 16px; height: 16px; flex: none; }
 .toast.success > svg { color: var(--success); }
 .toast.error { border-color: color-mix(in srgb, var(--danger) 55%, var(--border-strong)); }
+.toast.working > svg { color: var(--muted-foreground); }
 .toast.warn { border-color: color-mix(in srgb, var(--warn) 55%, var(--border-strong)); }
 .toast-close { display: grid; place-items: center; width: 26px; height: 26px; flex: none; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--muted-foreground); cursor: pointer; }
 .toast-close:hover { background: var(--selected); color: var(--foreground); }
@@ -542,7 +543,7 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
    it waits (never done, or EFT running). */
 .tracker-profile-tools .history-needed { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
 .tracker-profile-tools .history-needed:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); }
-.tracker-prestige-note { grid-column: 1 / -1; display: grid; gap: 8px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--danger) 8%, transparent); font-size: 12.5px; line-height: 1.6; }
+.tracker-prestige-note { grid-column: 1 / -1; display: grid; gap: 8px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--warn) 10%, transparent); font-size: 12.5px; line-height: 1.6; }
 .tracker-prestige-note p { margin: 0; }
 .tracker-prestige-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .tracker-history-note { grid-column: 1 / -1; margin: -4px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted-foreground); }

@@ -188,6 +188,7 @@ const messages = {
     trackerSyncPastLogsHelp:
       'このプロフィールのEFTログを最初のプレイから読み、記録されたタスクの完了・失敗をTarkovTrackerへ送ります。キーを割り当てたときにも自動で行います。MAYAKを起動していなかった間にプレイした分を取り込むときに押してください。',
     trackerHistorySynced: '{mode}: EFTの過去ログから {n} 件のタスク状態をTarkovTrackerへ同期しました',
+    trackerHistoryWorking: '{mode}: EFT の過去ログを確認しています。長く遊んだプロフィールは 1 分ほどかかります',
     trackerHistoryFrom: 'この日以降のログだけ',
     trackerHistoryFromHelp:
       'プレステージすると同じプロフィールの進捗がリセットされるので、過去ログの再チェック（キーを割り当てたときの自動の同期も）は、EFT のログに残っている最後のプレステージより前のタスクを送りません。別の PC でプレステージしたときなど、ログにプレステージが残っていない場合は、ここにその日を入れてください。この日より前のログを読まなくなります。空欄なら、このプロフィールの最初のプレイから読みます。',
@@ -567,6 +568,7 @@ const messages = {
     trackerSyncPastLogsHelp:
       "Reads this profile's EFT logs from its first session and sends the task completions and failures they recorded to TarkovTracker. It also runs by itself when a key is assigned. Press it to pick up play from while MAYAK was not running.",
     trackerHistorySynced: '{mode}: synced {n} task states from the past EFT logs to TarkovTracker.',
+    trackerHistoryWorking: '{mode}: checking the past EFT logs. A long-played profile takes about a minute.',
     trackerHistoryFrom: 'Logs from',
     trackerHistoryFromHelp:
       "A Prestige resets the same profile's progress, so rechecking past logs (and the sync when a key is assigned) skips the tasks before the last Prestige the EFT logs hold. When the logs hold none (it was taken on another PC), enter its day here: the logs before it are skipped. Empty: from the profile's first session.",

@@ -87,6 +87,9 @@ function App() {
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>(emptyUpdate)
   const [notice, setNotice] = useState('')
   const [noticeError, setNoticeError] = useState(false)
+  // Work that takes a while (a recheck of past logs): its toast stays until
+  // it ends.
+  const [working, setWorking] = useState('')
   const [remoteTestResult, setRemoteTestResult] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
   // The Remote IDs shown instead of dots (by row; -1 is the in-app browser's).
   const [shownRemoteIds, setShownRemoteIds] = useState<Set<number>>(() => new Set())
@@ -153,25 +156,43 @@ function App() {
         unsubscribers.push(EventsOn('log:clear', () => setLogs([])))
         // A key assignment syncs the profile's past logs (syncAssignedHistory).
         unsubscribers.push(
-          EventsOn('tracker:history', (result: { mode: string; sent: number; error?: string; deferred?: boolean }) => {
-            const language = settingsRef.current.language
-            const mode = translate(
-              language,
-              result.mode === 'pve' ? 'trackerPVE' : result.mode === 'seasonal' ? 'trackerSeasonal' : 'trackerPVP',
-            )
-            if (result.deferred) {
-              setNotice(`${mode}: ${translate(language, 'trackerHistoryDeferred')}`)
-              setNoticeError(false)
-            } else if (result.error) {
-              setNotice(`${mode}: ${translate(language, 'trackerHistoryFailed')} ${result.error}`)
-              setNoticeError(true)
-            } else {
-              setNotice(
-                translate(language, 'trackerHistorySynced').replace('{mode}', mode).replace('{n}', String(result.sent)),
+          EventsOn(
+            'tracker:history',
+            (result: {
+              mode: string
+              sent: number
+              error?: string
+              deferred?: boolean
+              running?: boolean
+              idle?: boolean
+            }) => {
+              const language = settingsRef.current.language
+              const mode = translate(
+                language,
+                result.mode === 'pve' ? 'trackerPVE' : result.mode === 'seasonal' ? 'trackerSeasonal' : 'trackerPVP',
               )
-              setNoticeError(false)
-            }
-          }),
+              if (result.running) {
+                setWorking(translate(language, 'trackerHistoryWorking').replace('{mode}', mode))
+                return
+              }
+              setWorking('')
+              if (result.idle) return
+              if (result.deferred) {
+                setNotice(`${mode}: ${translate(language, 'trackerHistoryDeferred')}`)
+                setNoticeError(false)
+              } else if (result.error) {
+                setNotice(`${mode}: ${translate(language, 'trackerHistoryFailed')} ${result.error}`)
+                setNoticeError(true)
+              } else {
+                setNotice(
+                  translate(language, 'trackerHistorySynced')
+                    .replace('{mode}', mode)
+                    .replace('{n}', String(result.sent)),
+                )
+                setNoticeError(false)
+              }
+            },
+          ),
         )
         unsubscribers.push(
           EventsOn('update:status', (next: UpdateStatus) => setUpdateStatus({ ...emptyUpdate, ...next })),
@@ -630,6 +651,12 @@ function App() {
   // successes fade out, failures stay until dismissed or retried.
   const toasts = (
     <div className="toast-stack" aria-live="polite">
+      {working && (
+        <div className="toast working" role="status">
+          <RefreshCw className="spin" />
+          <span>{working}</span>
+        </div>
+      )}
       {saveState === 'saved' && (
         <div className="toast success" role="status">
           <Check />
@@ -1018,6 +1045,7 @@ function App() {
               setBusy={setBusy}
               setNotice={setNotice}
               setNoticeError={setNoticeError}
+              setWorking={setWorking}
               trackerModeLabel={trackerModeLabel}
               trackerToken={trackerToken}
               setTrackerToken={setTrackerToken}

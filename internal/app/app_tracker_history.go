@@ -15,8 +15,9 @@ import (
 
 // syncAssignedHistory sends a profile's past logs once a key is assigned to
 // it, so the assignment alone brings TarkovTracker up to date: the live sync
-// only follows the logs while MAYAK runs. The settings page shows the result
-// ("tracker:history"); logs with nothing to send report nothing.
+// only follows the logs while MAYAK runs. The settings page shows it running
+// and its result ("tracker:history": running, then sent, error, deferred or
+// idle); logs with nothing to send report nothing but the end.
 func (a *App) syncAssignedHistory(accountID, profileID, mode string) {
 	a.mu.RLock()
 	enabled := a.settings.TarkovTrackerEnabled
@@ -30,9 +31,13 @@ func (a *App) syncAssignedHistory(accountID, profileID, mode string) {
 		a.emitEvent("tracker:history", map[string]any{"mode": mode, "profileId": profileID, "deferred": true})
 		return
 	}
+	// Reading every session takes a while (a minute for a long-played
+	// profile): the settings page says so meanwhile.
+	a.emitEvent("tracker:history", map[string]any{"mode": mode, "profileId": profileID, "running": true})
 	sent, err := a.SyncTrackerProfileHistory(accountID, profileID, mode)
 	if errors.Is(err, errNoTrackerHistory) {
 		a.markHistorySynced(accountID, profileID, mode)
+		a.emitEvent("tracker:history", map[string]any{"mode": mode, "profileId": profileID, "idle": true})
 		return
 	}
 	if errors.Is(err, errGameRunning) {
