@@ -8,7 +8,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### Fixed
 
-- Since 1.2.0.0, a screenshot of the character screen's Tasks went unrecognized, in a raid and out of one. New tabs moved the Tasks tab, and MAYAK did not see a task screen and took it for a position screenshot. The task's name is also cut around its line of letters now, so the taller rows of the new screen do not cut it off.
+- A screenshot of the character screen's Tasks sometimes went unrecognized (PvE since 1.2.0.0 among others; in a raid and out of one). In a mode with the Prestige tab the Tasks tab sits elsewhere, and MAYAK did not see a task screen and took it for a position screenshot. It now also looks at the Side and Operational switch under the tabs, so the screen is recognized whatever mode or tabs. The task's name is also cut around its line of letters, so taller rows do not cut it off.
 
 ## v0.1.27 (2026-10-07)
 

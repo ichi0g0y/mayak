@@ -24,10 +24,13 @@ type Preset struct {
 	// when a story chapter is shown; StoryTitle is the chapter's name under
 	// the "Chapter" label, at a fixed place (the chapter page has no list).
 	StoryAnchor, StoryTitle Rect
-	MinScore                float64
+	// SearchBox is the Tasks screen's search box, right of the sub-tabs;
+	// SubTabGap the empty bar between them.
+	SearchBox, SubTabGap Rect
+	MinScore             float64
 }
 
-var Preset2560 = Preset{Width: 2560, Height: 1440, Anchor: Rect{150, 18, 240, 55}, CharacterAnchor: Rect{1430, 5, 300, 60}, RaidCharacterAnchor: Rect{1170, 5, 260, 60}, TasksTabs: []TasksTab{{Tab: Rect{1540, 5, 240, 60}, Neighbor: Rect{1290, 5, 200, 60}}, {Tab: Rect{1295, 5, 130, 60}, Neighbor: Rect{1040, 5, 200, 60}}}, LeftPanel: Rect{10, 410, 740, 950}, RightPanel: Rect{770, 410, 1750, 950}, Title: Rect{810, 315, 720, 85}, StoryAnchor: Rect{28, 66, 228, 52}, StoryTitle: Rect{224, 211, 620, 70}, MinScore: .42}
+var Preset2560 = Preset{Width: 2560, Height: 1440, Anchor: Rect{150, 18, 240, 55}, CharacterAnchor: Rect{1430, 5, 300, 60}, RaidCharacterAnchor: Rect{1170, 5, 260, 60}, TasksTabs: []TasksTab{{Tab: Rect{1540, 5, 240, 60}, Neighbor: Rect{1290, 5, 200, 60}}, {Tab: Rect{1295, 5, 130, 60}, Neighbor: Rect{1040, 5, 200, 60}}}, LeftPanel: Rect{10, 410, 740, 950}, RightPanel: Rect{770, 410, 1750, 950}, Title: Rect{810, 315, 720, 85}, StoryAnchor: Rect{28, 66, 228, 52}, StoryTitle: Rect{224, 211, 620, 70}, SearchBox: Rect{1250, 74, 400, 30}, SubTabGap: Rect{870, 74, 300, 30}, MinScore: .42}
 
 // storyTabBright is the share of bright pixels the lit "Story" tab has at
 // least (.87 measured; the "Side" list lit next to it gives it .06–.14).
@@ -42,6 +45,78 @@ const (
 	storyTabEdges     = .08
 	storyCharacterTab = .2
 )
+
+// subTabStoryEnd is where a run starting further left is the Story sub-tab
+// (it starts at about 30; Side at 220 in English, 290 in Japanese).
+const subTabStoryEnd = 150
+
+// searchBoxDark and subTabGapDark are the shares of dark pixels the Tasks
+// screen's search box and the bar before it have at least (.81 and 1 seen);
+// a sky behind trees has fewer.
+const (
+	searchBoxDark = .7
+	subTabGapDark = .9
+)
+
+// subTabTraderBright is the trader screen's anchor brightness under which the
+// sub-tabs count: a trader's screen has its portraits where they would be.
+const subTabTraderBright = .3
+
+// subTabLit finds the Tasks screen's lit Side or Operational sub-tab (their
+// places differ by language) in the row under the tabs: one run of mostly
+// bright columns as wide as a button, not at Story's place first in the row,
+// the rest of the row dark. It returns the run's brightness. A bright sky
+// lights more of it.
+func subTabLit(px imaging.Pixels) (float64, bool) {
+	const x0, x1, y0, y1 = 20, 820, 72, 108
+	lit := make([]bool, 0, (x1-x0)/2)
+	litCount := 0
+	for x := x0; x < x1; x += 2 {
+		bright, total := 0, 0
+		for y := y0; y < y1; y += 4 {
+			if px.Luma(x, y) > 155 {
+				bright++
+			}
+			total++
+		}
+		on := float64(bright)/float64(total) >= .6
+		lit = append(lit, on)
+		if on {
+			litCount++
+		}
+	}
+	// Runs of lit columns, gaps of a few letters' width closed.
+	type run struct{ start, end, count int }
+	var runs []run
+	for i := 0; i < len(lit); i++ {
+		if !lit[i] {
+			continue
+		}
+		r := run{start: i, end: i, count: 1}
+		for j := i + 1; j < len(lit) && j-r.end <= 8; j++ {
+			if lit[j] {
+				r.end, r.count = j, r.count+1
+			}
+		}
+		runs = append(runs, r)
+		i = r.end
+	}
+	var wide []run
+	for _, r := range runs {
+		if width := (r.end - r.start + 1) * 2; width >= 100 {
+			wide = append(wide, r)
+		}
+	}
+	if len(wide) != 1 {
+		return 0, false
+	}
+	r := wide[0]
+	width := (r.end - r.start + 1) * 2
+	if width > 300 || x0+r.start*2 < subTabStoryEnd || litCount-r.count > len(lit)/10 {
+		return 0, false
+	}
+	return float64(r.count) / float64(r.end-r.start+1), true
+}
 
 // TasksTab is where the Tasks tab is lit and, Neighbor, the Map tab left of
 // it, dark then; a raid's bright sky lights both.
@@ -112,6 +187,18 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 	if raidCharacterScore > characterScore {
 		characterScore = raidCharacterScore
 		characterTabBright = raidCharacterAnchor.bright
+	}
+	// Story, Side and Operational sit under the tabs whatever tabs a mode or
+	// version has: Side or Operational lit, with the bar dark beside them and
+	// the search box dark, says the Tasks screen too (subTabLit). Story is left to the tabs
+	// above: a raid's inventory can light its place.
+	if anchor.bright < subTabTraderBright && stats(px, p.SearchBox).dark >= searchBoxDark && stats(px, p.SubTabGap).dark >= subTabGapDark {
+		if lit, ok := subTabLit(px); ok {
+			if tabScore := imaging.Clamp01(lit*.9 + (left.edges+right.edges)*.8 + (left.dark+right.dark)*.05); tabScore > characterScore {
+				characterScore = tabScore
+				characterTabBright = lit
+			}
+		}
 	}
 	for _, tab := range p.TasksTabs {
 		lit := stats(px, tab.Tab)
