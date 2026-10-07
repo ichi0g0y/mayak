@@ -1414,9 +1414,10 @@ body[data-sidebar=collapsed] .live-map-entry .live-map-icon,[data-layout=horizon
 .connection-only{margin:0 0 12px;font-weight:500}
 
 /* The toast window (toast.html, app_toast.go): the notices stacked at the
-   bottom middle of the main window, the window as high as they are. */
-body.toast-page{margin:0;background:var(--bg);overflow:hidden}
-.toast-list{display:flex;flex-direction:column;border:1px solid var(--border-strong);border-radius:10px;overflow:hidden;background:var(--sidebar,var(--bg))}
+   bottom middle of the main window, the window as high as they are. They
+   fill it, as the menu window's do: Windows rounds the window's corners. */
+body.toast-page{margin:0;background:var(--sidebar,var(--bg));overflow:hidden}
+.toast-list{display:flex;flex-direction:column;border:1px solid var(--border-strong);border-radius:0;overflow:hidden;background:var(--sidebar,var(--bg))}
 .toast-row{display:flex;align-items:flex-start;gap:10px;padding:10px 8px 10px 12px;font-size:13px;line-height:1.5;color:var(--text)}
 .toast-row+.toast-row{border-top:1px solid var(--border)}
 .toast-icon{width:16px;height:16px;flex:none;margin-top:2px;color:var(--muted)}
