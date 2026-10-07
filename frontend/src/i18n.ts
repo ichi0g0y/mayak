@@ -242,6 +242,19 @@ const messages = {
     debugMode: 'デバッグモード',
     debugHelp: 'cropプレビューと詳細な解析結果を表示',
     soundsTitle: '通知音',
+    toastsTitle: 'ページの上の通知',
+    toastsDescription:
+      '画面の下の中央に、文字の通知（トースト）を出します。オフにした種類は出さず、履歴にも残しません。エラーとアップデートは常に出します。履歴はブラウザのサイドバーの下のベルのボタンから見られます。',
+    toastKind_tracker: 'TarkovTracker への送信',
+    toastKind_sound: '音声の通知',
+    toastKind_recognition: 'スクリーンショットの認識',
+    toastKind_squad: 'スクワッド',
+    toastKindHelp_tracker:
+      'タスクの完了・失敗やレベルを TarkovTracker に送ったとき、送れなかったとき、プレステージのあとのお願い。',
+    toastKindHelp_sound:
+      'マッチング、レイド開始、Run-Through などの音声の通知を、文字でも出します（音を切っていても出ます）。',
+    toastKindHelp_recognition: 'タスク・アイテム・位置・Overall 画面のスクリーンショットを読んだ結果。',
+    toastKindHelp_squad: '仲間の参加・退出と、中継サーバーとの接続。',
     soundsDescription: '短く控えめなローカル効果音',
     soundsEnabled: '通知音を使用',
     soundsHelp: '画面通知や外部プレイヤーは使用しません',
@@ -622,6 +635,18 @@ const messages = {
     debugMode: 'Debug mode',
     debugHelp: 'Show crop preview and detailed analysis',
     soundsTitle: 'Sounds',
+    toastsTitle: 'Notices over the pages',
+    toastsDescription:
+      'Notices in words (toasts) at the bottom middle of the window. A kind turned off neither shows nor goes to the history; errors and updates always show. The history opens from the bell at the bottom of the browser sidebar.',
+    toastKind_tracker: 'Sent to TarkovTracker',
+    toastKind_sound: 'Alerts',
+    toastKind_recognition: 'Screenshots read',
+    toastKind_squad: 'Squad',
+    toastKindHelp_tracker:
+      'Tasks completed or failed and the level sent to TarkovTracker, what could not be sent, and what to do after a Prestige.',
+    toastKindHelp_sound: 'The alerts (match found, raid started, Run-Through…) in words too, also with the sound off.',
+    toastKindHelp_recognition: 'What a screenshot of a task, an item, a position or the Overall screen was read as.',
+    toastKindHelp_squad: 'Members joining and leaving, and the connection to the relay.',
     soundsDescription: 'Short, subtle local sound cues',
     soundsEnabled: 'Enable sounds',
     soundsHelp: 'No screen notifications or external players are used',

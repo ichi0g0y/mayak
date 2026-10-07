@@ -495,7 +495,10 @@ const settingsGroups = /** @type {[string,string[]][]} */ ([
   ['grpDiagnostics', ['status', 'logs', 'debug']],
   ['grpAbout', ['about', 'licenses']],
 ])
-const sectionAvailable = (key) => browserSections.includes(key) || (state.localHost && hostSections.includes(key))
+const sectionAvailable = (key) =>
+  key === 'notifications'
+    ? !state.localHost
+    : browserSections.includes(key) || (state.localHost && hostSections.includes(key))
 // While settings are open, the sidebar lists their sections instead of tabs.
 function settingsSidebar() {
   const link = (key) =>
@@ -536,8 +539,8 @@ function settings() {
     : `<div class="page settings"><h1>${esc(t('sec_' + key))}</h1>${browserSettings(key)}${tutorial}</div>`
 }
 // The update controls, in About: check now, download or restart, and the
-// state of the last check. The status strip along the bottom says the same
-// while an update is pending.
+// state of the last check. The update notice over the pages (syncUpdateToast)
+// says the same while an update is pending.
 function aboutUpdate() {
   const u = state.update || {}
   const v = (key) => t(key).replace('{v}', u.latest || '')

@@ -17,6 +17,7 @@ import {
   RotateCcw,
   ScanLine,
   Volume2,
+  Bell,
   Wifi,
   X,
 } from 'lucide-react'
@@ -1054,6 +1055,41 @@ function App() {
         </TabsContent>
         <TabsContent value="sounds">
           <div className="settings-stack">
+            {/* The notices over the pages (app_toast.go), each optional kind on or off. */}
+            <Card>
+              <CardHeader>
+                <div className="icon-title">
+                  <Bell />
+                  <div>
+                    <CardTitle>{t('toastsTitle')}</CardTitle>
+                    <CardDescription>{t('toastsDescription')}</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="switch-stack">
+                  {(['tracker', 'sound', 'recognition', 'squad'] as const).map((kind) => (
+                    <div className="switch-row" key={kind}>
+                      <div>
+                        <Label htmlFor={`toast-${kind}`}>{t(`toastKind_${kind}`)}</Label>
+                        <p className="help">{t(`toastKindHelp_${kind}`)}</p>
+                      </div>
+                      <Switch
+                        id={`toast-${kind}`}
+                        checked={!(settings.toastsOff || []).includes(kind)}
+                        onCheckedChange={(on) =>
+                          patch({
+                            toastsOff: on
+                              ? (settings.toastsOff || []).filter((k) => k !== kind)
+                              : [...(settings.toastsOff || []).filter((k) => k !== kind), kind],
+                          })
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <div className="icon-title">
