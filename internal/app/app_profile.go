@@ -157,6 +157,15 @@ func (a *App) handleProfileScreenshot(ctx context.Context, sequence uint64, path
 			profile.Level = byExp
 		case profile.Level == byExp:
 			sure = true
+		case agreeing(levels, byExp) > 0:
+			// An engine read the level the experience makes, though the vote
+			// went to another reading (10 read as 1, 10 and 12).
+			profile.Level, sure = byExp, true
+		case agreeing(exps, profile.Exp) >= 2:
+			// Engines that agree on the experience, a long number, outweigh a
+			// level's glyph dropped or misread (16 read as 6).
+			a.addLog("Info", "Profile", fmt.Sprintf("Read level %d, but %d experience, read alike by %d engines, makes level %d: level %d it is", profile.Level, profile.Exp, agreeing(exps, profile.Exp), byExp, byExp))
+			profile.Level, sure = byExp, true
 		default:
 			a.addLog("Warn", "Profile", fmt.Sprintf("Read level %d, but %d experience makes level %d", profile.Level, profile.Exp, byExp))
 		}
@@ -189,6 +198,17 @@ func (a *App) handleProfileScreenshot(ctx context.Context, sequence uint64, path
 	if sure {
 		a.trackerRaiseLevel(ctx, settings, profile.Level)
 	}
+}
+
+// agreeing counts the readings that are v.
+func agreeing(readings []int, v int) int {
+	n := 0
+	for _, r := range readings {
+		if r == v {
+			n++
+		}
+	}
+	return n
 }
 
 // setAnalysisStage shows how far a screenshot's analysis is.

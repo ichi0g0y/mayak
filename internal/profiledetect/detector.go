@@ -197,9 +197,13 @@ func crop(img image.Image, r image.Rectangle) image.Image {
 	return dst
 }
 
-// Ink makes the panel's light text black on white and twice as large, as
-// OCR reads it best (the panel's dark, textured background otherwise hides
-// digits from it).
+// inkMargin is the white room Ink leaves around the text: OCR drops a glyph
+// that touches the edge (the "1" of a level of 16 was read as 6).
+const inkMargin = 32
+
+// Ink makes the panel's light text black on white and twice as large, with
+// white room around it, as OCR reads it best (the panel's dark, textured
+// background otherwise hides digits from it).
 func Ink(src image.Image) image.Image {
 	b := src.Bounds()
 	gray := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
@@ -212,7 +216,11 @@ func Ink(src image.Image) image.Image {
 			gray.Pix[y*gray.Stride+x] = v
 		}
 	}
-	dst := image.NewGray(image.Rect(0, 0, b.Dx()*2, b.Dy()*2))
-	xdraw.CatmullRom.Scale(dst, dst.Bounds(), gray, gray.Bounds(), xdraw.Src, nil)
+	dst := image.NewGray(image.Rect(0, 0, b.Dx()*2+inkMargin*2, b.Dy()*2+inkMargin*2))
+	for i := range dst.Pix {
+		dst.Pix[i] = 255
+	}
+	text := image.Rect(inkMargin, inkMargin, inkMargin+b.Dx()*2, inkMargin+b.Dy()*2)
+	xdraw.CatmullRom.Scale(dst, text, gray, gray.Bounds(), xdraw.Src, nil)
 	return dst
 }
