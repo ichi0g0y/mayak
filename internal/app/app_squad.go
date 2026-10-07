@@ -56,6 +56,10 @@ func (a *App) SquadAvailable() bool { return true }
 // with.
 func (a *App) SquadNewCode() string { return squad.Format(squad.NewCode()) }
 
+// squadOfflineWait is how long the relay stays lost before the player is
+// told (a toast): it comes back within seconds after a short cut.
+const squadOfflineWait = 15 * time.Second
+
 // SquadJoin joins the squad of code as name, leaving the one joined before.
 // It returns the code in its canonical form ("ABCD-1234").
 func (a *App) SquadJoin(code, name string) (string, error) {
@@ -87,6 +91,9 @@ func (a *App) SquadJoin(code, name string) (string, error) {
 	// The other members by ID (their names) as last told, to tell who came
 	// and who went; the first list is the squad as found, told by no one.
 	members, listed := map[string]string{}, false
+	// A relay lost for a moment (a few seconds; EFT starting cuts it) tells
+	// no one: only one still lost after squadOfflineWait does, and its end then.
+	offlineSince, offlineTold := 0, false
 	client, err = squad.Join(canonical, squadEndpoint(), version.UserAgent(), a.squadReport(name), func(s squad.State) {
 		squadMu.Lock()
 		current := client != nil && squadClient == client
@@ -125,12 +132,31 @@ func (a *App) SquadJoin(code, name string) (string, error) {
 			switch s.Phase {
 			case squad.PhaseConnected:
 				a.addLog("Info", "Squad", "Connected to the squad relay")
-				if previous == squad.PhaseOffline {
+				squadMu.Lock()
+				told := previous == squad.PhaseOffline && offlineTold
+				offlineSince++
+				offlineTold = false
+				squadMu.Unlock()
+				if told {
 					a.toast(Toast{Key: "squad:phase", Event: "squadRelay", Category: ToastSquad, Level: "success", Message: "toastSquadBack"})
 				}
 			case squad.PhaseOffline:
 				a.addLog("Warn", "Squad", "Lost the squad relay; trying again")
-				a.toast(Toast{Key: "squad:phase", Event: "squadRelay", Category: ToastSquad, Level: "warn", Message: "toastSquadOffline"})
+				squadMu.Lock()
+				offlineSince++
+				lost := offlineSince
+				squadMu.Unlock()
+				time.AfterFunc(squadOfflineWait, func() {
+					squadMu.Lock()
+					still := client != nil && squadClient == client && phase == squad.PhaseOffline && offlineSince == lost
+					if still {
+						offlineTold = true
+					}
+					squadMu.Unlock()
+					if still {
+						a.toast(Toast{Key: "squad:phase", Event: "squadRelay", Category: ToastSquad, Level: "warn", Message: "toastSquadOffline"})
+					}
+				})
 			case squad.PhaseFull:
 				a.addLog("Warn", "Squad", "The squad is full")
 				a.toast(Toast{Key: "squad:phase", Event: "squadRelay", Category: ToastSquad, Level: "warn", Message: "toastSquadFull"})
