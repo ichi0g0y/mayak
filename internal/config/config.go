@@ -20,7 +20,10 @@ type Settings struct {
 	// QuestSites is the task sites in the order they are tried: a task opens
 	// on the first that has its page. QuestSite is the first, for the
 	// versions that know one site only.
-	QuestSites          []string       `json:"questSites"`
+	QuestSites []string `json:"questSites"`
+	// ToastsOff are the kinds of notices over the pages turned off in the
+	// settings (app.toastCategories: tracker, sound, recognition, squad).
+	ToastsOff           []string       `json:"toastsOff"`
 	Language            string         `json:"language"`
 	ScreenshotDirectory string         `json:"screenshotDirectory"`
 	LogsDirectory       string         `json:"logsDirectory"`

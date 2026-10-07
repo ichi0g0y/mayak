@@ -587,6 +587,94 @@ export class SquadShot {
     }
 }
 
+/**
+ * Toast is one notice. Message is a key of the shell's words (words.js) and
+ * Params its values ({name}); Text is shown as is instead (an error's
+ * message). Key, when set, names a notice that a newer one with the same Key
+ * replaces in place (an update's progress, a running job). A persistent one
+ * stays until closed or replaced; the others go after a few seconds.
+ */
+export class Toast {
+    "id": string;
+    "key"?: string;
+    "category": string;
+    "level": string;
+    "message"?: string;
+    "params"?: { [_ in string]?: string };
+    "text"?: string;
+    "persistent"?: boolean;
+
+    /**
+     * Progress is a bar's fill (0–100), -1 or absent for none.
+     */
+    "progress"?: number;
+    "actions"?: ToastAction[];
+    "at": string;
+
+    /** Creates a new Toast instance. */
+    constructor($$source: Partial<Toast> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
+        if (!("category" in $$source)) {
+            this["category"] = "";
+        }
+        if (!("level" in $$source)) {
+            this["level"] = "";
+        }
+        if (!("at" in $$source)) {
+            this["at"] = "0001-01-01T00:00:00.000Z";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new Toast instance from a string or object.
+     */
+    static createFrom($$source: any = {}): Toast {
+        const $$createField5_0 = $$createType4;
+        const $$createField9_0 = $$createType13;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("params" in $$parsedSource) {
+            $$parsedSource["params"] = $$createField5_0($$parsedSource["params"]);
+        }
+        if ("actions" in $$parsedSource) {
+            $$parsedSource["actions"] = $$createField9_0($$parsedSource["actions"]);
+        }
+        return new Toast($$parsedSource as Partial<Toast>);
+    }
+}
+
+/**
+ * ToastAction is a button of a notice: Label is a key of the shell's words.
+ * Pressing it tells the shell ("toast:action"), which does it.
+ */
+export class ToastAction {
+    "id": string;
+    "label": string;
+
+    /** Creates a new ToastAction instance. */
+    constructor($$source: Partial<ToastAction> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
+        if (!("label" in $$source)) {
+            this["label"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ToastAction instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ToastAction {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ToastAction($$parsedSource as Partial<ToastAction>);
+    }
+}
+
 // Private type creation functions
 const $$createType0 = GoonRaid.createFrom;
 const $$createType1 = $Create.Nullable($$createType0);
@@ -600,3 +688,5 @@ const $$createType8 = $Create.Array($$createType7);
 const $$createType9 = screenshotstore$0.Record.createFrom;
 const $$createType10 = $Create.Nullable($$createType9);
 const $$createType11 = snapnote$0.Note.createFrom;
+const $$createType12 = ToastAction.createFrom;
+const $$createType13 = $Create.Array($$createType12);

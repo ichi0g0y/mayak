@@ -50,6 +50,16 @@ func (a *App) notePrestige(accountID, profileID, mode string, at time.Time) {
 		return
 	}
 	a.addLog("Warn", "TarkovTracker", fmt.Sprintf("Prestige taken (%s) at %s: reset the progress on TarkovTracker too (its settings, Prestige); MAYAK then sends what was done since", mode, at.Local().Format("2006-01-02 15:04:05")))
+	// It stays until TarkovTracker has been reset (clearPrestigePending).
+	a.toast(Toast{
+		Key: prestigeToastKey(accountID, profileID, mode), Category: ToastTracker, Level: "warn", Persistent: true,
+		Message: "toastPrestige", Params: map[string]string{"mode": mode, "at": at.Local().Format("2006-01-02 15:04")},
+		Actions: []ToastAction{{ID: "trackerPrestige", Label: "toastOpenTrackerPrestige"}},
+	})
+}
+
+func prestigeToastKey(accountID, profileID, mode string) string {
+	return "prestige:" + accountID + "/" + profileID + "/" + mode
 }
 
 // checkPrestigeReset sees a profile's TarkovTracker reset in its progress
@@ -127,6 +137,7 @@ func (a *App) clearPrestigePending(accountID, profileID, mode string) bool {
 	status := a.status
 	a.mu.Unlock()
 	a.emitStatus(status)
+	a.endToast(prestigeToastKey(accountID, profileID, mode))
 	return true
 }
 

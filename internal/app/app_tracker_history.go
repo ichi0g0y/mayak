@@ -34,7 +34,10 @@ func (a *App) syncAssignedHistory(accountID, profileID, mode string) {
 	// Reading every session takes a while (a minute for a long-played
 	// profile): the settings page says so meanwhile.
 	a.emitEvent("tracker:history", map[string]any{"mode": mode, "profileId": profileID, "running": true})
+	working := "history:" + accountID + "/" + profileID + "/" + mode
+	a.toast(Toast{Key: working, Category: ToastWorking, Persistent: true, Message: "toastHistoryWorking", Params: map[string]string{"mode": mode}})
 	sent, err := a.SyncTrackerProfileHistory(accountID, profileID, mode)
+	a.endToast(working)
 	if errors.Is(err, errNoTrackerHistory) {
 		a.markHistorySynced(accountID, profileID, mode)
 		a.emitEvent("tracker:history", map[string]any{"mode": mode, "profileId": profileID, "idle": true})
@@ -107,9 +110,11 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 	defer cancel()
 	if err := a.trackerClient.SetTasks(ctx, token, updates); err != nil {
 		a.addLog("Error", "TarkovTracker", "Historical sync failed: "+err.Error())
+		a.toast(Toast{Category: ToastTracker, Level: "error", Message: "toastHistoryFailed", Params: map[string]string{"mode": mode, "error": err.Error()}})
 		return 0, err
 	}
 	a.addLog("Info", "TarkovTracker", fmt.Sprintf("Synced %d task states from existing logs for %s (%s)", len(updates), maskProfileID(profileID), mode))
+	a.toast(Toast{Category: ToastTracker, Level: "success", Message: "toastHistorySynced", Params: map[string]string{"mode": mode, "n": fmt.Sprint(len(updates))}})
 	a.markHistorySynced(accountID, profileID, mode)
 	a.mu.RLock()
 	active := a.status.Tracker.AccountID == accountID && a.status.Tracker.ProfileID == profileID && a.status.Tracker.Mode == mode

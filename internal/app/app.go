@@ -46,6 +46,7 @@ type App struct {
 	popup                         itemPopup
 	// menu is the window the shell's menus open in, above the page (app_menu.go).
 	menu          shellMenu
+	toasts        toastCenter
 	adblock       *adblock.Blocker
 	browserClient atomic.Bool
 	// hostMode is the Host's game mode as its link told this Client

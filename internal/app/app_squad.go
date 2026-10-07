@@ -84,12 +84,38 @@ func (a *App) SquadJoin(code, name string) (string, error) {
 	var client *squad.Client
 	// The connection's phase as last logged, to log each change once.
 	phase := ""
+	// The other members by ID (their names) as last told, to tell who came
+	// and who went; the first list is the squad as found, told by no one.
+	members, listed := map[string]string{}, false
 	client, err = squad.Join(canonical, squadEndpoint(), version.UserAgent(), a.squadReport(name), func(s squad.State) {
 		squadMu.Lock()
 		current := client != nil && squadClient == client
 		changed := current && s.Phase != phase
+		previous := phase
 		if changed {
 			phase = s.Phase
+		}
+		var came, went []string
+		if current {
+			now := map[string]string{}
+			for _, m := range s.Members {
+				if !m.Me && !m.Viewer {
+					now[m.ID] = m.Name
+				}
+			}
+			if listed {
+				for id, n := range now {
+					if _, ok := members[id]; !ok {
+						came = append(came, n)
+					}
+				}
+				for id, n := range members {
+					if _, ok := now[id]; !ok {
+						went = append(went, n)
+					}
+				}
+			}
+			members, listed = now, true
 		}
 		squadMu.Unlock()
 		if !current {
@@ -99,11 +125,22 @@ func (a *App) SquadJoin(code, name string) (string, error) {
 			switch s.Phase {
 			case squad.PhaseConnected:
 				a.addLog("Info", "Squad", "Connected to the squad relay")
+				if previous == squad.PhaseOffline {
+					a.toast(Toast{Key: "squad:phase", Category: ToastSquad, Level: "success", Message: "toastSquadBack"})
+				}
 			case squad.PhaseOffline:
 				a.addLog("Warn", "Squad", "Lost the squad relay; trying again")
+				a.toast(Toast{Key: "squad:phase", Category: ToastSquad, Level: "warn", Message: "toastSquadOffline"})
 			case squad.PhaseFull:
 				a.addLog("Warn", "Squad", "The squad is full")
+				a.toast(Toast{Key: "squad:phase", Category: ToastSquad, Level: "warn", Message: "toastSquadFull"})
 			}
+		}
+		for _, n := range came {
+			a.toast(Toast{Category: ToastSquad, Level: "info", Message: "toastSquadCame", Params: map[string]string{"name": n}})
+		}
+		for _, n := range went {
+			a.toast(Toast{Category: ToastSquad, Level: "info", Message: "toastSquadWent", Params: map[string]string{"name": n}})
 		}
 		a.emitEvent("squad:state", s)
 	}, func(from string, data json.RawMessage) {
@@ -121,6 +158,7 @@ func (a *App) SquadJoin(code, name string) (string, error) {
 	squadClient = client
 	squadMu.Unlock()
 	a.addLog("Info", "Squad", "Joined a squad")
+	a.toast(Toast{Category: ToastSquad, Level: "success", Message: "toastSquadJoined"})
 	go func() {
 		select {
 		case <-a.done:
@@ -143,6 +181,7 @@ func (a *App) SquadLeave() {
 	if client != nil {
 		client.Close()
 		a.addLog("Info", "Squad", "Left the squad")
+		a.toast(Toast{Category: ToastSquad, Level: "info", Message: "toastSquadLeft"})
 		a.emitEvent("squad:state", nil)
 	}
 }

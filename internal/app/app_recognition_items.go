@@ -91,10 +91,12 @@ func (a *App) handleItemAnalysis(ctx context.Context, sequence uint64, path stri
 	a.emitEvent("status:update", status)
 	if status.ItemConfidence >= .82 {
 		a.addLog("Info", "Item", fmt.Sprintf("Matched %s (%.0f%%) from OCR: %s", status.LastItem, status.ItemConfidence*100, raw))
+		a.toast(Toast{Category: ToastRecognition, Level: "success", Message: "toastItemRead", Params: map[string]string{"item": status.LastItem}})
 		go a.showBrowserItem(a.effectiveCatalogMode(settings.GameMode), status.ItemID)
 		a.notifyOnce(sound.Item, status.ItemID)
 	} else {
 		a.addLog("Warn", "Item", fmt.Sprintf("No confident match (%.0f%%) from OCR: %s", status.ItemConfidence*100, raw))
+		a.toast(Toast{Category: ToastRecognition, Level: "warn", Message: "toastItemNotRead", Params: map[string]string{"text": raw}})
 		a.notifyOnce(sound.ItemNotMatched, raw)
 	}
 }

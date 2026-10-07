@@ -6,6 +6,10 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Nightly
 
+### New
+
+- Notices (toasts) show at the bottom middle of the window: what was sent to TarkovTracker, the alerts in words, what a screenshot was read as, the squad coming and going, updates and errors. They show over the pages too and take no focus from the game or the page. Errors, updates and the like stay until closed; the others go after a few seconds. Each kind can be turned off under Notifications in the settings, and the bell at the bottom of the sidebar shows their history (the last 200). The update and error strips along the bottom are now these notices.
+
 ### Improved
 
 - After a Prestige (in PvE too since 1.2.0.0), rechecking past logs and the sync when a key is assigned no longer send the tasks done before it to TarkovTracker. The profile stays the same through a Prestige, so MAYAK finds when it was taken in the EFT logs and skips the logs before it. For a Prestige the logs do not hold (taken on another PC), each TarkovTracker profile also gains "Logs from".

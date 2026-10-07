@@ -60,7 +60,6 @@ let state,
   notify = /** @type {(state:any)=>void} */ (() => {}),
   onKey = /** @type {(key:any)=>void} */ (() => {}),
   section = 'appearance',
-  error = '',
   peerState = { phase: 'idle' }
 // Tabs closed in this session, newest last, for Ctrl+Shift+T (not saved).
 const closedTabs = []
@@ -70,14 +69,15 @@ let queue = Promise.resolve(),
 // While the shell shows an overlay (the tutorial), the native page views stay
 // hidden whatever else asks to show them; closing it shows the active tab again.
 let overlay = false
-// The updater's state (model.UpdateStatus) drives the update bar: a status
-// strip along the bottom of the whole window while a newer version is found,
-// downloading or ready. The page views are native windows above the shell,
-// so the bar takes its own row (bounds() lifts the pages by it) rather than
-// floating over them, where it would be covered.
+// The updater's state (model.UpdateStatus) drives the update notice: a
+// notice over the pages (app_toast.go) while a newer version is found,
+// downloading or ready, until it is applied or put off (syncUpdateToast).
 let updateStatus = null,
   updateDismissed = ''
-const updateBarHeight = 32
+// The notices shown (app_toast.go), for the notifications page, and the kinds
+// turned off in the settings (config ToastsOff, this PC's Go side).
+let toastHistory = [],
+  toastsOff = []
 function updateBarVisible() {
   const u = updateStatus
   return !!(u && ['available', 'downloading', 'ready'].includes(u.state) && u.latest && u.latest !== updateDismissed)
@@ -220,8 +220,8 @@ const snapshot = () => ({
     : null,
   update: updateStatus,
   updateChannel,
-  updateBar: updateBarVisible(),
-  statusRows: statusRows(),
+  notifications: toastHistory,
+  toastsOff,
   goonReport,
   bosses: bosses && { ...bosses, current: (state.connection.mode === 'client' ? remoteHost?.map : host?.map) || '' },
   screenshots: shotsAvailable()
@@ -253,18 +253,52 @@ const snapshot = () => ({
           : 'disconnected',
   // paired: a pairing is kept for this mode.
   peer: { ...peerState, self: hostName, paired: !!state.connection.link && state.connection.link.role === linkRole() },
-  error,
 })
 const update = () => notify(snapshot())
-// An error shows as a strip along the bottom, in a row of its own like the
-// update bar (see there): a toast over the page would be under it. The row
-// appears when the first error arrives; a failure to show the pages after
-// that is not retried, or it would loop.
-const messageError = (e) => {
-  const shown = !!error
-  error = t(state.language, 'actionFailed') + String(e?.message || e)
-  update()
-  if (!shown) void show().catch(() => {})
+// An error shows as a notice over the pages (app_toast.go), until closed; a
+// newer one replaces it. level "warn" is a note that goes after a while.
+const errorToast = (text, level = 'error') => {
+  if (!go?.BrowserToast) {
+    console.error(text)
+    return
+  }
+  void go
+    .BrowserToast({ key: 'shell-error', category: 'error', level, persistent: level === 'error', text })
+    .catch(() => console.error(text))
+}
+const messageError = (e) => errorToast(t(state.language, 'actionFailed') + String(e?.message || e))
+// syncUpdateToast shows the update notice as the updater's state says (found,
+// downloading with its progress, ready), with its buttons, or takes it off.
+function syncUpdateToast() {
+  if (!go?.BrowserToast) return
+  const u = updateStatus
+  if (!updateBarVisible()) {
+    void go.BrowserToastEnd('update').catch(() => {})
+    return
+  }
+  const message =
+    u.state === 'ready' ? 'updateReady' : u.state === 'downloading' ? 'updateDownloading' : 'updateAvailable'
+  const actions = [
+    ...(u.releaseUrl ? [{ id: 'updateNotes', label: 'updateNotes' }] : []),
+    ...(u.state === 'ready'
+      ? [{ id: 'updateInstall', label: 'updateRestart' }]
+      : u.state === 'available'
+        ? [{ id: 'updateDownload', label: 'updateDownload' }]
+        : []),
+    { id: 'updateDismiss', label: 'updateLater' },
+  ]
+  void go
+    .BrowserToast({
+      key: 'update',
+      category: 'update',
+      level: 'info',
+      persistent: true,
+      message,
+      params: { v: String(u.latest || '') },
+      progress: u.state === 'downloading' ? Math.max(1, Math.min(100, u.progress | 0)) : 0,
+      actions,
+    })
+    .catch(() => {})
 }
 const native = (command, o) => {
   const result = nativeQueue.then(() => go.BrowserView(command, o))
@@ -284,12 +318,9 @@ function bounds() {
     left: (state.sidebarSide === 'left' ? nav : 0) + (dock === 'left' ? item : 0),
     top: state.layout === 'horizontal' ? 96 : 48,
     right: (state.sidebarSide === 'right' ? nav : 0) + (dock === 'right' ? item : 0),
-    bottom: (dock === 'bottom' ? state.itemPanelHeight : 0) + statusRows() * updateBarHeight,
+    bottom: dock === 'bottom' ? state.itemPanelHeight : 0,
   }
 }
-// The rows along the bottom that the pages make room for: the update bar and
-// the error strip. The shell lays them out from the same count.
-const statusRows = () => (updateBarVisible() ? 1 : 0) + (error ? 1 : 0)
 // A page view opens at its tab's address. (The fixed tarkov.dev map view,
 // which added the Host's Remote Control ID, is gone: map detections show on
 // the map view, view-map.js.)
@@ -1130,13 +1161,13 @@ const ready = (async () => {
     migrated = saved.bookmarkRevision !== state.bookmarkRevision
   } catch (e) {
     state = defaults()
-    error = String(e)
+    errorToast(String(e))
   }
   if (migrated)
     try {
       await persist()
     } catch (e) {
-      error = String(e)
+      errorToast(String(e))
     }
   // The item sidebar comes back as it was, with current prices for its item.
   itemOpen = state.itemPanel.open
@@ -1167,7 +1198,7 @@ const ready = (async () => {
   try {
     await go.BrowserSetAdblock(state.adblock)
   } catch (e) {
-    error = String(e)
+    errorToast(String(e))
   }
   // The trusted settings document shares only the trusted parent's runtime.
   // External websites are native views and never receive this object.
@@ -1255,8 +1286,7 @@ const ready = (async () => {
   // Progress arrives once per percent; the bar redraws at most a few times a second.
   let updateRedraw = 0
   const updateChanged = (next) => {
-    const shown = updateBarVisible(),
-      before = updateStatus
+    const before = updateStatus
     updateStatus = next
     const minor = before && before.state === next?.state && before.latest === next?.latest
     if (minor) {
@@ -1270,9 +1300,37 @@ const ready = (async () => {
       updateRedraw = 0
       update()
     }
-    if (updateBarVisible() !== shown) void show()
+    syncUpdateToast()
   }
   window.mayakDesktop.on('update:status', updateChanged)
+  // A notice's button (app_toast.go): what the shell does for it.
+  window.mayakDesktop.on('toast:action', (event) => {
+    const act = String(event?.action || '')
+    void enqueue(async () => {
+      if (act === 'trackerPrestige') await perform('openOrFocus', 'https://tarkovtracker.org/settings#prestige')
+      else if (act === 'updateNotes')
+        await perform(
+          'openOrFocus',
+          'https://mayak.ich.sh/changelog' + (updateStatus?.latest ? '#v' + updateStatus.latest : ''),
+        )
+      else if (['updateDownload', 'updateInstall', 'updateDismiss'].includes(act)) await perform(act)
+    })
+  })
+  // The notices shown, for the notifications page: one more, one changed (an
+  // update's progress), or all gone (null).
+  window.mayakDesktop.on('toast:history', (toast) => {
+    if (!toast) toastHistory = []
+    else {
+      const at = toastHistory.findIndex((n) => n.id === toast.id)
+      if (at >= 0) toastHistory[at] = toast
+      else toastHistory = [...toastHistory, toast].slice(-200)
+    }
+    if (state.tabs.find((t) => t.id === state.active)?.kind === 'notifications') update()
+  })
+  try {
+    toastHistory = (await go.BrowserToastHistory()) || []
+    toastsOff = (await go.GetSettings()).toastsOff || []
+  } catch {}
   go.GetUpdateStatus?.()
     .then(updateChanged)
     .catch(() => {})
@@ -1350,7 +1408,7 @@ const ready = (async () => {
     }
     if (check?.step === 'check' && Date.now() - (checkPassed.get(originalURL(check.url)) || 0) < checkAgain) {
       state.translatePausedUntil = Date.now() + translatePause
-      error = t(state.language, 'translateRefused')
+      errorToast(t(state.language, 'translateRefused'), 'warn')
       return void openInTab(tab, originalURL(check.url))
     }
     tab.url = pageURL(event.url)
@@ -1528,10 +1586,7 @@ async function performOne(type, data) {
         )
       } catch (e) {
         snaps.busy = false
-        const shown = !!error
-        error = t(state.language, 'snapCaptureFailed') + String(e?.message || e)
-        update()
-        if (!shown) void show().catch(() => {})
+        errorToast(t(state.language, 'snapCaptureFailed') + String(e?.message || e))
         return snapshot()
       }
       snaps.busy = false
@@ -1608,7 +1663,7 @@ async function performOne(type, data) {
       return snapshot()
     // The map view could not make its picture (view-map.js snapMap).
     case 'mapSnapFailed':
-      error = t(state.language, 'mapSnapFailed') + String(data || '')
+      errorToast(t(state.language, 'mapSnapFailed') + String(data || ''))
       return snapshot()
     case 'snapNew': {
       let note = await go.SnapNoteCreate(String(data?.image || ''), String(data?.title || ''))
@@ -2192,13 +2247,31 @@ async function performOne(type, data) {
     }
     case 'updateDismiss':
       updateDismissed = updateStatus?.latest || ''
-      await show()
+      syncUpdateToast()
       return snapshot()
-    case 'dismiss':
-      error = ''
-      update()
-      await show()
+    // The notices shown, and the kinds of them turned off (this PC's).
+    case 'notifications':
+      try {
+        toastHistory = (await go.BrowserToastHistory()) || []
+      } catch {}
+      openLocal(state, 'notifications')
+      break
+    case 'notificationsClear':
+      await go.BrowserToastHistoryClear()
+      toastHistory = []
       return snapshot()
+    case 'toastsOff': {
+      const kind = String(data?.kind || '')
+      if (!['tracker', 'sound', 'recognition', 'squad'].includes(kind)) return snapshot()
+      const s = await go.GetSettings()
+      const off = new Set(s.toastsOff || [])
+      if (data?.on) off.delete(kind)
+      else off.add(kind)
+      s.toastsOff = [...off]
+      await go.PersistSettings(s)
+      toastsOff = s.toastsOff
+      return snapshot()
+    }
     default:
       return snapshot()
   }
@@ -2221,7 +2294,7 @@ window.mayak = {
     return enqueue(() => perform(type, data))
   },
   // request is action for a caller that must know of a failure (a save): the
-  // error shows in the error bar and is thrown to the caller too.
+  // error shows as a notice (messageError) and is thrown to the caller too.
   async request(type, data) {
     await ready
     const result = queue.then(() => perform(type, data))

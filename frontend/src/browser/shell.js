@@ -48,6 +48,7 @@ import {
   maskedClass,
 } from './shell-core.js'
 import { goonFresh, bossSection, bossesPage } from './view-bosses.js'
+import { notificationsPage } from './view-notifications.js'
 import { shotBadges, screenshotsPage } from './view-screenshots.js'
 import { itemToggle, itemPanel } from './view-item.js'
 import { tutorialOpen, tutorialHTML, handleTutorial, openTutorial } from './view-tutorial.js'
@@ -124,19 +125,21 @@ const tabName = (tab) =>
           ? t('settings')
           : tab.kind === 'bosses'
             ? t('bosses')
-            : tab.kind === 'screenshots'
-              ? t('screenshots')
-              : tab.kind === 'snapnotes'
-                ? t('snapNotes')
-                : tab.kind === 'livemap'
-                  ? t('liveMap')
-                  : tab.kind === 'squad'
-                    ? t('squad')
-                    : tab.kind === 'bookmarks'
-                      ? t('bookmarks')
-                      : tab.kind === 'tabs'
-                        ? t('allTabs')
-                        : tab.title || tab.url
+            : tab.kind === 'notifications'
+              ? t('notifications')
+              : tab.kind === 'screenshots'
+                ? t('screenshots')
+                : tab.kind === 'snapnotes'
+                  ? t('snapNotes')
+                  : tab.kind === 'livemap'
+                    ? t('liveMap')
+                    : tab.kind === 'squad'
+                      ? t('squad')
+                      : tab.kind === 'bookmarks'
+                        ? t('bookmarks')
+                        : tab.kind === 'tabs'
+                          ? t('allTabs')
+                          : tab.title || tab.url
 // Tabs listed in the tab section (the strip sizes itself by their number).
 const listedTabs = () =>
   state.tabs.filter(
@@ -149,6 +152,7 @@ const listedTabs = () =>
       tab.kind !== 'livemap' &&
       tab.kind !== 'squad' &&
       tab.kind !== 'bosses' &&
+      tab.kind !== 'notifications' &&
       tab.kind !== 'tabs',
   )
 const tabCount = () => listedTabs().length
@@ -466,6 +470,7 @@ function bookmarkEditor() {
 const sectionIcons = {
   about: 'info',
   appearance: 'palette',
+  notifications: 'bell',
   tasks: 'task',
   adblock: 'shield',
   connection: 'linked',
@@ -483,7 +488,7 @@ const sectionIcons = {
 // Sections grouped by what they are about. Some are the browser's own and
 // some the Host's (its page in a frame); that split is not shown.
 const settingsGroups = /** @type {[string,string[]][]} */ ([
-  ['grpGeneral', ['appearance', 'startup', 'sounds']],
+  ['grpGeneral', ['appearance', 'notifications', 'startup', 'sounds']],
   ['grpGame', ['folders', 'recognition', 'tasks']],
   ['grpLinks', ['remote', 'tracker', 'connection']],
   ['grpBrowser', ['adblock']],
@@ -637,6 +642,14 @@ function browserSettings(key) {
         state.taskMode,
       )}</div><p class="hint">${esc(t('taskSiteHelp'))}${local ? '' : ' ' + esc(t('taskSiteClientHelp'))} ${t('taskHelp')}</p><label class="check"><input type="checkbox" data-action="translateWiki" ${state.translateWiki ? 'checked' : ''}>${esc(t('translateWiki'))}</label><p class="hint">${esc(t('translateWikiHelp'))}</p></section>`
     }
+    // The kinds of notices over the pages, each on or off (this PC's).
+    case 'notifications':
+      return `<section class="panel">${['tracker', 'sound', 'recognition', 'squad']
+        .map(
+          (kind) =>
+            `<label class="check"><input type="checkbox" data-action="toastsOff" data-id="${kind}" ${(state.toastsOff || []).includes(kind) ? '' : 'checked'}>${esc(t('toastKind_' + kind))}</label><p class="hint">${esc(t('toastKindHelp_' + kind))}</p>`,
+        )
+        .join('')}<p class="hint">${esc(t('notificationsSettingsHelp'))}</p></section>`
     case 'adblock':
       return `<section class="panel"><label class="check"><input type="checkbox" data-action="adblock" ${state.adblock ? 'checked' : ''}>${t('adblockEnable')}</label><p class="hint">${t('adblockHelp')}</p></section>`
     default:
@@ -775,28 +788,6 @@ function showItemScroll(event) {
 }
 document.addEventListener('scroll', showItemScroll, { capture: true, passive: true })
 document.addEventListener('pointermove', showItemScroll, { passive: true })
-// The update bar: a status strip along the bottom of the window (api.js lifts
-// the page views by it), shown while a newer version is found, downloading
-// or ready, until it is applied or put off.
-function updateBarHTML() {
-  const u = state.update
-  if (!state.updateBar || !u) return ''
-  const text = t(
-    u.state === 'ready' ? 'updateReady' : u.state === 'downloading' ? 'updateDownloading' : 'updateAvailable',
-  ).replace('{v}', u.latest)
-  const progress =
-    u.state === 'downloading'
-      ? `<span class="update-progress"><i style="width:${Math.max(0, Math.min(100, u.progress | 0))}%"></i></span>`
-      : ''
-  const action =
-    u.state === 'ready'
-      ? `<button class="primary" data-action="updateInstall">${esc(t('updateRestart'))}</button>`
-      : u.state === 'available'
-        ? `<button class="primary" data-action="updateDownload">${esc(t('updateDownload'))}</button>`
-        : ''
-  const notes = u.releaseUrl ? `<button data-action="updateNotes">${esc(t('updateNotes'))}</button>` : ''
-  return `<div class="update-bar" role="status" title="${esc(u.state === 'ready' ? t('updateReadyHint') : '')}"><span class="update-text">${esc(text)}</span>${progress}<span class="update-actions">${notes}${action}<button data-action="updateDismiss">${esc(t('updateLater'))}</button></span></div>`
-}
 function render() {
   if (!state) return
   // Rebuilding the DOM would drop the tab being dragged; render when it lands.
@@ -837,8 +828,6 @@ function render() {
   document.body.dataset.item = state.itemOpen ? state.itemDock : 'closed'
   document.body.dataset.nav = state.layout === 'horizontal' ? 'top' : state.sidebarSide
   document.body.dataset.settings = settingsHost() ? 'host' : ''
-  document.body.dataset.updateBar = state.updateBar ? 'on' : ''
-  document.body.dataset.statusRows = String(state.statusRows || 0)
   document.body.dataset.sidebar = state.layout === 'vertical' && state.sidebarCollapsed ? 'collapsed' : 'open'
   if (!sidebarDrag) document.documentElement.style.setProperty('--sidebar-width', state.sidebarWidth + 'px')
   if (!itemDrag) {
@@ -864,7 +853,7 @@ function render() {
       })
       .filter(Boolean)
   )
-  const html = `<div class="sidebar-resizer" role="separator" aria-orientation="vertical" aria-valuemin="${sidebarWidths.min}" aria-valuemax="${sidebarWidths.max}" aria-valuenow="${state.sidebarWidth}" title="${esc(t('resizeSidebar'))}"></div>${brandBar()}<nav class="tab-strip ${tab?.kind === 'settings' ? 'settings-strip' : ''}" aria-label="${esc(t(tab?.kind === 'settings' ? 'settings' : 'tabHelp'))}">${tab?.kind === 'settings' ? settingsSidebar() : `${mapEntry()}${squadSection()}${screenshotSection()}${snapSection()}${bossSection()}${bookmarkSection()}<div class="section-label tabs-section-label ${tab?.kind === 'tabs' ? 'active' : ''}"><button class="section-link" data-action="tabsPage" title="${esc(t('allTabs'))}">${esc(t('tabs'))}</button><button class="new-tab tabs-open" data-action="tabsPage" title="${esc(t('allTabs'))}" aria-label="${esc(t('allTabs'))}" aria-pressed="${tab?.kind === 'tabs'}">${icon('tabs')}</button><button class="new-tab" data-action="newTab" title="${esc(t('newTab'))}" aria-label="${esc(t('newTab'))}">${icon('plus')}</button></div><div class="tabs" role="tablist" style="--n:${tabCount()}">${tabs()}</div>`}</nav><div class="layout-dock">${state.layout === 'vertical' ? sidebarToggle() : ''}${layoutToggle()}${itemToggle()}<button class="dock-button dock-settings ${tab?.kind === 'settings' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'settings'}" data-action="settings" title="${esc(t('settings'))}" aria-label="${esc(t('settings'))}">${icon('settings')}</button>${state.layout === 'horizontal' ? `<span class="dock-indicators">${indicators()}</span>` : ''}</div>${windowControls()}<div class="toolbar">${
+  const html = `<div class="sidebar-resizer" role="separator" aria-orientation="vertical" aria-valuemin="${sidebarWidths.min}" aria-valuemax="${sidebarWidths.max}" aria-valuenow="${state.sidebarWidth}" title="${esc(t('resizeSidebar'))}"></div>${brandBar()}<nav class="tab-strip ${tab?.kind === 'settings' ? 'settings-strip' : ''}" aria-label="${esc(t(tab?.kind === 'settings' ? 'settings' : 'tabHelp'))}">${tab?.kind === 'settings' ? settingsSidebar() : `${mapEntry()}${squadSection()}${screenshotSection()}${snapSection()}${bossSection()}${bookmarkSection()}<div class="section-label tabs-section-label ${tab?.kind === 'tabs' ? 'active' : ''}"><button class="section-link" data-action="tabsPage" title="${esc(t('allTabs'))}">${esc(t('tabs'))}</button><button class="new-tab tabs-open" data-action="tabsPage" title="${esc(t('allTabs'))}" aria-label="${esc(t('allTabs'))}" aria-pressed="${tab?.kind === 'tabs'}">${icon('tabs')}</button><button class="new-tab" data-action="newTab" title="${esc(t('newTab'))}" aria-label="${esc(t('newTab'))}">${icon('plus')}</button></div><div class="tabs" role="tablist" style="--n:${tabCount()}">${tabs()}</div>`}</nav><div class="layout-dock">${state.layout === 'vertical' ? sidebarToggle() : ''}${layoutToggle()}${itemToggle()}<button class="dock-button dock-notifications ${tab?.kind === 'notifications' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'notifications'}" data-action="notifications" title="${esc(t('notifications'))}" aria-label="${esc(t('notifications'))}">${icon('bell')}</button><button class="dock-button dock-settings ${tab?.kind === 'settings' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'settings'}" data-action="settings" title="${esc(t('settings'))}" aria-label="${esc(t('settings'))}">${icon('settings')}</button>${state.layout === 'horizontal' ? `<span class="dock-indicators">${indicators()}</span>` : ''}</div>${windowControls()}<div class="toolbar">${
     tab?.fixed
       ? `<button data-action="back" aria-label="${t('back')}" title="${t('back')}" ${!tab.canBack ? 'disabled' : ''}>${icon('back')}</button><button data-action="forward" aria-label="${t('forward')}" title="${t('forward')}" ${!tab.canForward ? 'disabled' : ''}>${icon('forward')}</button><button data-action="reload" aria-label="${t('reload')}" title="${t('reload')}">${icon('reload')}</button><button data-action="home" aria-label="${esc(t('home'))}" title="${esc(t('homeHelp'))}" ${tab.url === tab.home ? 'disabled' : ''}>${icon('home')}</button><form id="address-form" class="readonly">${icon('globe', 'address-icon')}<input id="address" readonly aria-readonly="true" aria-label="${esc(tabName(tab))}" title="${esc(t('fixedAddress'))}" value="${esc(tab.url)}">${loadBar(tab)}</form>`
       : tab?.kind === 'snapnotes'
@@ -872,6 +861,7 @@ function render() {
         : tab?.kind === 'bookmarks' ||
             tab?.kind === 'screenshots' ||
             tab?.kind === 'bosses' ||
+            tab?.kind === 'notifications' ||
             tab?.kind === 'livemap' ||
             tab?.kind === 'squad'
           ? ''
@@ -884,7 +874,7 @@ function render() {
                       .join('')}</select>`
                   : ''
               }`
-  }${toolIcons(tab)}${state.layout === 'vertical' ? '<div class="titlebar-grip"></div>' : ''}</div><main>${tab?.kind === 'settings' ? settings() : tab?.kind === 'bookmarks' ? bookmarksPage() : tab?.kind === 'tabs' ? tabsPage() : tab?.kind === 'screenshots' ? screenshotsPage() : tab?.kind === 'snapnotes' ? snapNotesPage() : tab?.kind === 'bosses' ? bossesPage() : tab?.kind === 'livemap' ? liveMapPage() : tab?.kind === 'squad' ? squadPage() : !tab ? `<p class="empty-tabs">${t('noTabs')}</p>` : ''}</main>${tab?.kind === 'settings' ? `<button class="page-close" data-action="closeSettings" title="${esc(t('closeSettings'))}" aria-label="${esc(t('closeSettings'))}">${icon('x')}</button>` : ''}${itemPanel()}${contextMenuHTML()}${placeMenuHTML()}${snapMenuHTML()}${state.error ? `<aside class="error-bar" role="alert"><span title="${esc(state.error)}">${esc(state.error)}</span><button data-action="dismiss" title="${esc(t('dismiss'))}" aria-label="${esc(t('dismiss'))}">${icon('x')}</button></aside>` : ''}${updateBarHTML()}${tutorialOpen ? tutorialHTML() : ''}`
+  }${toolIcons(tab)}${state.layout === 'vertical' ? '<div class="titlebar-grip"></div>' : ''}</div><main>${tab?.kind === 'settings' ? settings() : tab?.kind === 'bookmarks' ? bookmarksPage() : tab?.kind === 'tabs' ? tabsPage() : tab?.kind === 'screenshots' ? screenshotsPage() : tab?.kind === 'snapnotes' ? snapNotesPage() : tab?.kind === 'bosses' ? bossesPage() : tab?.kind === 'notifications' ? notificationsPage() : tab?.kind === 'livemap' ? liveMapPage() : tab?.kind === 'squad' ? squadPage() : !tab ? `<p class="empty-tabs">${t('noTabs')}</p>` : ''}</main>${tab?.kind === 'settings' ? `<button class="page-close" data-action="closeSettings" title="${esc(t('closeSettings'))}" aria-label="${esc(t('closeSettings'))}">${icon('x')}</button>` : ''}${itemPanel()}${contextMenuHTML()}${placeMenuHTML()}${snapMenuHTML()}${tutorialOpen ? tutorialHTML() : ''}`
   // The DOM is morphed to the new markup rather than rebuilt: elements that
   // stay keep their node, so hover, focus, a press in flight and scroll
   // positions survive a render, and a render costs only its differences.
@@ -1131,6 +1121,7 @@ document.addEventListener('change', (event) => {
   else if (input.id === 'task-site') void action('site', input.value)
   else if (input.dataset.action === 'adblock') void action('preferences', { adblock: input.checked })
   if (input.dataset.action === 'translateWiki') void action('preferences', { translateWiki: input.checked })
+  if (input.dataset.action === 'toastsOff') void action('toastsOff', { kind: input.dataset.id, on: input.checked })
   if (input.dataset.action === 'linkReceive')
     void action('connection', { receive: { ...state.connection.receive, [input.dataset.id]: input.checked } })
 })

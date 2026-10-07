@@ -170,8 +170,10 @@ func (a *App) handleTaskAnalysis(ctx context.Context, sequence uint64, path stri
 	a.emitEvent("status:update", status)
 	if status.MatchConfidence >= .78 {
 		a.addLog("Info", "Quest", fmt.Sprintf("Matched %s (%.0f%%) from OCR: %s", status.LastQuest, status.MatchConfidence*100, raw))
+		a.toast(Toast{Category: ToastRecognition, Level: "success", Message: "toastTaskRead", Params: map[string]string{"task": status.LastQuest}})
 	} else {
 		a.addLog("Warn", "Quest", fmt.Sprintf("No confident match (%.0f%%) from OCR: %s", status.MatchConfidence*100, raw))
+		a.toast(Toast{Category: ToastRecognition, Level: "warn", Message: "toastTaskNotRead", Params: map[string]string{"text": raw}})
 	}
 	if a.analysisSequence.Load() != sequence {
 		return

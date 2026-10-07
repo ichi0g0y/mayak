@@ -116,6 +116,11 @@ func Run(assets fs.FS, icon, template []byte) error {
 	service.window.OnWindowEvent(events.Common.WindowRuntimeReady, func(*application.WindowEvent) {
 		buttonsOnce.Do(func() { keepWindowButtonsPlaced(service.window) })
 	})
+	// The notices over the pages (app_toast.go) once the window is up.
+	var toastsOnce sync.Once
+	service.window.OnWindowEvent(events.Common.WindowRuntimeReady, func(*application.WindowEvent) {
+		toastsOnce.Do(func() { go service.setupToasts() })
+	})
 	var placementOnce sync.Once
 	service.window.OnWindowEvent(events.Common.WindowRuntimeReady, func(*application.WindowEvent) {
 		placementOnce.Do(func() {

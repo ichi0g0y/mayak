@@ -115,6 +115,7 @@ func soundChoice(s config.Settings, kind sound.Kind) (bool, string) {
 
 // notify plays a notification when sounds and it are on.
 func (a *App) notify(s config.Settings, kind sound.Kind) {
+	a.toastAlert(kind)
 	enabled, path := soundChoice(s, kind)
 	if !s.SoundsEnabled || !enabled {
 		return

@@ -261,6 +261,14 @@ func normalizeSettings(s config.Settings) config.Settings {
 	}
 	s.QuestSites = normalizeQuestSites(s.QuestSites, s.QuestSite)
 	s.QuestSite = s.QuestSites[0]
+	// The kinds of notices turned off: known ones, each once.
+	off := []string{}
+	for _, category := range toastCategories {
+		if slices.Contains(s.ToastsOff, category) {
+			off = append(off, category)
+		}
+	}
+	s.ToastsOff = off
 	if s.UpdateChannel != update.ChannelNightly {
 		s.UpdateChannel = update.ChannelStable
 	}
