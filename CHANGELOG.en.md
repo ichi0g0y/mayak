@@ -13,7 +13,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### Improved
 
-- The map's floor is picked with a floor button of its own in the button column left of the map. Before, the floors were under the list of maps, and each floor change in a raid needed the maps panel. The floor button shows on maps with floors only.
+- The map's floor is picked with a floor button of its own in the button column left of the map. Before, the floors were under the list of maps, and each floor change in a raid needed the maps panel. On a map with no floors (Woods…) the floor button shows disabled.
 - The map's floors are listed top floor first, like a lift's buttons. Before, the floors above came after the ground and the underground (Reserve's Bunkers…) came last, hard to find; it now comes right below the ground.
 
 ## v0.1.29 (2026-10-07)

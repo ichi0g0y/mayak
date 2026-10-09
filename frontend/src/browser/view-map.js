@@ -151,8 +151,8 @@ export function lockPlace(lock) {
   return { key: map.key, floor, name: mapName(map.key), where: parts.filter(Boolean).join(' · ') }
 }
 
-// The icon buttons in a column under the zoom buttons: map, floors (a map
-// with floors), filters,
+// The icon buttons in a column under the zoom buttons: map, floors (disabled
+// on a map with none), filters,
 // search and settings (the squad is in the sidebar and on its page), each opening its panel beside the column,
 // and under search the one that makes the map a snap note and your pen.
 function rail(map, floor) {
@@ -165,9 +165,11 @@ function rail(map, floor) {
   const snap = state.snapNotes
     ? `<button class="map-rail-button map-rail-snap" data-action="mapSnap" title="${esc(t('mapSnap'))}" aria-label="${esc(t('mapSnap'))}" ${!map || snapping ? 'disabled' : ''}>${icon('snap')}</button>`
     : ''
+  // Always in the column, so it keeps its shape between maps; a map with no
+  // floors (Woods) has it disabled.
   const floors = map?.layers?.length
     ? button('floors', 'floors', `${t('mapFloor')}: ${floorName(map, floor)}`, floorBadge)
-    : ''
+    : `<button class="map-rail-button" disabled title="${esc(t('mapNoFloors'))}" aria-label="${esc(t('mapNoFloors'))}">${icon('floors')}</button>`
   return `<div class="map-rails"><div class="map-rail">${button('maps', 'map', `${t('mapPick')}${where ? `: ${where}` : ''}`)}${floors}${button('filters', 'list', t('mapFilters'))}${button('search', 'search', t('mapSearch'), view.search ? '<span class="map-rail-dot"></span>' : '')}${snap}${penButton(!map)}${button('settings', 'settings', t('mapSettings'))}</div>${squadRail(map)}</div>`
 }
 
