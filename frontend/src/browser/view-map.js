@@ -27,6 +27,8 @@ import {
   textScale,
 } from './map-geo.js'
 import { state, esc, t, icon, action, clickHandlers, afterRenderHooks, render } from './shell-core.js'
+import { keepMeInView } from './map-keep.js'
+import { floorChoices } from './map-floors.js'
 import {
   attach,
   clearNotice,
@@ -149,7 +151,8 @@ export function lockPlace(lock) {
   return { key: map.key, floor, name: mapName(map.key), where: parts.filter(Boolean).join(' · ') }
 }
 
-// The icon buttons in a column under the zoom buttons: map, filters,
+// The icon buttons in a column under the zoom buttons: map, floors (a map
+// with floors), filters,
 // search and settings (the squad is in the sidebar and on its page), each opening its panel beside the column,
 // and under search the one that makes the map a snap note and your pen.
 function rail(map, floor) {
@@ -162,7 +165,10 @@ function rail(map, floor) {
   const snap = state.snapNotes
     ? `<button class="map-rail-button map-rail-snap" data-action="mapSnap" title="${esc(t('mapSnap'))}" aria-label="${esc(t('mapSnap'))}" ${!map || snapping ? 'disabled' : ''}>${icon('snap')}</button>`
     : ''
-  return `<div class="map-rails"><div class="map-rail">${button('maps', 'map', `${t('mapPick')}${where ? `: ${where}` : ''}`, floorBadge)}${button('filters', 'list', t('mapFilters'))}${button('search', 'search', t('mapSearch'), view.search ? '<span class="map-rail-dot"></span>' : '')}${snap}${penButton(!map)}${button('settings', 'settings', t('mapSettings'))}</div>${squadRail(map)}</div>`
+  const floors = map?.layers?.length
+    ? button('floors', 'floors', `${t('mapFloor')}: ${floorName(map, floor)}`, floorBadge)
+    : ''
+  return `<div class="map-rails"><div class="map-rail">${button('maps', 'map', `${t('mapPick')}${where ? `: ${where}` : ''}`)}${floors}${button('filters', 'list', t('mapFilters'))}${button('search', 'search', t('mapSearch'), view.search ? '<span class="map-rail-dot"></span>' : '')}${snap}${penButton(!map)}${button('settings', 'settings', t('mapSettings'))}</div>${squadRail(map)}</div>`
 }
 
 // The squad's column, under the other while in a squad, framed in this
@@ -176,7 +182,21 @@ function squadRail(map) {
   return `<div class="map-rail map-rail-squad" style="--c:${esc(squadStyle().c)}" role="group" aria-label="${esc(t('squad'))}"><span class="map-rail-head" title="${esc(t('squad'))}">${icon('squad')}</span>${squadPenButton(!map)}${pin}${fit}</div>`
 }
 
-// The map panel: the maps, then the floors of the one shown.
+// The floors panel (the floor button): Auto, then the floors top first
+// (map-floors.js), as on a lift's buttons.
+function floorsPanel(map, floor) {
+  const choice = (value, label, on) =>
+    `<button class="map-choice ${on ? 'selected' : ''}" data-action="floorPick" data-id="${esc(value)}" aria-pressed="${on}">${esc(label)}</button>`
+  const auto = choice(
+    'auto',
+    `${t('mapAuto')}${view.floor === 'auto' ? ` (${floorName(map, floor)})` : ''}`,
+    view.floor === 'auto',
+  )
+  const floors = floorChoices(map, baseName(map)).map((f) => choice(f.id, f.label, view.floor === f.id))
+  return `<aside class="map-panel map-floors" aria-label="${esc(t('mapFloor'))}">${panelHead(t('mapFloor'))}<div class="map-choices">${[auto, ...floors].join('')}</div><p class="hint">${esc(t('mapFloorHelp'))}</p></aside>`
+}
+
+// The map panel: the game mode, the maps and the map's style.
 function mapsPanel(map, floor) {
   const maps = (state.squad.maps || []).filter(drawable)
   const choice = (action, value, label, on) =>
@@ -190,18 +210,6 @@ function mapsPanel(map, floor) {
     ),
     ...maps.map((m) => choice('mapPick', m.key, mapName(m.key), view.map === m.key)),
   ].join('')
-  const floors = map?.layers?.length
-    ? `<h3>${esc(t('mapFloor'))}</h3><div class="map-choices">${[
-        choice(
-          'floorPick',
-          'auto',
-          `${t('mapAuto')}${view.floor === 'auto' ? ` (${floorName(map, floor)})` : ''}`,
-          view.floor === 'auto',
-        ),
-        choice('floorPick', '', baseName(map), view.floor === ''),
-        ...map.layers.map((l) => choice('floorPick', l.id, l.name, view.floor === l.id)),
-      ].join('')}</div><p class="hint">${esc(t('mapFloorHelp'))}</p>`
-    : ''
   // tarkov.dev's Abstract (the SVG) and Satellite (the tiles), for a map with both.
   const style = styleOf(map)
   const styles =
@@ -224,7 +232,7 @@ function mapsPanel(map, floor) {
       ),
     )
     .join('')}</div>`
-  return `<aside class="map-panel map-maps" aria-label="${esc(t('mapPick'))}">${panelHead(t('mapPick'))}${modes}<h3>${esc(t('liveMap'))}</h3><div class="map-choices">${mapList}</div>${floors}${styles}</aside>`
+  return `<aside class="map-panel map-maps" aria-label="${esc(t('mapPick'))}">${panelHead(t('mapPick'))}${modes}<h3>${esc(t('liveMap'))}</h3><div class="map-choices">${mapList}</div>${styles}</aside>`
 }
 
 // The search panel: tarkov.dev's search, by commas.
@@ -331,13 +339,15 @@ export function liveMapPage() {
   const panel =
     view.panel === 'maps'
       ? mapsPanel(map, floor)
-      : view.panel === 'filters'
-        ? filtersPanel(map, data)
-        : view.panel === 'settings'
-          ? settingsPanel()
-          : view.panel === 'search'
-            ? searchPanel()
-            : ''
+      : view.panel === 'floors' && map?.layers?.length
+        ? floorsPanel(map, floor)
+        : view.panel === 'filters'
+          ? filtersPanel(map, data)
+          : view.panel === 'settings'
+            ? settingsPanel()
+            : view.panel === 'search'
+              ? searchPanel()
+              : ''
   return `<div class="live-map-page"><div id="live-map" data-keep="livemap"></div>${note ? `<p class="map-note">${esc(note)}</p>` : ''}${rail(map, floor)}${penBar()}${clearNotice()}${panel ? `<div class="map-panel-host">${panel}</div>` : ''}${raidInfo(map, data)}<div class="map-coords" data-keep="map-coords"></div></div>`
 }
 
@@ -1008,6 +1018,14 @@ function drawMap() {
   drawPins(map, floor)
   lm.map.getContainer().classList.toggle('map-pinning', pinning)
   followSquad(map, members)
+  // A new position of your own outside the view: the map pans to it (map-keep.js).
+  const me = placed(members).find((m) => m.me)
+  keepMeInView(
+    lm.map,
+    me,
+    !!me && findMap(state.squad?.maps, me.map)?.key === map.key,
+    state.mapSettings?.openOnPosition !== false,
+  )
   if (view.focus?.map === map.key) {
     const { x, z, zoom, pulse, keep, rings, points } = view.focus
     view.focus = null

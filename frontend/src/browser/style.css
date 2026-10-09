@@ -1107,6 +1107,8 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 .map-choice.selected{background:var(--selected);color:var(--accent);font-weight:600}
 .map-panel h3{margin:10px 0 4px;font-size:12px;font-weight:500;color:var(--muted)}
 .map-panel{width:300px;max-height:calc(100vh - var(--page-top, 48px) - 190px);overflow:auto;box-sizing:border-box;padding:12px 14px 14px}
+/* The floors panel lists short names only. */
+.map-panel.map-floors{width:220px}
 .map-panel header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .map-panel h2{margin:0;font-size:14px}
 .map-panel header button{width:28px;height:28px;padding:0;border:0;background:none;color:var(--text-2)}

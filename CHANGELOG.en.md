@@ -8,7 +8,13 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### New
 
+- When a position screenshot opens the map and your arrow is outside the view, the map moves just enough to bring it in, the zoom kept. An arrow already in view stays where it is. It works while the map setting "Show the map on a position screenshot" is on.
 - The item panel says "No use" for a key that has none: its door or safe is always unlocked (the Health Resort rooms…), or it opens no lock (the Pumping station doors…). It is read from the "usage" of the key's page on the official wiki. Before, a key with no places showed nothing, so it was not clear whether it had no use or the data was missing. A key with places on tarkov.dev shows them as before.
+
+### Improved
+
+- The map's floor is picked with a floor button of its own in the button column left of the map. Before, the floors were under the list of maps, and each floor change in a raid needed the maps panel. The floor button shows on maps with floors only.
+- The map's floors are listed top floor first, like a lift's buttons. Before, the floors above came after the ground and the underground (Reserve's Bunkers…) came last, hard to find; it now comes right below the ground.
 
 ## v0.1.29 (2026-10-07)
 
