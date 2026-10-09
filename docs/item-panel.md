@@ -156,7 +156,15 @@
   - ローカル接続（Host 上）: Host の設定 `questSites`。
   - Client: Host から届いた `questSites`（古い Host なら `questSite` を先頭にした順番）。届いていなければアイテムと一緒に届いた `questSites`。
 
-## アイテム検索
+## 鍵の使う場所
+
+- **場所**: 鍵を開けられる扉や金庫の場所は、tarkov.dev のマップの `locks` から作ります（`iteminfo` の `Locks`）。「使う場所」にマップごとに並べ、押すとマップでその場所を示します（`itemLocks`、`view-item.js`）。
+- **使い道なし**（`internal/keyusage`）: tarkov.dev に場所が無い鍵には、本当に使い道が無いものと、データが無いだけのもの（Labs のキーカード、金庫、車の鍵など）が混ざっているので、場所の有無だけでは分かりません。そこで公式 Wiki の鍵のページ（Category:Keys と Category:Keycards）のインフォボックスから `usage`（用途の文）と `node`（tarkov.dev と同じアイテム ID）を読み、用途の文を 2 つに分けます（`Classify`）。
+  - **いつも開いている**（`open`）: 「always unlocked」「always open」。Health Resort の部屋、Pinewood hotel の 206 号室、ガソリンスタンドと気象観測所の金庫など。
+  - **何も開けない**（`none`）: 「does (currently) not open any lock」「does not open any lock」「no usage」「has no use」など。
+  - どちらにも当たらない文は分類しません（間違った案内より、何も出さないほうがよいため）。両方に当たるときは「いつも開いている」にします（Health Resort の鍵は「no usage」と「always unlocked」の両方を書いている）。2026-10-08 の時点で 247 ページ中 26 件が分類されます。
+  - **取得**: 起動時に裏で取り、1 日ごとに取り直します（失敗したら 30 分後）。ページは 50 件ずつ本文ごと取るので、数回のリクエストで済みます。結果は分類できた鍵だけを `%APPDATA%MAYAKcatalogkey-usage.json` にキャッシュします（この PC のキャッシュ。無ければ取り直す）。取れるまでは何も出しません。アイテム欄の表示は待ちません。
+  - **表示**: tarkov.dev に場所が無い鍵で、分類できたときだけ、「使う場所」に 1 行で出します（`keyUse`。Host の `itemProgress` が付け、Client はそのまま表示）。tarkov.dev に場所がある鍵は、Wiki に使い道なしとあっても場所を出します（Folding car key、VAZ car key など）。タスクに要る鍵（Kruglov's RFID keycard など）も「開けられる鍵がありません」と出ますが、要るタスクは別の欄に出るので食い違いません。
 
 - 欄上部のルーペボタンで、アイテムの上に重なる検索ポップアップを開きます（アイテム表示は動きません）。ポップアップの外を押すか `Escape` で閉じ、検索語をクリアします。
 - 入力から 150ms 待って `itemSearch` を実行します。入力は最大 80 文字、後から打った検索の結果が優先されます。

@@ -91,3 +91,11 @@ test('names by language keep language codes and text only', () => {
   assert.deepEqual(names(null), {})
   assert.deepEqual(names(['ja']), {})
 })
+
+test("a key's wiki usage is one of two words, else none", () => {
+  const key = (keyUse) => itemInfo({ id: 'k', name: 'Room 323 key', keyUse }).keyUse
+  assert.equal(key('open'), 'open')
+  assert.equal(key('none'), 'none')
+  assert.equal(key('<b>'), '')
+  assert.equal(key(undefined), '')
+})

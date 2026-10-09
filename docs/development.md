@@ -71,6 +71,7 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `itemdetect` | スクリーンショット内のアイテム詳細ウィンドウの検出 |
 | `iteminfo` | アイテム欄の表示内容（フリマ・トレーダー価格、必要なタスク・ハイドアウト、価格履歴） |
 | `itemmatch` | OCR 結果からアイテム名への照合（日本語名を含む） |
+| `keyusage` | 公式 Wiki の鍵のページの用途から、使い道の無い鍵（いつも開いている・何も開けない）を見分ける（[item-panel.md](item-panel.md#鍵の使う場所)） |
 | `locale` | 英語以外に読むゲーム言語の一覧（[languages.md](languages.md)） |
 | `logdetect` | EFT ログからのレイド状態の判定 |
 | `model` | 共有データ型、ハイドアウト進捗の計算 |

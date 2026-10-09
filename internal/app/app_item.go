@@ -8,6 +8,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/local/mayak/internal/appdir"
 	"github.com/local/mayak/internal/iteminfo"
 	"github.com/local/mayak/internal/itemmatch"
 	"github.com/local/mayak/internal/model"
@@ -69,6 +70,10 @@ func (a *App) latestItemID() string {
 // itemProgress marks the item's tasks and hideout levels with TarkovTracker
 // progress when it belongs to the same game mode.
 func (a *App) itemProgress(info iteminfo.Info) iteminfo.Info {
+	// A key with places shows them; with none, what the wiki says of it.
+	if len(info.Locks) == 0 && a.keyUse != nil {
+		info.KeyUse = string(a.keyUse.Kind(info.ID))
+	}
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	info = withTaskURLs(info, a.settings.QuestSites)
@@ -87,6 +92,13 @@ func (a *App) itemProgress(info iteminfo.Info) iteminfo.Info {
 		}
 	}
 	return iteminfo.Progress(info, tasks, hideout)
+}
+
+// keyUsagePath is the cache of the wiki's key usage, kept with the catalog
+// (a cache of this PC, fetched again when missing).
+func keyUsagePath() string {
+	path, _ := appdir.Path("catalog", "key-usage.json")
+	return path
 }
 
 // BrowserItemHistory returns the item's flea market price history for the

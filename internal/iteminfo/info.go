@@ -41,6 +41,9 @@ type Info struct {
 	// Locks are the doors and containers a key opens (none for an item that
 	// is not a key, or one tarkov.dev has not placed).
 	Locks []Lock `json:"locks,omitempty"`
+	// KeyUse is what the official wiki says of a key with no places: "open"
+	// (always unlocked) or "none" (opens nothing); internal/keyusage.
+	KeyUse string `json:"keyUse,omitempty"`
 	// Live is true when the prices came from the GraphQL API just now; the
 	// catalog snapshot is at most catalog.RefreshInterval old otherwise.
 	Live bool `json:"live"`

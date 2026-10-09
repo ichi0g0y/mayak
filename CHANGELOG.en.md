@@ -4,6 +4,12 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### New
+
+- The item panel says "No use" for a key that has none: its door or safe is always unlocked (the Health Resort rooms…), or it opens no lock (the Pumping station doors…). It is read from the "usage" of the key's page on the official wiki. Before, a key with no places showed nothing, so it was not clear whether it had no use or the data was missing. A key with places on tarkov.dev shows them as before.
+
 ## v0.1.29 (2026-10-07)
 
 ### Fixed

@@ -22,6 +22,7 @@ import (
 	"github.com/local/mayak/internal/hideoutlog"
 	"github.com/local/mayak/internal/itemapi"
 	"github.com/local/mayak/internal/iteminfo"
+	"github.com/local/mayak/internal/keyusage"
 	"github.com/local/mayak/internal/logdetect"
 	"github.com/local/mayak/internal/model"
 	"github.com/local/mayak/internal/ocr"
@@ -90,8 +91,10 @@ type App struct {
 	catalogRefreshMu  sync.Mutex
 	itemClient        *itemapi.Client
 	itemInfo          *iteminfo.Service
-	bossInfo          *bossinfo.Client
-	screenshotIndex   *screenshotstore.Index
+	// keyUse is what the official wiki says of keys with no use.
+	keyUse          *keyusage.Store
+	bossInfo        *bossinfo.Client
+	screenshotIndex *screenshotstore.Index
 	// lastRaid is the last raid that ended, and goonReports the raids reported
 	// (account|mode|start), for Goons reports.
 	lastRaid      *GoonRaid
@@ -142,7 +145,7 @@ type App struct {
 func NewApp() *App {
 	processed, _ := config.LoadProcessedScreenshot()
 	data := catalog.New()
-	a := &App{hideoutStore: hideoutlog.NewStore(filepath.Join(hideoutDirectory(), "events.json")), status: model.Status{Connection: "disconnected", ScreenshotType: "unknown", LastScreenshot: processed.Path, Tracker: model.TrackerStatus{Connection: "disabled"}}, lastProcessed: processed, remotes: make(map[string]*remote.Client), catalogClient: data, questClient: questapi.NewWithSource(data).EnableWiki(), itemClient: itemapi.NewWithSource(data), itemInfo: iteminfo.New(data), bossInfo: bossinfo.New(), screenshotIndex: screenshotstore.NewIndex(screenshotIndexPath()), trackerClient: tracker.New(), trackerData: trackerstore.Empty(), trackerTasks: make(map[string]string), logs: applog.New(500), done: make(chan struct{})}
+	a := &App{hideoutStore: hideoutlog.NewStore(filepath.Join(hideoutDirectory(), "events.json")), status: model.Status{Connection: "disconnected", ScreenshotType: "unknown", LastScreenshot: processed.Path, Tracker: model.TrackerStatus{Connection: "disabled"}}, lastProcessed: processed, remotes: make(map[string]*remote.Client), catalogClient: data, questClient: questapi.NewWithSource(data).EnableWiki(), itemClient: itemapi.NewWithSource(data), itemInfo: iteminfo.New(data), keyUse: keyusage.New(keyUsagePath()).Enable(), bossInfo: bossinfo.New(), screenshotIndex: screenshotstore.NewIndex(screenshotIndexPath()), trackerClient: tracker.New(), trackerData: trackerstore.Empty(), trackerTasks: make(map[string]string), logs: applog.New(500), done: make(chan struct{})}
 	a.status.Profile = loadPlayerProfile()
 	return a
 }
@@ -153,6 +156,7 @@ func (a *App) startup(ctx context.Context) {
 	// Story chapters are known from the wiki only; fetch its list before the
 	// first recognition needs it.
 	a.questClient.WarmWiki()
+	a.keyUse.Warm()
 	if removed, err := autostart.RemoveLegacy(); err != nil {
 		a.addLog("Warn", "Application", "Could not remove the RaidLens startup entry: "+err.Error())
 	} else if removed {

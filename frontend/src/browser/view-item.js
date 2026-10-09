@@ -248,7 +248,9 @@ function itemDetails() {
                .join('')}</li>`,
          )
          .join('')}</ul></section>`
-     : ''
+     : item.keyUse
+       ? `<section class="item-section"><h3>${esc(t('itemLocks'))}</h3><p class="item-key-use">${esc(t(item.keyUse === 'open' ? 'itemKeyAlwaysOpen' : 'itemKeyOpensNothing'))}</p></section>`
+       : ''
  })()}
  ${itemChart(item)}
  <section class="item-section"><h3>${esc(t('flea'))}</h3>${flea ? row(t('fleaLow'), money(flea.lastLow)) + row(t('fleaAvg'), money(flea.avg24h)) + (flea.low24h && flea.high24h ? row(t('fleaRange'), `${money(flea.low24h)} – ${money(flea.high24h)}`) : '') + row(t('fleaChange'), `${change > 0 ? '+' : ''}${change.toFixed(1)}%`, change > 0 ? 'up' : change < 0 ? 'down' : '') + row(t('fleaOffers'), flea.offers.toLocaleString()) + (flea.minLevel ? row(t('fleaLevel'), 'Lv.' + flea.minLevel) : '') : `<p class="item-empty">${t('noFlea')}</p>`}</section>

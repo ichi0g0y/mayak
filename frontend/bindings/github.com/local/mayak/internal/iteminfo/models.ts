@@ -130,6 +130,12 @@ export class Info {
     "locks"?: Lock[];
 
     /**
+     * KeyUse is what the official wiki says of a key with no places: "open"
+     * (always unlocked) or "none" (opens nothing); internal/keyusage.
+     */
+    "keyUse"?: string;
+
+    /**
      * Live is true when the prices came from the GraphQL API just now; the
      * catalog snapshot is at most catalog.RefreshInterval old otherwise.
      */
@@ -212,7 +218,7 @@ export class Info {
         const $$createField14_0 = $$createType6;
         const $$createField15_0 = $$createType8;
         const $$createField16_0 = $$createType10;
-        const $$createField19_0 = $$createType11;
+        const $$createField20_0 = $$createType11;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("names" in $$parsedSource) {
             $$parsedSource["names"] = $$createField4_0($$parsedSource["names"]);
@@ -236,7 +242,7 @@ export class Info {
             $$parsedSource["locks"] = $$createField16_0($$parsedSource["locks"]);
         }
         if ("questSites" in $$parsedSource) {
-            $$parsedSource["questSites"] = $$createField19_0($$parsedSource["questSites"]);
+            $$parsedSource["questSites"] = $$createField20_0($$parsedSource["questSites"]);
         }
         return new Info($$parsedSource as Partial<Info>);
     }
