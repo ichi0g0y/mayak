@@ -48,7 +48,11 @@ func Run(assets fs.FS, icon, template []byte) error {
 	// installed app's preferences the first time.
 	var seeded bool
 	var seedErr error
-	if version.DevInstance() {
+	// `task dev:fresh` (MAYAK_FRESH=1) starts with no data at all instead.
+	fresh := version.DevInstance() && os.Getenv("MAYAK_FRESH") == "1"
+	if fresh {
+		seedErr = appdir.UseFresh()
+	} else if version.DevInstance() {
 		seeded, seedErr = appdir.UseDev()
 	}
 	service := NewApp()
@@ -64,7 +68,13 @@ func Run(assets fs.FS, icon, template []byte) error {
 	if restarted {
 		service.addLog("Info", "Update", "Restarted into MAYAK "+version.Current())
 	}
-	if seedErr != nil {
+	if fresh {
+		if seedErr != nil {
+			service.addLog("Warn", "Application", "Could not empty "+appdir.FreshName+": "+seedErr.Error())
+		} else {
+			service.addLog("Info", "Application", "Development build: data in "+appdir.FreshName+", started empty as on a new PC")
+		}
+	} else if seedErr != nil {
 		service.addLog("Warn", "Application", "Could not copy the preferences into "+appdir.DevName+": "+seedErr.Error())
 	} else if seeded {
 		service.addLog("Info", "Application", "Development build: data in "+appdir.DevName+", preferences copied from Mayak")

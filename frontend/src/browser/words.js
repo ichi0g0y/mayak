@@ -418,6 +418,8 @@ export const words = {
     tutFoldersScreens: 'スクリーンショット',
     tutFoldersLogs: 'ログ',
     tutNotFound: '未検出。設定で選んでください',
+    tutKeyNow: '今の割り当て',
+    tutKeyNone: 'EFT でスクリーンショットのキーがまだ割り当てられていません。',
     tutOpenFolders: 'フォルダの設定を開く',
     tutKeyTitle: 'スクリーンショットキーを押しやすい場所に',
     tutKey:
@@ -613,6 +615,13 @@ export const words = {
     toastPrestige:
       '{mode} のプレステージ（{at}）を見つけました。TarkovTracker でもプレステージしてください。リセットを確かめたら、プレステージ後の進捗を送り直します。',
     toastOpenTrackerPrestige: 'TarkovTracker を開く',
+    toastSetupFolders_screenshots:
+      'EFT のスクリーンショットのフォルダが見つかりません。設定で選ぶまで、スクリーンショットを読めません。',
+    toastSetupFolders_logs:
+      'EFT のログのフォルダが見つかりません。設定で選ぶまで、レイドやマップの検出と TarkovTracker の同期が動きません。',
+    toastSetupFolders_both:
+      'EFT のスクリーンショットとログのフォルダが見つかりません。設定で選ぶまで、MAYAK はほとんど動きません。',
+    toastOpenFolders: 'フォルダの設定を開く',
     toastTaskRead: 'タスク: {task}',
     toastTaskNotRead: 'タスクを特定できませんでした（読んだ文字: {text}）',
     toastItemRead: 'アイテム: {item}',
@@ -681,6 +690,9 @@ export const words = {
     tracker_connected: '同期中',
     tracker_connecting: '接続中',
     'tracker_waiting-profile': 'プロフィール待ち',
+    trackerWaiting_logs: 'EFT のログのフォルダが見つかりません。設定のフォルダで選んでください',
+    trackerWaiting_stopped: '監視が止まっているので、EFT のログを読んでいません',
+    trackerWaiting_game: 'EFT のログにまだプロフィールがありません。EFT を起動してください',
     'tracker_missing-token': 'APIキー未設定',
     tracker_error: 'エラー',
     tracker_disabled: 'オフ',
@@ -1228,6 +1240,8 @@ export const words = {
     tutFoldersScreens: 'Screenshots',
     tutFoldersLogs: 'Logs',
     tutNotFound: 'Not found; pick it in the settings',
+    tutKeyNow: 'Bound now',
+    tutKeyNone: 'No screenshot key is bound in EFT yet.',
     tutOpenFolders: 'Open the folder settings',
     tutKeyTitle: 'Put the screenshot key within reach',
     tutKey:
@@ -1424,6 +1438,13 @@ export const words = {
     toastPrestige:
       'A {mode} Prestige ({at}) was found. Take the Prestige on TarkovTracker too; once its reset is seen, the progress since is sent again.',
     toastOpenTrackerPrestige: 'Open TarkovTracker',
+    toastSetupFolders_screenshots:
+      "EFT's screenshots folder is not found. Until it is chosen in the settings, no screenshot is read.",
+    toastSetupFolders_logs:
+      "EFT's logs folder is not found. Until it is chosen in the settings, raids and maps are not detected and TarkovTracker does not sync.",
+    toastSetupFolders_both:
+      "EFT's screenshots and logs folders are not found. Until they are chosen in the settings, MAYAK can do little.",
+    toastOpenFolders: 'Open the folder settings',
     toastTaskRead: 'Task: {task}',
     toastTaskNotRead: 'Task not found (read: {text})',
     toastItemRead: 'Item: {item}',
@@ -1492,6 +1513,9 @@ export const words = {
     tracker_connected: 'synced',
     tracker_connecting: 'connecting',
     'tracker_waiting-profile': 'waiting for profile',
+    trackerWaiting_logs: 'The EFT logs folder is not found; choose it under Folders in the settings',
+    trackerWaiting_stopped: 'Monitoring is stopped, so the EFT logs are not read',
+    trackerWaiting_game: 'The EFT logs have no profile yet; start EFT',
     'tracker_missing-token': 'no API key',
     tracker_error: 'error',
     tracker_disabled: 'off',

@@ -120,7 +120,11 @@ type CatalogStatus struct {
 }
 
 type TrackerStatus struct {
-	Connection  string `json:"connection"`
+	Connection string `json:"connection"`
+	// Waiting says why the EFT profile is awaited ("waiting-profile"): "logs"
+	// (no logs folder), "stopped" (the logs are not read) or "game" (no EFT
+	// session with a profile in the logs yet).
+	Waiting     string `json:"waiting,omitempty"`
 	Mode        string `json:"mode"`
 	ProfileID   string `json:"profileId"`
 	AccountID   string `json:"accountId"`

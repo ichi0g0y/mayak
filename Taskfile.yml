@@ -163,6 +163,14 @@ tasks:
       - task: frontend:install
       - '{{.WAILS}} dev -config ./build/config.yml -port 9245'
 
+  dev:fresh:
+    summary: Run like `dev`, but as on a new PC (an empty data folder, Mayak-fresh, emptied at each start)
+    env:
+      MAYAK_FRESH: '1'
+    cmds:
+      - task: frontend:install
+      - '{{.WAILS}} dev -config ./build/config.yml -port 9245'
+
   build:dev:
     summary: Development build used by `dev` (no production tag, so assets come from the Vite dev server)
     cmds:

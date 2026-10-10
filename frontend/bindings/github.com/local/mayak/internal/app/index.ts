@@ -18,6 +18,7 @@ export {
     PopupPage,
     PopupPlace,
     ScreenshotEntry,
+    ScreenshotKey,
     SnapNoteData,
     SquadShot,
     Toast,

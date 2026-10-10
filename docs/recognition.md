@@ -9,6 +9,7 @@ MAYAK は EFT のスクリーンショットキーでゲーム自身が保存し
   - `Logs` フォルダのログ(レイド状態やマップの判定に使う。`internal/logdetect`)
   - ゲーム設定 `%AppData%\Battlestate Games\Escape from Tarkov\Settings\Game.ini`(表示言語のみ。`eftdetect.GameLanguage`)
   - ランチャー設定 `%AppData%\Battlestate Games\BsgLauncher\settings` の `gamesRootDir`(フォルダの自動検出のみ。`eftdetect.Detect`)
+  - Windows に登録された EFT のインストール先(レジストリ `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\EscapeFromTarkov` の `InstallLocation`。ログのフォルダの自動検出のみ)
 - 解析はプレイヤーが撮ったスクリーンショットに対してだけ行うので、ゲームとのやり取りはすべてプレイヤーの操作が起点になります。アンチチートの観点でも、外部ツールがゲームを観察していると見なされる経路を持ちません。
 - 画面認識も OCR もローカルで完結します(同梱 Tesseract または Windows OCR)。ネットワークを使うのはカタログ取得とブラウザ連携だけです([catalog.md](catalog.md)、[settings-and-integrations.md](settings-and-integrations.md))。
 
@@ -30,7 +31,7 @@ Screenshots/*.png|jpg ─▶ watcher ─▶ processScreenshot(sequence++、前�
 
 ## スクリーンショットの監視 (`internal/watcher`)
 
-- `StartMonitoring` が設定の `ScreenshotDirectory` を `watcher.New` で監視します(Windows Host モードのみ。ログ監視 `startLogDetector` も同時に開始)。フォルダは `eftdetect.Detect` が自動検出します(`Documents\Escape from Tarkov\Screenshots`、OneDrive 配下、ランチャーの `gamesRootDir`、各ドライブの `Battlestate Games` / `Games` 配下)。
+- `StartMonitoring` が設定の `ScreenshotDirectory` を `watcher.New` で監視します(Windows Host モードのみ。ログ監視 `startLogDetector` も同時に開始)。フォルダは `eftdetect.Detect` が自動検出します。スクリーンショットは、EFT(Unity)が保存する Windows のドキュメントフォルダ(既知のフォルダ `FOLDERID_Documents`。別のドライブや OneDrive に移していてもその場所)の `Escape from Tarkov\Screenshots` だけを見ます(Windows が答えないときはホームの `Documents` と `OneDrive\Documents`)。EFT の設定やログには保存先が書かれていません(2026-10-10 に確認。`Control.ini` にあるのはスクリーンショットのキーの割り当て `MakeScreenshot` だけ)。ゲームのフォルダの `Screenshots` は EFT の保存先ではないので見ません。ログは、Windows に登録されたインストール先、ランチャーの `gamesRootDir`(`%AppData%` は Windows に聞く)、各ドライブの `Battlestate Games` / `Games` 配下の順に探します。ユーザー名ではなくユーザーのフォルダから探すので、ユーザー名を変えても見つかります。起動時は、空の設定に加えて、保存したフォルダが無くなっていたとき(ユーザーフォルダやドキュメントを移した、ゲームを入れ直した)も、見つけたフォルダに置き換えてログに残します。
 - 対象拡張子は `.png` / `.jpg` / `.jpeg` です。
 - fsnotify の `Create` / `Rename` / `Write` を受けます。Windows では通知がまとめられたり欠けたりするので、1 秒ごとのポーリングで「最新ファイル 1 件」も確認します(更新から 2 分以内のもののみ)。
 - 起動時には、更新から 15 分以内の最新スクリーンショットを 1 件だけ再生します。解析中にアプリを再起動しても画像を取りこぼさないためです。

@@ -33,6 +33,7 @@ import {
   GetUpdateStatus,
   ChooseLogsDirectory,
   ChooseScreenshotDirectory,
+  EFTScreenshotKey,
   ChooseSoundFile,
   GetLogs,
   GetSettings,
@@ -98,6 +99,13 @@ function App() {
   // The Remote IDs shown instead of dots (by row; -1 is the in-app browser's).
   const [shownRemoteIds, setShownRemoteIds] = useState<Set<number>>(() => new Set())
   const [busy, setBusy] = useState(false)
+  // EFT's own screenshot key (Control.ini), shown under the screenshots folder.
+  const [shotKey, setShotKey] = useState<{ known: boolean; keys: string[] } | null>(null)
+  useEffect(() => {
+    EFTScreenshotKey()
+      .then((key) => setShotKey(key ? { known: !!key.known, keys: key.keys || [] } : null))
+      .catch(() => setShotKey(null))
+  }, [])
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [logLevel, setLogLevel] = useState('all')
   const [logCategory, setLogCategory] = useState('all')
@@ -766,6 +774,13 @@ function App() {
                       {t('select')}
                     </Button>
                   </div>
+                  {shotKey?.known && (
+                    <p className={`help${shotKey.keys.length ? '' : ' warn-text'}`}>
+                      {shotKey.keys.length
+                        ? t('screenshotKeyNow').replace('{key}', shotKey.keys.join(' / '))
+                        : t('screenshotKeyNone')}
+                    </p>
+                  )}
                 </div>
                 <div className="field">
                   <Label htmlFor="logs">{t('logsFolder')}</Label>
@@ -1576,7 +1591,12 @@ function App() {
                 <div className="card-title-actions">
                   <div>
                     <CardTitle>{t('trackerTitle')}</CardTitle>
-                    <CardDescription>{trackerConnectionLabel}</CardDescription>
+                    <CardDescription>
+                      {trackerConnectionLabel}
+                      {status.tracker.connection === 'waiting-profile' && status.tracker.waiting
+                        ? ` · ${t(`trackerWaiting_${status.tracker.waiting}` as never)}`
+                        : ''}
+                    </CardDescription>
                   </div>
                   <Button
                     type="button"

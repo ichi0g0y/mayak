@@ -111,8 +111,18 @@ func (a *App) updateTrackerConnectionLocked() {
 		a.status.Tracker.Connection = "disabled"
 		return
 	}
+	a.status.Tracker.Waiting = ""
 	if a.status.Tracker.Mode == "" {
 		a.status.Tracker.Connection = "waiting-profile"
+		// Why: the profile comes from the EFT logs.
+		switch {
+		case a.settings.LogsDirectory == "" || !isDir(a.settings.LogsDirectory):
+			a.status.Tracker.Waiting = "logs"
+		case a.trackerDetector == nil:
+			a.status.Tracker.Waiting = "stopped"
+		default:
+			a.status.Tracker.Waiting = "game"
+		}
 		return
 	}
 	if a.trackerData.TokenFor(a.status.Tracker.AccountID, a.status.Tracker.ProfileID, a.status.Tracker.Mode) == "" {

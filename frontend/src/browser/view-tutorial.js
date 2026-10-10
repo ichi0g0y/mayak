@@ -8,7 +8,8 @@ import { esc, t, appVersion, icon, render, api, state, action, SUPPORT_URL } fro
 
 export let tutorialOpen = false,
   tutorialStep = 0,
-  tutorialSettings = null
+  tutorialSettings = null,
+  tutorialKey = null
 
 const tutorialSteps = ['welcome', 'folders', 'key', 'map', 'remote', 'tracker', 'done']
 export function tutorialHTML() {
@@ -18,7 +19,7 @@ export function tutorialHTML() {
   const body = {
     welcome: `<p>${esc(t('tutWelcome'))}</p>${appVersion ? `<p class="hint">MAYAK ${esc(appVersion)}</p>` : ''}`,
     folders: `<p>${esc(t('tutFolders'))}</p><div class="tutorial-status"><span>${esc(t('tutFoldersScreens'))}: <code>${esc(tutorialSettings?.screenshotDirectory || t('tutNotFound'))}</code></span><span>${esc(t('tutFoldersLogs'))}: <code>${esc(tutorialSettings?.logsDirectory || t('tutNotFound'))}</code></span></div><button data-action="tutorialFolders">${icon('folder')}${esc(t('tutOpenFolders'))}</button>`,
-    key: `<p>${esc(t('tutKey'))}</p><p class="hint">${esc(t('tutKeyNote'))}</p>`,
+    key: `<p>${esc(t('tutKey'))}</p>${keyStatus()}<p class="hint">${esc(t('tutKeyNote'))}</p>`,
     map: `<p>${esc(t('tutMap'))}</p><button data-action="tutorialMap">${icon('map')}${esc(t('tutOpenMap'))}</button>`,
     remote: `<p>${esc(t('tutRemote'))}</p><button data-action="tutorialRemote">${icon('linked')}${esc(t('tutOpenRemote'))}</button>`,
     tracker: `<p>${esc(t('tutTracker'))}</p><button data-action="tutorialTracker">${icon('tracker')}${esc(t('tutOpenTracker'))}</button>`,
@@ -44,6 +45,14 @@ export function tutorialHTML() {
       : `<div><button data-action="tutorialSkip">${esc(t('tutSkip'))}</button></div><div><button data-action="tutorialBack">${esc(t('tutBack'))}</button><button class="primary" data-action="tutorialNext">${esc(t('tutNext'))}</button></div>`
   return `<div class="tutorial-backdrop" data-action="tutorialSkip"></div><section class="tutorial" role="dialog" aria-modal="true" aria-labelledby="tutorial-title"><p class="tutorial-kicker">${esc(t('tutStep'))} ${tutorialStep + 1} / ${tutorialSteps.length}</p><h2 id="tutorial-title">${esc(title)}</h2>${body}<div class="tutorial-steps">${dots}</div><div class="tutorial-actions">${nav}</div></section>`
 }
+// The key EFT has for screenshots now (Control.ini), or a warning when none is
+// bound; nothing when EFT's settings cannot be read.
+function keyStatus() {
+  if (!tutorialKey?.known) return ''
+  return tutorialKey.keys?.length
+    ? `<div class="tutorial-status"><span>${esc(t('tutKeyNow'))}: <code>${esc(tutorialKey.keys.join(' / '))}</code></span></div>`
+    : `<div class="tutorial-status warn"><span>${esc(t('tutKeyNone'))}</span></div>`
+}
 export async function openTutorial() {
   tutorialOpen = true
   tutorialStep = 0
@@ -55,6 +64,11 @@ export async function openTutorial() {
     tutorialSettings = await window.mayakDesktop?.backend?.GetSettings?.()
   } catch {
     tutorialSettings = null
+  }
+  try {
+    tutorialKey = await window.mayakDesktop?.backend?.EFTScreenshotKey?.()
+  } catch {
+    tutorialKey = null
   }
   if (tutorialOpen) render()
 }

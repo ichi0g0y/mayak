@@ -4,6 +4,21 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### New
+
+- When EFT's screenshots or logs folder is not found, a notice stays until closed, with a button to the folder settings. Choosing the folder takes it away and starts monitoring.
+- The first-run guide and the folder settings show EFT's current screenshot key (e.g. Ctrl + ;), read from EFT's settings, and say so when none is bound.
+
+### Improved
+
+- EFT's screenshot and log folders are found more surely. Screenshots are looked for in Windows' actual Documents folder (also when moved to another drive or OneDrive). Logs are also looked for where Windows has EFT installed. At start, a saved folder that is gone (the profile or Documents moved, the game reinstalled) is found again and replaced.
+
+### Fixed
+
+- TarkovTracker sync could stay at "Waiting for EFT profile": with no screenshots folder, monitoring did not start, and the EFT logs, where the profile is found, were not read. The logs are now read without the screenshots folder, and the waiting status says why (no logs folder, monitoring stopped, EFT not started yet).
+
 ## v0.1.31 (2026-10-10)
 
 ### Fixed

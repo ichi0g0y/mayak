@@ -277,7 +277,8 @@ function trackerIndicator() {
         : status === 'disabled'
           ? 'off'
           : 'wait'
-  const text = [`TarkovTracker: ${words[state.language]['tracker_' + status] || status}`, h.trackerError]
+  const waiting = status === 'waiting-profile' && h.trackerWaiting ? t('trackerWaiting_' + h.trackerWaiting) : ''
+  const text = [`TarkovTracker: ${words[state.language]['tracker_' + status] || status}`, waiting, h.trackerError]
     .filter(Boolean)
     .join(' · ')
   // Tasks done in the game but not on TarkovTracker: a count, and a press

@@ -440,6 +440,8 @@ Windows 実装（`internal/browserview/view_windows.go`）の動作:
 
 Host で初めて起動したとき（`browser.json` の `tutorialDone` が `true` でないとき）、シェルは 7 ステップのチュートリアルをオーバーレイで表示します。ようこそ → EFT のフォルダ（`GetSettings` で見つけたスクリーンショット / ログのフォルダを表示）→ スクリーンショットキー → マップ → 別の PC や普段のブラウザ（tarkov.dev 連携）→ TarkovTracker → 完了、の順です。各ステップのボタンは、対応する設定セクション（`settings` → `settingsSection`）やマップ（`livemap`。マップの無いリリース版では何もしない）を開きます。
 
+- スクリーンショットキーの手順では、EFT の今の割り当てを出します（`EFTScreenshotKey`。EFT の `Control.ini` の `MakeScreenshot` を `eftdetect.ScreenshotKeys` が「Ctrl + ;」のように読む）。割り当てが無いときは警告を出し、EFT の設定が読めないときは何も出しません。設定の「フォルダ」でも、スクリーンショットのフォルダの下に同じ割り当てを出します。
+- 確かめ方: 設定の「外観」の「チュートリアルを表示」でいつでも開けます。初回起動の流れ（フォルダの自動検出、チュートリアル、フォルダが無いときの通知）をそのまま試すには `task dev:fresh` を使います（[development.md](development.md)）。
 - 操作: 「次へ」「戻る」「スキップ」「あとで」「完了」のボタンのほか、Enter / → で進み、← で戻り、Esc で閉じます。
 - 閉じるかスキップすると `preferences` で `tutorialDone: true` を保存します。設定 → 表示 の「チュートリアルを表示」でいつでも再表示できます。
 - 表示中は `overlay` アクションでネイティブビューを隠します。`api.js` は `overlay` フラグを持ち、表示中にほかの理由で `show()` が呼ばれてもビューを出しません。閉じるとアクティブなタブのビューを戻します。

@@ -599,6 +599,8 @@ function hostStatus(s) {
   }
   if (s.tracker && typeof s.tracker === 'object') {
     out.tracker = String(s.tracker.connection || '')
+    // Why the EFT profile is awaited (app_tracker_sync.go): logs, stopped, game.
+    out.trackerWaiting = ['logs', 'stopped', 'game'].includes(s.tracker.waiting) ? s.tracker.waiting : ''
     // Keys registered (none hides the TarkovTracker indicator) and the last
     // error, for the indicator's tooltip.
     out.trackerKeys = Array.isArray(s.tracker.keys) ? s.tracker.keys.length : 0
@@ -1338,6 +1340,7 @@ const ready = (async () => {
     const act = String(event?.action || '')
     void enqueue(async () => {
       if (act === 'trackerPrestige') await perform('openOrFocus', 'https://tarkovtracker.org/settings#prestige')
+      else if (act === 'setupFolders') await perform('settingsAt', 'folders')
       else if (act === 'trackerExperience')
         await perform('openOrFocus', 'https://tarkovtracker.org/settings#progression')
       else if (act === 'updateNotes')

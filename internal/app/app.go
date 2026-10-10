@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"sync"
@@ -115,7 +116,10 @@ type App struct {
 	// takes the notice away.
 	levelWarned atomic.Int64
 	// levelWaiting is an Overall screen's level not sent yet (app_tracker_level.go).
-	levelWaiting   waitingLevel
+	levelWaiting waitingLevel
+	// setupShown is set while the notice of a missing EFT folder shows
+	// (app_setup.go).
+	setupShown     atomic.Bool
 	trackerStore   trackerstore.Store
 	trackerStoreMu sync.Mutex
 	// trackerJobs is the work a key assignment starts (a sync of the
@@ -209,13 +213,21 @@ func (a *App) startup(ctx context.Context) {
 		}
 	}
 	if detected, err := eftdetect.Detect(); err == nil {
+		// An empty folder takes the one found; so does a saved one that is
+		// gone (the profile or Documents moved, the game reinstalled).
 		changed := false
-		if a.settings.ScreenshotDirectory == "" && detected.ScreenshotDirectory != "" {
-			a.settings.ScreenshotDirectory = detected.ScreenshotDirectory
-			changed = true
-		}
-		if a.settings.LogsDirectory == "" && detected.LogsDirectory != "" {
-			a.settings.LogsDirectory = detected.LogsDirectory
+		for _, f := range []struct {
+			name  string
+			saved *string
+			found string
+		}{{"Screenshots", &a.settings.ScreenshotDirectory, detected.ScreenshotDirectory}, {"Logs", &a.settings.LogsDirectory, detected.LogsDirectory}} {
+			if f.found == "" || *f.saved == f.found || (*f.saved != "" && isDir(*f.saved)) {
+				continue
+			}
+			if *f.saved != "" {
+				a.addLog("Info", "Settings", fmt.Sprintf("The %s folder %s is gone: using %s found now", f.name, *f.saved, f.found))
+			}
+			*f.saved = f.found
 			changed = true
 		}
 		if changed && loadErr == nil {
@@ -223,7 +235,8 @@ func (a *App) startup(ctx context.Context) {
 		}
 	}
 	a.rememberExistingScreenshot()
-	if a.settings.AutoStartMonitoring && a.settings.ScreenshotDirectory != "" {
+	a.noteSetupFolders(true)
+	if a.settings.AutoStartMonitoring {
 		_ = a.StartMonitoring()
 	}
 	if len(a.settings.RemoteTargets) > 0 {
@@ -384,6 +397,10 @@ func (a *App) StartMonitoring() error {
 	if alreadyRunning {
 		return nil
 	}
+	// The logs first: TarkovTracker's sync, the raid and the map come from
+	// them, and a screenshots folder missing must not leave them unread (the
+	// sync waited for the EFT profile forever).
+	a.startLogDetector(settings.LogsDirectory)
 	if settings.ScreenshotDirectory == "" {
 		err := errors.New("Screenshotsフォルダが未設定です")
 		a.addLog("Error", "Watcher", err.Error())
@@ -393,7 +410,6 @@ func (a *App) StartMonitoring() error {
 		a.addLog("Error", "Watcher", err.Error())
 		return err
 	}
-	a.startLogDetector(settings.LogsDirectory)
 	a.setMonitoring(true)
 	a.addLog("Info", "Watcher", "Screenshot monitoring started")
 	return nil
@@ -430,6 +446,7 @@ func (a *App) StopMonitoring() {
 func (a *App) setMonitoring(active bool) {
 	a.mu.Lock()
 	a.status.Monitoring = active
+	a.updateTrackerConnectionLocked()
 	status := a.status
 	a.mu.Unlock()
 	if a.ctx != nil {

@@ -767,6 +767,13 @@ export class TrackerProfileSummary {
 
 export class TrackerStatus {
     "connection": string;
+
+    /**
+     * Waiting says why the EFT profile is awaited ("waiting-profile"): "logs"
+     * (no logs folder), "stopped" (the logs are not read) or "game" (no EFT
+     * session with a profile in the logs yet).
+     */
+    "waiting"?: string;
     "mode": string;
     "profileId": string;
     "accountId": string;
@@ -858,14 +865,14 @@ export class TrackerStatus {
      * Creates a new TrackerStatus instance from a string or object.
      */
     static createFrom($$source: any = {}): TrackerStatus {
-        const $$createField16_0 = $$createType25;
-        const $$createField17_0 = $$createType27;
+        const $$createField17_0 = $$createType25;
+        const $$createField18_0 = $$createType27;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("keys" in $$parsedSource) {
-            $$parsedSource["keys"] = $$createField16_0($$parsedSource["keys"]);
+            $$parsedSource["keys"] = $$createField17_0($$parsedSource["keys"]);
         }
         if ("profiles" in $$parsedSource) {
-            $$parsedSource["profiles"] = $$createField17_0($$parsedSource["profiles"]);
+            $$parsedSource["profiles"] = $$createField18_0($$parsedSource["profiles"]);
         }
         return new TrackerStatus($$parsedSource as Partial<TrackerStatus>);
     }

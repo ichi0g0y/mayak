@@ -40,6 +40,7 @@ func (a *App) startLogDetector(dir string) {
 	a.mu.Lock()
 	a.logDetector = d
 	a.trackerDetector = td
+	a.updateTrackerConnectionLocked()
 	a.status.RaidActive = snapshot.Active
 	a.status.LastQueueSeconds = snapshot.LastQueueSeconds
 	a.status.RaidStartedAt = ""

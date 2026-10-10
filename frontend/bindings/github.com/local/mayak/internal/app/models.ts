@@ -498,6 +498,40 @@ export class ScreenshotEntry {
 }
 
 /**
+ * ScreenshotKey is EFT's own screenshot key, for the tutorial and the folder
+ * settings: Known false when EFT's settings cannot be read, Keys empty when
+ * the key is left unbound.
+ */
+export class ScreenshotKey {
+    "known": boolean;
+    "keys": string[];
+
+    /** Creates a new ScreenshotKey instance. */
+    constructor($$source: Partial<ScreenshotKey> = {}) {
+        if (!("known" in $$source)) {
+            this["known"] = false;
+        }
+        if (!("keys" in $$source)) {
+            this["keys"] = [];
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ScreenshotKey instance from a string or object.
+     */
+    static createFrom($$source: any = {}): ScreenshotKey {
+        const $$createField1_0 = $$createType11;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("keys" in $$parsedSource) {
+            $$parsedSource["keys"] = $$createField1_0($$parsedSource["keys"]);
+        }
+        return new ScreenshotKey($$parsedSource as Partial<ScreenshotKey>);
+    }
+}
+
+/**
  * SnapNoteData is a note opened for drawing: the note with its strokes and
  * its image as a data URL.
  */
@@ -521,7 +555,7 @@ export class SnapNoteData {
      * Creates a new SnapNoteData instance from a string or object.
      */
     static createFrom($$source: any = {}): SnapNoteData {
-        const $$createField0_0 = $$createType11;
+        const $$createField0_0 = $$createType12;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("note" in $$parsedSource) {
             $$parsedSource["note"] = $$createField0_0($$parsedSource["note"]);
@@ -640,7 +674,7 @@ export class Toast {
      */
     static createFrom($$source: any = {}): Toast {
         const $$createField6_0 = $$createType4;
-        const $$createField10_0 = $$createType13;
+        const $$createField10_0 = $$createType14;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("params" in $$parsedSource) {
             $$parsedSource["params"] = $$createField6_0($$parsedSource["params"]);
@@ -693,6 +727,7 @@ const $$createType7 = MenuItem.createFrom;
 const $$createType8 = $Create.Array($$createType7);
 const $$createType9 = screenshotstore$0.Record.createFrom;
 const $$createType10 = $Create.Nullable($$createType9);
-const $$createType11 = snapnote$0.Note.createFrom;
-const $$createType12 = ToastAction.createFrom;
-const $$createType13 = $Create.Array($$createType12);
+const $$createType11 = $Create.Array($Create.Any);
+const $$createType12 = snapnote$0.Note.createFrom;
+const $$createType13 = ToastAction.createFrom;
+const $$createType14 = $Create.Array($$createType13);

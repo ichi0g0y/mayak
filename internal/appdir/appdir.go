@@ -49,6 +49,21 @@ func Path(parts ...string) (string, error) {
 	return filepath.Join(append([]string{base, Name}, parts...)...), err
 }
 
+// FreshName is the folder of `task dev:fresh`: emptied at every start, never
+// seeded, so the app starts as on a new PC (the folder detection, the
+// tutorial and the setup notice show as they would).
+const FreshName = "Mayak-fresh"
+
+// UseFresh makes Name FreshName and empties that folder.
+func UseFresh() error {
+	base, err := os.UserConfigDir()
+	Name = FreshName
+	if err != nil {
+		return err
+	}
+	return os.RemoveAll(filepath.Join(base, FreshName))
+}
+
 // UseDev makes Name DevName and, when that folder does not exist yet,
 // seeds it from the installed app's (devSeed). It tells whether it seeded.
 func UseDev() (bool, error) {

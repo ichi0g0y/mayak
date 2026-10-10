@@ -22,6 +22,7 @@ export const {
   ClearLogs,
   DiscoverTrackerProfiles,
   DownloadUpdate,
+  EFTScreenshotKey,
   GameLanguages,
   GetLogs,
   GetSettings,

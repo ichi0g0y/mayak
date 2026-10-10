@@ -123,6 +123,8 @@ export type CatalogStatus = {
 }
 export type TrackerStatus = {
   connection: string
+  // Why the EFT profile is awaited: logs, stopped or game (app_tracker_sync.go).
+  waiting?: string
   mode: string
   profileId: string
   accountId: string

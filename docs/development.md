@@ -213,6 +213,7 @@ Wails 本体はフォークせず公式モジュールを使います。
 | `task relay:dev` | 中継の Worker（`relay/`、分隊ルーム `/squad/<room>` と Host・Client のリンク `/link/<room>`）をローカル（`ws://127.0.0.1:8787`）で動かす（`wrangler dev`） |
 | `task relay:deploy` | 中継の Worker `mayak-relay` を Cloudflare に公開する（`wrangler deploy`、設定は `relay/wrangler.jsonc`。頼まれたときだけ） |
 | `task dev` | 依存インストール → ホットリロード付き開発モード（下記）。アプリを起動する |
+| `task dev:fresh` | `dev` と同じだが、新しい PC と同じ状態で起動する。データのフォルダは `%APPDATA%Mayak-fresh`（`MAYAK_FRESH=1`、`appdir.UseFresh`）で、起動のたびに空にし、インストール版の設定も写さない。フォルダの自動検出、初回チュートリアル、フォルダが無いときの通知を確かめるのに使う |
 | `task build:dev` | `dev` が使う開発ビルド。バインディング生成、Tesseract 同梱、`production` タグなしで `build/bin/Mayak-dev.exe` |
 | `task check:offline` | アプリを開かない検証。全パッケージのコンパイル、`TestBrowser*`、bun のテスト |
 | `task run` | ビルド済みアプリを起動（明示的に頼まれたときだけ使う） |

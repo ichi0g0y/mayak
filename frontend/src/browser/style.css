@@ -763,6 +763,7 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .tutorial>button{display:inline-flex;align-items:center;gap:8px;margin-top:4px}
 .tutorial>button .icon{width:16px;height:16px}
 .tutorial-status{display:grid;gap:6px;margin:12px 0;padding:10px 12px;border-radius:10px;background:var(--surface-2);font-size:12px}
+.tutorial-status.warn{color:var(--warn,#d9a400)}
 .tutorial-status code{font:12px ui-monospace,"Cascadia Code",Consolas,monospace;overflow-wrap:anywhere}
 .tutorial-steps{display:flex;gap:6px;margin:18px 0 4px}
 .tutorial-steps i{width:8px;height:8px;border-radius:50%;background:var(--border-strong)}

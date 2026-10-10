@@ -55,6 +55,7 @@ func (a *App) AutoDetectEFTDirectories() (eftdetect.Result, error) {
 	if monitoring && detected.LogsDirectory != "" {
 		a.startLogDetector(detected.LogsDirectory)
 	}
+	go a.noteSetupFolders(false)
 	return detected, nil
 }
 
@@ -75,6 +76,7 @@ func (a *App) ChooseScreenshotDirectory() (string, error) {
 	a.mu.RLock()
 	monitoring := a.status.Monitoring
 	a.mu.RUnlock()
+	defer func() { go a.noteSetupFolders(false) }()
 	if monitoring {
 		return dir, a.startWatcher(dir)
 	}
@@ -101,6 +103,7 @@ func (a *App) ChooseLogsDirectory() (string, error) {
 	if monitoring {
 		a.startLogDetector(dir)
 	}
+	go a.noteSetupFolders(false)
 	return dir, nil
 }
 
@@ -209,6 +212,9 @@ func (a *App) saveSettings(s config.Settings, restartMonitor bool) error {
 	status := a.status
 	a.mu.Unlock()
 	a.emitStatus(status)
+	if old.ScreenshotDirectory != s.ScreenshotDirectory || old.LogsDirectory != s.LogsDirectory {
+		go a.noteSetupFolders(false)
+	}
 	if !old.TarkovTrackerEnabled && s.TarkovTrackerEnabled {
 		go func() { _ = a.RefreshTracker() }()
 	}
@@ -418,4 +424,21 @@ func (a *App) keepWindowSettings(s config.Settings) config.Settings {
 	s.BrowserRemoteID = a.settings.BrowserRemoteID
 	s.OCRDefaultRevision = a.settings.OCRDefaultRevision
 	return s
+}
+
+// ScreenshotKey is EFT's own screenshot key, for the tutorial and the folder
+// settings: Known false when EFT's settings cannot be read, Keys empty when
+// the key is left unbound.
+type ScreenshotKey struct {
+	Known bool     `json:"known"`
+	Keys  []string `json:"keys"`
+}
+
+// EFTScreenshotKey reads EFT's screenshot key from its Control.ini.
+func (a *App) EFTScreenshotKey() ScreenshotKey {
+	keys, known := eftdetect.ScreenshotKeys()
+	if keys == nil {
+		keys = []string{}
+	}
+	return ScreenshotKey{Known: known, Keys: keys}
 }

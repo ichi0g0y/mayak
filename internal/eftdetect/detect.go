@@ -17,16 +17,19 @@ type launcherSettings struct {
 	GamesRootDir string `json:"gamesRootDir"`
 }
 
-// Detect reads ordinary EFT folders and the launcher's public installation setting only.
+// Detect finds EFT's folders from where the game puts them: its screenshots
+// under Windows' own Documents folder (EFT and its logs say no other place),
+// its logs in the game's folder, found from the install location Windows
+// has, the launcher's setting, or the usual folders of each drive.
 func Detect() (Result, error) {
 	var result Result
 	home, _ := os.UserHomeDir()
-	result.ScreenshotDirectory = firstDirectory([]string{
-		filepath.Join(home, "Documents", "Escape from Tarkov", "Screenshots"),
-		filepath.Join(home, "OneDrive", "Documents", "Escape from Tarkov", "Screenshots"),
-	})
+	result.ScreenshotDirectory = firstDirectory(screenshotPlaces(documentsDirectory(), home))
 
-	roots := launcherRoots(home)
+	if game := installedGame(); game != "" && isDirectory(filepath.Join(game, "Logs")) {
+		result.LogsDirectory = filepath.Join(filepath.Clean(game), "Logs")
+	}
+	roots := launcherRoots()
 	for drive := 'C'; drive <= 'Z'; drive++ {
 		root := string(drive) + `:\`
 		roots = append(roots, filepath.Join(root, "Battlestate Games"), filepath.Join(root, "Games"))
@@ -37,9 +40,6 @@ func Detect() (Result, error) {
 			if result.LogsDirectory == "" && isDirectory(filepath.Join(gameDir, "Logs")) {
 				result.LogsDirectory = filepath.Join(gameDir, "Logs")
 			}
-			if result.ScreenshotDirectory == "" && isDirectory(filepath.Join(gameDir, "Screenshots")) {
-				result.ScreenshotDirectory = filepath.Join(gameDir, "Screenshots")
-			}
 		}
 	}
 	if result.ScreenshotDirectory == "" && result.LogsDirectory == "" {
@@ -48,8 +48,30 @@ func Detect() (Result, error) {
 	return result, nil
 }
 
-func launcherRoots(home string) []string {
-	settingsPath := filepath.Join(home, "AppData", "Roaming", "Battlestate Games", "BsgLauncher", "settings")
+// screenshotPlaces are where EFT's screenshots may be: under Windows'
+// Documents folder first, then the home's Documents and OneDrive's (in case
+// Windows does not answer).
+func screenshotPlaces(documents, home string) []string {
+	var places []string
+	if documents != "" {
+		places = append(places, filepath.Join(documents, "Escape from Tarkov", "Screenshots"))
+	}
+	if home != "" {
+		places = append(places,
+			filepath.Join(home, "Documents", "Escape from Tarkov", "Screenshots"),
+			filepath.Join(home, "OneDrive", "Documents", "Escape from Tarkov", "Screenshots"))
+	}
+	return places
+}
+
+// launcherRoots are the games folder in the launcher's settings (under
+// %AppData%, wherever Windows has it).
+func launcherRoots() []string {
+	config, err := os.UserConfigDir()
+	if err != nil {
+		return nil
+	}
+	settingsPath := filepath.Join(config, "Battlestate Games", "BsgLauncher", "settings")
 	b, err := os.ReadFile(settingsPath)
 	if err != nil {
 		return nil
@@ -96,11 +118,11 @@ func unique(values []string) []string {
 // (%AppData%\Battlestate Games\Escape from Tarkov\Settings\Game.ini) as "ja"
 // or "en", or "" when it is unknown. Other Latin-script languages read as "en".
 func GameLanguage() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
+	path := gameSettings("Game.ini")
+	if path == "" {
 		return ""
 	}
-	data, err := os.ReadFile(filepath.Join(home, "AppData", "Roaming", "Battlestate Games", "Escape from Tarkov", "Settings", "Game.ini"))
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return ""
 	}
