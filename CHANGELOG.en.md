@@ -4,6 +4,13 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### Fixed
+
+- After a Prestige, an Overall screenshot taken right after resetting TarkovTracker could leave the level unsent: MAYAK dropped a level read before it noticed the reset (up to 5 minutes). Now a screenshot taken while the reset is awaited reads TarkovTracker again at once, and a level still not sendable is kept and sent when the reset is seen.
+- The Overall screen's experience could be misread, and the level with it: part of the "EXP+" badge before it was read as a digit, making 5 200 into 15 200 (level 3 into level 5).
+
 ## v0.1.30 (2026-10-09)
 
 ### New

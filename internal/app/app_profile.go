@@ -281,7 +281,11 @@ func (a *App) trackerRaiseLevel(ctx context.Context, settings config.Settings, l
 	tr := a.status.Tracker
 	token := a.trackerData.TokenFor(tr.AccountID, tr.ProfileID, tr.Mode)
 	a.mu.RUnlock()
-	if !settings.TarkovTrackerEnabled || tr.Connection != "connected" || token == "" || level <= tr.PlayerLevel {
+	if !settings.TarkovTrackerEnabled || tr.Connection != "connected" || token == "" {
+		return
+	}
+	if level <= tr.PlayerLevel {
+		a.keepLevel(tr, level)
 		return
 	}
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)

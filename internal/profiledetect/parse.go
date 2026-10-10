@@ -35,9 +35,17 @@ func Level(text string) int {
 
 // Experience reads a row of the experience (digits in groups, maybe after
 // the edition's badge, "EXP+"): its number, and whether the row is one (at
-// least four digits, most of what was read).
+// least four digits, most of what was read). The digits are those of the
+// pieces with no letter in them: the badge read as "G1" (Tesseract,
+// 2026-10-10) made 5 200 into 15 200.
 func Experience(text string) (int, bool) {
-	digits := onlyDigits(text)
+	var number strings.Builder
+	for _, piece := range strings.Fields(text) {
+		if !strings.ContainsFunc(piece, unicode.IsLetter) {
+			number.WriteString(onlyDigits(piece))
+		}
+	}
+	digits := number.String()
 	letters := 0
 	for _, r := range text {
 		if unicode.IsLetter(r) {

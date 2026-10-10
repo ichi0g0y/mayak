@@ -113,7 +113,9 @@ type App struct {
 	// levelWarned is the level a notice says TarkovTracker went back from
 	// (checkTrackerLevelKept), 0 without one: a later read at it or above
 	// takes the notice away.
-	levelWarned    atomic.Int64
+	levelWarned atomic.Int64
+	// levelWaiting is an Overall screen's level not sent yet (app_tracker_level.go).
+	levelWaiting   waitingLevel
 	trackerStore   trackerstore.Store
 	trackerStoreMu sync.Mutex
 	// trackerJobs is the work a key assignment starts (a sync of the

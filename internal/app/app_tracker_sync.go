@@ -314,6 +314,7 @@ func (a *App) refreshTrackerIdentity(mode, profileID, accountID string) error {
 	a.emitStatus(status)
 	a.addLog("Info", "TarkovTracker", fmt.Sprintf("Progress loaded for %s: %d completed", mode, completed))
 	a.levelKept(progress.Data.PlayerLevel)
+	a.sendWaitingLevel(accountID, profileID, mode, progress.Data.PlayerLevel)
 	a.checkPrestigeReset(accountID, profileID, mode, completed)
 	a.squadUpdateTracker()
 	a.publishCompletable()

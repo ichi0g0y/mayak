@@ -11,6 +11,12 @@ func TestReadsTheLeftPanel(t *testing.T) {
 			t.Fatalf("experience of %q = %d, %v", row, n, ok)
 		}
 	}
+	// A piece with letters is not counted: the badge read as "G1" or "EXP+".
+	for row, want := range map[string]int{"G1 5 200": 5200, "EXP+ 5 200": 5200, "26.3 947": 263947, "263 947": 263947, "国 263 947": 263947} {
+		if n, ok := Experience(row); !ok || n != want {
+			t.Fatalf("experience of %q = %d, %v, want %d", row, n, ok, want)
+		}
+	}
 	if _, ok := Experience("ICHBOCCHI"); ok {
 		t.Fatal("a name read as experience")
 	}
