@@ -84,7 +84,7 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `remote` | tarkov.dev Remote Control（`wss://socket.tarkov.dev`）への送信 |
 | `remoteid` | ブラウザの Local Storage のコピーから Remote ID を自動検出（Windows のみ） |
 | `screenshotstore` | 認識デバッグ用の画像保存と古いスクリーンショットの削除 |
-| `screenscale` | 16:10〜16:9 のスクリーンショットを、判定の基準の横幅 2560 px に拡大・縮小する（[recognition.md](recognition.md)） |
+| `screenscale` | 16:10 から横長のスクリーンショットを、判定の基準の横幅 2560 px に拡大・縮小する。ウルトラワイドは真ん中の 16:9 を切り出す（[recognition.md](recognition.md)） |
 | `sound` | 通知音（Windows のみ再生） |
 | `taskdetect` | スクリーンショット内のタスク一覧画面の検出と、タスク名領域の切り出し |
 | `tracker` | TarkovTracker API クライアント |

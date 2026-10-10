@@ -4,6 +4,12 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### New
+
+- Screenshots of ultrawide screens (21:9, 32:9) are read too: the Tasks screen, item inspection and the character's Overall screen. EFT draws its menus in the center 16:9 of the screen, and that part is read. Before, only 16:9 and 16:10 were.
+
 ## v0.1.32 (2026-10-10)
 
 ### New
