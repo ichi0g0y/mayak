@@ -4,6 +4,13 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### New
+
+- A snap note's original image can be moved: unlock it with the lock button of "Original image" in the layer panel, then drag it to move it, or drag its corners to resize it with its proportions kept. The image itself never changes. Press the button again to lock it.
+- Snap notes can be cropped: the crop button in the tools shows a frame; choose a ratio (Free, Original, 16:9, 4:3, 1:1, 9:16), move or resize the frame, and press "Crop". Drawing outside the frame is not deleted, and Ctrl+Z brings it back.
+
 ## v0.1.33 (2026-10-10)
 
 ### New

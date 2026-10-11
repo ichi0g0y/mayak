@@ -933,7 +933,7 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 .snap-color.on{outline:2px solid var(--accent);outline-offset:2px}
 .snap-size span{display:block;width:var(--dot);height:var(--dot);border-radius:50%;background:currentColor}
 .snap-stage{flex:1;overflow:auto;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);padding:10px}
-.snap-sheet{position:relative;margin:0 auto;box-shadow:var(--shadow)}
+.snap-sheet{position:relative;margin:0 auto;box-shadow:var(--shadow);background:#fff}
 .snap-base,.snap-ink{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none}
 .snap-ink{touch-action:none;cursor:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke-linecap='round'><path d='M12 3v6M12 15v6M3 12h6M15 12h6M12 12h.01' stroke='white' stroke-width='3.5'/><path d='M12 3v6M12 15v6M3 12h6M15 12h6M12 12h.01' stroke='black' stroke-width='1.5'/></svg>") 12 12,crosshair}
 .snap-stage[data-tool=eraser] .snap-ink{cursor:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke-linecap='round'><path d='M12 5a7 7 0 1 0 0 14a7 7 0 1 0 0-14' stroke='white' stroke-width='3.5'/><path d='M12 5a7 7 0 1 0 0 14a7 7 0 1 0 0-14' stroke='black' stroke-width='1.5'/></svg>") 12 12,cell}
@@ -1001,7 +1001,31 @@ body[data-sidebar=collapsed] .snap-section-label .section-link{display:none}
 .snap-layer-name small{font-size:11px;color:var(--muted)}
 .snap-layer.base{margin-top:6px;padding-top:9px;border-top:1px solid var(--border);border-radius:0}
 .snap-layer.base .snap-layer-name{padding:0 6px}
-.snap-layer.base>.icon{width:15px;height:15px;margin-right:8px;color:var(--muted)}
+.snap-layer.base.on{border-radius:8px}
+.snap-base-lock{width:30px;padding:0!important;color:var(--muted)}
+.snap-base-lock svg{width:15px;height:15px}
+.snap-base-lock.open{color:var(--accent)}
+/* The canvas (snap-frame.js): the original lies at its place, cut by the
+   canvas; chosen, it has a frame with corners. The crop dims what is outside
+   its frame. */
+.snap-clip{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.snap-base-box{position:absolute}
+.snap-sheet.base-active .snap-ink{cursor:move}
+.snap-base-frame{position:absolute;z-index:2;pointer-events:none;outline:1.5px dashed var(--accent)}
+.snap-handle{position:absolute;width:14px;height:14px;margin:-7px;box-sizing:border-box;border:2px solid #fff;border-radius:3px;background:var(--accent);box-shadow:0 0 0 1px rgba(0,0,0,.45);pointer-events:auto;touch-action:none}
+.snap-handle[data-corner=nw]{left:0;top:0;cursor:nwse-resize}
+.snap-handle[data-corner=ne]{right:0;top:0;cursor:nesw-resize}
+.snap-handle[data-corner=sw]{left:0;bottom:0;cursor:nesw-resize}
+.snap-handle[data-corner=se]{right:0;bottom:0;cursor:nwse-resize}
+.snap-crop-layer{position:absolute;inset:0;z-index:2;touch-action:none}
+.snap-crop-dim{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.snap-crop-hole{position:absolute;box-shadow:0 0 0 100vmax rgba(0,0,0,.55)}
+.snap-crop{position:absolute;outline:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.5);cursor:move;touch-action:none}
+.snap-crop-size{position:absolute;left:6px;top:6px;padding:2px 6px;border-radius:5px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;font-variant-numeric:tabular-nums;pointer-events:none}
+.snap-tools .snap-crop-style button{width:auto;padding:0 10px;font-size:12px}
+.snap-tools .snap-crop-style .snap-group button{height:26px}
+.snap-tools .snap-crop-apply{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.snap-tools .snap-crop-apply svg{width:15px;height:15px}
 @media(max-width:900px){.snap-body{flex-direction:column}.snap-layers{width:auto;align-self:stretch;flex-direction:row;flex-wrap:wrap}}
 
 /* The snap note editor's head in the toolbar row; the page starts with the tools. */
