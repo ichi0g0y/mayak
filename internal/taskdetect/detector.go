@@ -21,19 +21,28 @@ type Preset struct {
 	TasksTabs                    []TasksTab
 	LeftPanel, RightPanel, Title Rect
 	// StoryAnchor is the "Story" tab of the character's Tasks screen, lit
-	// when a story chapter is shown; StoryTitle is the chapter's name under
-	// the "Chapter" label, at a fixed place (the chapter page has no list).
+	// when a story chapter is shown (inside the tab: EFT 1.2.0.0 made it
+	// narrower, about 160 px from the left edge); StoryTitle is the chapter's
+	// name under the "Chapter" label, at a fixed place (the chapter page has
+	// no list).
 	StoryAnchor, StoryTitle Rect
 	// SearchBox is the Tasks screen's search box, right of the sub-tabs;
 	// SubTabGap the empty bar between them.
 	SearchBox, SubTabGap Rect
-	MinScore             float64
+	// AnchorNeighbor is right of Anchor: the trader screen's Services tab,
+	// dark, where the character screen's Gear tab, lit, reaches past Anchor.
+	// MenuCharacter and MenuTraders are the bottom menu's Character and
+	// Traders buttons, Y counted up from the bottom edge (a 16:10 screen is
+	// taller): the one of the screen shown is lit.
+	AnchorNeighbor, MenuCharacter, MenuTraders Rect
+	MinScore                                   float64
 }
 
-var Preset2560 = Preset{Width: 2560, Height: 1440, Anchor: Rect{150, 18, 240, 55}, CharacterAnchor: Rect{1430, 5, 300, 60}, RaidCharacterAnchor: Rect{1170, 5, 260, 60}, TasksTabs: []TasksTab{{Tab: Rect{1540, 5, 240, 60}, Neighbor: Rect{1290, 5, 200, 60}}, {Tab: Rect{1295, 5, 130, 60}, Neighbor: Rect{1040, 5, 200, 60}}}, LeftPanel: Rect{10, 410, 740, 950}, RightPanel: Rect{770, 410, 1750, 950}, Title: Rect{810, 315, 720, 85}, StoryAnchor: Rect{28, 66, 228, 52}, StoryTitle: Rect{224, 211, 620, 70}, SearchBox: Rect{1250, 74, 400, 30}, SubTabGap: Rect{870, 74, 300, 30}, MinScore: .42}
+var Preset2560 = Preset{Width: 2560, Height: 1440, Anchor: Rect{150, 18, 240, 55}, CharacterAnchor: Rect{1430, 5, 300, 60}, RaidCharacterAnchor: Rect{1170, 5, 260, 60}, TasksTabs: []TasksTab{{Tab: Rect{1540, 5, 240, 60}, Neighbor: Rect{1290, 5, 200, 60}}, {Tab: Rect{1295, 5, 130, 60}, Neighbor: Rect{1040, 5, 200, 60}}}, LeftPanel: Rect{10, 410, 740, 950}, RightPanel: Rect{770, 410, 1750, 950}, Title: Rect{810, 315, 720, 85}, StoryAnchor: Rect{30, 70, 150, 40}, StoryTitle: Rect{224, 211, 620, 70}, SearchBox: Rect{1250, 74, 400, 30}, SubTabGap: Rect{870, 74, 300, 30}, AnchorNeighbor: Rect{400, 18, 110, 55}, MenuCharacter: Rect{1050, 34, 170, 26}, MenuTraders: Rect{1245, 34, 140, 26}, MinScore: .42}
 
 // storyTabBright is the share of bright pixels the lit "Story" tab has at
-// least (.87 measured; the "Side" list lit next to it gives it .06–.14).
+// least (.87 measured, .74 on EFT 1.2.0.0's narrower tab; the "Side" list
+// lit next to it gives it .06–.14).
 const storyTabBright = .6
 
 // With the Story tab lit, a chapter counts as a Tasks screen when the tab
@@ -45,6 +54,15 @@ const (
 	storyTabEdges     = .08
 	storyCharacterTab = .2
 )
+
+// A trader's Tasks screen lights its Tasks tab at Anchor; the character
+// screen's Gear (or Overall) tab lights much of the same place since EFT
+// 1.2.0.0, and with the panels' edges such a screen scored .45–.53 as a
+// trader's, as high as the real ones (.47–.57). It is told apart by the tab
+// right of Anchor, lit on it (.52–.59) and dark on a trader's (0), or by the
+// bottom menu's Character button lit (.72) and its Traders one not (.13; a
+// trader's screen: .07 and .70). Lit means at least characterScreenBright.
+const characterScreenBright = .3
 
 // subTabStoryEnd is where a run starting further left is the Story sub-tab
 // (it starts at about 30; Side at 220 in English, 290 in Japanese).
@@ -206,6 +224,12 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 			characterScore = tabScore
 			characterTabBright = lit.bright
 		}
+	}
+	// A character screen is no trader's (characterScreenBright).
+	bottom := func(r Rect) Rect { return Rect{r.X, b.Dy() - r.Y, r.W, r.H} }
+	menuCharacter, menuTraders := stats(px, bottom(p.MenuCharacter)), stats(px, bottom(p.MenuTraders))
+	if stats(px, p.AnchorNeighbor).bright >= characterScreenBright || (menuCharacter.bright >= characterScreenBright && menuTraders.bright < characterScreenBright) {
+		traderScore = 0
 	}
 	score, layout, cropRect := traderScore, "trader-tasks", p.Title
 	if characterScore > traderScore {

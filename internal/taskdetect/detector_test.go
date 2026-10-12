@@ -265,3 +265,45 @@ func TestSideSubTabSaysTasks(t *testing.T) {
 		t.Fatalf("a lit row: %+v", got)
 	}
 }
+
+// The character screen's Gear tab lights Anchor too (EFT 1.2.0.0): the tab
+// right of Anchor lit, or the bottom menu's Character button lit and the
+// Traders one not, says it is no trader's Tasks screen.
+func TestCharacterScreenIsNoTradersTasks(t *testing.T) {
+	screen := func(lit ...Rect) *image.RGBA {
+		img := image.NewRGBA(image.Rect(0, 0, 2560, 1440))
+		for y := 0; y < 1440; y++ {
+			for x := 0; x < 2560; x++ {
+				img.Set(x, y, color.RGBA{18, 20, 19, 255})
+			}
+		}
+		for _, r := range []Rect{Preset2560.LeftPanel, Preset2560.RightPanel} {
+			for y := r.Y; y < r.Y+r.H; y += 20 {
+				for x := r.X; x < r.X+r.W; x++ {
+					img.Set(x, y, color.RGBA{180, 180, 170, 255})
+				}
+			}
+		}
+		for _, r := range append([]Rect{Preset2560.Anchor}, lit...) {
+			for y := r.Y; y < r.Y+r.H; y++ {
+				for x := r.X; x < r.X+r.W; x++ {
+					img.Set(x, y, color.RGBA{210, 210, 205, 255})
+				}
+			}
+		}
+		return img
+	}
+	fromBottom := func(r Rect) Rect { return Rect{r.X, 1440 - r.Y, r.W, r.H} }
+	trader, _ := Analyze(screen(fromBottom(Preset2560.MenuTraders)), Preset2560)
+	if !trader.IsTasks || trader.Layout != "trader-tasks" {
+		t.Fatalf("trader's tasks: %+v", trader)
+	}
+	for name, lit := range map[string][]Rect{
+		"gear tab":       {Preset2560.AnchorNeighbor},
+		"character menu": {fromBottom(Preset2560.MenuCharacter)},
+	} {
+		if got, _ := Analyze(screen(lit...), Preset2560); got.Layout == "trader-tasks" && got.IsTasks {
+			t.Errorf("%s taken for a trader's tasks: %+v", name, got)
+		}
+	}
+}

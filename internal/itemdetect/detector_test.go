@@ -123,3 +123,33 @@ func TestAnalyzeStopsAtTheWindowsOwnLeftBorder(t *testing.T) {
 		t.Fatalf("window rect: %+v (item=%v)", result.WindowRect, result.IsItem)
 	}
 }
+
+// A stash row can look like a header (a grid line along its top, a reddish
+// figurine at its end for the close button, the grid's lines down past it);
+// its items' grey pictures fill the "title bar", which a window's never has.
+func TestAnalyzeRejectsAStashRow(t *testing.T) {
+	const left, top, width = 1686, 438, 843
+	img := syntheticInspectWindow(left, top, width)
+	grey := color.RGBA{R: 70, G: 72, B: 74, A: 255}
+	for y := top + 6; y < top+46; y++ {
+		for x := left + 30; x < left+width-60; x++ {
+			if (x/40)%2 == 0 {
+				img.Set(x, y, grey)
+			}
+		}
+	}
+	if result, _ := Analyze(img); result.IsItem {
+		t.Fatalf("stash row taken for a window: %+v", result)
+	}
+}
+
+// A header running past the window (a grey line behind it at the height of
+// its top border) still finds the side borders a little inside its ends.
+func TestWindowHeightLooksInsideTheHeadersEnds(t *testing.T) {
+	const left, top, width = 746, 305, 1068
+	img := syntheticInspectWindow(left, top, width)
+	px := imaging.Of(img)
+	if got := windowHeight(px, Rect{X: left - 5, Y: top, W: width + 18, H: 48}); got < minWindowHeight {
+		t.Fatalf("height = %d", got)
+	}
+}

@@ -203,7 +203,36 @@ func headerAt(px imaging.Pixels, left, right, top int) (header, bool) {
 		left = windowLeft(px, left, right, top)
 		width = right - left + 1
 	}
+	if stashRow(px, left, right, top) {
+		return header{}, false
+	}
 	return header{rect: Rect{X: left, Y: top, W: width, H: 48}, score: score}, true
+}
+
+// stashRowShare is the share of a header's columns that, down its title
+// bar, are mostly of the border's grey (stashRow): none on a window's bar
+// (dark, with the name in white), .43 and .46 on a stash row taken for one.
+const stashRowShare = .1
+
+// stashRow tells a row of the stash taken for a window's header: a grid line
+// along its top, items' grey pictures under it, and a reddish item at its end
+// (a figurine) for the close button. A title bar is dark all along, so few of
+// its columns are grey where the stash's are.
+func stashRow(px imaging.Pixels, left, right, top int) bool {
+	columns, grey := 0, 0
+	for x := left + 40; x < right-60; x++ {
+		columns++
+		hits := 0
+		for y := top + 10; y <= top+42 && y < px.Height(); y += 8 {
+			if isBorderAt(px, x, y) {
+				hits++
+			}
+		}
+		if hits >= 4 {
+			grey++
+		}
+	}
+	return columns > 0 && float64(grey) > stashRowShare*float64(columns)
 }
 
 // windowLeft is the leftmost column of the header run left..right that is
@@ -284,13 +313,19 @@ func closeButtonScore(px imaging.Pixels, right, top, width int) float64 {
 // left one can be off screen, so the longer of the two counts.
 func windowHeight(px imaging.Pixels, r Rect) int {
 	// A scaled screenshot can put a side border a pixel or two off the
-	// header's ends: look around them.
+	// header's ends, and a grey line behind the window at the height of its
+	// top border (an equipment slot's, the stash's) can make the header run
+	// on past them (5 and 13 px measured): look a little inside the ends.
 	height := 0
-	for _, dx := range []int{-2, 0, 2} {
-		height = max(height, borderHeight(px, r, r.X+dx, r.X+dx+1), borderHeight(px, r, r.X+r.W-1+dx, r.X+r.W-2+dx))
+	for dx := -2; dx <= borderInset; dx += 2 {
+		height = max(height, borderHeight(px, r, r.X+dx, r.X+dx+1), borderHeight(px, r, r.X+r.W-1-dx, r.X+r.W-2-dx))
 	}
 	return height
 }
+
+// borderInset is how far inside a header's ends windowHeight looks for the
+// window's side borders.
+const borderInset = 24
 
 func borderHeight(px imaging.Pixels, r Rect, x0, x1 int) int {
 	gap, bottom := 0, r.Y+r.H
