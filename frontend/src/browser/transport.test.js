@@ -60,7 +60,7 @@ test('the Host info keeps what is sound: mode, task site, map, raid and position
   assert.deepEqual(bad, { mode: 'pvp', questSite: '', questSites: null, map: '', raid: false, position: null })
 })
 
-test('the Host keeps what it detected while no Client was there, the latest of each kind', () => {
+test('the Host keeps its latest detection of each kind, sent or not', () => {
   const { MayakLink } = /** @type {any} */ (globalThis)
   const link = new MayakLink()
   link.role = 'host'
@@ -68,6 +68,52 @@ test('the Host keeps what it detected while no Client was there, the latest of e
   assert.equal(link.send({ event: 'browser:task', args: [{ id: 'b' }] }), false)
   assert.equal(link.send({ event: 'browser:map', args: ['customs'] }), false)
   assert.equal(link.send({ event: 'squad:state', args: [] }), false)
-  assert.deepEqual([...link.held.keys()], ['browser:task', 'browser:map'])
-  assert.equal(link.held.get('browser:task').message.args[0].id, 'b')
+  assert.deepEqual(
+    link.recent.due().map((k) => [k.event, k.args[0]]),
+    [
+      ['browser:task', { id: 'b' }],
+      ['browser:map', 'customs'],
+    ],
+  )
+})
+
+// A socket that keeps what is sent on it.
+const fakeSocket = () => ({
+  readyState: WebSocket.OPEN,
+  out: /** @type {string[]} */ ([]),
+  send(text) {
+    this.out.push(text)
+  },
+})
+
+test('a Client missing a detection gets it at the next hello, and one it got does not open again', async () => {
+  const { MayakLink, linkSecrets, newLinkKey } = /** @type {any} */ (globalThis)
+  const secrets = await linkSecrets(newLinkKey())
+  const host = new MayakLink()
+  Object.assign(host, { role: 'host', secrets, ws: fakeSocket() })
+  host.peers.set('client', 'mac')
+  const got = []
+  const client = new MayakLink({ onMessage: (m) => got.push(m.args[0].id) })
+  Object.assign(client, { role: 'client', secrets, ws: fakeSocket() })
+  client.peers.set('host', 'pc')
+  // What the Host said since last time reaches the Client.
+  const deliver = async () => {
+    await host.outbox
+    for (const data of host.ws.out.splice(0))
+      await client.received(client.ws, JSON.stringify({ t: 'msg', from: 'host', data }))
+  }
+  host.send({ event: 'browser:task', args: [{ id: 'a' }] })
+  await deliver()
+  assert.deepEqual(got, ['a'])
+  // Said again at a hello: already shown.
+  host.sendRecent()
+  await deliver()
+  assert.deepEqual(got, ['a'])
+  // Sent while the Client could not hear it (lost), then said again.
+  host.send({ event: 'browser:task', args: [{ id: 'b' }] })
+  await host.outbox
+  host.ws.out.length = 0
+  host.sendRecent()
+  await deliver()
+  assert.deepEqual(got, ['a', 'b'])
 })

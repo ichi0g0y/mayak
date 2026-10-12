@@ -138,6 +138,16 @@ export function BrowserItemSearch(query: string): $CancellablePromise<$models.It
 }
 
 /**
+ * BrowserLinkLog writes a line from the shell's Host–Client link
+ * (transport.js) to the log: a detection a Client got and how late, a quiet
+ * link made again. It tells a detection that came late from one that never
+ * came. Control characters are dropped and the line is cut short.
+ */
+export function BrowserLinkLog(message: string): $CancellablePromise<void> {
+    return $Call.ByID(291813020, message);
+}
+
+/**
  * BrowserLinkRelay is where a Host and its Client meet (the shell's
  * transport.js); MAYAK_LINK_RELAY points a development build at another one
  * (`task relay:dev`: ws://127.0.0.1:8787/link/).

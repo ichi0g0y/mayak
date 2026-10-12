@@ -908,6 +908,8 @@ const peer = new /** @type {any} */ (globalThis).MayakLink({
   onBookmarks: (b) => void enqueue(() => receiveBookmarks(b)),
   // The Host ended the pairing: this Client forgets it too.
   onUnpair: () => void enqueue(() => unpair(false)),
+  // What the link did, in the log: a detection late or never got.
+  onLog: (text) => void go?.BrowserLinkLog(text).catch(() => {}),
 })
 // startLink joins the link of the pairing kept (or being made) when this
 // PC's mode is its side, and leaves it otherwise.

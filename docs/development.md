@@ -38,6 +38,8 @@ Wails CLI はインストール不要です。`Taskfile.yml` は `go run github.
 | `app_lifecycle.go` | Wails v3 の `ServiceStartup` / `ServiceShutdown` を既存の起動・終了処理へ接続 |
 | `app_events.go` | Wails アプリ内イベントの発行（外部へのブリッジは起動しない） |
 | `app_browser.go` | ブラウザシェルの状態（`browser.json`）、ホスト／クライアントモード切替、Host と Client のリンクの中継先（`BrowserLinkRelay`） |
+| `app_browser_link.go` | Host と Client のリンクのログ（`BrowserLinkLog`。シェルの `transport.js` が受け取った認識やつなぎ直しを書く） |
+| `shell_running_darwin.go` | macOS でシェルの WKWebView を、ウインドウが見えなくても動かし続ける（`inactiveSchedulingPolicy`。Client が裏でも Host からのものを受け取る） |
 | `app_browser_remote.go` | 内蔵ブラウザ用 tarkov.dev Remote Control ID の生成と、マップページへの自動接続スクリプト |
 | `app_adblock.go` | 内蔵ブラウザの広告ブロック設定 |
 | `app_favicon.go` | サイトアイコンのディスクキャッシュ |
@@ -147,6 +149,7 @@ ocrtrain -catalog %AppData%\Mayak\catalog\pve.json -fonts <dir with Bender*.otf>
 | `src/browser/state.js` | タブ・ブックマークなどの状態操作（純粋関数中心） |
 | `src/browser/item.js` | アイテム欄の入力検証と価格・履歴の整形 |
 | `src/browser/peer-code.js` / `transport.js` | ペアリングの招待コード（`MAYAK1.`）と、中継（`relay/` の `/link/`）を通した Host と Client のリンク（`MayakLink`。鍵から部屋と AES-GCM の鍵を作り、封じて送受信する） |
+| `src/browser/link-recent.js` | Host が最後に認識したもの（種類ごと、30 分）を Client の hello ごとに送り直すための記録（`Recent`）と、Client が同じものを二度開かないための記録（`Shown`） |
 | `src/browser/tab-drag.js` | タブのドラッグ並べ替え |
 | `src/browser/popup.js` | ポップアップのヘッダー描画 |
 | `tsconfig.shell.json` / `src/browser/shell-env.d.ts` | シェルの JavaScript（`src/browser/*.js`）の型チェック。`bun run build` が設定画面の `tsc` に続けて実行する。strict は切り、`window.mayak`・`window.mayakDesktop` の宣言と、イベントの対象と要素のメンバーを緩くする宣言を置く。名前・import・呼び出しは確かめられる（import 漏れなどが見つかる）。`shell-env.d.ts` は設定画面の型チェック（`tsconfig.json`）からは外す |

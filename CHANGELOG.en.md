@@ -4,6 +4,13 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### Fixed
+
+- A task the Host recognized while a Client (a Mac, say) was in the background (behind other windows, minimized, or in the tray) was sometimes not open when the Client came back to the front. The Host now keeps the last thing it recognized of each kind (task, map, position, item) for 30 minutes and sends it again each time a Client connects again. A Client does not open the same one twice. When the window comes back, a link that heard nothing for a while is checked first and connected again only if needed, so what came in the background is not thrown away. On a Mac (macOS 14 and later), the Client keeps receiving from the Host while its window is not seen.
+- What a Client gets over the link (and how many seconds after the Host) and a quiet link connected again are written to the log (debug).
+
 ## v0.1.35 (2026-10-12)
 
 ### New
