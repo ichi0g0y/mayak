@@ -40,6 +40,28 @@ type Settings struct {
 	GameMode            string         `json:"gameMode"`
 	OCREngine           string         `json:"ocrEngine"`
 	TesseractPath       string         `json:"tesseractPath"`
+	// CaptureKey is MAYAK's own screenshot key (experimental,
+	// internal/capture), as capture.Format writes it; empty for none.
+	CaptureKey string `json:"captureKey"`
+	// CaptureAuto captures after a click in the game when the screen is one
+	// MAYAK reads (experimental, like RatScanner's automatic scan).
+	CaptureAuto bool `json:"captureAuto"`
+	// CaptureAutoOff are the screens a click is not captured for
+	// ("profile", "item", "tasks"); none, all are.
+	CaptureAutoOff []string `json:"captureAutoOff"`
+	// CaptureTasksTrigger and CaptureItemTrigger are the clicks the tasks
+	// screen and an item's window are taken after: "right" (a right click),
+	// "shift" (a click with Shift) or "click" (any). Tasks take a right
+	// click by default, so going through the list with clicks reads nothing.
+	CaptureTasksTrigger string `json:"captureTasksTrigger"`
+	CaptureItemTrigger  string `json:"captureItemTrigger"`
+	// CaptureSettleMs is how long after the last click the screen is taken
+	// (EFT draws what the click opened meanwhile), CaptureRepeatSeconds how
+	// long the same screen is not taken again (0: always), and CapturePollMs
+	// how often the mouse button is looked at while EFT is in front.
+	CaptureSettleMs      int `json:"captureSettleMs"`
+	CaptureRepeatSeconds int `json:"captureRepeatSeconds"`
+	CapturePollMs        int `json:"capturePollMs"`
 	// OCRDefaultRevision records one-time moves to a new default OCR engine.
 	OCRDefaultRevision    int    `json:"ocrDefaultRevision"`
 	Debug                 bool   `json:"debug"`
@@ -157,8 +179,12 @@ type WindowState struct {
 	Configured bool   `json:"configured"`
 }
 
+// Defaults are the settings of a new install (each settings page's "back to
+// defaults" takes its own from them).
+func Defaults() Settings { return defaults() }
+
 func defaults() Settings {
-	return Settings{DesktopOn: []string{"matchFound", "prestige", "trackerFailed"}, Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: false, QuestSoundEnabled: true, ErrorSoundEnabled: true, TaskNotMatchedSoundEnabled: true, RemoteErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, MatchFoundSound: true, RaidStartSound: true, RunThroughSound: true, AutoUpdate: true}
+	return Settings{DesktopOn: []string{"matchFound", "prestige", "trackerFailed"}, Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: false, QuestSoundEnabled: true, ErrorSoundEnabled: true, TaskNotMatchedSoundEnabled: true, RemoteErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, MatchFoundSound: true, RaidStartSound: true, RunThroughSound: true, AutoUpdate: true, CaptureSettleMs: 250, CaptureRepeatSeconds: 60, CapturePollMs: 30, CaptureTasksTrigger: "right", CaptureItemTrigger: "click"}
 }
 func path() (string, error) {
 	d, err := os.UserConfigDir()

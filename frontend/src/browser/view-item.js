@@ -234,7 +234,7 @@ function itemDetails() {
      : `<div class="item-page-link">${inner}</div>`
  })()}</div>
  <p class="item-fresh ${item.live ? 'live' : ''}"><span class="fresh-dot"></span>${esc(item.live ? t('itemLive') : t('itemCatalog'))} · ${esc(t('itemPriced'))} <span class="item-age" data-time="${esc(item.pricedAt)}">${esc(age(item.pricedAt, lang))}</span><button class="item-refresh" data-action="itemRefresh" title="${esc(t('itemRefresh'))}" aria-label="${esc(t('itemRefresh'))}" aria-busy="${!!state.itemBusy}">${icon('reload', state.itemBusy ? 'icon spin' : 'icon')}</button></p>
- ${best ? `<div class="item-best"><span>${esc(t('bestSale'))} · ${esc(best.where === 'flea' ? t('flea') : best.where)}</span><strong>${money(best.priceRub)}</strong><small>${money(best.priceRub / slots)} / ${esc(t('perSlot'))}</small></div>` : ''}
+ ${best ? `<div class="item-best"><span title="${esc(t('bestSale'))}">${esc(best.where === 'flea' ? t('flea') : best.where)}</span><strong>${money(best.priceRub)}</strong><small>${money(best.priceRub / slots)} / ${esc(t('perSlot'))}</small>${best.where === 'flea' && item.traders[0] ? `<div class="item-best-trader"><span>${esc(item.traders[0].trader)}</span><b>${money(item.traders[0].priceRub)}</b><small>${money(item.traders[0].priceRub / slots)} / ${esc(t('perSlot'))}</small></div>` : ''}</div>` : ''}
  ${(() => {
    const locks = itemLocks(item)
    return locks.length

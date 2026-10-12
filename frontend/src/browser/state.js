@@ -662,7 +662,18 @@ function openLocal(state, kind) {
 // Settings sections: the browser's own, then the Host's (its settings page in a
 // frame, which shows the section named in its URL hash).
 const browserSections = ['appearance', 'tasks', 'notifications', 'adblock', 'connection', 'about', 'licenses']
-const hostSections = ['status', 'logs', 'folders', 'recognition', 'remote', 'tracker', 'sounds', 'startup', 'debug']
+const hostSections = [
+  'status',
+  'logs',
+  'folders',
+  'screenshots',
+  'recognition',
+  'remote',
+  'tracker',
+  'sounds',
+  'startup',
+  'debug',
+]
 // The address bar takes a URL or a search. Anything that is not an address
 // (a scheme, a host name with a dot or a port, an IPv4 address, localhost)
 // is searched on Google, as in Chrome; "? words" always searches.

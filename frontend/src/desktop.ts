@@ -16,6 +16,7 @@ export const {
   AutoDetectEFTDirectories,
   AutoDetectRemoteID,
   CheckForUpdates,
+  DefaultSettings,
   ChooseLogsDirectory,
   ChooseScreenshotDirectory,
   ChooseSoundFile,

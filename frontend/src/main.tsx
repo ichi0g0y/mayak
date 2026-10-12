@@ -30,6 +30,7 @@ import {
   AnalyzeLatestScreenshot,
   AutoDetectEFTDirectories,
   AutoDetectRemoteID,
+  DefaultSettings,
   GetUpdateStatus,
   ChooseLogsDirectory,
   ChooseScreenshotDirectory,
@@ -80,6 +81,8 @@ import {
 } from './settings-model'
 import { TrackerSection } from './TrackerSection'
 import { LogsSection } from './LogsSection'
+import { CaptureKeyField } from './CaptureKeyField'
+import { ResetPanel, resetValues, resettable } from './SectionReset'
 import { Metric } from './Metric'
 import './style.css'
 
@@ -113,6 +116,15 @@ function App() {
   const [trackerToken, setTrackerToken] = useState('')
   const [now, setNow] = useState(Date.now())
   const settingsRef = useRef<Settings>(defaults)
+  // "Back to defaults" (SectionReset.tsx): the Go side's defaults, and the
+  // page whose defaults are shown in place of its settings, not yet saved.
+  const [defaultSettings, setDefaultSettings] = useState<Settings | null>(null)
+  const [resetPreview, setResetPreview] = useState<{ section: HostSection; values: Partial<Settings> } | null>(null)
+  useEffect(() => {
+    DefaultSettings()
+      .then((d) => setDefaultSettings(d as unknown as Settings))
+      .catch(() => setDefaultSettings(null))
+  }, [])
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [gameLanguages, setGameLanguages] = useState<string[]>(['ja', 'en'])
   const [voicePacks, setVoicePacks] = useState<VoicePack[]>([])
@@ -274,6 +286,12 @@ function App() {
     }
   }, [])
   useEffect(() => {
+    setResetPreview((preview) => {
+      if (preview && preview.section !== activeTab) setSettings(settingsRef.current)
+      return preview?.section === activeTab ? preview : null
+    })
+  }, [activeTab])
+  useEffect(() => {
     if (activeTab !== 'tracker') return
     let pending = false
     const refresh = async () => {
@@ -297,6 +315,8 @@ function App() {
   }, [activeTab])
   const patch = (value: Partial<Settings>) => {
     if (!backendReady.current) return
+    // An edit gives up the defaults being shown.
+    setResetPreview(null)
     const next = { ...settingsRef.current, ...value }
     settingsRef.current = next
     setSettings(next)
@@ -315,6 +335,23 @@ function App() {
           setNoticeError(true)
         }
       })
+  }
+  // The first press shows the page with its defaults, the second saves them;
+  // cancelling shows the page's own settings again.
+  const startReset = () => {
+    if (!defaultSettings) return
+    const values = resetValues(activeTab, settingsRef.current, defaultSettings)
+    setResetPreview({ section: activeTab, values })
+    setSettings({ ...settingsRef.current, ...values })
+  }
+  const cancelReset = () => {
+    setResetPreview(null)
+    setSettings(settingsRef.current)
+  }
+  const commitReset = () => {
+    const values = resetPreview?.values
+    if (values && Object.keys(values).length) patch(values)
+    else cancelReset()
   }
   const persistCurrent = () => {
     const revision = ++saveRevision.current
@@ -736,7 +773,25 @@ function App() {
       <Tabs className="app-tabs" value={activeTab}>
         <div className={`section-head${['status', 'logs'].includes(activeTab) ? '' : ' narrow'}`}>
           <h1>{t(sectionTitles[activeTab])}</h1>
+          {resettable(activeTab) && defaultSettings && (
+            <Button
+              type="button"
+              variant={resetPreview?.section === activeTab ? 'default' : 'secondary'}
+              className="reset-button"
+              onClick={resetPreview?.section === activeTab ? commitReset : startReset}
+            >
+              <RotateCcw />
+              {t(resetPreview?.section === activeTab ? 'resetCommit' : 'resetButton')}
+            </Button>
+          )}
         </div>
+        <ResetPanel
+          preview={resetPreview?.section === activeTab ? resetPreview.values : null}
+          current={settingsRef.current}
+          t={t}
+          onCommit={commitReset}
+          onCancel={cancelReset}
+        />
         <TabsContent value="folders">
           <div className="settings-stack">
             <Card>
@@ -907,6 +962,57 @@ function App() {
                     />
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        {/* Screenshots: EFT's own key (Control.ini), which positions need, then
+            MAYAK's own capture. */}
+        <TabsContent value="screenshots">
+          <div className="settings-stack">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('eftShotKeyTitle')}</CardTitle>
+                <CardDescription>{t('eftShotKeyDescription')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {shotKey?.known ? (
+                  shotKey.keys.length ? (
+                    <div className="eft-shot-keys">
+                      {shotKey.keys.map((key) => (
+                        <kbd key={key}>{key}</kbd>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="help warn-text">{t('screenshotKeyNone')}</p>
+                  )
+                ) : (
+                  <p className="help">{t('eftShotKeyUnknown')}</p>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('captureTitle')}</CardTitle>
+                <CardDescription>{t('captureDescription')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CaptureKeyField
+                  value={settings.captureKey || ''}
+                  auto={!!settings.captureAuto}
+                  onAuto={(captureAuto) => patch({ captureAuto })}
+                  autoOff={settings.captureAutoOff || []}
+                  onAutoOff={(captureAutoOff) => patch({ captureAutoOff })}
+                  tuning={{
+                    captureTasksTrigger: settings.captureTasksTrigger || 'right',
+                    captureItemTrigger: settings.captureItemTrigger || 'click',
+                  }}
+                  onTuning={(tuning) => patch(tuning)}
+                  eftKeys={shotKey?.keys || []}
+                  hasFolder={!!settings.screenshotDirectory}
+                  t={t}
+                  onChange={(captureKey) => patch({ captureKey })}
+                />
               </CardContent>
             </Card>
           </div>

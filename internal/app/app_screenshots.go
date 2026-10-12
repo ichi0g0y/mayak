@@ -37,7 +37,7 @@ func (a *App) afterScreenshotAnalysis(sequence uint64, path string, settings con
 	}
 	if settings.SaveRecognitionDebug {
 		metadata := screenshotMetadata(path, status)
-		metadata.DetectionDetails = recognitionDetails(path)
+		metadata.DetectionDetails = a.recognitionDetails(path)
 		metaPath, err := screenshotstore.SaveDebug(settings.ScreenshotDirectory, path, metadata, status.CropPreview)
 		if err != nil {
 			a.addLog("Warn", "Screenshot", "Could not save recognition debug data: "+err.Error())
@@ -48,11 +48,11 @@ func (a *App) afterScreenshotAnalysis(sequence uint64, path string, settings con
 	a.cleanupScreenshotsLocked(settings, path)
 }
 
-// recognitionDetails records both detectors' findings for the debug data;
-// the screenshot is decoded once for both.
-func recognitionDetails(path string) map[string]any {
+// recognitionDetails records both detectors' findings for the debug data,
+// on the screenshot as it was decoded for reading it.
+func (a *App) recognitionDetails(path string) map[string]any {
 	details := make(map[string]any)
-	img, err := decodeImage(path)
+	img, err := a.screenshotImage(path)
 	if err != nil {
 		details["error"] = err.Error()
 		return details

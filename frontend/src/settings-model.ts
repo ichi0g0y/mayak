@@ -15,6 +15,16 @@ export type Settings = {
   desktopAlways?: boolean
   language: Language
   screenshotDirectory: string
+  // MAYAK's own screenshot key (experimental, CaptureKeyField), "" for none.
+  captureKey?: string
+  // Capturing after a click in the game (experimental).
+  captureAuto?: boolean
+  // The screens a click is not captured for ("profile", "item", "tasks").
+  captureAutoOff?: string[]
+  // How the tasks screen and an item's window are read: "right", "shift"
+  // or "click" (CaptureKeyField).
+  captureTasksTrigger?: string
+  captureItemTrigger?: string
   logsDirectory: string
   remoteId: string
   remoteTargets: RemoteTarget[]
@@ -211,6 +221,11 @@ export const defaults: Settings = {
   questSite: 'official-wiki',
   language: 'ja',
   screenshotDirectory: '',
+  captureKey: '',
+  captureAuto: false,
+  captureAutoOff: [],
+  captureTasksTrigger: 'right',
+  captureItemTrigger: 'click',
   logsDirectory: '',
   remoteId: '',
   remoteTargets: [],
@@ -376,6 +391,7 @@ export const hostSections = [
   'status',
   'logs',
   'folders',
+  'screenshots',
   'recognition',
   'remote',
   'tracker',
@@ -395,6 +411,7 @@ export const sectionTitles: Record<HostSection, Parameters<typeof translate>[1]>
   status: 'secStatus',
   logs: 'secLogs',
   folders: 'secFolders',
+  screenshots: 'secScreenshots',
   recognition: 'secRecognition',
   remote: 'secRemote',
   tracker: 'secTracker',

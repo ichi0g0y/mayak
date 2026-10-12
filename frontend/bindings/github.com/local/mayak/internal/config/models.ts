@@ -75,6 +75,43 @@ export class Settings {
     "tesseractPath": string;
 
     /**
+     * CaptureKey is MAYAK's own screenshot key (experimental,
+     * internal/capture), as capture.Format writes it; empty for none.
+     */
+    "captureKey": string;
+
+    /**
+     * CaptureAuto captures after a click in the game when the screen is one
+     * MAYAK reads (experimental, like RatScanner's automatic scan).
+     */
+    "captureAuto": boolean;
+
+    /**
+     * CaptureAutoOff are the screens a click is not captured for
+     * ("profile", "item", "tasks"); none, all are.
+     */
+    "captureAutoOff": string[];
+
+    /**
+     * CaptureTasksTrigger and CaptureItemTrigger are the clicks the tasks
+     * screen and an item's window are taken after: "right" (a right click),
+     * "shift" (a click with Shift) or "click" (any). Tasks take a right
+     * click by default, so going through the list with clicks reads nothing.
+     */
+    "captureTasksTrigger": string;
+    "captureItemTrigger": string;
+
+    /**
+     * CaptureSettleMs is how long after the last click the screen is taken
+     * (EFT draws what the click opened meanwhile), CaptureRepeatSeconds how
+     * long the same screen is not taken again (0: always), and CapturePollMs
+     * how often the mouse button is looked at while EFT is in front.
+     */
+    "captureSettleMs": number;
+    "captureRepeatSeconds": number;
+    "capturePollMs": number;
+
+    /**
      * OCRDefaultRevision records one-time moves to a new default OCR engine.
      */
     "ocrDefaultRevision": number;
@@ -231,6 +268,30 @@ export class Settings {
         }
         if (!("tesseractPath" in $$source)) {
             this["tesseractPath"] = "";
+        }
+        if (!("captureKey" in $$source)) {
+            this["captureKey"] = "";
+        }
+        if (!("captureAuto" in $$source)) {
+            this["captureAuto"] = false;
+        }
+        if (!("captureAutoOff" in $$source)) {
+            this["captureAutoOff"] = [];
+        }
+        if (!("captureTasksTrigger" in $$source)) {
+            this["captureTasksTrigger"] = "";
+        }
+        if (!("captureItemTrigger" in $$source)) {
+            this["captureItemTrigger"] = "";
+        }
+        if (!("captureSettleMs" in $$source)) {
+            this["captureSettleMs"] = 0;
+        }
+        if (!("captureRepeatSeconds" in $$source)) {
+            this["captureRepeatSeconds"] = 0;
+        }
+        if (!("capturePollMs" in $$source)) {
+            this["capturePollMs"] = 0;
         }
         if (!("ocrDefaultRevision" in $$source)) {
             this["ocrDefaultRevision"] = 0;
@@ -409,9 +470,10 @@ export class Settings {
         const $$createField3_0 = $$createType0;
         const $$createField4_0 = $$createType0;
         const $$createField10_0 = $$createType2;
-        const $$createField37_0 = $$createType3;
-        const $$createField38_0 = $$createType4;
-        const $$createField39_0 = $$createType4;
+        const $$createField18_0 = $$createType0;
+        const $$createField45_0 = $$createType3;
+        const $$createField46_0 = $$createType4;
+        const $$createField47_0 = $$createType4;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("questSites" in $$parsedSource) {
             $$parsedSource["questSites"] = $$createField2_0($$parsedSource["questSites"]);
@@ -425,14 +487,17 @@ export class Settings {
         if ("remoteTargets" in $$parsedSource) {
             $$parsedSource["remoteTargets"] = $$createField10_0($$parsedSource["remoteTargets"]);
         }
+        if ("captureAutoOff" in $$parsedSource) {
+            $$parsedSource["captureAutoOff"] = $$createField18_0($$parsedSource["captureAutoOff"]);
+        }
         if ("soundVoices" in $$parsedSource) {
-            $$parsedSource["soundVoices"] = $$createField37_0($$parsedSource["soundVoices"]);
+            $$parsedSource["soundVoices"] = $$createField45_0($$parsedSource["soundVoices"]);
         }
         if ("soundVolumeOffsets" in $$parsedSource) {
-            $$parsedSource["soundVolumeOffsets"] = $$createField38_0($$parsedSource["soundVolumeOffsets"]);
+            $$parsedSource["soundVolumeOffsets"] = $$createField46_0($$parsedSource["soundVolumeOffsets"]);
         }
         if ("soundDelays" in $$parsedSource) {
-            $$parsedSource["soundDelays"] = $$createField39_0($$parsedSource["soundDelays"]);
+            $$parsedSource["soundDelays"] = $$createField47_0($$parsedSource["soundDelays"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }

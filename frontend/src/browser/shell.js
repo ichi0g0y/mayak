@@ -48,6 +48,7 @@ import {
   maskedClass,
 } from './shell-core.js'
 import { goonFresh, bossSection, bossesPage } from './view-bosses.js'
+import { resetHead, resetPanel } from './settings-reset.js'
 import { notificationsPage } from './view-notifications.js'
 import { shotBadges, screenshotsPage } from './view-screenshots.js'
 import { itemToggle, itemPanel } from './view-item.js'
@@ -478,6 +479,7 @@ const sectionIcons = {
   status: 'activity',
   logs: 'list',
   folders: 'folder',
+  screenshots: 'camera',
   recognition: 'scan',
   remote: 'map',
   tracker: 'tracker',
@@ -490,7 +492,7 @@ const sectionIcons = {
 // some the Host's (its page in a frame); that split is not shown.
 const settingsGroups = /** @type {[string,string[]][]} */ ([
   ['grpGeneral', ['appearance', 'notifications', 'startup', 'sounds']],
-  ['grpGame', ['folders', 'recognition', 'tasks']],
+  ['grpGame', ['folders', 'screenshots', 'recognition', 'tasks']],
   ['grpLinks', ['remote', 'tracker', 'connection']],
   ['grpBrowser', ['adblock']],
   ['grpDiagnostics', ['status', 'logs', 'debug']],
@@ -537,7 +539,7 @@ function settings() {
       : ''
   return settingsHost()
     ? ''
-    : `<div class="page settings"><h1>${esc(t('sec_' + key))}</h1>${browserSettings(key)}${tutorial}</div>`
+    : `<div class="page settings"><div class="settings-head"><h1>${esc(t('sec_' + key))}</h1>${resetHead(key)}</div>${resetPanel(key)}${browserSettings(key)}${tutorial}</div>`
 }
 // The update controls, in About: check now, download or restart, and the
 // state of the last check. The update notice over the pages (syncUpdateToast)

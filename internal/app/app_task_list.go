@@ -105,7 +105,7 @@ func (a *App) scanTaskList(ctx context.Context, path string, settings config.Set
 	if !settings.TarkovTrackerEnabled || tr.Connection != "connected" {
 		return
 	}
-	img, err := decodeImage(path)
+	img, err := a.screenshotImage(path)
 	if err != nil {
 		return
 	}

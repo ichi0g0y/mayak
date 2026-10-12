@@ -74,7 +74,7 @@ func profileReaders(settings config.Settings) []ocr.Engine {
 // tryProfileScreenshot reads path as the Overall screen when it is one,
 // and tells whether it was.
 func (a *App) tryProfileScreenshot(ctx context.Context, sequence uint64, path string, settings config.Settings) bool {
-	detected, err := profiledetect.AnalyzeFile(path)
+	detected, err := a.detectProfile(path)
 	if err != nil || !detected.IsProfile {
 		return false
 	}

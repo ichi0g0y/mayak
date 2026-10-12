@@ -10,12 +10,10 @@ import (
 	"time"
 
 	"github.com/local/mayak/internal/config"
-	"github.com/local/mayak/internal/itemdetect"
 	"github.com/local/mayak/internal/logdetect"
 	"github.com/local/mayak/internal/model"
 	"github.com/local/mayak/internal/position"
 	"github.com/local/mayak/internal/sound"
-	"github.com/local/mayak/internal/taskdetect"
 	"github.com/local/mayak/internal/watcher"
 )
 
@@ -188,11 +186,11 @@ func (a *App) handleCoordinateScreenshot(ctx context.Context, sequence uint64, p
 	if a.tryProfileScreenshot(ctx, sequence, path, settings) {
 		return
 	}
-	if itemDetected, err := itemdetect.AnalyzeFile(path); err == nil && itemDetected.IsItem {
+	if itemDetected, err := a.detectItem(path); err == nil && itemDetected.IsItem {
 		a.handleItemAnalysis(ctx, sequence, path, settings, itemDetected)
 		return
 	}
-	detected, detectErr := taskdetect.AnalyzeFile(path, taskdetect.Preset2560)
+	detected, detectErr := a.detectTasks(path)
 	if detectErr == nil && detected.IsTasks {
 		// The list goes in its own queue first (app_task_list.go).
 		a.queueTaskList(path, settings)

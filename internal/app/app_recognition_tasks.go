@@ -6,7 +6,6 @@ import (
 	"image"
 
 	"github.com/local/mayak/internal/config"
-	"github.com/local/mayak/internal/itemdetect"
 	"github.com/local/mayak/internal/logdetect"
 	"github.com/local/mayak/internal/model"
 	"github.com/local/mayak/internal/ocr"
@@ -23,7 +22,7 @@ func (a *App) handleTaskScreenshot(ctx context.Context, sequence uint64, path st
 	if a.tryProfileScreenshot(ctx, sequence, path, settings) {
 		return
 	}
-	itemDetected, itemErr := itemdetect.AnalyzeFile(path)
+	itemDetected, itemErr := a.detectItem(path)
 	if itemErr != nil {
 		a.updateAnalysisError(sequence, path, itemErr)
 		return
@@ -32,7 +31,7 @@ func (a *App) handleTaskScreenshot(ctx context.Context, sequence uint64, path st
 		a.handleItemAnalysis(ctx, sequence, path, settings, itemDetected)
 		return
 	}
-	detected, err := taskdetect.AnalyzeFile(path, taskdetect.Preset2560)
+	detected, err := a.detectTasks(path)
 	if err != nil {
 		a.updateAnalysisError(sequence, path, err)
 		return

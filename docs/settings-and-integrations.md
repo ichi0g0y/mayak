@@ -19,7 +19,8 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | | `startup` | 起動とウィンドウ | Host |
 | | `sounds` | 通知 | Host |
 | ゲーム | `folders` | フォルダと保存 | Host |
-| | `recognition` | ゲームと認識 | Host |
+| | `screenshots` | スクリーンショット | Host |
+| | `recognition` | 認識方法 | Host |
 | | `tasks` | タスクの開き方 | ブラウザ |
 | 連携 | `remote` | tarkov.dev 連携 | Host |
 | | `tracker` | TarkovTracker | Host |
@@ -31,6 +32,16 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 
 - Host 側のページは URL ハッシュでセクションを切り替えます。ハッシュが変わると、保留中の保存を待ってから `GetSettings()` で設定を読み直します。
 - シェルの表示言語（`<html lang>`）が変わると、Host 設定の `language` にも反映されます。テーマも同一オリジンの iframe に適用されます。
+
+### 初期値に戻す
+
+設定のあるページは、見出しの右に「初期値に戻す」ボタンがあります。2 段階です。
+
+- 1 回目: そのページで初期値と違う項目を、見出しの下に一覧にします（「名前 / 今の値（取り消し線） → 初期値（色付き）」）。ボタンは「もう一度押して確定」に変わります。Host のページは、フォームにも初期値を表示します（まだ保存しません）。
+- 2 回目（一覧の確定ボタンでも同じ）: 初期値を保存します。「やめる」、ほかのページへの移動、項目の編集のどれかで取りやめます。すでに初期値なら、その旨だけ出します。
+- 初期値は Go 側のもの（`DefaultSettings` が `config.Defaults()` を `normalizeSettings` に通して返す）と、シェルの設定は `state.js` の `defaults()` です。
+- 戻す項目（Host、`SectionReset.tsx` の `pageKeys`）: フォルダと保存は自動削除の 3 項目だけ（フォルダのパスは残す）、スクリーンショットは `capture*` すべて（画面に出していない時間の 3 項目も）、認識方法はゲームモード・ゲームの言語・OCR・Tesseract のパス、tarkov.dev 連携はマップと 2 つのスイッチ（接続先 `remoteTargets` は残す）、TarkovTracker は同期のオンオフ、通知は音と通知の全項目（一覧では通知ごとの設定を 1 行にまとめる）、起動とウィンドウ、デバッグ。状態とログにはボタンがありません。
+- 戻す項目（シェル、`settings-reset.js`）: 表示はテーマ・時刻・タブの位置・アイテム情報の位置・サイドバーの TarkovTracker（言語は残す）、タスクの開き方はサイトの順番（Host の設定）・開き方・翻訳、通知は分隊の 3 つのイベントのトーストとデスクトップ通知・デスクトップ通知を出すとき、広告ブロック。他の PC との接続、このアプリについて、ライセンスにはボタンがありません。
 
 ## Host 設定 (`internal/config.Settings`)
 
@@ -77,6 +88,11 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `gameMode` | `"auto"` | `auto` / `regular` / `pve` / `pvp-season`。変更するとカタログを再取得 |
 | `ocrEngine` | `"tesseract"` | `tesseract` / `windows`。それ以外は `tesseract` |
 | `tesseractPath` | `""` | Tesseract 実行ファイルのパス（空なら同梱版または PATH） |
+| `captureKey` | `""` | MAYAK で撮るキー（実験的。`capture.Format` の「Ctrl + F10」の形）。空なら使わない。読めない値は空にする（[recognition.md](recognition.md)） |
+| `captureAuto` | `false` | EFT でクリックしたあと、読める画面なら MAYAK が撮る（実験的） |
+| `captureTasksTrigger` / `captureItemTrigger` | `"right"` / `"click"` | タスクの画面・アイテムの窓を撮る操作。`right`（右クリック）/ `shift`（Shift＋クリック）/ `click`（どのクリックでも。タスクは開いた時、アイテムは詳細を開いた時に読む）。それ以外は初期値 |
+| `captureSettleMs` / `captureRepeatSeconds` / `capturePollMs` | `250` / `60` / `30` | クリックから撮るまでの待ち時間（50〜2000 ms）、同じ画面を撮り直さない時間（0〜3600 秒、0 で毎回）、ボタンを認識する間隔（10〜100 ms）。範囲外は初期値。設定画面には出さない |
+| `captureAutoOff` | `[]` | クリックで撮らない画面（`profile` / `item` / `tasks`）。知らない値は除き、この順に並べる（`captureKindList`） |
 | `ocrDefaultRevision` | `0` | OCR 既定値移行の記録（内部用） |
 | `debug` | `false` | デバッグ表示（crop プレビュー、候補、Hideout 診断） |
 | `saveRecognitionDebug` | `false` | 認識データを `Screenshots\Mayak-Debug` に保存する |
@@ -122,6 +138,7 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | セクション | 項目 | 操作 |
 |---|---|---|
 | `folders` | `screenshotDirectory`, `logsDirectory`, `screenshotCleanup`（オンのとき `screenshotRetainCount` と `screenshotRetainHours` を表示） | 自動検出（`AutoDetectEFTDirectories`）、フォルダ選択 |
+| `screenshots` | カード「EFT のスクリーンショットキー」（`EFTScreenshotKey` が Control.ini から読んだキーをキーの形で並べる。割り当てが無ければ注意、読めなければ EFT を一度起動するよう案内）。カード「MAYAK で撮る」の先頭に「位置情報は読めません」の注意（枠で目立たせる）、続けて `captureKey`（ボタンを押して次に押したキーを登録。Esc でやめる。EFT のスクリーンショットのキーと同じなら注意）と `captureAuto`（オンのとき、認識する項目 `captureAutoOff` をチェックボックスで選ぶ。全部外すと注意。タスクとアイテムは、チェックのすぐ下に字下げして、それぞれの認識方法（`captureTasksTrigger`、`captureItemTrigger`）をラジオボタンで選ぶ。自動スクリーンショットの子設定は 1 つの枠にまとめ、キーの欄とは区切り線で分ける。時間の 3 項目は設定画面に出さない） | — |
 | `recognition` | `gameMode`, `gameLanguage`（選択肢は「自動」と Go の `GameLanguages()` が返す言語。表示名は `main.tsx` の `languageNames`）, `ocrEngine`, `tesseractPath`（`tesseract` のときのみ表示） | — |
 | `remote` | `remoteTargets`（名前、ID（伏せ字。目のボタンで表示）、役割「マップ」「タスク」）, `map`, `openMapOnRaidStart`, `navigateMapOnPositionScreenshot` | 追加、ブラウザからの ID 自動検出（`AutoDetectRemoteID`）、接続テスト（`TestRemote`） |
 | `tracker` | `tarkovTrackerEnabled`、トークンの取り込み、保存済みキー、既知プロフィールへのキーの割り当て、過去ログの同期 | ログからプロフィールを探す、tarkovtracker.org の API 設定を開く |
@@ -187,7 +204,7 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 
 | 表示 | 状態 |
 |---|---|
-| ゲームモード（`game-mode-badge`） | Host が検出しているゲームモード（PvP / PvE / Season）を太字で出す（枠なし、PvE と Season は色付き）。分からないあいだは出さない。クリックで 設定 → ゲームと認識 を開く（`settingsAt`） |
+| ゲームモード（`game-mode-badge`） | Host が検出しているゲームモード（PvP / PvE / Season）を太字で出す（枠なし、PvE と Season は色付き）。分からないあいだは出さない。クリックで 設定 → 認識方法 を開く（`settingsAt`） |
 | Host アイコン（`mode-status`） | `host`（`local`・Host モード）/ `linked`（Client で Host とつながっている）/ `unlinked`（Client で未接続）/ `off`（受信 OFF）。ツールチップには「Hostモード」や「Clientモード · 接続中」などを出し、Host で接続中の PC があれば台数も出す。クリックで 設定 → 他のPCとの接続 を開く（`settingsAt`） |
 | 監視ドット（`monitor-toggle`） | Windows の Host のときだけ表示する。`on` クラスで監視中を示す。ツールチップは「監視中/監視停止中 · マップ · レイド中/外 · TarkovTracker: 状態 · クリックで開始/停止」。クリックで `StartMonitoring` / `StopMonitoring` を呼ぶ。監視停止中に押したとき Screenshots フォルダが未設定（`GetSettings` の `screenshotDirectory` が空）なら、監視を始める代わりに 設定 → フォルダ を開く（自動判別に失敗したまま「何も認識されない」状態から、選び直す場所へ直接行けるように） |
 | TarkovTracker（`tracker-status`） | Windows の Host で TarkovTracker のキーが 1 つ以上あるときだけ、監視ドットの左に出す（無ければ出さない）。`status.tracker.connection` に合わせて緑（`connected`・同期中）、黄（`connecting` / `waiting-profile`）、赤（`missing-token` / `error`）、灰（`disabled`）。ツールチップに状態と最後のエラー。クリックで 設定 → TarkovTracker を開く（`settingsAt`） |

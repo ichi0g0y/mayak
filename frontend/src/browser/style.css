@@ -405,10 +405,17 @@ button.item-page-link:hover h2{color:var(--accent)}
 .fresh-dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
 .item-fresh.live{color:var(--text-2)}
 .item-fresh.live .fresh-dot{background:var(--success);box-shadow:0 0 0 3px color-mix(in srgb,var(--success) 25%,transparent)}
-.item-best{display:grid;gap:2px;padding:12px 14px;border-radius:10px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
-.item-best span{font-size:12px;color:var(--text-2)}
-.item-best strong{font-size:22px;font-weight:650;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
-.item-best small{color:var(--text-2);font-variant-numeric:tabular-nums}
+.item-best{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 10px;padding:12px 14px;border-radius:10px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+/* Where it sells best on the left, the price and its per-slot share on the
+   right, as the best trader's row under it. */
+.item-best span{min-width:0;font-size:12px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-best strong{font-size:22px;font-weight:650;letter-spacing:-.01em;font-variant-numeric:tabular-nums;text-align:right}
+.item-best small{grid-column:2;color:var(--text-2);font-variant-numeric:tabular-nums;text-align:right}
+/* The best trader, under the flea market when that pays more. */
+.item-best-trader{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:0 10px;margin-top:8px;padding-top:8px;border-top:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
+.item-best-trader span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-best-trader b{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.item-best-trader small{grid-column:2;text-align:right}
 .item-section{margin-top:16px}
 .item-section h3{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--text-2)}
 .item-section h3 .count{margin-left:auto;min-width:20px;padding:1px 7px;border-radius:10px;background:var(--surface-2);color:var(--text-2);font-size:11.5px;text-align:center}
@@ -1493,3 +1500,18 @@ body.toast-page{margin:0;background:var(--sidebar,var(--bg));overflow:hidden}
 .notify-grid{display:grid;grid-template-columns:minmax(0,1fr) 84px 84px;align-items:center;gap:10px 8px;margin-bottom:12px}
 .notify-grid>span:nth-child(-n+3){font-size:12px;color:var(--muted)}
 .notify-grid input{justify-self:center;cursor:pointer}
+/* Back to defaults (settings-reset.js): the button at the title's end, and the
+   list of what goes back, the values it goes back to coloured. */
+.settings-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.settings-head h1{margin-right:auto}
+.reset-button .icon{width:15px;height:15px}
+.reset-panel{margin:0 0 18px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);border-radius:10px;background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.reset-panel-title{margin:0 0 8px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.reset-panel ul{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:4px}
+.reset-panel li{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:baseline;gap:8px;font-size:13px}
+.reset-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reset-from{color:var(--muted);text-decoration:line-through}
+.reset-arrow{color:var(--muted)}
+.reset-to{font-weight:600;color:var(--accent)}
+.reset-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.reset-actions .reset-panel-title{margin:0 auto 0 0}

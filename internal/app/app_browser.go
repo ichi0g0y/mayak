@@ -84,6 +84,14 @@ func (a *App) BrowserSetMode(mode string) error {
 	if changed && !client {
 		a.startBrowserHostBackground()
 	}
+	// The capture key is the Host's: a Client reads no screenshots.
+	if changed {
+		a.mu.RLock()
+		key, auto := a.settings.CaptureKey, a.settings.CaptureAuto
+		a.mu.RUnlock()
+		a.applyCaptureKey(key)
+		a.applyCaptureAuto(auto)
+	}
 	return nil
 }
 

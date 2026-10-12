@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/local/mayak/internal/autostart"
+	"github.com/local/mayak/internal/capture"
 	"github.com/local/mayak/internal/config"
 	"github.com/local/mayak/internal/eftdetect"
 	"github.com/local/mayak/internal/locale"
@@ -26,6 +27,10 @@ import (
 func (a *App) GameLanguages() []string { return append([]string{"en"}, locale.Languages...) }
 
 func (a *App) GetSettings() config.Settings { a.mu.RLock(); defer a.mu.RUnlock(); return a.settings }
+
+// DefaultSettings are the settings of a new install, as saved: a settings
+// page puts its own back to them (SectionReset.tsx).
+func (a *App) DefaultSettings() config.Settings { return normalizeSettings(config.Defaults()) }
 
 func (a *App) AutoDetectEFTDirectories() (eftdetect.Result, error) {
 	detected, err := eftdetect.Detect()
@@ -234,6 +239,12 @@ func (a *App) saveSettings(s config.Settings, restartMonitor bool) error {
 	if old.Language != s.Language {
 		a.setTrayLanguage(s.Language)
 	}
+	if old.CaptureKey != s.CaptureKey {
+		go a.applyCaptureKey(s.CaptureKey)
+	}
+	if old.CaptureAuto != s.CaptureAuto || old.CaptureSettleMs != s.CaptureSettleMs || old.CapturePollMs != s.CapturePollMs {
+		go a.applyCaptureAuto(s.CaptureAuto)
+	}
 	if old.ScreenshotCleanup != s.ScreenshotCleanup || old.ScreenshotRetainCount != s.ScreenshotRetainCount || old.ScreenshotRetainHours != s.ScreenshotRetainHours {
 		go a.runScreenshotMaintenance()
 	}
@@ -271,6 +282,15 @@ func normalizeSettings(s config.Settings) config.Settings {
 	// known ones, each once (a former kind of notices, its events).
 	s.ToastsOff = notifyEventList(s.ToastsOff)
 	s.DesktopOn = notifyEventList(s.DesktopOn)
+	s.CaptureKey = capture.Normalize(s.CaptureKey)
+	s.CaptureAutoOff = captureKindList(s.CaptureAutoOff)
+	if !slices.Contains(captureTriggers, s.CaptureTasksTrigger) {
+		s.CaptureTasksTrigger = "right"
+	}
+	if !slices.Contains(captureTriggers, s.CaptureItemTrigger) {
+		s.CaptureItemTrigger = "click"
+	}
+	s.CaptureSettleMs, s.CaptureRepeatSeconds, s.CapturePollMs = captureTuning(s.CaptureSettleMs, s.CaptureRepeatSeconds, s.CapturePollMs)
 	if s.UpdateChannel != update.ChannelNightly {
 		s.UpdateChannel = update.ChannelStable
 	}

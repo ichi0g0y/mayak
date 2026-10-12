@@ -38,7 +38,11 @@ import (
 )
 
 type App struct {
-	desktop              *application.App
+	desktop *application.App
+	// capture is MAYAK's own capture (app_capture.go), shotImages the
+	// screenshots decoded last (app_shot_image.go).
+	capture              captureState
+	shotImages           shotImages
 	window               *application.WebviewWindow
 	windowPlacementReady atomic.Bool
 	browserViews         *browserview.Manager
@@ -195,6 +199,8 @@ func (a *App) startup(ctx context.Context) {
 	if a.browserClient.Load() {
 		return
 	}
+	a.applyCaptureKey(a.settings.CaptureKey)
+	a.applyCaptureAuto(a.settings.CaptureAuto)
 	// The bundled Tesseract became the default engine: settings still on the
 	// old default move to it once. Windows OCR stays selectable afterwards.
 	if a.settings.OCRDefaultRevision < 1 {
@@ -249,6 +255,7 @@ func (a *App) startup(ctx context.Context) {
 
 func (a *App) shutdown(context.Context) {
 	ocr.StopWindowsWorker()
+	a.stopCapture()
 	a.stopHideoutDetector()
 	a.addLog("Info", "Application", "MAYAK stopped")
 	a.quitting.Store(true)

@@ -457,6 +457,16 @@ export function ConfirmTrackerPrestigeReset(accountID: string, profileID: string
 }
 
 /**
+ * DefaultSettings are the settings of a new install, as saved: a settings
+ * page puts its own back to them (SectionReset.tsx).
+ */
+export function DefaultSettings(): $CancellablePromise<config$0.Settings> {
+    return $Call.ByID(4019472634).then(($result: any) => {
+        return $$createType18($result);
+    });
+}
+
+/**
  * DevInstance tells the shell whether this is the `task dev` build.
  */
 export function DevInstance(): $CancellablePromise<boolean> {
@@ -479,7 +489,7 @@ export function DownloadUpdate(): $CancellablePromise<void> {
  */
 export function EFTScreenshotKey(): $CancellablePromise<$models.ScreenshotKey> {
     return $Call.ByID(807603978).then(($result: any) => {
-        return $$createType18($result);
+        return $$createType19($result);
     });
 }
 
@@ -489,19 +499,19 @@ export function EFTScreenshotKey(): $CancellablePromise<$models.ScreenshotKey> {
  */
 export function GameLanguages(): $CancellablePromise<string[]> {
     return $Call.ByID(241665187).then(($result: any) => {
-        return $$createType19($result);
+        return $$createType20($result);
     });
 }
 
 export function GetLogs(): $CancellablePromise<model$0.LogEntry[]> {
     return $Call.ByID(3489936509).then(($result: any) => {
-        return $$createType21($result);
+        return $$createType22($result);
     });
 }
 
 export function GetSettings(): $CancellablePromise<config$0.Settings> {
     return $Call.ByID(1576393379).then(($result: any) => {
-        return $$createType22($result);
+        return $$createType18($result);
     });
 }
 
@@ -971,7 +981,7 @@ export function SyncTrackerProfileHistory(accountID: string, profileID: string, 
  */
 export function SystemFonts(): $CancellablePromise<string[]> {
     return $Call.ByID(2671723451).then(($result: any) => {
-        return $$createType19($result);
+        return $$createType20($result);
     });
 }
 
@@ -1024,11 +1034,11 @@ const $$createType14 = $Create.Array($$createType13);
 const $$createType15 = $models.Toast.createFrom;
 const $$createType16 = $Create.Array($$createType15);
 const $$createType17 = model$0.UpdateStatus.createFrom;
-const $$createType18 = $models.ScreenshotKey.createFrom;
-const $$createType19 = $Create.Array($Create.Any);
-const $$createType20 = model$0.LogEntry.createFrom;
-const $$createType21 = $Create.Array($$createType20);
-const $$createType22 = config$0.Settings.createFrom;
+const $$createType18 = config$0.Settings.createFrom;
+const $$createType19 = $models.ScreenshotKey.createFrom;
+const $$createType20 = $Create.Array($Create.Any);
+const $$createType21 = model$0.LogEntry.createFrom;
+const $$createType22 = $Create.Array($$createType21);
 const $$createType23 = model$0.Status.createFrom;
 const $$createType24 = $Create.Map($Create.Any, $Create.Any);
 const $$createType25 = snapnote$0.Note.createFrom;

@@ -4,7 +4,7 @@ export const en: Messages = {
   nav: { features: 'Features', start: 'Getting started', squad: 'Squad', safety: 'Safety', download: 'Download', faq: 'FAQ', github: 'GitHub', language: 'Language', downloadButton: 'Download', changelog: 'Changelog' },
   hero: {
     tagline: 'Escape from Tarkov companion',
-    lead: 'MAYAK is a companion for Escape from Tarkov. Just by reading the pictures Tarkov’s own screenshot feature saves and the game’s logs, it shows your position on the map, your tasks and item info in the app. With your squad, you can also share positions and drawings on the map. It never captures your screen, and never touches the game’s process or memory.',
+    lead: 'MAYAK is a companion for Escape from Tarkov. Just by reading the pictures Tarkov’s own screenshot feature saves and the game’s logs, it shows your position on the map, your tasks and item info in the app. With your squad, you can also share positions and drawings on the map. It never touches the game’s process or memory, and only captures your screen with an experimental feature you turn on yourself.',
     installLabel: (version: string, os: string) => `Install MAYAK ${version} for ${os}`,
     hints: { windows: 'The Windows installer. Just run it; no administrator rights needed.', mac: 'Open the dmg and drag Mayak.app to Applications. The first time, right-click → Open. A preview build.', linux: 'Extract the tar.gz and run ./Mayak (needs WebKitGTK). A preview build.' },
     otherPlatforms: 'Other platforms →',
@@ -18,6 +18,7 @@ export const en: Messages = {
     title: 'A map and squads,\nright in the app.',
     lead: 'The larger changes in this version. Every smaller one is in the changelog.',
     items: [
+      { title: 'Capture by MAYAK (experimental)', body: 'Instead of EFT’s screenshot key, MAYAK can take the game’s screen and read it, without EFT’s screenshot notice in the game. Under Screenshots in the settings, set a key or turn on “Auto screenshot”. Positions are not read, so take the screenshot with EFT’s key to show where you are on the map. It is off by default.' },
       { title: 'Where a key is used', body: 'Screenshot a key and the item panel shows where it is used: each map with the floor and the nearby place name of every door and safe. Press one and the map goes there, with the key’s markers glowing.' },
       { title: 'MAYAK’s own map', body: '“Map” at the top of the sidebar opens a map built on the same maps and data as tarkov.dev. Filters switch extracts, bosses, keys, task objectives and more on and off, and the floor switches with your height. Draw on it with your own pen, or turn the map on screen into a snap note.' },
       { title: 'Squads', body: 'Share a squad code with your friends and the spot where each of you took a screenshot shows on everyone’s map, with name, colour and heading. Draw on the same map at once with the squad pen, drop a pin to say “look here”, or send pages and snap notes.' },
@@ -40,6 +41,7 @@ export const en: Messages = {
       { title: 'Snap notes', reads: 'Browser pages, game screenshots and the map', body: 'Capture the page you are on, a game screenshot or the map and draw or write on it. Notes stay linked to their page, dark screenshots can be brightened to read better, the spot where a screenshot was taken can be shown on the map, and a note can be copied, saved, posted to X or shared with your squad.' },
       { title: 'Voice alerts', reads: 'EFT logs', body: 'Match found, raid start, avoiding a run-through, the way back from a raid and more are read out by VOICEVOX characters (in Japanese) or an English voice. Each alert has its own voice, volume and switch; beeps and your own sound files work too.' },
       { title: 'Check the map and tasks on another PC', reads: 'An 8-character link code', body: 'Enter the 8-character code shown on the PC you play Tarkov on (the Host) into MAYAK on another computer (Windows, Mac or Linux) and you can check the map, tasks and items on that PC too. Once linked it connects by itself from then on, and the connection is encrypted.' },
+      { title: 'Capture by MAYAK (experimental)', reads: 'The game’s screen (only on its key or a click)', body: 'MAYAK takes the game’s screen and reads it, without EFT’s screenshot notice. Use it under Screenshots → Capture by MAYAK in the settings: set a key to capture with it, or turn on “Auto screenshot” to read, like RatScanner’s automatic scan, an item’s inspection or the Overall screen when you open it. A task is read when you right-click the one chosen in the list (the action can be changed). The screens it reacts to and its timings can be set. Positions are not read, so use EFT’s key for the map. EFT needs borderless or windowed mode.' },
     ],
     more: ['Everything in the built-in browser (tarkov.dev, TarkovTracker and the wiki in tabs; the sites you use most pinned to the sidebar)', 'A translate button in the built-in browser (through Google Translate, into Japanese or English)', 'Ad blocking in the built-in browser (Windows and Mac; EasyList, EasyPrivacy and AdGuard’s Japanese filter)', 'Squad and link codes shown masked, so a stream or a screenshot does not give them away', 'Automatic updates from GitHub Releases (stable, or the nightly built every day)', 'Japanese and English UI'],
   },
@@ -103,7 +105,7 @@ export const en: Messages = {
     lead: 'MAYAK reads only the screenshots and logs the game saves, local settings files and public web APIs.',
     items: [
       'No process memory reads, DLL injection, hooks or packet capture',
-      'No screen capture, recording or overlay; the only pictures read are those the game’s own screenshot feature saves',
+      'No recording or overlay. No screen capture by default either: only with the experimental “Capture by MAYAK” turned on does it copy the game’s screen once, when you press its key or click (the way RatScanner does it, with no input hook)',
       'No automated keyboard or mouse input to the game',
       'Screenshots are never uploaded; OCR and image analysis run locally (only a snap note you share with your squad and your character picture go to your squad, encrypted)',
       'TarkovTracker API keys are stored encrypted with Windows DPAPI',
@@ -142,7 +144,7 @@ export const en: Messages = {
     title: 'Questions',
     items: [
       { q: 'How do you say MAYAK, and what does it mean?', a: 'Ma-YAK. It is the Russian word for lighthouse (маяк), which is why the logo is one.' },
-      { q: 'Can this get me banned?', a: 'MAYAK never touches the game process; it only reads files the game saves itself (screenshots and logs). Even the screenshots are not taken by MAYAK: they are the ones Tarkov’s own screenshot feature saves. It does nothing an anti-cheat looks for, such as reading memory or automating input. Whether you use a companion tool at all is still your own decision.' },
+      { q: 'Can this get me banned?', a: 'MAYAK never touches the game process; it only reads files the game saves itself (screenshots and logs). By default the screenshots it reads are the ones Tarkov’s own screenshot feature saves (the experimental “Capture by MAYAK” copies the screen once only when turned on, the way RatScanner does). It does nothing an anti-cheat looks for, such as reading memory or automating input. Whether you use a companion tool at all is still your own decision.' },
       { q: 'Are my screenshots sent anywhere?', a: 'The screenshots themselves are not. OCR and image analysis run locally with the bundled Tesseract or Windows OCR. Only while you are in a squad do your position, the snap notes you share and the picture cut from your character screen go to your squad, encrypted with the squad code. The other services are listed under Safety, and no image goes to them.' },
       { q: 'Which resolutions and languages are supported?', a: 'Your position on the map works at any resolution. Tasks screen and item recognition are tuned for 2560×1440 and support common 16:9 and 16:10 resolutions and ultrawide (21:9, 32:9). The game can be in English or Japanese.' },
       { q: 'Why does SmartScreen warn about the installer?', a: 'MAYAK is an unsigned open-source app, so SmartScreen warns once. Click "More info", then "Run anyway" and setup completes; later starts and automatic updates show no warning. Code signing needs money and identity checks, so it is not in place yet.' },
@@ -150,6 +152,7 @@ export const en: Messages = {
       { q: 'Do I have to use TarkovTracker?', a: 'No. Without it, your position on the map, the Tasks screen and the item panel still work. To use it, create an API key per PvP, Season and PvE and assign it to the matching profile.' },
       { q: 'Do I need another PC or browser?', a: 'No. MAYAK has its own “Map” that follows your position with no setup, which is all you need on one PC with a second monitor. To watch on another PC, install MAYAK there and enter the 8-character code the Host shows. To watch in a browser alone, open the tarkov.dev map, click the connect button at the bottom left and enter the Remote ID it shows in MAYAK.' },
       { q: 'Do my squadmates need MAYAK too?', a: 'Yes. Each enters the same squad code on MAYAK’s squad page (a Client on a Mac or Linux can join too). A squad takes up to 10 computers. Positions come from whoever plays Tarkov on Windows and takes screenshots.' },
+      { q: 'Can I use it without the screenshot notice in the game?', a: 'Yes, with the experimental “Capture by MAYAK”. Under Screenshots → Capture by MAYAK in the settings, set a key or turn on “Auto screenshot”, which reads an item’s inspection or the Overall screen when you open it, and the chosen task when you right-click it. Positions are not read, though: to show where you are on the map, take the screenshot with EFT’s key as before. Put EFT in borderless or windowed mode (full screen comes out black). The screen is copied the way RatScanner does it, but BSG has not approved it.' },
     ],
   },
   license: {
