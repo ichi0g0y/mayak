@@ -10,9 +10,10 @@ URL は `https://json.tarkov.dev/<mode>/<resource>` です。
 |---|---|---|
 | 必須 | `items`, `items_en`, `maps`, `maps_en`, `traders`, `traders_en`, `tasks`, `tasks_en`, `hideout`, `hideout_en` | 更新全体を失敗扱いにする |
 | 任意（言語別） | `tasks_<lang>`, `items_<lang>`（現在は `tasks_ja`, `items_ja`） | 前回の内容を引き継ぐ。なければ英語のみで動作 |
+| 任意 | `barters`（トレーダーの交換） | 前回の内容を引き継ぐ。なければアイテム欄の「トレーダーで買う」はお金の販売だけ |
 
 - 任意リソースの言語は `internal/locale` の `Languages`（現在 `["ja"]`）から `locale.Resource(base, lang)` で組み立てます。言語を追加すると取得対象も増えます（[言語](languages.md)）。
-- 任意リソースは `data` が空でないオブジェクトのときだけ採用されます。
+- 任意リソースは `data` が空でないオブジェクト（言語別）か配列（`barters`）のときだけ採用されます。
 - `Client.Get` は上記以外のリソース名を拒否します（`unsupported catalog resource`）。
 
 ## ゲームモード

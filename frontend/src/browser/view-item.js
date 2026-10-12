@@ -2,6 +2,7 @@ import { price, chartSeries, chartPath, itemPanelHeights, itemPanelWidths, itemP
 import { t, state, esc, icon, siteChoices, render, action, clickHandlers } from './shell-core.js'
 import { siteOrder } from './state.js'
 import { lockPlace } from './view-map.js'
+import { itemOffers } from './view-item-offers.js'
 
 // An item's picture that did not load (a failed download the page's cache
 // keeps, say) is asked for once more under another address (a query the
@@ -255,6 +256,7 @@ function itemDetails() {
  ${itemChart(item)}
  <section class="item-section"><h3>${esc(t('flea'))}</h3>${flea ? row(t('fleaLow'), money(flea.lastLow)) + row(t('fleaAvg'), money(flea.avg24h)) + (flea.low24h && flea.high24h ? row(t('fleaRange'), `${money(flea.low24h)} – ${money(flea.high24h)}`) : '') + row(t('fleaChange'), `${change > 0 ? '+' : ''}${change.toFixed(1)}%`, change > 0 ? 'up' : change < 0 ? 'down' : '') + row(t('fleaOffers'), flea.offers.toLocaleString()) + (flea.minLevel ? row(t('fleaLevel'), 'Lv.' + flea.minLevel) : '') : `<p class="item-empty">${t('noFlea')}</p>`}</section>
  <section class="item-section"><h3>${esc(t('traders'))}</h3>${item.traders.map((s, i) => row(s.trader, s.currency === 'RUB' ? money(s.price) : `${money(s.price, s.currency)} <small>(${money(s.priceRub)})</small>`, i === 0 ? 'best' : '')).join('') || `<p class="item-empty">${t('noNeeds')}</p>`}</section>
+ ${itemOffers(item, itemIconHTML)}
  <section class="item-section"><h3>${esc(t('itemTasks'))}<span class="count">${open(item.tasks)}</span></h3>${needs(item.tasks, (s) => `<span class="need-name" title="${esc(s.name)}">${esc(localName(s.names, s.name))}<small>${esc(s.trader)}</small></span>`, 'itemTask')}</section>
  <section class="item-section"><h3>${esc(t('itemHideout'))}<span class="count">${open(item.hideout)}</span></h3>${needs(item.hideout, (s) => `<span class="need-name">${esc(s.station)}<small>Lv.${s.level}</small></span>`)}</section>
  `

@@ -31,6 +31,17 @@ export function names(raw, max = 160) {
       .map(([lang, name]) => [lang, name.trim().slice(0, max)]),
   )
 }
+// taskNeed is a task needing the item, or one unlocking a trader offer.
+const taskNeed = (s) => ({
+  id: text(s.id, 40),
+  name: text(s.name),
+  names: names(s.names),
+  trader: text(s.trader, 40),
+  count: count(s.count),
+  foundInRaid: !!s.foundInRaid,
+  state: ['completed', 'failed', 'uncompleted'].includes(s.state) ? s.state : '',
+  urls: Object.fromEntries(sites.map((site) => [site, webURL(s.urls?.[site]) || ''])),
+})
 export function itemInfo(raw) {
   if (!raw || typeof raw !== 'object' || !text(raw.id) || !text(raw.name)) return null
   const flea =
@@ -65,16 +76,31 @@ export function itemInfo(raw) {
       currency: text(s.currency, 8),
       priceRub: count(s.priceRub),
     })),
-    tasks: list(raw.tasks, 80).map((s) => ({
-      id: text(s.id, 40),
-      name: text(s.name),
-      names: names(s.names),
-      trader: text(s.trader, 40),
-      count: count(s.count),
-      foundInRaid: !!s.foundInRaid,
-      state: ['completed', 'failed', 'uncompleted'].includes(s.state) ? s.state : '',
-      urls: Object.fromEntries(sites.map((site) => [site, webURL(s.urls?.[site]) || ''])),
+    // Traders selling the item for cash, cheapest first, then in barters
+    // (offers.go): the items a barter takes, and how many it gives.
+    offers: list(raw.offers, 40).map((o) => ({
+      trader: text(o.trader, 40),
+      price: count(o.price),
+      currency: text(o.currency, 8),
+      priceRub: count(o.priceRub),
+      barter: list(o.barter, 12)
+        .map((b) => ({
+          id: text(b.id, 40),
+          name: text(b.name),
+          names: names(b.names),
+          shortName: text(b.shortName, 60),
+          iconUrl: webURL(b.iconUrl) || '',
+          count: Number.isFinite(b.count) && b.count > 0 ? b.count : 0,
+        }))
+        .filter((b) => b.id && b.name && b.count),
+      count: Math.max(1, count(o.count)),
+      level: Math.max(1, count(o.level)),
+      playerLevel: count(o.playerLevel),
+      reputation: Number.isFinite(o.reputation) ? o.reputation : 0,
+      buyLimit: count(o.buyLimit),
+      task: o.task && typeof o.task === 'object' && text(o.task.id) ? taskNeed(o.task) : null,
     })),
+    tasks: list(raw.tasks, 80).map(taskNeed),
     hideout: list(raw.hideout, 80).map((s) => ({
       levelId: text(s.levelId, 80),
       station: text(s.station, 60),
@@ -100,6 +126,14 @@ const symbols = { RUB: '₽', USD: '$', EUR: '€' }
 export function price(value, currency = 'RUB', language = 'ja') {
   const number = Math.round(value).toLocaleString(language === 'ja' ? 'ja-JP' : 'en-US')
   return currency === 'RUB' ? `${number} ₽` : `${symbols[currency] || ''}${number}`
+}
+
+// offerNeeds is what reaching a trader offer's loyalty level takes: the
+// player's level and the reputation (two decimals) with the trader; null for
+// a first level every player has.
+export function offerNeeds(offer) {
+  if (offer.level <= 1 && offer.playerLevel <= 1 && offer.reputation <= 0) return null
+  return { level: offer.playerLevel, reputation: offer.reputation.toFixed(2) }
 }
 
 // bestSale is where the item sells for the most roubles: the flea market's

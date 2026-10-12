@@ -29,10 +29,11 @@ const retryCooldown = time.Minute
 
 var resources = []string{"items", "items_en", "maps", "maps_en", "traders", "traders_en", "tasks", "tasks_en", "hideout", "hideout_en"}
 
-// optionalResources are the names in other languages (see internal/locale):
-// a catalog without them still works, in English.
+// optionalResources are the names in other languages (see internal/locale),
+// and the trader barters: a catalog without them still works, in English and
+// with the cash offers only.
 var optionalResources = func() []string {
-	var names []string
+	names := []string{"barters"}
 	for _, lang := range locale.Languages {
 		names = append(names, locale.Resource("tasks", lang), locale.Resource("items", lang))
 	}
@@ -40,6 +41,17 @@ var optionalResources = func() []string {
 }()
 
 func optional(name string) bool { return slices.Contains(optionalResources, name) }
+
+// filled reports whether an optional resource's data has something in it:
+// an object (the names) or a list (the barters).
+func filled(data json.RawMessage) bool {
+	var object map[string]json.RawMessage
+	if json.Unmarshal(data, &object) == nil {
+		return len(object) > 0
+	}
+	var list []json.RawMessage
+	return json.Unmarshal(data, &list) == nil && len(list) > 0
+}
 
 // The resources each consumer reads, for Snapshot.Version: the task list
 // (internal/questapi), the item data (internal/itemapi) and the hideout.
@@ -197,10 +209,10 @@ func (c *Client) Refresh(ctx context.Context, mode string, force bool) (*Snapsho
 	for range names {
 		result := <-results
 		if optional(result.name) {
-			var locale struct {
-				Data map[string]string `json:"data"`
+			var envelope struct {
+				Data json.RawMessage `json:"data"`
 			}
-			if result.err == nil && json.Unmarshal(result.data, &locale) == nil && len(locale.Data) > 0 {
+			if result.err == nil && json.Unmarshal(result.data, &envelope) == nil && filled(envelope.Data) {
 				next.Resources[result.name] = result.data
 				next.ETags[result.name] = result.etag
 			} else if previous != nil {

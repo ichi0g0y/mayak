@@ -4,6 +4,12 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### New
+
+- The item panel shows "Buy from traders": for an item traders sell, each trader's price, the loyalty level (LL) it needs with what that level takes (player level and reputation), how many can be bought per restock, and the task that unlocks the offer, cheapest first. Barters follow from the lowest LL, with the items they take; pressing one of those items opens it. Pressing the task opens its page; it is checked when TarkovTracker has it completed.
+
 ## v0.1.34 (2026-10-12)
 
 ### New

@@ -442,6 +442,24 @@ button.need-row:hover .need-name{color:var(--accent)}
 .need-done{display:grid;color:var(--success)}
 .need-done .icon{width:14px;height:14px}
 .item-empty{margin:4px 0;color:var(--muted)}
+/* Trader offers: the trader with its loyalty level and the price (or a barter
+   tag and the items the barter takes), then what the level takes and the buy
+   limit, then the task unlocking the offer. */
+.item-offers{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.item-offers li{display:grid;gap:2px;padding:6px 8px;border-radius:8px;background:var(--surface-2)}
+.offer-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.offer-trader{display:flex;align-items:baseline;gap:6px;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden}
+.offer-ll{flex:none;padding:0 5px;border-radius:5px;font-size:10.5px;font-weight:600;color:var(--text-2);border:1px solid var(--border-strong)}
+.offer-price{flex:none;font-weight:500;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.offer-price small{color:var(--muted);font-weight:400}
+.offer-notes{display:flex;flex-wrap:wrap;gap:0 10px;color:var(--muted);font-size:11.5px;font-variant-numeric:tabular-nums}
+.need-row.offer-task{width:calc(100% + 8px);margin:1px -4px -2px;padding:3px 4px;font-size:12px}
+.offer-task>.icon{width:13px;height:13px;color:var(--muted)}
+.offer-barter-tag{flex:none;padding:0 6px;border-radius:5px;font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft)}
+.offer-barter{display:grid;margin:1px -4px 0}
+.need-row.offer-barter-item{padding:2px 4px;font-size:12.5px}
+.offer-barter-img,.offer-barter-item>.icon{flex:none;width:20px;height:20px;object-fit:contain}
+.offer-barter-count{flex:none;font-weight:600;font-variant-numeric:tabular-nums}
 .item-links{display:flex;gap:8px;margin-top:16px}
 .item-links button{flex:1;padding:6px 10px;font-size:12.5px}
 .item-links .icon{width:14px;height:14px}

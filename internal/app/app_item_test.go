@@ -10,10 +10,15 @@ import (
 )
 
 func TestWithTaskURLs(t *testing.T) {
-	info := withTaskURLs(iteminfo.Info{Tasks: []iteminfo.TaskNeed{{ID: "t", Name: "Half-Empty", Trader: "Prapor", NormalizedName: "half-empty", WikiLink: "https://escapefromtarkov.fandom.com/wiki/Half-Empty"}}}, []string{"official-wiki"})
+	unlock := &iteminfo.TaskNeed{ID: "g", Name: "Gunsmith - Part 1", Trader: "Mechanic", NormalizedName: "gunsmith-part-1"}
+	info := withTaskURLs(iteminfo.Info{Tasks: []iteminfo.TaskNeed{{ID: "t", Name: "Half-Empty", Trader: "Prapor", NormalizedName: "half-empty", WikiLink: "https://escapefromtarkov.fandom.com/wiki/Half-Empty"}}, Offers: []iteminfo.TraderOffer{{Trader: "Prapor"}, {Trader: "Mechanic", Task: unlock}}}, []string{"official-wiki"})
 	urls := info.Tasks[0].URLs
 	if info.QuestSite != "official-wiki" || !slices.Equal(info.QuestSites, []string{"official-wiki", "japanese-wiki", "tarkov-dev"}) || urls["tarkov-dev"] != "https://tarkov.dev/task/half-empty" || urls["official-wiki"] != "https://escapefromtarkov.fandom.com/wiki/Half-Empty" || urls["japanese-wiki"] != "https://wikiwiki.jp/eft/Prapor/Half-Empty" {
 		t.Fatalf("info = %+v", info)
+	}
+	// A task unlocking a trader offer opens like the item's tasks.
+	if info.Offers[0].Task != nil || info.Offers[1].Task.URLs["tarkov-dev"] != "https://tarkov.dev/task/gunsmith-part-1" || unlock.URLs != nil {
+		t.Fatalf("offers = %+v %+v", info.Offers, info.Offers[1].Task)
 	}
 	if got := questPageURL("japanese-wiki", "Camera, Action!", "Mechanic", ""); got != "https://wikiwiki.jp/eft/Mechanic/Camera%20Action%21" {
 		t.Fatalf("japanese wiki URL = %s", got)

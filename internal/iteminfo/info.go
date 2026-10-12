@@ -36,6 +36,9 @@ type Info struct {
 	// Flea is nil when the item cannot be sold on the flea market.
 	Flea    *Flea         `json:"flea"`
 	Traders []TraderPrice `json:"traders"`
+	// Offers are the traders selling the item, for cash or in a barter
+	// (offers.go).
+	Offers  []TraderOffer `json:"offers,omitempty"`
 	Tasks   []TaskNeed    `json:"tasks"`
 	Hideout []HideoutNeed `json:"hideout"`
 	// Locks are the doors and containers a key opens (none for an item that
@@ -207,9 +210,10 @@ func (s *Service) Current(ctx context.Context, mode, id string) (Info, error) {
 	return info, liveErr
 }
 
-// Progress marks tasks and hideout levels with TarkovTracker progress. Nil
-// maps mean the progress is unknown.
+// Progress marks tasks (with those unlocking offers) and hideout levels with
+// TarkovTracker progress. Nil maps mean the progress is unknown.
 func Progress(info Info, tasks map[string]string, hideout map[string]bool) Info {
+	info.Offers = offerProgress(info.Offers, tasks)
 	info.Tasks = append([]TaskNeed(nil), info.Tasks...)
 	for i := range info.Tasks {
 		info.Tasks[i].State = ""
@@ -277,6 +281,7 @@ type rawItem struct {
 		PriceRUB int    `json:"priceRUB"`
 		Currency string `json:"currency"`
 	} `json:"sellToTrader"`
+	BuyFromTrader []rawOffer `json:"buyFromTrader"`
 }
 
 type index struct {
@@ -287,9 +292,15 @@ type index struct {
 	// resource (items, tasks; kept apart so their keys cannot collide), then key.
 	languages map[string]map[string]map[string]string
 	traders   map[string]string
-	tasks     map[string][]TaskNeed
-	hideout   map[string][]HideoutNeed
-	locks     map[string][]Lock
+	// levels are the traders' loyalty levels and taskByID every task, for
+	// the offers (offers.go).
+	levels   map[string][]traderLevel
+	taskByID map[string]TaskNeed
+	// barters are the trader barters by the item they give.
+	barters map[string][]rawBarter
+	tasks   map[string][]TaskNeed
+	hideout map[string][]HideoutNeed
+	locks   map[string][]Lock
 }
 
 func build(snapshot *catalog.Snapshot) (*index, error) {
@@ -310,7 +321,8 @@ func build(snapshot *catalog.Snapshot) (*index, error) {
 	}
 	var traders struct {
 		Data map[string]struct {
-			Name string `json:"name"`
+			Name   string        `json:"name"`
+			Levels []traderLevel `json:"levels"`
 		} `json:"data"`
 	}
 	var tasks struct {
@@ -357,11 +369,15 @@ func build(snapshot *catalog.Snapshot) (*index, error) {
 		}
 		return key
 	}
-	ix := &index{snapshot: snapshot, items: items.Data.Items, text: text.Data, languages: languages, traders: make(map[string]string), tasks: make(map[string][]TaskNeed), hideout: make(map[string][]HideoutNeed), locks: make(map[string][]Lock)}
+	ix := &index{snapshot: snapshot, items: items.Data.Items, text: text.Data, languages: languages, traders: make(map[string]string), levels: make(map[string][]traderLevel), taskByID: make(map[string]TaskNeed), barters: make(map[string][]rawBarter), tasks: make(map[string][]TaskNeed), hideout: make(map[string][]HideoutNeed), locks: make(map[string][]Lock)}
 	for id, trader := range traders.Data {
 		ix.traders[id] = localized(traderText.Data, trader.Name)
+		ix.levels[id] = trader.Levels
 	}
 	for _, task := range tasks.Data.Tasks {
+		base := TaskNeed{ID: task.ID, Name: localized(taskText.Data, task.Name), Trader: ix.traders[task.Trader], NormalizedName: task.NormalizedName, WikiLink: task.WikiLink}
+		base.Names = ix.names("tasks", task.Name, base.Name)
+		ix.taskByID[task.ID] = base
 		// One row per task and item: "find in raid" and "hand over" objectives
 		// for the same item are merged.
 		needs := map[string]*TaskNeed{}
@@ -374,8 +390,8 @@ func build(snapshot *catalog.Snapshot) (*index, error) {
 			for _, item := range objective.Items {
 				need := needs[item]
 				if need == nil {
-					need = &TaskNeed{ID: task.ID, Name: localized(taskText.Data, task.Name), Trader: ix.traders[task.Trader], NormalizedName: task.NormalizedName, WikiLink: task.WikiLink}
-					need.Names = ix.names("tasks", task.Name, need.Name)
+					copied := base
+					need = &copied
 					needs[item] = need
 				}
 				need.Count = max(need.Count, objective.Count)
@@ -390,6 +406,17 @@ func build(snapshot *catalog.Snapshot) (*index, error) {
 		for _, level := range station.Levels {
 			for _, r := range level.ItemRequirements {
 				ix.hideout[r.Item] = append(ix.hideout[r.Item], HideoutNeed{LevelID: level.ID, Station: localized(hideoutText.Data, station.Name), Level: level.Level, Count: int(r.Count), FoundInRaid: r.Attributes.FoundInRaid})
+			}
+		}
+	}
+	// The barters are optional: without them the offers are for cash only.
+	var barters struct {
+		Data []rawBarter `json:"data"`
+	}
+	if decode("barters", &barters) == nil {
+		for _, b := range barters.Data {
+			if b.OfferedItem.Item != "" {
+				ix.barters[b.OfferedItem.Item] = append(ix.barters[b.OfferedItem.Item], b)
 			}
 		}
 	}
@@ -477,6 +504,7 @@ func (ix *index) info(id string) (Info, bool) {
 		info.Traders = append(info.Traders, TraderPrice{Trader: ix.traders[sale.Trader], Price: sale.Price, Currency: sale.Currency, PriceRUB: sale.PriceRUB})
 	}
 	sortTraders(info.Traders)
+	info.Offers = ix.offers(item)
 	info.Tasks = append([]TaskNeed(nil), ix.tasks[id]...)
 	info.Hideout = append([]HideoutNeed(nil), ix.hideout[id]...)
 	info.Locks = append([]Lock(nil), ix.locks[id]...)

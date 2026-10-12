@@ -1,6 +1,17 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { itemInfo, bestSale, price, age, historyPoints, chartSeries, chartPath, itemPageURL, names } from './item.js'
+import {
+  itemInfo,
+  bestSale,
+  price,
+  age,
+  historyPoints,
+  chartSeries,
+  chartPath,
+  itemPageURL,
+  names,
+  offerNeeds,
+} from './item.js'
 
 test('item details are validated before rendering', () => {
   assert.equal(itemInfo(null), null)
@@ -27,6 +38,76 @@ test('item details are validated before rendering', () => {
   assert.equal(item.tasks[0].foundInRaid, true)
   assert.equal(item.hideout[0].complete, true)
   assert.equal(item.pricedAt, '')
+})
+
+test('trader offers are validated with the task that unlocks them', () => {
+  const item = itemInfo({
+    id: 'gpu',
+    name: 'Graphics card',
+    offers: [
+      { trader: 'Prapor', price: 140000, currency: 'RUB', priceRub: 140000, level: 1, playerLevel: 0, reputation: 0 },
+      {
+        trader: 'Mechanic',
+        price: 1000,
+        currency: 'USD',
+        priceRub: 150000,
+        level: 2,
+        playerLevel: 12,
+        reputation: 0.6,
+        buyLimit: 5,
+        task: {
+          id: 'g1',
+          name: 'Gunsmith - Part 1',
+          state: 'completed',
+          urls: { 'tarkov-dev': 'https://tarkov.dev/task/g1' },
+        },
+      },
+      { trader: 'Skier', level: 'x', reputation: 'high', task: { name: 'no id' } },
+      {
+        trader: 'Ref',
+        level: 3,
+        count: 2,
+        barter: [
+          {
+            id: 'gp',
+            name: 'GP coin',
+            names: { ja: 'GP コイン' },
+            iconUrl: 'https://assets.tarkov.dev/gp.webp',
+            count: 7.51,
+          },
+          { id: 'none', name: 'No count' },
+          'junk',
+        ],
+      },
+      'junk',
+    ],
+  })
+  assert.equal(item.offers.length, 4)
+  const [prapor, mechanic, skier, ref] = item.offers
+  assert.deepEqual(prapor.barter, [])
+  assert.equal(prapor.count, 1)
+  assert.equal(ref.count, 2)
+  assert.deepEqual(ref.barter, [
+    {
+      id: 'gp',
+      name: 'GP coin',
+      names: { ja: 'GP コイン' },
+      shortName: '',
+      iconUrl: 'https://assets.tarkov.dev/gp.webp',
+      count: 7.51,
+    },
+  ])
+  assert.equal(prapor.task, null)
+  assert.equal(prapor.buyLimit, 0)
+  assert.equal(offerNeeds(prapor), null)
+  assert.equal(mechanic.task.name, 'Gunsmith - Part 1')
+  assert.equal(mechanic.task.state, 'completed')
+  assert.equal(mechanic.task.urls['tarkov-dev'], 'https://tarkov.dev/task/g1')
+  assert.deepEqual(offerNeeds(mechanic), { level: 12, reputation: '0.60' })
+  assert.equal(skier.level, 1)
+  assert.equal(skier.reputation, 0)
+  assert.equal(skier.task, null)
+  assert.deepEqual(itemInfo({ id: 'x', name: 'X' }).offers, [])
 })
 
 test('best sale compares the flea market with the best trader', () => {

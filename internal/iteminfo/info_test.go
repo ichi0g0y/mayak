@@ -18,9 +18,11 @@ func (s fixedSource) Refresh(context.Context, string, bool) (*catalog.Snapshot, 
 
 func testSnapshot() *catalog.Snapshot {
 	raw := map[string]string{
-		"items":      `{"data":{"items":{"gpu":{"id":"gpu","name":"gpu Name","shortName":"gpu Short","width":2,"height":1,"lastLowPrice":400000,"avg24hPrice":410000,"changeLast48hPercent":-2.5,"lastOfferCount":12,"minLevelForFlea":20,"updated":"2026-09-23T12:00:00.000Z","sellToTrader":[{"trader":"prapor","price":90000,"priceRUB":90000,"currency":"RUB"},{"trader":"therapist","price":120000,"priceRUB":120000,"currency":"RUB"}]}}}}`,
-		"items_en":   `{"data":{"gpu Name":"Graphics card","gpu Short":"GPU"}}`,
-		"traders":    `{"data":{"prapor":{"name":"prapor Nickname"},"therapist":{"name":"therapist Nickname"}}}`,
+		"items":      `{"data":{"items":{"gpu":{"id":"gpu","name":"gpu Name","shortName":"gpu Short","width":2,"height":1,"lastLowPrice":400000,"avg24hPrice":410000,"changeLast48hPercent":-2.5,"lastOfferCount":12,"minLevelForFlea":20,"updated":"2026-09-23T12:00:00.000Z","sellToTrader":[{"trader":"prapor","price":90000,"priceRUB":90000,"currency":"RUB"},{"trader":"therapist","price":120000,"priceRUB":120000,"currency":"RUB"}],"buyFromTrader":[{"trader":"therapist","price":1000,"priceRUB":150000,"currency":"USD","minTraderLevel":2,"taskUnlock":"t2","buyLimit":3},{"trader":"prapor","price":140000,"priceRUB":140000,"currency":"RUB","minTraderLevel":1,"taskUnlock":null,"buyLimit":null},{"trader":"gone","price":1,"priceRUB":1,"currency":"RUB"}]},"thermo":{"id":"thermo","name":"thermo Name","shortName":"thermo Short","iconLink":"https://example.com/thermo.webp"}}}}`,
+		"items_en":   `{"data":{"gpu Name":"Graphics card","gpu Short":"GPU","thermo Name":"Analog thermometer","thermo Short":"Termo"}}`,
+		"items_ja":   `{"data":{"thermo Name":"アナログ温度計"}}`,
+		"barters":    `{"data":[{"trader":"prapor","minTraderLevel":2,"taskUnlock":"t2","buyLimit":6,"requiredItems":[{"item":"thermo","count":1}],"offeredItem":{"item":"gpu","count":1}},{"trader":"therapist","minTraderLevel":1,"taskUnlock":null,"buyLimit":4,"requiredItems":[{"item":"gpu","count":7.51}],"offeredItem":{"item":"gpu","count":2}},{"trader":"prapor","requiredItems":[{"item":"unknown","count":1}],"offeredItem":{"item":"gpu","count":1}},{"trader":"prapor","requiredItems":[{"item":"gpu","count":1}],"offeredItem":{"item":"thermo","count":1}}]}`,
+		"traders":    `{"data":{"prapor":{"name":"prapor Nickname","levels":[{"level":1,"requiredPlayerLevel":0,"requiredReputation":0},{"level":2,"requiredPlayerLevel":6,"requiredReputation":0.7}]},"therapist":{"name":"therapist Nickname","levels":[{"level":1,"requiredPlayerLevel":0},{"level":2,"requiredPlayerLevel":5,"requiredReputation":0.6}]}}}`,
 		"traders_en": `{"data":{"prapor Nickname":"Prapor","therapist Nickname":"Therapist"}}`,
 		"tasks":      `{"data":{"tasks":{"t1":{"id":"t1","name":"t1 name","trader":"prapor","objectives":[{"type":"findItem","items":["gpu"],"count":2,"foundInRaid":true},{"type":"giveItem","items":["gpu","other"],"count":2}]},"t2":{"id":"t2","name":"t2 name","trader":"prapor","objectives":[{"type":"visit"}]}}}}`,
 		"tasks_en":   `{"data":{"t1 name":"Farming - Part 4","t2 name":"Other"}}`,
@@ -59,6 +61,28 @@ func TestCatalogInfo(t *testing.T) {
 	if len(info.Locks) != 1 || info.Locks[0] != (Lock{Map: "customs", X: 10, Y: 2, Z: -5}) {
 		t.Fatalf("locks = %+v", info.Locks)
 	}
+	// Cash offers, cheapest in roubles first, then barters from the lowest
+	// loyalty level; a trader or a barter item not in the catalog is left out.
+	if len(info.Offers) != 4 {
+		t.Fatalf("offers = %+v", info.Offers)
+	}
+	first, second := info.Offers[0], info.Offers[1]
+	if first.Trader != "Prapor" || first.Price != 140000 || first.Level != 1 || first.PlayerLevel != 0 || first.BuyLimit != 0 || first.Task != nil {
+		t.Fatalf("first offer = %+v", first)
+	}
+	if second.Trader != "Therapist" || second.Price != 1000 || second.Currency != "USD" || second.PriceRUB != 150000 || second.Level != 2 || second.PlayerLevel != 5 || second.Reputation != 0.6 || second.BuyLimit != 3 || second.Task == nil || second.Task.ID != "t2" || second.Task.Name != "Other" || second.Task.Trader != "Prapor" {
+		t.Fatalf("second offer = %+v %+v", second, second.Task)
+	}
+	coins, thermo := info.Offers[2], info.Offers[3]
+	if coins.Trader != "Therapist" || coins.Level != 1 || coins.Price != 0 || coins.Count != 2 || coins.BuyLimit != 4 || coins.Task != nil || len(coins.Barter) != 1 || coins.Barter[0].ID != "gpu" || coins.Barter[0].Count != 7.51 || coins.Barter[0].Name != "Graphics card" {
+		t.Fatalf("coin barter = %+v", coins)
+	}
+	if thermo.Trader != "Prapor" || thermo.Level != 2 || thermo.PlayerLevel != 6 || thermo.Reputation != 0.7 || thermo.Count != 0 || thermo.BuyLimit != 6 || thermo.Task == nil || thermo.Task.ID != "t2" {
+		t.Fatalf("thermometer barter = %+v", thermo)
+	}
+	if b := thermo.Barter; len(b) != 1 || b[0].Name != "Analog thermometer" || b[0].Names["ja"] != "アナログ温度計" || b[0].ShortName != "Termo" || b[0].IconURL != "https://example.com/thermo.webp" || b[0].Count != 1 {
+		t.Fatalf("thermometer barter items = %+v", b)
+	}
 }
 
 func TestProgress(t *testing.T) {
@@ -70,6 +94,13 @@ func TestProgress(t *testing.T) {
 	known := Progress(info, map[string]string{"t1": "completed"}, map[string]bool{})
 	if known.Tasks[0].State != "completed" || known.Hideout[0].Complete == nil || *known.Hideout[0].Complete {
 		t.Fatalf("known progress = %+v %+v", known.Tasks, known.Hideout)
+	}
+	// The task unlocking an offer is marked too, on a copy.
+	if unknown.Offers[1].Task.State != "" || known.Offers[1].Task.State != "uncompleted" || info.Offers[1].Task.State != "" {
+		t.Fatalf("offer task states = %q %q", unknown.Offers[1].Task.State, known.Offers[1].Task.State)
+	}
+	if done := Progress(info, map[string]string{"t2": "completed"}, nil); done.Offers[1].Task.State != "completed" {
+		t.Fatalf("completed offer task = %+v", done.Offers[1].Task)
 	}
 }
 

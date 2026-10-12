@@ -1,6 +1,6 @@
 # アイテム欄
 
-ブラウザシェルのアイテム欄（`aside.item-panel`。既定は右側。設定で左・下にも置けます）で、1 つのアイテムについて売値・価格の推移・必要なタスクとハイドアウトを表示します。ウインドウ全体の構成は [browser-shell.md](browser-shell.md) を参照してください。
+ブラウザシェルのアイテム欄（`aside.item-panel`。既定は右側。設定で左・下にも置けます）で、1 つのアイテムについて売値・価格の推移・トレーダーでの買値・必要なタスクとハイドアウトを表示します。ウインドウ全体の構成は [browser-shell.md](browser-shell.md) を参照してください。
 
 主な実装箇所:
 
@@ -10,7 +10,8 @@
 | 状態管理・Go 呼び出し・保存 | `frontend/src/browser/api.js` |
 | 検証・価格計算・経過時間・チャート計算・アイテムページURL | `frontend/src/browser/item.js` |
 | Go 側の入口（`showBrowserItem`、`BrowserItemInfo`、`BrowserItemHistory`、`BrowserItemSearch`、`withTaskURLs`） | `app_item.go` |
-| 価格・必要数の組み立て | `internal/iteminfo/info.go`, `live.go`, `history.go` |
+| 価格・必要数の組み立て | `internal/iteminfo/info.go`, `offers.go`, `live.go`, `history.go` |
+| トレーダーで買う（描画） | `frontend/src/browser/view-item-offers.js` |
 | 検索用のアイテム一覧 | `internal/itemapi/client.go`, `internal/itemmatch/match.go` |
 | 他言語名 | `internal/locale/locale.go` |
 | タスクページURL | `app_quest_site.go` |
@@ -113,6 +114,22 @@
 - ルーブル換算（`priceRub`）の高い順に並べ、先頭行に `best` クラスを付けます。
 - ルーブル以外は「元の通貨の金額（ルーブル換算）」と表示します。通貨記号は `₽` / `$` / `€`、桁区切りは `ja-JP` または `en-US` です。
 - `itemInfo()` はトレーダーを最大 12 件まで受け付けます。
+
+### トレーダーで買う（`offers.go`、`view-item-offers.js`）
+
+- トレーダーがお金（ルーブル・ドル・ユーロ）か交換（バーター）で売っているアイテムに出します。どのトレーダーも売っていないアイテムでは、見出しごと出しません。
+- お金の販売の出どころはカタログの `items[].buyFromTrader` です。交換はカタログの `barters`（json.tarkov.dev の `<mode>/barters`）で、`offeredItem` がそのアイテムのものを使います。`barters` は任意のリソースです。取れないときは前のスナップショットのものを使い、それも無ければお金の販売だけを出します。トレーダー名は `traders` と `traders_en`、LL の条件は `traders[].levels`、タスク名は `tasks` と `tasks_en`（他言語名は `tasks_<lang>`）から引きます。カタログに無いトレーダーの販売と、カタログに無いアイテムを求める交換は除きます。ライブ価格では置き換えず、いつもカタログの値です。
+- お金の販売を先に、ルーブル換算（`priceRUB`）の安い順に並べます。同じ値段なら LL の低い順です。そのあとに交換を、LL の低い順に並べます。見出しの数字は件数（交換も含む）です。
+- 各行には次のものを出します。
+  - トレーダー名と、必要な LL（`minTraderLevel`。`LL2` の形）。
+  - 値段。ルーブル以外は「元の通貨の金額（ルーブル換算）」と出します（トレーダー買取と同じ `price()`）。交換では値段の代わりに「交換」の札を出します。
+  - 交換で渡すアイテム（`barter`）。アイコン、名前（表示言語の名前があればそれ）、個数（`×1`）を出します。個数は小数のこともあり（Ref の GP コインなど）、小数 2 桁まで出します。押すとそのアイテムをアイテム欄で開きます（`itemSelect`）。
+  - 1 回の交換で 2 個以上もらえるときは、その数（`count`。`1回で 2 個`）。
+  - その LL に必要なプレイヤーレベルと信頼度（`レベル 15・信頼 0.20`。信頼度は小数 2 桁）。LL1 でレベル 1 以下、信頼度 0 のときは出しません（`offerNeeds`）。
+  - リセットごとに買える数（`buyLimit`。`リセットごとに 5 個まで`）。上限が無い（0 か null）ときは出しません。
+  - 販売の解放に要るタスク（`taskUnlock`）があれば「「タスク名」の完了後」。押すと、必要なタスクと同じようにタスクのページをポップアップで開きます（`itemTask`。`api.js` は `tasks` に無ければ `offers[].task` から探します）。
+- 解放のタスクは必要なタスクと同じ `TaskNeed` で送ります。ページの URL は `withTaskURLs` が付け、TarkovTracker の状態は `Progress` が同じ条件で付けます。`completed` ならチェックを出します。
+- `itemInfo()` は最大 40 件まで受け付けます。
 
 ## 価格の推移チャート
 

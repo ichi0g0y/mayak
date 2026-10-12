@@ -2121,8 +2121,10 @@ async function performOne(type, data) {
     }
     // A task in the item sidebar opens like a recognized task, on the task site
     // set now (on the Host its current setting, not the one when the item came).
+    // A task unlocking a trader offer opens the same way.
     case 'itemTask': {
-      const task = item?.tasks.find((t) => t.id === (data?.id ?? data))
+      const id = data?.id ?? data
+      const task = item?.tasks.find((t) => t.id === id) || item?.offers?.find((o) => o.task?.id === id)?.task
       if (!task) return snapshot()
       const site = await pickSite(task.urls),
         url = webURL(task.urls[site])

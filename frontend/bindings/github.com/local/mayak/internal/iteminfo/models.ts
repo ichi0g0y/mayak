@@ -5,6 +5,52 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
+/**
+ * BarterItem is one of the items a barter takes. Count can be a fraction:
+ * Ref's offers take GP coins as money.
+ */
+export class BarterItem {
+    "id": string;
+    "name": string;
+    "names"?: { [_ in string]?: string };
+    "shortName": string;
+    "iconUrl": string;
+    "count": number;
+
+    /** Creates a new BarterItem instance. */
+    constructor($$source: Partial<BarterItem> = {}) {
+        if (!("id" in $$source)) {
+            this["id"] = "";
+        }
+        if (!("name" in $$source)) {
+            this["name"] = "";
+        }
+        if (!("shortName" in $$source)) {
+            this["shortName"] = "";
+        }
+        if (!("iconUrl" in $$source)) {
+            this["iconUrl"] = "";
+        }
+        if (!("count" in $$source)) {
+            this["count"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new BarterItem instance from a string or object.
+     */
+    static createFrom($$source: any = {}): BarterItem {
+        const $$createField2_0 = $$createType0;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("names" in $$parsedSource) {
+            $$parsedSource["names"] = $$createField2_0($$parsedSource["names"]);
+        }
+        return new BarterItem($$parsedSource as Partial<BarterItem>);
+    }
+}
+
 export class Flea {
     "lastLow": number;
     "avg24h": number;
@@ -120,6 +166,12 @@ export class Info {
      */
     "flea": Flea | null;
     "traders": TraderPrice[];
+
+    /**
+     * Offers are the traders selling the item, for cash or in a barter
+     * (offers.go).
+     */
+    "offers"?: TraderOffer[];
     "tasks": TaskNeed[];
     "hideout": HideoutNeed[];
 
@@ -218,7 +270,8 @@ export class Info {
         const $$createField14_0 = $$createType6;
         const $$createField15_0 = $$createType8;
         const $$createField16_0 = $$createType10;
-        const $$createField20_0 = $$createType11;
+        const $$createField17_0 = $$createType12;
+        const $$createField21_0 = $$createType13;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("names" in $$parsedSource) {
             $$parsedSource["names"] = $$createField4_0($$parsedSource["names"]);
@@ -232,17 +285,20 @@ export class Info {
         if ("traders" in $$parsedSource) {
             $$parsedSource["traders"] = $$createField13_0($$parsedSource["traders"]);
         }
+        if ("offers" in $$parsedSource) {
+            $$parsedSource["offers"] = $$createField14_0($$parsedSource["offers"]);
+        }
         if ("tasks" in $$parsedSource) {
-            $$parsedSource["tasks"] = $$createField14_0($$parsedSource["tasks"]);
+            $$parsedSource["tasks"] = $$createField15_0($$parsedSource["tasks"]);
         }
         if ("hideout" in $$parsedSource) {
-            $$parsedSource["hideout"] = $$createField15_0($$parsedSource["hideout"]);
+            $$parsedSource["hideout"] = $$createField16_0($$parsedSource["hideout"]);
         }
         if ("locks" in $$parsedSource) {
-            $$parsedSource["locks"] = $$createField16_0($$parsedSource["locks"]);
+            $$parsedSource["locks"] = $$createField17_0($$parsedSource["locks"]);
         }
         if ("questSites" in $$parsedSource) {
-            $$parsedSource["questSites"] = $$createField20_0($$parsedSource["questSites"]);
+            $$parsedSource["questSites"] = $$createField21_0($$parsedSource["questSites"]);
         }
         return new Info($$parsedSource as Partial<Info>);
     }
@@ -384,6 +440,97 @@ export class TaskNeed {
     }
 }
 
+/**
+ * TraderOffer is a trader selling the item, for cash or in a barter: its
+ * price or the items it takes, the loyalty level it needs and what reaching
+ * that level takes, and the task that unlocks it.
+ */
+export class TraderOffer {
+    "trader": string;
+
+    /**
+     * Price, Currency and PriceRUB are zero for a barter.
+     */
+    "price": number;
+    "currency": string;
+    "priceRub": number;
+
+    /**
+     * Barter is what the trader takes instead of money, nil for a cash offer.
+     */
+    "barter"?: BarterItem[];
+
+    /**
+     * Count is how many of the item a barter gives, when more than one.
+     */
+    "count"?: number;
+
+    /**
+     * Level is the trader loyalty level the offer needs; PlayerLevel and
+     * Reputation are what that level needs.
+     */
+    "level": number;
+    "playerLevel": number;
+    "reputation": number;
+
+    /**
+     * BuyLimit is how many can be bought per restock, 0 when unlimited.
+     */
+    "buyLimit": number;
+
+    /**
+     * Task is the task whose completion unlocks the offer, nil for none. It
+     * gets its pages and TarkovTracker state like the item's tasks.
+     */
+    "task"?: TaskNeed | null;
+
+    /** Creates a new TraderOffer instance. */
+    constructor($$source: Partial<TraderOffer> = {}) {
+        if (!("trader" in $$source)) {
+            this["trader"] = "";
+        }
+        if (!("price" in $$source)) {
+            this["price"] = 0;
+        }
+        if (!("currency" in $$source)) {
+            this["currency"] = "";
+        }
+        if (!("priceRub" in $$source)) {
+            this["priceRub"] = 0;
+        }
+        if (!("level" in $$source)) {
+            this["level"] = 0;
+        }
+        if (!("playerLevel" in $$source)) {
+            this["playerLevel"] = 0;
+        }
+        if (!("reputation" in $$source)) {
+            this["reputation"] = 0;
+        }
+        if (!("buyLimit" in $$source)) {
+            this["buyLimit"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new TraderOffer instance from a string or object.
+     */
+    static createFrom($$source: any = {}): TraderOffer {
+        const $$createField4_0 = $$createType15;
+        const $$createField10_0 = $$createType16;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("barter" in $$parsedSource) {
+            $$parsedSource["barter"] = $$createField4_0($$parsedSource["barter"]);
+        }
+        if ("task" in $$parsedSource) {
+            $$parsedSource["task"] = $$createField10_0($$parsedSource["task"]);
+        }
+        return new TraderOffer($$parsedSource as Partial<TraderOffer>);
+    }
+}
+
 export class TraderPrice {
     "trader": string;
     "price": number;
@@ -423,10 +570,15 @@ const $$createType1 = Flea.createFrom;
 const $$createType2 = $Create.Nullable($$createType1);
 const $$createType3 = TraderPrice.createFrom;
 const $$createType4 = $Create.Array($$createType3);
-const $$createType5 = TaskNeed.createFrom;
+const $$createType5 = TraderOffer.createFrom;
 const $$createType6 = $Create.Array($$createType5);
-const $$createType7 = HideoutNeed.createFrom;
+const $$createType7 = TaskNeed.createFrom;
 const $$createType8 = $Create.Array($$createType7);
-const $$createType9 = Lock.createFrom;
+const $$createType9 = HideoutNeed.createFrom;
 const $$createType10 = $Create.Array($$createType9);
-const $$createType11 = $Create.Array($Create.Any);
+const $$createType11 = Lock.createFrom;
+const $$createType12 = $Create.Array($$createType11);
+const $$createType13 = $Create.Array($Create.Any);
+const $$createType14 = BarterItem.createFrom;
+const $$createType15 = $Create.Array($$createType14);
+const $$createType16 = $Create.Nullable($$createType7);

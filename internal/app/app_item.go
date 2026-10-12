@@ -123,13 +123,27 @@ func withTaskURLs(info iteminfo.Info, order []string) iteminfo.Info {
 	info.QuestSite = info.QuestSites[0]
 	info.Tasks = append([]iteminfo.TaskNeed(nil), info.Tasks...)
 	for i, task := range info.Tasks {
-		status := model.Status{LastQuest: task.Name, QuestTrader: task.Trader, QuestWikiURL: task.WikiLink}
-		if task.NormalizedName != "" {
-			status.QuestURL = "https://tarkov.dev/task/" + task.NormalizedName
+		info.Tasks[i].URLs = taskPageURLs(task)
+	}
+	// The tasks unlocking trader offers open the same way.
+	info.Offers = append([]iteminfo.TraderOffer(nil), info.Offers...)
+	for i, offer := range info.Offers {
+		if offer.Task != nil {
+			task := *offer.Task
+			task.URLs = taskPageURLs(task)
+			info.Offers[i].Task = &task
 		}
-		info.Tasks[i].URLs = questSiteURLs(status)
 	}
 	return info
+}
+
+// taskPageURLs is a task's page on every quest site.
+func taskPageURLs(task iteminfo.TaskNeed) map[string]string {
+	status := model.Status{LastQuest: task.Name, QuestTrader: task.Trader, QuestWikiURL: task.WikiLink}
+	if task.NormalizedName != "" {
+		status.QuestURL = "https://tarkov.dev/task/" + task.NormalizedName
+	}
+	return questSiteURLs(status)
 }
 
 // ItemSearchHit is one match of the item sidebar's search box.
