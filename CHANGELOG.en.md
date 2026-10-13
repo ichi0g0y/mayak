@@ -4,6 +4,12 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### Fixed
+
+- The built-in browser's reload button sometimes did nothing. A page still loading is stopped first; when the reload bypassing the cache is refused, a plain reload runs.
+
 ## v0.1.38 (2026-10-13)
 
 ### Improved

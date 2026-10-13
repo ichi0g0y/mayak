@@ -26,6 +26,10 @@ type browserHandler struct {
 	vtbl   *browserHandlerVtbl
 	invoke func(uintptr)
 	iid    windows.GUID
+	// complete, when set, takes a completion's result instead of invoke: a
+	// completed handler's Invoke gets the error code where an event's gets
+	// its sender.
+	complete func(errorCode uintptr)
 }
 type browserHandlerVtbl struct{ query, add, release, invoke ComProc }
 
@@ -48,15 +52,23 @@ var browserVtbl = browserHandlerVtbl{
 	}),
 	NewComProc(func(h *browserHandler) uintptr { return 1 }),
 	NewComProc(func(h *browserHandler) uintptr { return 1 }),
-	NewComProc(func(h *browserHandler, sender, args uintptr) uintptr { h.invoke(args); return 0 }),
+	NewComProc(func(h *browserHandler, sender, args uintptr) uintptr {
+		if h.complete != nil {
+			h.complete(sender)
+		} else {
+			h.invoke(args)
+		}
+		return 0
+	}),
 }
 
 // devToolsPending keeps completion handlers alive until WebView2 calls them.
 var devToolsPending = map[*browserHandler]struct{}{}
 
-// devToolsCall runs a DevTools protocol method without waiting for its result.
-// It must be called on the UI thread, which also runs the completion handler.
-func (e *Chromium) devToolsCall(method, params string) error {
+// devToolsCall runs a DevTools protocol method without waiting for its result;
+// done, when not nil, gets the method's error code (0 when it ran). It must be
+// called on the UI thread, which also runs the completion handler.
+func (e *Chromium) devToolsCall(method, params string, done func(errorCode uintptr)) error {
 	w := e.webview
 	if w == nil || e.shuttingDown {
 		return errors.New("webview is not available")
@@ -71,7 +83,12 @@ func (e *Chromium) devToolsCall(method, params string) error {
 	}
 	guid, _ := windows.GUIDFromString("{5C4889F0-5EF6-4C5A-952C-D8F1B92D0574}")
 	h := &browserHandler{vtbl: &browserVtbl, iid: guid}
-	h.invoke = func(uintptr) { delete(devToolsPending, h) }
+	h.complete = func(code uintptr) {
+		delete(devToolsPending, h)
+		if done != nil {
+			done(code)
+		}
+	}
 	devToolsPending[h] = struct{}{}
 	hr, _, _ := w.vtbl.CallDevToolsProtocolMethod.Call(uintptr(unsafe.Pointer(w)), uintptr(unsafe.Pointer(name)), uintptr(unsafe.Pointer(args)), uintptr(unsafe.Pointer(h)))
 	if hr != 0 {
@@ -116,7 +133,7 @@ func (e *Chromium) BrowserIsolation(notify func(BrowserEvent)) (func(), error) {
 		if err != nil {
 			return err
 		}
-		h := &browserHandler{&browserVtbl, fn, guid}
+		h := &browserHandler{vtbl: &browserVtbl, invoke: fn, iid: guid}
 		var token _EventRegistrationToken
 		hr, _, _ := proc.Call(ptr, uintptr(unsafe.Pointer(h)), uintptr(unsafe.Pointer(&token)))
 		if hr != 0 {
@@ -198,7 +215,7 @@ func (e *Chromium) BrowserIsolation(notify func(BrowserEvent)) (func(), error) {
 	if w15 := e.webview15(); w15 != 0 {
 		v := *(**[113]ComProc)(unsafe.Pointer(w15))
 		guid, _ := windows.GUIDFromString("{2913DA94-833D-4DE0-8DCA-900FC524A1A4}")
-		h := &browserHandler{&browserVtbl, changed, guid}
+		h := &browserHandler{vtbl: &browserVtbl, invoke: changed, iid: guid}
 		var token _EventRegistrationToken
 		if hr, _, _ := v[109].Call(w15, uintptr(unsafe.Pointer(h)), uintptr(unsafe.Pointer(&token))); hr == 0 {
 			handlers = append(handlers, h)
@@ -273,7 +290,21 @@ func (e *Chromium) BrowserCommand(command, rawURL string) error {
 	case "reload":
 		// Like Ctrl+Shift+R: a normal reload keeps using cached files, so a
 		// broken cache entry (a site's script cached mid-deploy) never heals.
-		if err := e.devToolsCall("Page.reload", `{"ignoreCache":true}`); err == nil {
+		// DevTools can refuse it (the page not ready for it) after the call
+		// has gone through: then the plain reload runs, so the button always
+		// reloads.
+		reload := func() { w.vtbl.Reload.Call(uintptr(unsafe.Pointer(w))) }
+		// A page still loading would carry on and win over the reload: it
+		// is stopped first, as the browser's stop button does.
+		if e.browserLoading {
+			w.vtbl.Stop.Call(uintptr(unsafe.Pointer(w)))
+		}
+		err := e.devToolsCall("Page.reload", `{"ignoreCache":true}`, func(code uintptr) {
+			if code != 0 && !e.shuttingDown && e.webview == w {
+				reload()
+			}
+		})
+		if err == nil {
 			return nil
 		}
 		proc = w.vtbl.Reload

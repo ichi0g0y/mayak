@@ -85,7 +85,7 @@ func (e *Chromium) OnDOMContentLoaded(fn func()) (func(), error) {
 		webview2.Release()
 		return nil, err
 	}
-	h := &browserHandler{&browserVtbl, func(uintptr) { fn() }, guid}
+	h := &browserHandler{vtbl: &browserVtbl, invoke: func(uintptr) { fn() }, iid: guid}
 	ptr := uintptr(unsafe.Pointer(webview2))
 	var token _EventRegistrationToken
 	hr, _, _ := webview2.vtbl.AddDomContentLoaded.Call(ptr, uintptr(unsafe.Pointer(h)), uintptr(unsafe.Pointer(&token)))
