@@ -4,6 +4,7 @@
 export {
     BarterItem,
     Flea,
+    FleaFee,
     HideoutNeed,
     Info,
     Lock,

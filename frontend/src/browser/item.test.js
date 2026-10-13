@@ -203,6 +203,9 @@ test("the flea market's fee is tarkov.dev's, the Intel Center's level 3 taking 3
   assert.equal(fleaFee(item), 5968)
   assert.equal(fleaFee({ ...item, fleaFee: { ...rates, intel: true } }), 4178)
   assert.equal(fleaFee({ ...item, fleaFee: { ...rates, intel: false } }), 5968)
+  // Either way on purpose, whatever TarkovTracker says.
+  assert.equal(fleaFee(item, 47776, true), 4178)
+  assert.equal(fleaFee({ ...item, fleaFee: { ...rates, intel: true } }, 47776, false), 5968)
   // Listed above the base price, the asked part grows.
   assert.ok(fleaFee(item, 200000) > fleaFee(item, 100000))
   assert.equal(fleaFee({ ...item, fleaFee: null }), null)

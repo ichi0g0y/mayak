@@ -13,7 +13,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### Improved
 
-- The item sidebar shows the flea market's listing fee and what is left after it, and where it sells best compares the flea after the fee with the traders. The fee is for listing one at the lowest offer, with the Intel Center level 3's 30% off when TarkovTracker says it is built.
+- The item sidebar shows the flea market's listing fee and what is left after it, and where it sells best compares the flea after the fee with the traders, the lowest offer, the fee and what is left listed under it with what each makes a slot. The fee is for listing one at the lowest offer, with the Intel Center level 3's 30% off when TarkovTracker says it is built; without TarkovTracker, both are shown.
 - Looking on another PC or a tablet, tabs no longer pile up on the Host PC. MAYAK used on one PC alone works as before.
   - The Host PC can choose what it shows too (tasks, maps and positions, items), under Other computers → Show on this PC. It applies while MAYAK on another PC or a registered tarkov.dev page is connected: what is left out does not open on the Host, and still goes to the paired PCs and to tarkov.dev.
   - What is asked for on the Host (Open task, Analyze latest screenshot) shows on the Host even so.

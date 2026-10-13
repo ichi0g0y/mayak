@@ -428,6 +428,11 @@ button.item-page-link:hover h2{color:var(--accent)}
 .item-best-trader .best-where{font-size:12.5px}
 .item-best-trader b{font-size:16px;line-height:20px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
 .item-best-trader small{grid-column:3;line-height:16px;font-size:11px;text-align:right}
+/* The flea market's sum, right under its line in the best sale: set in under the name, quieter, its sums in the line's right-hand column. */
+.item-best-fee{grid-column:2/-1;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:1px 8px;margin-top:4px;font-size:11.5px;line-height:16px;color:var(--muted)}
+.item-best-fee span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-best .item-best-fee b{font-size:11.5px;line-height:16px;font-weight:400;color:var(--text-2);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.item-best .item-best-fee b small{grid-column:auto;font-size:11px;line-height:16px;color:var(--muted)}
 .item-section{margin-top:16px}
 .item-section h3{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--text-2)}
 .item-section h3 .count{margin-left:auto;min-width:20px;padding:1px 7px;border-radius:10px;background:var(--surface-2);color:var(--text-2);font-size:11.5px;text-align:center}

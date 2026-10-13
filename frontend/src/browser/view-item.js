@@ -227,11 +227,45 @@ function itemDetails() {
   // whether the Intel Center's 30% off is in it (not known without
   // TarkovTracker, then left out).
   const fee = flea ? fleaFee(item) : null
+  const net = fee === null ? null : Math.max(0, flea.lastLow - fee)
+  // With the Intel Center's level not known (no TarkovTracker), the fee and
+  // what is left with its level 3's 30% off too, for reference; the best
+  // sale goes by the fee without it.
+  const intelFee = fee !== null && item.fleaFee.intel === null ? fleaFee(item, flea.lastLow, true) : null
+  const intelNet = intelFee === null ? null : Math.max(0, flea.lastLow - intelFee)
+  const perSlot = (v) => `${money(v / slots)} / ${esc(t('perSlot'))}`
+  // A sum's price a slot after it, in brackets; none for a one-slot item,
+  // where it would say the same again.
+  const andSlot = (v) => (slots > 1 ? ` <small>(${perSlot(v)})</small>` : '')
+  // The flea market's sum, right under its line in the best sale (whose
+  // sum is what is left after the fee), set in and quieter: the lowest
+  // offer (with what it makes a slot) and the fee, their sums in the
+  // column of the line's.
+  const feeBreakdown = () => {
+    if (fee === null) return ''
+    const line = (label, value) => `<span>${esc(label)}</span><b>${value}</b>`
+    return `<div class="item-best-fee">${line(t('fleaLow'), money(flea.lastLow) + andSlot(flea.lastLow))}${line(t('fleaFee'), '−' + money(fee))}${intelNet === null ? '' : line(t('fleaNetIntel'), money(intelNet))}</div>`
+  }
+  // The other side under the best sale: the best trader when the flea market
+  // wins, the flea market (after the fee, with its sum) when a trader does.
+  const fleaPays = net ?? flea?.lastLow ?? 0
+  const runnerUp = (best) =>
+    best.where === 'flea'
+      ? item.traders[0]
+        ? `<div class="item-best-trader">${traderAvatar(item, item.traders[0].trader, itemIconHTML)}<span class="best-where">${esc(item.traders[0].trader)}</span><b>${money(item.traders[0].priceRub)}</b><small>${perSlot(item.traders[0].priceRub)}</small></div>`
+        : ''
+      : fleaPays > 0
+        ? `<div class="item-best-trader">${traderAvatar(item, 'flea', itemIconHTML)}<span class="best-where">${esc(t('flea'))}</span><b>${money(fleaPays)}</b><small>${perSlot(fleaPays)}</small>${feeBreakdown()}</div>`
+        : ''
   const feeRows = () =>
     fee === null
       ? ''
       : row(t('fleaFee'), '−' + money(fee)) +
-        row(t('fleaNet'), money(Math.max(0, flea.lastLow - fee)), 'net') +
+        row(t('fleaNet'), money(net) + andSlot(net), 'net') +
+        (intelNet === null
+          ? ''
+          : row(t('fleaFeeIntelLv3'), '−' + money(intelFee)) +
+            row(t('fleaNetIntel'), money(intelNet) + andSlot(intelNet), 'net')) +
         `<p class="item-fee-note">${esc(t(item.fleaFee.intel === true ? 'fleaFeeIntel' : item.fleaFee.intel === false ? 'fleaFeeNoIntel' : 'fleaFeeUnknown'))}</p>`
   const change = flea?.changePercent || 0
   const done = (s) => s.state === 'completed' || s.complete === true
@@ -256,7 +290,7 @@ function itemDetails() {
      : `<div class="item-page-link">${inner}</div>`
  })()}</div>
  <p class="item-fresh ${item.live ? 'live' : ''}"><span class="fresh-dot"></span>${esc(item.live ? t('itemLive') : t('itemCatalog'))} · ${esc(t('itemPriced'))} <span class="item-age" data-time="${esc(item.pricedAt)}">${esc(age(item.pricedAt, lang))}</span><button class="item-refresh" data-action="itemRefresh" title="${esc(t('itemRefresh'))}" aria-label="${esc(t('itemRefresh'))}" aria-busy="${!!state.itemBusy}">${icon('reload', state.itemBusy ? 'icon spin' : 'icon')}</button></p>
- ${best ? `<div class="item-best">${traderAvatar(item, best.where, itemIconHTML)}<span class="best-where" title="${esc(t('bestSale'))}">${esc(best.where === 'flea' ? t(best.fee ? 'fleaAfterFee' : 'flea') : best.where)}</span><strong>${money(best.priceRub)}</strong><small>${money(best.priceRub / slots)} / ${esc(t('perSlot'))}</small>${best.where === 'flea' && item.traders[0] ? `<div class="item-best-trader">${traderAvatar(item, item.traders[0].trader, itemIconHTML)}<span class="best-where">${esc(item.traders[0].trader)}</span><b>${money(item.traders[0].priceRub)}</b><small>${money(item.traders[0].priceRub / slots)} / ${esc(t('perSlot'))}</small></div>` : ''}</div>` : ''}
+ ${best ? `<div class="item-best">${traderAvatar(item, best.where, itemIconHTML)}<span class="best-where" title="${esc(t('bestSale'))}">${esc(best.where === 'flea' ? t('flea') : best.where)}</span><strong>${money(best.priceRub)}</strong><small>${perSlot(best.priceRub)}</small>${best.where === 'flea' ? feeBreakdown() : ''}${runnerUp(best)}</div>` : ''}
  ${(() => {
    const locks = itemLocks(item)
    return locks.length
@@ -276,7 +310,7 @@ function itemDetails() {
        : ''
  })()}
  ${itemChart(item)}
- <section class="item-section"><h3>${esc(t('flea'))}</h3>${flea ? row(t('fleaLow'), money(flea.lastLow)) + feeRows() + row(t('fleaAvg'), money(flea.avg24h)) + (flea.low24h && flea.high24h ? row(t('fleaRange'), `${money(flea.low24h)} – ${money(flea.high24h)}`) : '') + row(t('fleaChange'), `${change > 0 ? '+' : ''}${change.toFixed(1)}%`, change > 0 ? 'up' : change < 0 ? 'down' : '') + row(t('fleaOffers'), flea.offers.toLocaleString()) + (flea.minLevel ? row(t('fleaLevel'), 'Lv.' + flea.minLevel) : '') : `<p class="item-empty">${t('noFlea')}</p>`}</section>
+ <section class="item-section"><h3>${esc(t('flea'))}</h3>${flea ? row(t('fleaLow'), fee === null ? money(flea.lastLow) : money(flea.lastLow) + andSlot(flea.lastLow)) + feeRows() + row(t('fleaAvg'), money(flea.avg24h)) + (flea.low24h && flea.high24h ? row(t('fleaRange'), `${money(flea.low24h)} – ${money(flea.high24h)}`) : '') + row(t('fleaChange'), `${change > 0 ? '+' : ''}${change.toFixed(1)}%`, change > 0 ? 'up' : change < 0 ? 'down' : '') + row(t('fleaOffers'), flea.offers.toLocaleString()) + (flea.minLevel ? row(t('fleaLevel'), 'Lv.' + flea.minLevel) : '') : `<p class="item-empty">${t('noFlea')}</p>`}</section>
  <section class="item-section"><h3>${esc(t('traders'))}</h3>${item.traders.map((s, i) => row(s.trader, s.currency === 'RUB' ? money(s.price) : `${money(s.price, s.currency)} <small>(${money(s.priceRub)})</small>`, i === 0 ? 'best' : '', s.trader)).join('') || `<p class="item-empty">${t('noNeeds')}</p>`}</section>
  ${itemOffers(item, itemIconHTML)}
  <section class="item-section"><h3>${esc(t('itemTasks'))}<span class="count">${open(item.tasks)}</span></h3>${needs(item.tasks, (s) => `<span class="need-name" title="${esc(s.name)}">${esc(localName(s.names, s.name))}<small>${esc(s.trader)}</small></span>`, 'itemTask')}</section>

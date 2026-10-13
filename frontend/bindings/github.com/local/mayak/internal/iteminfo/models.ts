@@ -96,6 +96,43 @@ export class Flea {
     }
 }
 
+/**
+ * FleaFee holds what the flea market's fee depends on besides the item's
+ * base price and the price asked: tarkov.dev's fee rates of the game mode
+ * (fleaMarket.sellOfferFeeRate, sellRequirementFeeRate), and whether the
+ * Intel Center is at level 3, which takes 30% off (TarkovTracker's hideout,
+ * nil when not known; Progress). The Hideout Management skill, which takes
+ * a little more off, is not known.
+ */
+export class FleaFee {
+    "offerRate": number;
+    "requirementRate": number;
+    "intel": boolean | null;
+
+    /** Creates a new FleaFee instance. */
+    constructor($$source: Partial<FleaFee> = {}) {
+        if (!("offerRate" in $$source)) {
+            this["offerRate"] = 0;
+        }
+        if (!("requirementRate" in $$source)) {
+            this["requirementRate"] = 0;
+        }
+        if (!("intel" in $$source)) {
+            this["intel"] = null;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new FleaFee instance from a string or object.
+     */
+    static createFrom($$source: any = {}): FleaFee {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new FleaFee($$parsedSource as Partial<FleaFee>);
+    }
+}
+
 export class HideoutNeed {
     "levelId": string;
     "station": string;
@@ -165,6 +202,16 @@ export class Info {
      * Flea is nil when the item cannot be sold on the flea market.
      */
     "flea": Flea | null;
+
+    /**
+     * FleaFee is what the flea market's fee for listing it is worked out
+     * with (the sidebar's item.js fleaFee), nil without flea prices.
+     */
+    "fleaFee"?: FleaFee | null;
+
+    /**
+     * Traders are the traders buying it, the best first.
+     */
     "traders": TraderPrice[];
 
     /**
@@ -274,12 +321,13 @@ export class Info {
         const $$createField5_0 = $$createType0;
         const $$createField12_0 = $$createType2;
         const $$createField13_0 = $$createType4;
-        const $$createField14_0 = $$createType0;
-        const $$createField15_0 = $$createType6;
+        const $$createField14_0 = $$createType6;
+        const $$createField15_0 = $$createType0;
         const $$createField16_0 = $$createType8;
         const $$createField17_0 = $$createType10;
         const $$createField18_0 = $$createType12;
-        const $$createField22_0 = $$createType13;
+        const $$createField19_0 = $$createType14;
+        const $$createField23_0 = $$createType15;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("names" in $$parsedSource) {
             $$parsedSource["names"] = $$createField4_0($$parsedSource["names"]);
@@ -290,26 +338,29 @@ export class Info {
         if ("flea" in $$parsedSource) {
             $$parsedSource["flea"] = $$createField12_0($$parsedSource["flea"]);
         }
+        if ("fleaFee" in $$parsedSource) {
+            $$parsedSource["fleaFee"] = $$createField13_0($$parsedSource["fleaFee"]);
+        }
         if ("traders" in $$parsedSource) {
-            $$parsedSource["traders"] = $$createField13_0($$parsedSource["traders"]);
+            $$parsedSource["traders"] = $$createField14_0($$parsedSource["traders"]);
         }
         if ("traderImages" in $$parsedSource) {
-            $$parsedSource["traderImages"] = $$createField14_0($$parsedSource["traderImages"]);
+            $$parsedSource["traderImages"] = $$createField15_0($$parsedSource["traderImages"]);
         }
         if ("offers" in $$parsedSource) {
-            $$parsedSource["offers"] = $$createField15_0($$parsedSource["offers"]);
+            $$parsedSource["offers"] = $$createField16_0($$parsedSource["offers"]);
         }
         if ("tasks" in $$parsedSource) {
-            $$parsedSource["tasks"] = $$createField16_0($$parsedSource["tasks"]);
+            $$parsedSource["tasks"] = $$createField17_0($$parsedSource["tasks"]);
         }
         if ("hideout" in $$parsedSource) {
-            $$parsedSource["hideout"] = $$createField17_0($$parsedSource["hideout"]);
+            $$parsedSource["hideout"] = $$createField18_0($$parsedSource["hideout"]);
         }
         if ("locks" in $$parsedSource) {
-            $$parsedSource["locks"] = $$createField18_0($$parsedSource["locks"]);
+            $$parsedSource["locks"] = $$createField19_0($$parsedSource["locks"]);
         }
         if ("questSites" in $$parsedSource) {
-            $$parsedSource["questSites"] = $$createField22_0($$parsedSource["questSites"]);
+            $$parsedSource["questSites"] = $$createField23_0($$parsedSource["questSites"]);
         }
         return new Info($$parsedSource as Partial<Info>);
     }
@@ -529,8 +580,8 @@ export class TraderOffer {
      * Creates a new TraderOffer instance from a string or object.
      */
     static createFrom($$source: any = {}): TraderOffer {
-        const $$createField4_0 = $$createType15;
-        const $$createField10_0 = $$createType16;
+        const $$createField4_0 = $$createType17;
+        const $$createField10_0 = $$createType18;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("barter" in $$parsedSource) {
             $$parsedSource["barter"] = $$createField4_0($$parsedSource["barter"]);
@@ -579,17 +630,19 @@ export class TraderPrice {
 const $$createType0 = $Create.Map($Create.Any, $Create.Any);
 const $$createType1 = Flea.createFrom;
 const $$createType2 = $Create.Nullable($$createType1);
-const $$createType3 = TraderPrice.createFrom;
-const $$createType4 = $Create.Array($$createType3);
-const $$createType5 = TraderOffer.createFrom;
+const $$createType3 = FleaFee.createFrom;
+const $$createType4 = $Create.Nullable($$createType3);
+const $$createType5 = TraderPrice.createFrom;
 const $$createType6 = $Create.Array($$createType5);
-const $$createType7 = TaskNeed.createFrom;
+const $$createType7 = TraderOffer.createFrom;
 const $$createType8 = $Create.Array($$createType7);
-const $$createType9 = HideoutNeed.createFrom;
+const $$createType9 = TaskNeed.createFrom;
 const $$createType10 = $Create.Array($$createType9);
-const $$createType11 = Lock.createFrom;
+const $$createType11 = HideoutNeed.createFrom;
 const $$createType12 = $Create.Array($$createType11);
-const $$createType13 = $Create.Array($Create.Any);
-const $$createType14 = BarterItem.createFrom;
-const $$createType15 = $Create.Array($$createType14);
-const $$createType16 = $Create.Nullable($$createType7);
+const $$createType13 = Lock.createFrom;
+const $$createType14 = $Create.Array($$createType13);
+const $$createType15 = $Create.Array($Create.Any);
+const $$createType16 = BarterItem.createFrom;
+const $$createType17 = $Create.Array($$createType16);
+const $$createType18 = $Create.Nullable($$createType9);

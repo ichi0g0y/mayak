@@ -158,9 +158,10 @@ export function offerNeeds(offer) {
 // offer by default), as tarkov.dev works it out (its API's fleaMarketFee):
 // V0·Ti·4^P0 + VR·Tr·4^PR, with V0 the base price, VR the price asked,
 // P0 = log10(V0/VR) and PR = log10(VR/V0), the one of them that is not
-// negative raised to 1.08; 30% off with the Intel Center at level 3. Null
-// without the rates or the prices.
-export function fleaFee(item, price = item.flea?.lastLow) {
+// negative raised to 1.08; 30% off with the Intel Center at level 3 (intel:
+// as TarkovTracker says by default, or true or false to work it out either
+// way). Null without the rates or the prices.
+export function fleaFee(item, price = item.flea?.lastLow, intel = item.fleaFee?.intel) {
   const rates = item.fleaFee
   const v0 = item.basePrice
   if (!rates || !(v0 > 0) || !(price > 0)) return null
@@ -169,7 +170,7 @@ export function fleaFee(item, price = item.flea?.lastLow) {
   if (price < v0) p0 = p0 ** 1.08
   else pr = pr ** 1.08
   const fee = v0 * rates.offerRate * 4 ** p0 + price * rates.requirementRate * 4 ** pr
-  return Math.round(rates.intel ? fee * 0.7 : fee)
+  return Math.round(intel ? fee * 0.7 : fee)
 }
 
 // bestSale is where the item sells for the most roubles: the flea market's
