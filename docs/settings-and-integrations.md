@@ -184,7 +184,7 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | `appearance` | 表示言語、テーマ、時刻表示、タブとアイテム情報の位置、「チュートリアルを表示」 |
 | `tasks` | 開くサイトの順番（Host の `questSites`）をドラッグで並べ替える（`questSites` アクション）。Host 上（`local`）では Host の設定を直接変え、Client では Host へ送る。どちらでも `taskMode` を設定する |
 | `adblock` | 有効化のチェックボックス。EasyList、EasyPrivacy、AdGuard 日本語フィルタを使う。tarkov.dev は対象外 |
-| `connection` | 接続方法（`local` は Windows のみ / `client`。前の版の `off` は `client` に読み替える）、この PC に出すもの（`connection.receive`。Host では接続方法の下、Client ではペアリングの欄。Host では、いまリモートにつながっているかも出す。Host で 3 つとも外すと「起動とウィンドウ」への案内を出す）。Host では接続コードの発行（ペアリング済みなら「別の PC を追加」）とすべての PC との解除、Client では接続コードの入力（長いコードの貼り付けも可）とこの PC の解除 |
+| `connection` | 接続方法（`local` は Windows のみ / `client`。前の版の `off` は `client` に読み替える）、この PC に出すもの（`connection.receive`。Host では接続方法の下、Client ではペアリングの欄。Host では見出しを「リモートで見ているあいだ、この PC に出すもの」にし、すぐ下にいまリモートにつながっているかを出す（つながっていないあいだは選択肢を薄く出す。選ぶことはできる）。Host で 3 つとも外すと「起動とウィンドウ」への案内を出す）。Host では接続コードの発行（ペアリング済みなら「別の PC を追加」）とすべての PC との解除、Client では接続コードの入力（長いコードの貼り付けも可）とこの PC の解除 |
 | `about` | 名前とバージョン（`GetVersion`。開発ビルドでは「開発ビルド」）、公式サイト・ソースコード・変更履歴へのリンク、ライセンスとクレジット、アップデート（現在の版・最新の版・最終確認、「更新を確認」`CheckForUpdates`、「ダウンロード」`DownloadUpdate`、「再起動して適用」`InstallUpdate`）。タスクトレイの右クリックにも「更新を確認」がある |
 
 - 以前、ブラウザ側で `questSite` を選んでいた場合は、Windows の Host で起動したときに一度だけそのサイトを Host の `questSites` の先頭へ移し、ブラウザ側を `host` に戻します。
@@ -361,7 +361,7 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
   - **この PC のもの**: 配置・サイドバーの幅や畳み方・タブ・ウインドウ、接続の設定、更新チャンネル、フォルダ・OCR・通知音・TarkovTracker のキーなど Host だけが使うものは、そろえません。
   - Client のゲームモードの表示は、Host が知らせたモードで出します。
 - **Host のマップと位置**: 同じ `host:info` に、Host が遊んでいるマップ（`map`）、レイド中か（`raid`）、最後の位置（`position`: `x`・`y`・`z`・`rot`・`at`）も載せ、どれかが変わるたびに送り直します（`shareHostInfo`。受ける側は `transport.js` の `hostInfoOf` で確かめる）。Client はそれを `hostView` に持ち、マップ画面は Host 自身と同じように、そのマップを出し（自動のとき）、分隊に入っていなければ Host の位置を自分の矢印として出します（`view-map.js` の `hostOf`。分隊では Host は仲間の 1 人として出るので出さない）。
-- **お互いの PC の名前**: つながると、お互いのコンピューター名（`BrowserHostname`、`os.Hostname`）を出します。Client には「Host の PC」、Host には「つながっている PC」（Client ごと）、両方に「この PC」です。名前はリンクの `hello` に入れて送ります（暗号化される。名前のない古い版の相手は出さない）。
+- **お互いの PC の名前**: つながると、お互いのコンピューター名（`BrowserHostname`、`os.Hostname`）を出します。上から「この PC」、続けて Client には「Host の PC」、Host には「つながっている PC」（Client ごと）です。名前はリンクの `hello` に入れて送ります（暗号化される。名前のない古い版の相手は出さない）。
 - **伏せ字**: 8 桁の接続コード、長い招待コード、Client の入力欄は「•」で出し、横の目のボタンで表示します（[browser-shell.md](browser-shell.md#マップ) の分隊コードと同じ `revealButton`）。コピーのボタンは伏せ字のままでも本当のコードをコピーします。
 - **別の PC を追加**: ペアリング済みの Host は、同じ鍵で新しい接続コードを出せます。初めて会った Client（接続コードで入った PC）が来た時点でそのコードは消し、すでにペアリング済みの Client がつなぎ直しただけでは消しません。
 - **解除**: Host で「すべての PC とのペアリングを解除」を押すと、つながっている Client すべてに伝わり、どの Client もペアを忘れます。Client で解除すると、その Client だけが抜けます。全員が同じ鍵を持つので、Host から 1 台だけを外すことはできません（外すときは全部を解除してつなぎ直す）。モードを切り替えると、作りかけのペアリングは捨て、保存したペアリングはそのモードが自分の役割（Host なら `local`、Client なら `client`）のときだけつなぎます。

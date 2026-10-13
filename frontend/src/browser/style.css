@@ -207,6 +207,13 @@ h3{font-size:12px;font-weight:500;color:var(--muted);margin:0 0 10px}
 .link-receive{margin:16px 0;padding:0;border:0;display:flex;flex-wrap:wrap;gap:6px 18px}
 .link-receive legend{padding:0;margin-bottom:8px;font-size:13px;font-weight:600;color:var(--text)}
 .link-receive .hint{flex-basis:100%;margin:2px 0 0}
+/* Whether the Host's choice applies now (shell.js receiveFields); while it
+   does not, the choices fade but can still be set. */
+.receive-now{flex-basis:100%;margin:0 0 6px}
+.receive-pill{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;background:var(--surface-2);font-size:12.5px;color:var(--text)}
+.receive-dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.receive-now[data-on=true] .receive-dot{background:var(--success);box-shadow:0 0 0 3px color-mix(in srgb,var(--success) 25%,transparent)}
+.link-receive.idle label.check{opacity:.6}
 .peer-panel details{margin-top:18px}
 .peer-panel summary{cursor:pointer;font-size:12.5px;color:var(--text-2);margin-bottom:12px;border-radius:6px}
 

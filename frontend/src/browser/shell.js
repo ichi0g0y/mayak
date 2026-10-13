@@ -714,14 +714,15 @@ function linkStatus(p, receive) {
     }[p.phase] || 'linkIdle'
   )
 }
-// The PCs' names: the other side's (the Host, or the Clients met) and this one's.
+// The PCs' names: this one's first, then the other side's (the Host, or the
+// Clients met), as one reads from where one sits.
 function peerNames(p, receive) {
   const others = p.phase === 'connected' ? p.names || [] : []
   const row = (label, names) =>
     names.length
       ? `<div><dt>${esc(t(label))}</dt><dd>${names.map((n) => `<span class="peer-name">${icon('monitor')}${esc(n)}</span>`).join('')}</dd></div>`
       : ''
-  const html = row(receive ? 'peerHostName' : 'peerClientNames', others) + row('peerSelfName', p.self ? [p.self] : [])
+  const html = row('peerSelfName', p.self ? [p.self] : []) + row(receive ? 'peerHostName' : 'peerClientNames', others)
   return html ? `<dl class="peer-names">${html}</dl>` : ''
 }
 // The pairing with the other PCs: the Host hands out codes (another Client
@@ -758,22 +759,31 @@ function peerPanel() {
   return `<section class="panel peer-panel"><h2>${t(receive ? 'p2pReceive' : 'p2pTitle')}</h2><p class="hint">${t('p2pHelp')}</p><p class="peer-status" role="status" data-phase="${esc(p.phase)}">${esc(t(linkStatus(p, receive)).replace('{n}', String(p.peers || 0)))}</p>${peerNames(p, receive)}${invite}${hostCode}${clientForms}${takes}${end}<p class="hint">${t('p2pLimit')}</p></section>`
 }
 // What this PC shows of the detections (state.js receiveOf). The Host keeps
-// to it only while it is looked at from elsewhere (api.js viewedElsewhere),
-// which it says; a Host showing none may as well start in the tray.
+// to it only while it is looked at from elsewhere (api.js viewedElsewhere):
+// its title says so, a line under it says whether that is now, and the
+// choices fade while it is not. A Host showing none may as well start in
+// the tray.
 function receiveFields(help) {
   const shown = (k) => state.connection.receive?.[k] !== false
   const host = state.connection.mode === 'local'
-  const now = host ? `<p class="hint">${esc(t(state.elsewhere ? 'linkReceiveActive' : 'linkReceiveIdle'))}</p>` : ''
+  const on = !host || !!state.elsewhere
+  const now = host
+    ? `<p class="receive-now" data-on="${on}"><span class="receive-pill"><span class="receive-dot"></span>${esc(t(on ? 'linkReceiveActive' : 'linkReceiveIdle'))}</span></p>`
+    : ''
   const none =
     host && !['task', 'map', 'item'].some(shown)
       ? `<p class="hint">${esc(t('linkReceiveNone'))} <button type="button" class="link" data-action="settingsSection" data-id="startup">${esc(t('linkReceiveStartup'))}</button></p>`
       : ''
-  return `<fieldset class="link-receive"><legend>${t('linkReceive')}</legend>${['task', 'map', 'item']
+  return `<fieldset class="link-receive${on ? '' : ' idle'}"><legend>${t(host ? 'linkReceiveHost' : 'linkReceive')}</legend>${now}${[
+    'task',
+    'map',
+    'item',
+  ]
     .map(
       (k) =>
         `<label class="check"><input type="checkbox" data-action="linkReceive" data-id="${k}" ${shown(k) ? 'checked' : ''}>${esc(t('linkReceive_' + k))}</label>`,
     )
-    .join('')}<p class="hint">${t(help)}</p>${now}${none}</fieldset>`
+    .join('')}<p class="hint">${t(help)}</p>${none}</fieldset>`
 }
 function settingsHost() {
   return (
