@@ -14,9 +14,11 @@ import (
 	"fmt"
 	"github.com/local/mayak/internal/appdir"
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime/cgo"
+	"strconv"
 	"unsafe"
 )
 
@@ -28,6 +30,8 @@ type nativeManager struct {
 	views   map[string]*nativeView
 	overlay unsafe.Pointer
 	closed  bool
+	// shown is the ID of the view shown, "" for none (the shell's own page).
+	shown string
 }
 type browserCallback struct {
 	manager *Manager
@@ -103,8 +107,29 @@ func (m *Manager) command(command string, o Options) error {
 				delete(views, o.ID)
 			}
 		}
+		// The view shown, for scrollShown.
+		switch {
+		case command == "show" && v != nil:
+			m.native.shown = o.ID
+		case command == "hideAll", command == "close" && m.native.shown == o.ID:
+			m.native.shown = ""
+		}
 		return nil
 	})
+}
+
+// scrollShown scrolls the view shown by dy CSS pixels with a script in the
+// page (the browser view's "scroll"): the wheel cannot be turned in it from
+// outside here.
+func (m *Manager) scrollShown(dy float64) bool {
+	shown := false
+	application.InvokeSync(func() {
+		if v := m.native.views[m.native.shown]; v != nil && !m.native.closed {
+			v.action("scroll", strconv.Itoa(int(math.Round(dy))), 0, 0, 0, 0)
+			shown = true
+		}
+	})
+	return shown
 }
 func (m *Manager) close() {
 	application.InvokeSync(func() {

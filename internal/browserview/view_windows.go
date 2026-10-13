@@ -396,3 +396,6 @@ func (m *Manager) acceleratorKey(id string, vk uint) bool {
 	handler := m.keyHandler()
 	return handler != nil && handler(Key{ID: id, Key: name, Ctrl: ctrl, Shift: shift, Alt: alt})
 }
+
+// scrollShown is not needed here: GameWheel turns the page's wheel.
+func (m *Manager) scrollShown(float64) bool { return false }

@@ -1,5 +1,10 @@
 #include "browser_view_linux.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+// The scroll a Client's Host's wheel makes ("scroll", by %d CSS pixels): the
+// element scrolling at the middle of the page, else the page.
+#define MAYAK_SCROLL_SCRIPT "(()=>{const dy=%d;let e=document.elementFromPoint(innerWidth/2,innerHeight/2);for(;e&&e!==document.body&&e!==document.documentElement;e=e.parentElement){const o=getComputedStyle(e).overflowY;if((o==='auto'||o==='scroll'||o==='overlay')&&e.scrollHeight>e.clientHeight+1){e.scrollBy({top:dy});return}}(document.scrollingElement||document.documentElement).scrollBy({top:dy})})()"
 extern void mayakBrowserEvent(uintptr_t, char *, char *, int, int, int);
 static gboolean valid_uri(const char *uri) {
  if (!uri) return FALSE;
@@ -58,6 +63,13 @@ void rl_browser_action(void *ptr,const char *command,const char *url,int left,in
  else if(!strcmp(command,"back"))webkit_web_view_go_back(v);
  else if(!strcmp(command,"forward"))webkit_web_view_go_forward(v);
  else if(!strcmp(command,"reload"))webkit_web_view_reload(v);
+ else if(!strcmp(command,"scroll")){char script[768];snprintf(script,sizeof script,MAYAK_SCROLL_SCRIPT,atoi(url));
+#if WEBKIT_CHECK_VERSION(2,40,0)
+  webkit_web_view_evaluate_javascript(v,script,-1,NULL,NULL,NULL,NULL,NULL);
+#else
+  webkit_web_view_run_javascript(v,script,NULL,NULL,NULL);
+#endif
+ }
  else if(!strcmp(command,"close")){webkit_web_view_stop_loading(v);
 #ifdef MAYAK_GTK3
  gtk_widget_destroy(widget);

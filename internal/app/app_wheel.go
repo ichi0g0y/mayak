@@ -35,17 +35,18 @@ func (a *App) BrowserLinkClients(n int) { a.wheel.clients.Store(int32(max(0, min
 func (a *App) gameRemote(input map[string]any) { a.emitEvent("browser:game-remote", input) }
 
 // BrowserGameScroll turns a Client's page as its Host's wheel was turned in
-// the game: dy CSS pixels at the middle of the page shown. False tells the
-// shell to scroll by itself (no page view there, or not Windows).
+// the game: dy CSS pixels at the middle of the page shown, by its wheel on
+// Windows, by a script in the page view shown elsewhere. False tells the
+// shell to scroll its own page (no page view shows on macOS or Linux).
 func (a *App) BrowserGameScroll(dy float64) bool {
 	if a.browserViews == nil || dy != dy {
 		return false
 	}
-	x, y, ok := a.browserViews.PageMiddle()
-	if !ok {
-		return false
+	dy = max(-5000, min(dy, 5000))
+	if x, y, ok := a.browserViews.PageMiddle(); ok && capture.ScrollAt(x, y, dy, a.scrollPageFromGame) {
+		return true
 	}
-	return capture.ScrollAt(x, y, max(-5000, min(dy, 5000)), a.scrollPageFromGame)
+	return a.browserViews.ScrollShown(dy)
 }
 
 // wheelButtons are o's buttons and keys.

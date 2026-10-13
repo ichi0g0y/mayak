@@ -114,6 +114,13 @@ func (m *Manager) PageMiddle() (x, y int32, ok bool) {
 }
 func (m *Manager) Close() { m.close() }
 
+// ScrollShown scrolls the page view shown by dy CSS pixels from within the
+// page, where the wheel cannot be turned in it from outside (macOS, Linux):
+// a Client's, for its Host's wheel. False when no page view shows (the
+// shell's own page does) or on Windows, which turns the wheel itself
+// (GameWheel).
+func (m *Manager) ScrollShown(dy float64) bool { return m.scrollShown(dy) }
+
 // Capture takes a PNG of tab id: what is on screen, or with full the whole
 // page. prepare runs in the page before (to hide a bar) and restore after.
 func (m *Manager) Capture(id string, full bool, prepare, restore string) ([]byte, error) {

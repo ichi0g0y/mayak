@@ -283,7 +283,7 @@ function tellLinkClients() {
 }
 // A Client works itself with its Host's wheel and buttons: a tab switch, a
 // tab closed or pinned, a scroll of the page shown (its Go side turns a page
-// view's wheel; else, or not on Windows, the shell's page area scrolls).
+// view's; with none shown on macOS or Linux, the shell scrolls its own).
 async function gameInput(input) {
   if (state.connection.mode !== 'client') return
   if (input.kind === 'tab') return window.mayak.action('cycleView', input.step)
@@ -292,7 +292,25 @@ async function gameInput(input) {
   try {
     scrolled = await go.BrowserGameScroll(input.dy)
   } catch {}
-  if (!scrolled) document.querySelector('main')?.scrollBy({ top: input.dy })
+  if (!scrolled) scrollShell(input.dy)
+}
+// scrollShell turns the shell's own page (a view of MAYAK's: the map, the
+// screenshots, the squad…) as a wheel at the middle of its page area would:
+// the element scrolling there moves; with none (the map), the wheel goes to
+// the element itself, which handles it (Leaflet zooms).
+function scrollShell(dy) {
+  const r = document.querySelector('main')?.getBoundingClientRect()
+  const x = r ? r.left + r.width / 2 : innerWidth / 2
+  const y = r ? r.top + r.height / 2 : innerHeight / 2
+  const at = document.elementFromPoint(x, y)
+  for (let e = at; e && e !== document.documentElement; e = e.parentElement) {
+    const o = getComputedStyle(e).overflowY
+    if ((o === 'auto' || o === 'scroll' || o === 'overlay') && e.scrollHeight > e.clientHeight + 1) {
+      e.scrollBy({ top: dy })
+      return
+    }
+  }
+  at?.dispatchEvent(new WheelEvent('wheel', { deltaY: dy, clientX: x, clientY: y, bubbles: true, cancelable: true }))
 }
 // An error shows as a notice over the pages (app_toast.go), until closed; a
 // newer one replaces it. level "warn" is a note that goes after a while.
