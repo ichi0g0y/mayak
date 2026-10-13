@@ -3,6 +3,8 @@ package browserview
 import (
 	"sync"
 
+	"github.com/local/mayak/internal/adblock"
+
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -66,7 +68,7 @@ func (m *Manager) SetKeyHandler(handler func(Key) bool) {
 // elements are hidden. kind is one of the adblock.Kind* strings.
 type ContentBlocker interface {
 	Block(rawURL, pageURL, kind string) bool
-	CosmeticCSS(pageURL string) string
+	CosmeticCSS(pageURL string) adblock.Cosmetic
 }
 
 // SetContentBlocker applies to tabs created afterwards.

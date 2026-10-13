@@ -30,6 +30,8 @@ type browserHandler struct {
 	// completed handler's Invoke gets the error code where an event's gets
 	// its sender.
 	complete func(errorCode uintptr)
+	// result, when set, takes a completion's error code and result.
+	result func(errorCode, value uintptr)
 }
 type browserHandlerVtbl struct{ query, add, release, invoke ComProc }
 
@@ -53,7 +55,9 @@ var browserVtbl = browserHandlerVtbl{
 	NewComProc(func(h *browserHandler) uintptr { return 1 }),
 	NewComProc(func(h *browserHandler) uintptr { return 1 }),
 	NewComProc(func(h *browserHandler, sender, args uintptr) uintptr {
-		if h.complete != nil {
+		if h.result != nil {
+			h.result(sender, args)
+		} else if h.complete != nil {
 			h.complete(sender)
 		} else {
 			h.invoke(args)

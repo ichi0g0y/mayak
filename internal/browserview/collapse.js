@@ -9,10 +9,26 @@
   const mediaSelector = "img,video,iframe,canvas,svg,picture,object,embed,input,button,select,textarea";
   const sized = el => { const r = el.getBoundingClientRect(); return r.width > 1 && r.height > 1; };
   const hide = (el, reason) => { el.style.setProperty("display", "none", "important"); el.setAttribute("data-mayak-hidden", reason); };
-  const marked = el => getComputedStyle(el).getPropertyValue("--rl").trim() === "1";
-  // The element stylesheet sets an inherited --rl on every element it hides;
-  // only the outermost one is where an ad was.
-  const hiddenByUs = el => el.hasAttribute("data-mayak-hidden") || (marked(el) && !(el.parentElement && marked(el.parentElement)));
+  // The selectors of the element hiding stylesheet (cosmetic.js), read again
+  // when it gains rules.
+  let cosmetic = [];
+  const cosmeticSelectors = () => {
+    const rules = window.__mayakSheet ? window.__mayakSheet.cssRules : [];
+    if (rules.length !== cosmetic.length) cosmetic = Array.from(rules, rule => rule.selectorText || "").filter(Boolean);
+    return cosmetic;
+  };
+  // What MAYAK hid: what it marked (a blocked picture or frame, an emptied
+  // slot) and what the site's hiding rules match, looked up directly rather
+  // than every element on the page checked (a heavy page has thousands).
+  const hiddenByUs = () => {
+    const found = new Set(document.body.querySelectorAll("[data-mayak-hidden]"));
+    for (const selector of cosmeticSelectors()) {
+      try {
+        for (const el of document.body.querySelectorAll(selector)) found.add(el);
+      } catch {} // a selector the browser does not take
+    }
+    return found;
+  };
   const hasContent = el => {
     if (el.innerText && el.innerText.trim()) return true; // innerText skips hidden text
     for (const m of el.querySelectorAll(mediaSelector)) if (sized(m)) return true;
@@ -26,10 +42,19 @@
   const tidy = () => {
     timer = 0; lastRun = Date.now();
     if (!document.body) return;
+    const found = hiddenByUs();
     const seeds = [];
-    for (const el of document.body.querySelectorAll("*")) {
+    for (const el of found) {
       if (skipTags.has(el.tagName) || el.getClientRects().length) continue;
-      if (hiddenByUs(el)) seeds.push(el);
+      // Only the outermost: an ancestor hidden too is where the ad was.
+      let outermost = true;
+      for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+        if (found.has(p)) {
+          outermost = false;
+          break;
+        }
+      }
+      if (outermost) seeds.push(el);
     }
     for (const seed of seeds) {
       let parent = seed.parentElement;
@@ -42,8 +67,9 @@
   };
   // Ads arrive late; re-check after DOM changes, at most every 1.5 seconds.
   const schedule = () => { if (active && !timer) timer = setTimeout(tidy, Math.max(400, 1500 - (Date.now() - lastRun))); };
+  // Also run when the stylesheet gains rules (cosmetic.js).
   const activate = () => {
-    if (active) return;
+    if (active) return schedule();
     active = true;
     new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
     schedule();

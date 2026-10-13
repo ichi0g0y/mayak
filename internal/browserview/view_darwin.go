@@ -132,11 +132,12 @@ func mayakBrowserCosmetic(h C.uintptr_t, u *C.char) *C.char {
 	if b == nil {
 		return nil
 	}
-	css := b.CosmeticCSS(C.GoString(u))
+	// The generic rules are in the content blocker (WebKitRules) already.
+	css := b.CosmeticCSS(C.GoString(u)).CSS
 	if css == "" {
 		return nil
 	}
-	return C.CString(cosmeticCall(css))
+	return C.CString(cosmeticCall(css, ""))
 }
 func (v *nativeView) action(command, url string, left, top, right, bottom int) {
 	c, u := C.CString(command), C.CString(url)

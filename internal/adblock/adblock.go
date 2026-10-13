@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -77,8 +78,9 @@ type Blocker struct {
 	enabled atomic.Bool
 	engine  atomic.Pointer[urlfilter.Engine]
 
-	cssMu sync.Mutex
-	css   map[string]string
+	cssMu   sync.Mutex
+	css     map[string]Cosmetic
+	generic map[string]string // Cosmetic.Generic, shared by the hosts with the same rules
 
 	// Run when the lists are rebuilt or blocking is turned on or off: the
 	// Mac's content blocker (WebKitRules) is made again or switched.
@@ -89,7 +91,7 @@ type Blocker struct {
 // New creates a blocker that caches its lists in dir. It is enabled but blocks
 // nothing until Start has loaded the lists.
 func New(dir string, logf func(level, message string)) *Blocker {
-	b := &Blocker{dir: dir, lists: DefaultLists, client: &http.Client{Timeout: 90 * time.Second}, logf: logf, css: map[string]string{}}
+	b := &Blocker{dir: dir, lists: DefaultLists, client: &http.Client{Timeout: 90 * time.Second}, logf: logf, css: map[string]Cosmetic{}, generic: map[string]string{}}
 	b.enabled.Store(true)
 	return b
 }
@@ -220,7 +222,7 @@ func (b *Blocker) rebuild() error {
 	}
 	b.engine.Store(urlfilter.NewEngine(storage))
 	b.cssMu.Lock()
-	b.css = map[string]string{}
+	b.css, b.generic = map[string]Cosmetic{}, map[string]string{}
 	b.cssMu.Unlock()
 	b.logf("Info", fmt.Sprintf("Ad blocking ready (%d filter lists)", len(lists)))
 	b.changed()
@@ -242,40 +244,106 @@ func (b *Blocker) Block(rawURL, pageURL, kind string) bool {
 	return rule != nil && !rule.Whitelist
 }
 
-// CosmeticCSS returns a stylesheet that hides ad elements on pageURL, or "".
-func (b *Blocker) CosmeticCSS(pageURL string) string {
+// Cosmetic is how ad elements are hidden on a page.
+type Cosmetic struct {
+	// CSS is put on the page as it is: the rules written for its site, and
+	// the generic ones no class or id narrows down (a few hundred).
+	CSS string
+	// Generic is the rest of the generic rules, one selector a line, each
+	// starting with the class (".ad") or id ("#ad") it needs. EasyList has
+	// some 13,000; put on every page they made a heavy one (the wiki's task
+	// pages) restyle against all of them while it loaded, so the page adds
+	// only those its elements have the class or id of (as uBlock Origin does).
+	Generic string
+}
+
+// CosmeticCSS returns how ad elements are hidden on pageURL.
+func (b *Blocker) CosmeticCSS(pageURL string) Cosmetic {
 	engine := b.active(pageURL)
 	if engine == nil {
-		return ""
+		return Cosmetic{}
 	}
 	u, err := url.Parse(pageURL)
 	if err != nil || u.Hostname() == "" {
-		return ""
+		return Cosmetic{}
 	}
 	host := strings.ToLower(u.Hostname())
 	b.cssMu.Lock()
-	css, ok := b.css[host]
+	cosmetic, ok := b.css[host]
 	b.cssMu.Unlock()
 	if ok {
-		return css
+		return cosmetic
 	}
 	option := engine.MatchRequest(rules.NewRequest(pageURL, "", rules.TypeDocument)).GetCosmeticOption()
-	result := engine.GetCosmeticResult(host, option)
-	selectors := [][]string{result.ElementHiding.Generic, result.ElementHiding.Specific}
+	hiding := engine.GetCosmeticResult(host, option).ElementHiding
+	keyed, unkeyed := splitGeneric(hiding.Generic)
+	selectors := [][]string{hiding.Specific}
 	// urlfilter looks site rules up by exact hostname, so "fandom.com##.ad"
-	// would miss escapefromtarkov.fandom.com. Add the parent domains' rules;
-	// generic rules are already included above.
+	// would miss escapefromtarkov.fandom.com. Add the parent domains' rules.
 	for _, parent := range parentDomains(host) {
 		selectors = append(selectors, engine.GetCosmeticResult(parent, option&^rules.CosmeticOptionGenericCSS).ElementHiding.Specific)
 	}
-	css = hidingCSS(selectors...)
+	cosmetic.CSS = hidingCSS(append(selectors, unkeyed)...)
 	b.cssMu.Lock()
+	cosmetic.Generic = b.shared(strings.Join(keyed, "\n"))
 	if len(b.css) >= maxCSSHosts {
-		b.css = map[string]string{}
+		b.css = map[string]Cosmetic{}
 	}
-	b.css[host] = css
+	b.css[host] = cosmetic
 	b.cssMu.Unlock()
-	return css
+	return cosmetic
+}
+
+// shared returns the copy of generic already kept, so the hosts with the same
+// generic rules (all but the few with exceptions) share one. b.cssMu is held.
+func (b *Blocker) shared(generic string) string {
+	if kept, ok := b.generic[generic]; ok {
+		return kept
+	}
+	if len(b.generic) >= 8 {
+		b.generic = map[string]string{}
+	}
+	b.generic[generic] = generic
+	return generic
+}
+
+// splitGeneric sorts out the generic selectors starting with a class or id
+// (".ad-box > img" needs an element with class ad-box) from the others
+// ("[data-ad-name]", "AD-SLOT"). keyed is sorted, so the same rules make the
+// same text.
+func splitGeneric(selectors []string) (keyed, unkeyed []string) {
+	for _, selector := range selectors {
+		selector = strings.TrimSpace(selector)
+		switch {
+		case selector == "" || strings.ContainsAny(selector, "{}\n") || strings.Contains(selector, "</"):
+		case selectorKey(selector) != "":
+			keyed = append(keyed, selector)
+		default:
+			unkeyed = append(unkeyed, selector)
+		}
+	}
+	slices.Sort(keyed)
+	return slices.Compact(keyed), unkeyed
+}
+
+// selectorKey returns ".name" or "#name" for a selector starting with that
+// class or id, or "" (an escaped or non-ASCII name is not worth reading).
+func selectorKey(selector string) string {
+	if len(selector) < 2 || (selector[0] != '.' && selector[0] != '#') {
+		return ""
+	}
+	end := 1
+	for end < len(selector) && identChar(selector[end]) {
+		end++
+	}
+	if end == 1 || (end < len(selector) && (selector[end] == '\\' || selector[end] >= 0x80)) {
+		return ""
+	}
+	return selector[:end]
+}
+
+func identChar(c byte) bool {
+	return c == '-' || c == '_' || c >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
 }
 
 func (b *Blocker) active(pageURL string) *urlfilter.Engine {

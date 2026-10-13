@@ -102,6 +102,10 @@ type Chromium struct {
 	navigatingURL string
 	// browserLoading is set from a page's navigation starting until it completes.
 	browserLoading bool
+	// documentScriptID is the script SetDocumentScript added last, and
+	// documentScriptGen counts its calls (see SetDocumentScript).
+	documentScriptID  string
+	documentScriptGen int
 
 	// Resize debouncing
 	lastBounds  *w32.Rect

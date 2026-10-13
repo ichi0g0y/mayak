@@ -4,6 +4,8 @@ package browserview
 
 import (
 	"encoding/json"
+	"net/url"
+	"strings"
 
 	"github.com/local/mayak/internal/adblock"
 	"github.com/wailsapp/go-webview2/pkg/edge"
@@ -30,6 +32,7 @@ type tabFilter struct {
 	scheduled bool
 	closed    bool
 	removeDOM func()
+	removeNav func()
 }
 
 func attachFilter(c *edge.Chromium, b ContentBlocker) (*tabFilter, error) {
@@ -46,6 +49,10 @@ func attachFilter(c *edge.Chromium, b ContentBlocker) (*tabFilter, error) {
 		return nil, err
 	}
 	f.removeDOM = remove
+	if f.removeNav, err = c.OnNavigationStarting(f.navigationStarting); err != nil {
+		f.close()
+		return nil, err
+	}
 	return f, nil
 }
 
@@ -54,6 +61,9 @@ func (f *tabFilter) close() {
 	f.chromium.WebResourceRequestedCallback = nil
 	if f.removeDOM != nil {
 		f.removeDOM()
+	}
+	if f.removeNav != nil {
+		f.removeNav()
 	}
 }
 
@@ -107,13 +117,32 @@ func (f *tabFilter) collapseLater(uri string) {
 	})
 }
 
+// navigationStarting sets the hiding stylesheet of the page being opened to go
+// in as its document is created, so the page never shows the ads (or the
+// space they take) first. It only runs on that page's host: the next
+// navigation may start before this one's document comes.
+func (f *tabFilter) navigationStarting(uri string) {
+	if f.closed {
+		return
+	}
+	script := ""
+	cosmetic := f.blocker.CosmeticCSS(uri)
+	if u, err := url.Parse(uri); err == nil && cosmetic != (adblock.Cosmetic{}) {
+		host, _ := json.Marshal(strings.ToLower(u.Hostname()))
+		script = "if(location.hostname===" + string(host) + ")" + cosmeticCall(cosmetic.CSS, cosmetic.Generic)
+	}
+	_ = f.chromium.SetDocumentScript(script)
+}
+
+// contentLoaded adds the stylesheet when navigationStarting's script did not
+// (it was not in yet, or the page's address changed on the way).
 func (f *tabFilter) contentLoaded() {
 	if f.closed {
 		return
 	}
-	css := f.blocker.CosmeticCSS(f.chromium.Source())
-	if css == "" {
+	cosmetic := f.blocker.CosmeticCSS(f.chromium.Source())
+	if cosmetic == (adblock.Cosmetic{}) {
 		return
 	}
-	_ = f.chromium.ExecuteScript(cosmeticCall(css))
+	_ = f.chromium.ExecuteScript(cosmeticCall(cosmetic.CSS, cosmetic.Generic))
 }

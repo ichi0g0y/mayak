@@ -15,6 +15,8 @@ const testRules = `[Adblock Plus 2.0]
 ||tracker.example^$third-party
 @@||ads.example/allowed.js
 ##.ad-banner
+###ad-box > img
+##[data-ad-name]
 example.com##.sponsor
 example.com#@#.ad-banner
 ||tarkov-ads.example^
@@ -59,31 +61,57 @@ func TestBlockRequests(t *testing.T) {
 func TestExemptSitesAndDisabling(t *testing.T) {
 	b := newTestBlocker(t)
 	for _, page := range []string{"https://tarkov.dev/map/customs", "https://api.tarkov.dev/"} {
-		if b.Block("https://tarkov-ads.example/x.js", page, KindScript) || b.CosmeticCSS(page) != "" {
+		if b.Block("https://tarkov-ads.example/x.js", page, KindScript) || b.CosmeticCSS(page) != (Cosmetic{}) {
 			t.Errorf("%s is not exempt", page)
 		}
 	}
 	b.SetEnabled(false)
-	if b.Block("https://ads.example/banner.png", "https://news.example.org/", KindImage) || b.CosmeticCSS("https://news.example.org/") != "" {
+	if b.Block("https://ads.example/banner.png", "https://news.example.org/", KindImage) || b.CosmeticCSS("https://news.example.org/") != (Cosmetic{}) {
 		t.Error("disabled blocker still filters")
 	}
 }
 
 func TestCosmeticCSSHidesAdSlots(t *testing.T) {
 	b := newTestBlocker(t)
-	css := b.CosmeticCSS("https://news.example.org/")
-	if !strings.Contains(css, ".ad-banner{display:none!important;--rl:1}") || strings.Contains(css, ".sponsor") {
-		t.Errorf("generic CSS = %q", css)
+	// Generic rules with a class or id are left for the page to pick from;
+	// the others are put on as they are.
+	got := b.CosmeticCSS("https://news.example.org/")
+	if got.CSS != "[data-ad-name]{display:none!important;--rl:1}\n" {
+		t.Errorf("generic CSS = %q", got.CSS)
 	}
-	css = b.CosmeticCSS("https://example.com/")
-	if !strings.Contains(css, ".sponsor{display:none!important;--rl:1}") || strings.Contains(css, ".ad-banner") {
-		t.Errorf("site CSS = %q", css)
+	if got.Generic != "#ad-box > img\n.ad-banner" {
+		t.Errorf("Generic = %q", got.Generic)
+	}
+	if other := b.CosmeticCSS("https://other.example.org/"); other.Generic != got.Generic {
+		t.Error("hosts with the same rules got different generic rules")
+	}
+	got = b.CosmeticCSS("https://example.com/")
+	if !strings.Contains(got.CSS, ".sponsor{display:none!important;--rl:1}") || strings.Contains(got.Generic, ".ad-banner") {
+		t.Errorf("site rules = %q %q", got.CSS, got.Generic)
+	}
+}
+
+func TestSelectorKey(t *testing.T) {
+	for selector, want := range map[string]string{
+		".ad":            ".ad",
+		"#ad-box > img":  "#ad-box",
+		".ad_1.wide":     ".ad_1",
+		".ad:not(.keep)": ".ad",
+		"[data-ad]":      "",
+		"AD-SLOT":        "",
+		".\\[\\&_x\\]":   "",
+		".ad\\:wide":     "",
+		".":              "",
+	} {
+		if got := selectorKey(selector); got != want {
+			t.Errorf("selectorKey(%q) = %q, want %q", selector, got, want)
+		}
 	}
 }
 
 func TestCosmeticCSSAppliesSiteRulesToSubdomains(t *testing.T) {
 	b := newTestBlocker(t)
-	css := b.CosmeticCSS("https://wiki.example.com/page")
+	css := b.CosmeticCSS("https://wiki.example.com/page").CSS
 	if !strings.Contains(css, ".sponsor{") {
 		t.Errorf("example.com rule missing on a subdomain: %q", css)
 	}
