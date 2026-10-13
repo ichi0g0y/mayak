@@ -16,13 +16,11 @@ import (
 // the wheel as Windows' message would read as a sideways scroll or a zoom.
 // It goes through DevTools, the way the page takes a wheel turned over it.
 // (A scroll gesture glides, but felt less like the wheel than this.)
-func GameWheel(hwnd uintptr, x, y, dy float64) bool {
+func GameWheel(hwnd uintptr, x, y, dy float64) {
 	params, _ := json.Marshal(map[string]any{"type": "mouseWheel", "x": x, "y": y, "deltaX": 0, "deltaY": dy, "modifiers": 0, "pointerType": "mouse"})
-	sent := false
 	application.InvokeSync(func() {
 		if e := edge.ForWindow(hwnd); e != nil {
-			sent = e.DevToolsCall("Input.dispatchMouseEvent", string(params), func(string, error) {}) == nil
+			_ = e.DevToolsCall("Input.dispatchMouseEvent", string(params), func(string, error) {})
 		}
 	})
-	return sent
 }
