@@ -4,6 +4,16 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### Improved
+
+- "Auto screenshot" is now called "Auto recognition".
+
+### Fixed
+
+- EFT's item search, sorting table and chat windows, and stash rows of coloured items, were taken for an item's inspection window, and "Item not found" showed. An item's window is now told by the magnifier left of its title, its handle down to the left.
+
 ## v0.1.36 (2026-10-13)
 
 ### New

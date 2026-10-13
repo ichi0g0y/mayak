@@ -218,7 +218,7 @@ export function CaptureKeyField({
           </div>
           <Switch id="capture-auto" checked={auto} onCheckedChange={onAuto} />
         </div>
-        {/* What the automatic screenshot reads, each one with how it is read
+        {/* What the auto recognition reads, each one with how it is read
             under it. Its times (config CaptureSettleMs and the others) are
             not on the page: the defaults suit. */}
         {auto && (

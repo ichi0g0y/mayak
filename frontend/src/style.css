@@ -582,7 +582,7 @@ html body[data-scroll-locked] { padding-right: 0 !important; margin-right: 0 !im
 .capture-no-position strong { display: block; font-size: 13px; color: color-mix(in srgb, var(--warn) 85%, var(--foreground)); }
 .capture-no-position p { margin: 3px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted-foreground); }
 
-/* The capture card's two parts (the key, the automatic screenshot), apart;
+/* The capture card's two parts (the key, the auto recognition), apart;
    the automatic one's settings in a panel: each thing to read with how it
    is read indented under it. */
 .capture-section + .capture-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }

@@ -441,7 +441,7 @@ Windows 実装（`internal/browserview/view_windows.go`）の動作:
 
 ## 初回チュートリアル
 
-Host で初めて起動したとき（`browser.json` の `tutorialDone` が `true` でないとき）、シェルは 8 ステップのチュートリアルをオーバーレイで表示します。ようこそ → EFT のフォルダ（`GetSettings` で見つけたスクリーンショット / ログのフォルダを表示）→ スクリーンショットキー → EFT の撮影通知なしで読む（実験的。自動スクリーンショットでできることとできないこと、BSG が認めた方式ではないことを書き、「オンにする」ボタンで `captureAuto` をその場でオンにする。オンなら「オンです」と出す。初期設定はオフのまま）→ マップ → 別の PC や普段のブラウザ（tarkov.dev 連携）→ TarkovTracker → 完了、の順です。各ステップのボタンは、対応する設定セクション（`settings` → `settingsSection`）やマップ（`livemap`。マップの無いリリース版では何もしない）を開きます。
+Host で初めて起動したとき（`browser.json` の `tutorialDone` が `true` でないとき）、シェルは 8 ステップのチュートリアルをオーバーレイで表示します。ようこそ → EFT のフォルダ（`GetSettings` で見つけたスクリーンショット / ログのフォルダを表示）→ スクリーンショットキー → EFT の撮影通知なしで読む（実験的。自動認識でできることとできないこと、BSG が認めた方式ではないことを書き、「オンにする」ボタンで `captureAuto` をその場でオンにする。オンなら「オンです」と出す。初期設定はオフのまま）→ マップ → 別の PC や普段のブラウザ（tarkov.dev 連携）→ TarkovTracker → 完了、の順です。各ステップのボタンは、対応する設定セクション（`settings` → `settingsSection`）やマップ（`livemap`。マップの無いリリース版では何もしない）を開きます。
 
 - スクリーンショットキーの手順では、EFT の今の割り当てを出します（`EFTScreenshotKey`。EFT の `Control.ini` の `MakeScreenshot` を `eftdetect.ScreenshotKeys` が「Ctrl + ;」のように読む）。割り当てが無いときは警告を出し、EFT の設定が読めないときは何も出しません。設定の「フォルダ」でも、スクリーンショットのフォルダの下に同じ割り当てを出します。
 - 確かめ方: 設定の「外観」の「チュートリアルを表示」でいつでも開けます。初回起動の流れ（フォルダの自動検出、チュートリアル、フォルダが無いときの通知）をそのまま試すには `task dev:fresh` を使います（[development.md](development.md)）。

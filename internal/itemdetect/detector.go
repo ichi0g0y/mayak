@@ -47,6 +47,12 @@ func Analyze(original image.Image) (Result, error) {
 	px := imaging.Of(img)
 	window, score := findInspectWindow(px)
 	result := Result{IsItem: score >= .72, Score: score, WindowRect: window}
+	// Other windows of EFT have the same header (the item search, the sorting
+	// table, a chat), and some stash rows pass for one: an item's window has
+	// the magnifier left of its title (the offer window an icon of its own).
+	if result.IsItem && !isOfferWindow(window) && !inspectIcon(px, window) {
+		result.IsItem = false
+	}
 	if !result.IsItem {
 		return result, nil
 	}
@@ -74,6 +80,52 @@ func Analyze(original image.Image) (Result, error) {
 	result.Crop = imaging.Crop(text, crop.X, crop.Y, crop.W, crop.H)
 	result.CropDataURL, _ = imaging.PNGDataURL(result.Crop)
 	return result, nil
+}
+
+// iconLean is how far, in tenths of a pixel, the bottom of an item window's
+// icon leans left of its top at most: its magnifier's handle runs down to the
+// left (-55 to -80 measured on 197 windows). The item search's magnifier
+// runs down to the right (+56), the sorting table's grid and a chat's icon
+// stand straight (0 to +11, -14), a stash row has none.
+const iconLean = -35
+
+// inspectIcon tells an item's window by the icon left of its title: the
+// mean column of its bright pixels' bottom quarter left of their top
+// quarter's by iconLean or more. Without an icon there it is no item's window.
+func inspectIcon(px imaging.Pixels, w Rect) bool {
+	bright := func(x, y int) bool { return px.Luma(x, y) > 110 }
+	minX, minY, maxX, maxY := w.X+36, w.Y+30, w.X+5, w.Y+3
+	for y := w.Y + 4; y < w.Y+30 && y < px.Height(); y++ {
+		for x := w.X + 6; x < w.X+36 && x < px.Width(); x++ {
+			if bright(x, y) {
+				minX, maxX = min(minX, x), max(maxX, x)
+				minY, maxY = min(minY, y), max(maxY, y)
+			}
+		}
+	}
+	if maxY < minY {
+		return false
+	}
+	// The mean column of the bright pixels between two rows, in tenths.
+	mean := func(y0, y1 int) (int, bool) {
+		sum, n := 0, 0
+		for y := y0; y <= y1; y++ {
+			for x := minX; x <= maxX; x++ {
+				if bright(x, y) {
+					sum += x
+					n++
+				}
+			}
+		}
+		if n == 0 {
+			return 0, false
+		}
+		return sum * 10 / n, true
+	}
+	quarter := (maxY - minY + 1) / 4
+	top, okTop := mean(minY, minY+quarter)
+	bottom, okBottom := mean(maxY-quarter, maxY)
+	return okTop && okBottom && bottom-top <= iconLean
 }
 
 // The "Offer creation" window is 1602 px wide at 1440p; inspect windows

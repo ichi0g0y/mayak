@@ -57,7 +57,7 @@ function keyStatus() {
     ? `<div class="tutorial-status"><span>${esc(t('tutKeyNow'))}: <code>${esc(tutorialKey.keys.join(' / '))}</code></span></div>`
     : `<div class="tutorial-status warn"><span>${esc(t('tutKeyNone'))}</span></div>`
 }
-// The automatic screenshot on, or a button turning it on.
+// The auto recognition on, or a button turning it on.
 function captureStatus() {
   if (!tutorialSettings) return ''
   return tutorialSettings.captureAuto
@@ -112,7 +112,7 @@ export async function handleTutorial(type) {
     case 'tutorialMap':
       await closeTutorial()
       return action('livemap')
-    // Turns the automatic screenshot on, as its switch in the settings does.
+    // Turns the auto recognition on, as its switch in the settings does.
     case 'tutorialCaptureOn': {
       const backend = window.mayakDesktop?.backend
       try {

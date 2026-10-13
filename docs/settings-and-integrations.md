@@ -138,7 +138,7 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | セクション | 項目 | 操作 |
 |---|---|---|
 | `folders` | `screenshotDirectory`, `logsDirectory`, `screenshotCleanup`（オンのとき `screenshotRetainCount` と `screenshotRetainHours` を表示） | 自動検出（`AutoDetectEFTDirectories`）、フォルダ選択 |
-| `screenshots` | カード「EFT のスクリーンショットキー」（`EFTScreenshotKey` が Control.ini から読んだキーをキーの形で並べる。割り当てが無ければ注意、読めなければ EFT を一度起動するよう案内）。カード「MAYAK で撮る」の先頭に「位置情報は読めません」の注意（枠で目立たせる）、続けて `captureKey`（ボタンを押して次に押したキーを登録。Esc でやめる。EFT のスクリーンショットのキーと同じなら注意）と `captureAuto`（オンのとき、認識する項目 `captureAutoOff` をチェックボックスで選ぶ。全部外すと注意。タスクとアイテムは、チェックのすぐ下に字下げして、それぞれの認識方法（`captureTasksTrigger`、`captureItemTrigger`）をラジオボタンで選ぶ。自動スクリーンショットの子設定は 1 つの枠にまとめ、キーの欄とは区切り線で分ける。時間の 3 項目は設定画面に出さない） | — |
+| `screenshots` | カード「EFT のスクリーンショットキー」（`EFTScreenshotKey` が Control.ini から読んだキーをキーの形で並べる。割り当てが無ければ注意、読めなければ EFT を一度起動するよう案内）。カード「MAYAK で撮る」の先頭に「位置情報は読めません」の注意（枠で目立たせる）、続けて `captureKey`（ボタンを押して次に押したキーを登録。Esc でやめる。EFT のスクリーンショットのキーと同じなら注意）と `captureAuto`（オンのとき、認識する項目 `captureAutoOff` をチェックボックスで選ぶ。全部外すと注意。タスクとアイテムは、チェックのすぐ下に字下げして、それぞれの認識方法（`captureTasksTrigger`、`captureItemTrigger`）をラジオボタンで選ぶ。自動認識の子設定は 1 つの枠にまとめ、キーの欄とは区切り線で分ける。時間の 3 項目は設定画面に出さない） | — |
 | `recognition` | `gameMode`, `gameLanguage`（選択肢は「自動」と Go の `GameLanguages()` が返す言語。表示名は `main.tsx` の `languageNames`）, `ocrEngine`, `tesseractPath`（`tesseract` のときのみ表示） | — |
 | `remote` | `remoteTargets`（名前、ID（伏せ字。目のボタンで表示）、役割「マップ」「タスク」）, `map`, `openMapOnRaidStart`, `navigateMapOnPositionScreenshot` | 追加、ブラウザからの ID 自動検出（`AutoDetectRemoteID`）、接続テスト（`TestRemote`） |
 | `tracker` | `tarkovTrackerEnabled`、トークンの取り込み、保存済みキー、既知プロフィールへのキーの割り当て、過去ログの同期 | ログからプロフィールを探す、tarkovtracker.org の API 設定を開く |

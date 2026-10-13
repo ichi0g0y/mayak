@@ -55,7 +55,26 @@ func syntheticInspectWindow(left, top, width int) *image.RGBA {
 		img.Set(x, top+10+i, color.White)
 		img.Set(x, top+33-i, color.White)
 	}
+	magnifier(img, left, top, color.RGBA{R: 200, G: 210, B: 215, A: 255})
 	return img
+}
+
+// magnifier draws an item window's icon left of its title: a ring up to the
+// right and its handle down to the left.
+func magnifier(img *image.RGBA, left, top int, c color.Color) {
+	cx, cy := left+24, top+13
+	for y := cy - 6; y <= cy+6; y++ {
+		for x := cx - 6; x <= cx+6; x++ {
+			d := (x-cx)*(x-cx) + (y-cy)*(y-cy)
+			if d >= 16 && d <= 36 {
+				img.Set(x, y, c)
+			}
+		}
+	}
+	for i := 0; i < 7; i++ {
+		img.Set(cx-5-i, cy+5+i, c)
+		img.Set(cx-4-i, cy+5+i, c)
+	}
 }
 
 func TestCoveredWindows(t *testing.T) {
@@ -151,5 +170,56 @@ func TestWindowHeightLooksInsideTheHeadersEnds(t *testing.T) {
 	px := imaging.Of(img)
 	if got := windowHeight(px, Rect{X: left - 5, Y: top, W: width + 18, H: 48}); got < minWindowHeight {
 		t.Fatalf("height = %d", got)
+	}
+}
+
+// EFT's item search has the same header with its magnifier the other way
+// round (its handle down to the right), the sorting table a grid: neither is
+// an item's window.
+func TestAnalyzeTellsTheItemWindowByItsIcon(t *testing.T) {
+	const left, top, width = 747, 150, 1065
+	if result, _ := Analyze(syntheticInspectWindow(left, top, width)); !result.IsItem {
+		t.Fatalf("an item's window: %+v", result)
+	}
+	search := syntheticInspectWindow(left, top, width)
+	for y := top + 4; y < top+30; y++ {
+		for x := left + 6; x < left+36; x++ {
+			search.Set(x, y, color.Black)
+		}
+	}
+	// Mirrored: the ring up to the left, the handle down to the right.
+	c := color.RGBA{R: 220, G: 210, B: 180, A: 255}
+	cx, cy := left+18, top+13
+	for y := cy - 6; y <= cy+6; y++ {
+		for x := cx - 6; x <= cx+6; x++ {
+			if d := (x-cx)*(x-cx) + (y-cy)*(y-cy); d >= 16 && d <= 36 {
+				search.Set(x, y, c)
+			}
+		}
+	}
+	for i := 0; i < 7; i++ {
+		search.Set(cx+5+i, cy+5+i, c)
+		search.Set(cx+4+i, cy+5+i, c)
+	}
+	if result, _ := Analyze(search); result.IsItem {
+		t.Fatalf("the item search taken for an item's window: %+v", result)
+	}
+	grid := syntheticInspectWindow(left, top, width)
+	for y := top + 4; y < top+30; y++ {
+		for x := left + 6; x < left+36; x++ {
+			grid.Set(x, y, color.Black)
+		}
+	}
+	for _, gy := range []int{8, 15, 22} {
+		for _, gx := range []int{12, 19, 26} {
+			for y := 0; y < 4; y++ {
+				for x := 0; x < 4; x++ {
+					grid.Set(left+gx+x, top+gy+y, c)
+				}
+			}
+		}
+	}
+	if result, _ := Analyze(grid); result.IsItem {
+		t.Fatalf("the sorting table taken for an item's window: %+v", result)
 	}
 }

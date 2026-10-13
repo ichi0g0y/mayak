@@ -250,7 +250,7 @@ const messages = {
       'EFT を前に出したままこのキーを押すと、MAYAK がゲームの画面を撮ってスクリーンショットフォルダに保存し、EFT のスクリーンショットと同じように読みます。ゲーム内に EFT の撮影の通知は出ません。タスク、アイテムの詳細、キャラクター画面「全般」に使えます。ボーダーレスかウィンドウモードで使ってください（フルスクリーンでは黒くなります）。このキーはほかのアプリに届かなくなるので、EFT で使っていないキーを選んでください。',
     captureKeySameAsEft: 'EFT のスクリーンショットのキーと同じです。EFT にキーが届かなくなり、位置を読めなくなります。',
     captureKeyNoFolder: 'スクリーンショットフォルダを設定すると使えます。',
-    captureAuto: '自動スクリーンショット',
+    captureAuto: '自動認識',
     captureNoPosition: '位置情報は読めません',
     captureNoPositionHelp:
       'MAYAK で撮った画像には、マップの現在地が入りません。マップに現在地を出すときは、これまでどおり EFT のスクリーンショットキーで撮ってください。',
@@ -721,7 +721,7 @@ const messages = {
     captureKeySameAsEft:
       "This is EFT's screenshot key too: EFT would no longer get it, and positions could not be read.",
     captureKeyNoFolder: 'Set the screenshots folder to use it.',
-    captureAuto: 'Auto screenshot',
+    captureAuto: 'Auto recognition',
     captureNoPosition: 'No positions',
     captureNoPositionHelp:
       "A shot taken by MAYAK has no position on the map. To show where you are on the map, take the screenshot with EFT's screenshot key as before.",

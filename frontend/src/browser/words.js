@@ -423,11 +423,11 @@ export const words = {
     tutOpenFolders: 'フォルダの設定を開く',
     tutCaptureTitle: 'EFT の撮影通知なしで読む（実験的）',
     tutCapture:
-      'EFT のスクリーンショットキーの代わりに、MAYAK がゲームの画面を撮って読むこともできます。ゲーム内に EFT の撮影の通知が出ません。自動スクリーンショットをオンにすると、アイテムの詳細やキャラクター画面「全般」を開いたときと、開いたタスクを右クリックしたときに読みます。撃つときのクリックには反応しません。',
+      'EFT のスクリーンショットキーの代わりに、MAYAK がゲームの画面を撮って読むこともできます。ゲーム内に EFT の撮影の通知が出ません。自動認識をオンにすると、アイテムの詳細やキャラクター画面「全般」を開いたときと、開いたタスクを右クリックしたときに読みます。撃つときのクリックには反応しません。',
     tutCaptureNote:
       '位置情報は読めないので、マップに現在地を出すときは EFT のキーで撮ってください。画面の写し方は RatScanner と同じですが、BSG が認めた方式ではありません。使うかどうかはご自身で決めてください。あとから設定の「スクリーンショット」で変えられます。',
-    tutCaptureOn: '自動スクリーンショットをオンにする',
-    tutCaptureIsOn: '自動スクリーンショットはオンです',
+    tutCaptureOn: '自動認識をオンにする',
+    tutCaptureIsOn: '自動認識はオンです',
     tutCaptureSettings: '設定の「スクリーンショット」を開く',
     tutKeyTitle: 'スクリーンショットキーを押しやすい場所に',
     tutKey:
@@ -1284,11 +1284,11 @@ export const words = {
     tutOpenFolders: 'Open the folder settings',
     tutCaptureTitle: 'Read without EFT’s screenshot notice (experimental)',
     tutCapture:
-      "Instead of EFT's screenshot key, MAYAK can take the game's screen and read it, without EFT's screenshot notice in the game. With the automatic screenshot on, it reads an item's inspection or the character's Overall screen when you open them, and a task when you right-click the one opened. Clicks to shoot are left alone.",
+      "Instead of EFT's screenshot key, MAYAK can take the game's screen and read it, without EFT's screenshot notice in the game. With auto recognition on, it reads an item's inspection or the character's Overall screen when you open them, and a task when you right-click the one opened. Clicks to shoot are left alone.",
     tutCaptureNote:
       "Positions are not read: to show where you are on the map, take the screenshot with EFT's key. The screen is copied the way RatScanner does it, but BSG has not approved it; whether to use it is your call. It can be changed later under Screenshots in the settings.",
-    tutCaptureOn: 'Turn the automatic screenshot on',
-    tutCaptureIsOn: 'The automatic screenshot is on',
+    tutCaptureOn: 'Turn auto recognition on',
+    tutCaptureIsOn: 'Auto recognition is on',
     tutCaptureSettings: 'Open Screenshots in the settings',
     tutKeyTitle: 'Put the screenshot key within reach',
     tutKey:
