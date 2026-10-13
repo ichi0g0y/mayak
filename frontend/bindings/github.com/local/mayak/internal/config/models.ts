@@ -125,6 +125,12 @@ export class Settings {
     "gameRemote": boolean;
 
     /**
+     * GameRemoteSmooth makes such a scroll glide on a Mac or Linux Client
+     * (a Windows one is turned the wheel of, which glides as it always does).
+     */
+    "gameRemoteSmooth": boolean;
+
+    /**
      * CaptureSettleMs is how long after the last click the screen is taken
      * (EFT draws what the click opened meanwhile), CaptureRepeatSeconds how
      * long the same screen is not taken again (0: always), and CapturePollMs
@@ -322,6 +328,9 @@ export class Settings {
         if (!("gameRemote" in $$source)) {
             this["gameRemote"] = false;
         }
+        if (!("gameRemoteSmooth" in $$source)) {
+            this["gameRemoteSmooth"] = false;
+        }
         if (!("captureSettleMs" in $$source)) {
             this["captureSettleMs"] = 0;
         }
@@ -509,9 +518,9 @@ export class Settings {
         const $$createField4_0 = $$createType0;
         const $$createField10_0 = $$createType2;
         const $$createField17_0 = $$createType0;
-        const $$createField50_0 = $$createType3;
-        const $$createField51_0 = $$createType4;
+        const $$createField51_0 = $$createType3;
         const $$createField52_0 = $$createType4;
+        const $$createField53_0 = $$createType4;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("questSites" in $$parsedSource) {
             $$parsedSource["questSites"] = $$createField2_0($$parsedSource["questSites"]);
@@ -529,13 +538,13 @@ export class Settings {
             $$parsedSource["captureAutoOff"] = $$createField17_0($$parsedSource["captureAutoOff"]);
         }
         if ("soundVoices" in $$parsedSource) {
-            $$parsedSource["soundVoices"] = $$createField50_0($$parsedSource["soundVoices"]);
+            $$parsedSource["soundVoices"] = $$createField51_0($$parsedSource["soundVoices"]);
         }
         if ("soundVolumeOffsets" in $$parsedSource) {
-            $$parsedSource["soundVolumeOffsets"] = $$createField51_0($$parsedSource["soundVolumeOffsets"]);
+            $$parsedSource["soundVolumeOffsets"] = $$createField52_0($$parsedSource["soundVolumeOffsets"]);
         }
         if ("soundDelays" in $$parsedSource) {
-            $$parsedSource["soundDelays"] = $$createField52_0($$parsedSource["soundDelays"]);
+            $$parsedSource["soundDelays"] = $$createField53_0($$parsedSource["soundDelays"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }

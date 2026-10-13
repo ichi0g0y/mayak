@@ -119,13 +119,17 @@ func (m *Manager) command(command string, o Options) error {
 }
 
 // scrollShown scrolls the view shown by dy CSS pixels with a script in the
-// page (the browser view's "scroll"): the wheel cannot be turned in it from
-// outside here.
-func (m *Manager) scrollShown(dy float64) bool {
+// page (the browser view's "scroll", or "scrollSmooth" to glide): the wheel
+// cannot be turned in it from outside here.
+func (m *Manager) scrollShown(dy float64, smooth bool) bool {
+	command := "scroll"
+	if smooth {
+		command = "scrollSmooth"
+	}
 	shown := false
 	application.InvokeSync(func() {
 		if v := m.native.views[m.native.shown]; v != nil && !m.native.closed {
-			v.action("scroll", strconv.Itoa(int(math.Round(dy))), 0, 0, 0, 0)
+			v.action(command, strconv.Itoa(int(math.Round(dy))), 0, 0, 0, 0)
 			shown = true
 		}
 	})

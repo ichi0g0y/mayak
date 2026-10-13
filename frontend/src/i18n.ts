@@ -433,6 +433,9 @@ const messages = {
     gameTabButtonsHelp:
       '閉じるのはタブの一覧にあるタブだけで、ピン留めしたタブは閉じません。ピン留めは Web のタブだけです。',
     gameRemote: 'リモートにつないでいるときは、つないだ PC を操作する',
+    gameRemoteSmooth: 'つないだ PC のスクロールをなめらかにする',
+    gameRemoteSmoothHelp:
+      'macOS と Linux の PC で、1 ノッチずつ一気に動かさず、なめらかに流します。続けて回すと、その分だけ先へ進みます。Windows の PC は、いつもなめらかに動きます。',
     gameRemoteHelp:
       '別の PC の MAYAK とつながっているあいだは、スクロールもタブの操作も、その PC の MAYAK に効きます。この PC の MAYAK は動きません。',
     gameWheelNote:
@@ -934,6 +937,9 @@ const messages = {
     gameButton_altMiddle: 'Alt + middle button',
     gameTabButtonsHelp: 'Only a tab of the tab list closes, not a pinned one; only web tabs pin.',
     gameRemote: 'Work the PC connected while connected remotely',
+    gameRemoteSmooth: 'Scroll the PC connected smoothly',
+    gameRemoteSmoothHelp:
+      'On a Mac or Linux PC, each notch glides rather than jumps; notches turned in a row carry on from where the last was going. A Windows PC always glides.',
     gameRemoteHelp:
       "While MAYAK on another PC is connected, the scrolling and the tabs work that PC's MAYAK, not this one's.",
     gameWheelNote:

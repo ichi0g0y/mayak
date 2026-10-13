@@ -118,8 +118,8 @@ func (m *Manager) Close() { m.close() }
 // page, where the wheel cannot be turned in it from outside (macOS, Linux):
 // a Client's, for its Host's wheel. False when no page view shows (the
 // shell's own page does) or on Windows, which turns the wheel itself
-// (GameWheel).
-func (m *Manager) ScrollShown(dy float64) bool { return m.scrollShown(dy) }
+// (GameWheel). smooth glides there, as a wheel turned on that PC would.
+func (m *Manager) ScrollShown(dy float64, smooth bool) bool { return m.scrollShown(dy, smooth) }
 
 // Capture takes a PNG of tab id: what is on screen, or with full the whole
 // page. prepare runs in the page before (to hide a bar) and restore after.

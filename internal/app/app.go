@@ -190,6 +190,7 @@ func (a *App) startup(ctx context.Context) {
 	a.browserClient.Store(a.browserStartsAsClient())
 	a.startUpdateChecks()
 	a.wheel.remote.Store(a.settings.GameRemote)
+	a.wheel.smooth.Store(a.settings.GameRemoteSmooth)
 	a.applyGameWheel(a.gameWheelSettings(a.settings))
 
 	if a.browserClient.Load() {

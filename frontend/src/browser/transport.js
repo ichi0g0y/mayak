@@ -28,12 +28,13 @@ const LINK_LIMITS = { rate: 120, rateWindow: 10000, bytes: 16 * 1024 * 1024, byt
 const questSites = ['official-wiki', 'japanese-wiki', 'tarkov-dev']
 // gameInputOf keeps what is sound of the wheel and the buttons the Host
 // passes on (app_wheel.go gameRemote): a tab switch (step 1 or -1), a tab
-// closed or pinned, or a scroll by dy CSS pixels; else null.
+// closed or pinned, or a scroll by dy CSS pixels (smooth: gliding); else null.
 export function gameInputOf(g) {
   if (!g || typeof g !== 'object') return null
   if (g.kind === 'tab' && (g.step === 1 || g.step === -1)) return { kind: 'tab', step: g.step }
   if (g.kind === 'action' && ['close', 'pin'].includes(g.action)) return { kind: 'action', action: g.action }
-  if (g.kind === 'scroll' && Number.isFinite(g.dy)) return { kind: 'scroll', dy: Math.max(-5000, Math.min(5000, g.dy)) }
+  if (g.kind === 'scroll' && Number.isFinite(g.dy))
+    return { kind: 'scroll', dy: Math.max(-5000, Math.min(5000, g.dy)), smooth: g.smooth === true }
   return null
 }
 // hostInfoOf keeps what is sound of the Host's info: its game mode, the

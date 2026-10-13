@@ -290,15 +290,17 @@ async function gameInput(input) {
   if (input.kind === 'action') return window.mayak.action('gameTabAction', input.action)
   let scrolled = false
   try {
-    scrolled = await go.BrowserGameScroll(input.dy)
+    scrolled = await go.BrowserGameScroll(input.dy, input.smooth)
   } catch {}
-  if (!scrolled) scrollShell(input.dy)
+  if (!scrolled) scrollShell(input.dy, input.smooth)
 }
 // scrollShell turns the shell's own page (a view of MAYAK's: the map, the
 // screenshots, the squad…) as a wheel at the middle of its page area would:
-// the element scrolling there moves; with none (the map), the wheel goes to
-// the element itself, which handles it (Leaflet zooms).
-function scrollShell(dy) {
+// the element scrolling there moves (gliding with smooth, a turn made while
+// it glides adding to it); with none (the map), the wheel goes to the element
+// itself, which handles it (Leaflet zooms).
+const glides = new WeakMap()
+function scrollShell(dy, smooth) {
   const r = document.querySelector('main')?.getBoundingClientRect()
   const x = r ? r.left + r.width / 2 : innerWidth / 2
   const y = r ? r.top + r.height / 2 : innerHeight / 2
@@ -306,7 +308,16 @@ function scrollShell(dy) {
   for (let e = at; e && e !== document.documentElement; e = e.parentElement) {
     const o = getComputedStyle(e).overflowY
     if ((o === 'auto' || o === 'scroll' || o === 'overlay') && e.scrollHeight > e.clientHeight + 1) {
-      e.scrollBy({ top: dy })
+      if (!smooth) {
+        e.scrollBy({ top: dy })
+        return
+      }
+      const now = Date.now()
+      const glide = glides.get(e)
+      const from = glide && now - glide.at < 600 ? glide.to : e.scrollTop
+      const to = Math.max(0, Math.min(from + dy, e.scrollHeight - e.clientHeight))
+      glides.set(e, { to, at: now })
+      e.scrollTo({ top: to, behavior: 'smooth' })
       return
     }
   }

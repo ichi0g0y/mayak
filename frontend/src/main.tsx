@@ -1703,6 +1703,18 @@ function App() {
                     onCheckedChange={(gameRemote) => patch({ gameRemote })}
                   />
                 </div>
+                <div className="switch-row">
+                  <div>
+                    <Label htmlFor="game-remote-smooth">{t('gameRemoteSmooth')}</Label>
+                    <p className="help">{t('gameRemoteSmoothHelp')}</p>
+                  </div>
+                  <Switch
+                    id="game-remote-smooth"
+                    checked={!!settings.gameRemoteSmooth}
+                    disabled={!settings.gameWheel || !settings.gameRemote}
+                    onCheckedChange={(gameRemoteSmooth) => patch({ gameRemoteSmooth })}
+                  />
+                </div>
                 {settings.gameWheel && (settings.gameScrollCombo === 'right' || settings.gameTabCombo === 'right') && (
                   <p className="help">{t('gameScrollRightHelp')}</p>
                 )}

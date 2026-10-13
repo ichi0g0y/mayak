@@ -18,10 +18,10 @@ type wheelState struct {
 	mu        sync.Mutex
 	current   [4]string // wheelButtons of the options running
 	forwarder *capture.WheelForwarder
-	// remote is config GameRemote; clients the Clients connected over the
-	// link, as the shell tells (BrowserLinkClients).
-	remote  atomic.Bool
-	clients atomic.Int32
+	// remote is config GameRemote, smooth GameRemoteSmooth; clients the
+	// Clients connected over the link, as the shell tells (BrowserLinkClients).
+	remote, smooth atomic.Bool
+	clients        atomic.Int32
 }
 
 // gameAway tells that the wheel and the buttons go to the Clients: GameRemote
@@ -36,9 +36,10 @@ func (a *App) gameRemote(input map[string]any) { a.emitEvent("browser:game-remot
 
 // BrowserGameScroll turns a Client's page as its Host's wheel was turned in
 // the game: dy CSS pixels at the middle of the page shown, by its wheel on
-// Windows, by a script in the page view shown elsewhere. False tells the
-// shell to scroll its own page (no page view shows on macOS or Linux).
-func (a *App) BrowserGameScroll(dy float64) bool {
+// Windows, by a script in the page view shown elsewhere (gliding with
+// smooth). False tells the shell to scroll its own page (no page view shows
+// on macOS or Linux).
+func (a *App) BrowserGameScroll(dy float64, smooth bool) bool {
 	if a.browserViews == nil || dy != dy {
 		return false
 	}
@@ -46,7 +47,7 @@ func (a *App) BrowserGameScroll(dy float64) bool {
 	if x, y, ok := a.browserViews.PageMiddle(); ok && capture.ScrollAt(x, y, dy, a.scrollPageFromGame) {
 		return true
 	}
-	return a.browserViews.ScrollShown(dy)
+	return a.browserViews.ScrollShown(dy, smooth)
 }
 
 // wheelButtons are o's buttons and keys.
@@ -104,7 +105,9 @@ func (a *App) applyGameWheel(o capture.WheelOptions) {
 	}
 	o.ScrollPage = a.scrollPageFromGame
 	o.Away = a.gameAway
-	o.ScrollAway = func(dy float64) { a.gameRemote(map[string]any{"kind": "scroll", "dy": dy}) }
+	o.ScrollAway = func(dy float64) {
+		a.gameRemote(map[string]any{"kind": "scroll", "dy": dy, "smooth": a.wheel.smooth.Load()})
+	}
 	o.Point = func() (int32, int32, bool) {
 		if a.browserViews == nil {
 			return 0, 0, false

@@ -69,6 +69,9 @@ type Settings struct {
 	// GameRemote sends the wheel and the buttons on to the PCs paired with
 	// the Host while one is connected, in place of the Host's own MAYAK.
 	GameRemote bool `json:"gameRemote"`
+	// GameRemoteSmooth makes such a scroll glide on a Mac or Linux Client
+	// (a Windows one is turned the wheel of, which glides as it always does).
+	GameRemoteSmooth bool `json:"gameRemoteSmooth"`
 	// CaptureSettleMs is how long after the last click the screen is taken
 	// (EFT draws what the click opened meanwhile), CaptureRepeatSeconds how
 	// long the same screen is not taken again (0: always), and CapturePollMs
@@ -198,7 +201,7 @@ type WindowState struct {
 func Defaults() Settings { return defaults() }
 
 func defaults() Settings {
-	return Settings{DesktopOn: []string{"matchFound", "prestige", "trackerFailed"}, Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: false, QuestSoundEnabled: true, ErrorSoundEnabled: true, TaskNotMatchedSoundEnabled: true, RemoteErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, MatchFoundSound: true, RaidStartSound: true, RunThroughSound: true, AutoUpdate: true, GameScrollCombo: "shift", GameTabCombo: "ctrl", GameCloseTab: "shift+middle", GamePinTab: "ctrl+middle", CaptureSettleMs: 250, CaptureRepeatSeconds: 60, CapturePollMs: 30, CaptureTasksTrigger: "right", CaptureItemTrigger: "click"}
+	return Settings{DesktopOn: []string{"matchFound", "prestige", "trackerFailed"}, Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: false, QuestSoundEnabled: true, ErrorSoundEnabled: true, TaskNotMatchedSoundEnabled: true, RemoteErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, MatchFoundSound: true, RaidStartSound: true, RunThroughSound: true, AutoUpdate: true, GameScrollCombo: "shift", GameTabCombo: "ctrl", GameCloseTab: "shift+middle", GamePinTab: "ctrl+middle", GameRemoteSmooth: true, CaptureSettleMs: 250, CaptureRepeatSeconds: 60, CapturePollMs: 30, CaptureTasksTrigger: "right", CaptureItemTrigger: "click"}
 }
 func path() (string, error) {
 	d, err := os.UserConfigDir()

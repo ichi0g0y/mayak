@@ -26,7 +26,7 @@ func TestGameInputGoesToClientsOnlyWhenSetAndOneIsConnected(t *testing.T) {
 }
 
 func TestBrowserGameScrollWithoutViews(t *testing.T) {
-	if (&App{}).BrowserGameScroll(120) {
+	if (&App{}).BrowserGameScroll(120, true) {
 		t.Fatal("no page views to scroll")
 	}
 }

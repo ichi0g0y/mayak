@@ -36,6 +36,7 @@ export type Settings = {
   gameCloseTab?: string
   gamePinTab?: string
   gameRemote?: boolean
+  gameRemoteSmooth?: boolean
   logsDirectory: string
   remoteId: string
   remoteTargets: RemoteTarget[]
@@ -242,6 +243,7 @@ export const defaults: Settings = {
   gameCloseTab: 'shift+middle',
   gamePinTab: 'ctrl+middle',
   gameRemote: false,
+  gameRemoteSmooth: true,
   logsDirectory: '',
   remoteId: '',
   remoteTargets: [],

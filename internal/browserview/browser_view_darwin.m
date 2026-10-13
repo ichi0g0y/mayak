@@ -173,9 +173,10 @@ void *rl_browser_new(void *ptr,uintptr_t handle){
   [view release];
  });return tab;
 }
-// The scroll a Client's Host's wheel makes ("scroll", by %d CSS pixels): the
+// The scroll a Client's Host's wheel makes ("scroll", by %d CSS pixels;
+// "scrollSmooth" glides, a turn made while one glides adding to it): the
 // element scrolling at the middle of the page, else the page.
-static NSString *const mayakScrollScript=@"(()=>{const dy=%d;let e=document.elementFromPoint(innerWidth/2,innerHeight/2);for(;e&&e!==document.body&&e!==document.documentElement;e=e.parentElement){const o=getComputedStyle(e).overflowY;if((o==='auto'||o==='scroll'||o==='overlay')&&e.scrollHeight>e.clientHeight+1){e.scrollBy({top:dy});return}}(document.scrollingElement||document.documentElement).scrollBy({top:dy})})()";
+static NSString *const mayakScrollScript=@"(()=>{const dy=%d,smooth=%d;let s=null;for(let e=document.elementFromPoint(innerWidth/2,innerHeight/2);e&&e!==document.body&&e!==document.documentElement;e=e.parentElement){const o=getComputedStyle(e).overflowY;if((o==='auto'||o==='scroll'||o==='overlay')&&e.scrollHeight>e.clientHeight+1){s=e;break}}s=s||document.scrollingElement||document.documentElement;if(!smooth){s.scrollBy({top:dy});return}const now=Date.now(),from=s.__mayakAt&&now-s.__mayakAt<600?s.__mayakTo:s.scrollTop,to=Math.max(0,Math.min(from+dy,s.scrollHeight-s.clientHeight));s.__mayakTo=to;s.__mayakAt=now;s.scrollTo({top:to,behavior:'smooth'})})()";
 void rl_browser_action(void *ptr,const char *rawCommand,const char *rawURL,int left,int top,int right,int bottom){
  NSString *command=[NSString stringWithUTF8String:rawCommand],*url=[NSString stringWithUTF8String:rawURL];
  onMain(^{
@@ -186,7 +187,7 @@ void rl_browser_action(void *ptr,const char *rawCommand,const char *rawURL,int l
   else if([command isEqualToString:@"back"])[view goBack];
   else if([command isEqualToString:@"forward"])[view goForward];
   else if([command isEqualToString:@"reload"])[view reload];
-  else if([command isEqualToString:@"scroll"])[view evaluateJavaScript:[NSString stringWithFormat:mayakScrollScript,[url intValue]] completionHandler:nil];
+  else if([command isEqualToString:@"scroll"]||[command isEqualToString:@"scrollSmooth"])[view evaluateJavaScript:[NSString stringWithFormat:mayakScrollScript,[url intValue],(int)[command isEqualToString:@"scrollSmooth"]] completionHandler:nil];
   else if([command isEqualToString:@"close"]){
    view.navigationDelegate=nil;view.UIDelegate=nil;
    // The content controller holds the tab as its message handler.

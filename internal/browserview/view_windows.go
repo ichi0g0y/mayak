@@ -398,4 +398,4 @@ func (m *Manager) acceleratorKey(id string, vk uint) bool {
 }
 
 // scrollShown is not needed here: GameWheel turns the page's wheel.
-func (m *Manager) scrollShown(float64) bool { return false }
+func (m *Manager) scrollShown(float64, bool) bool { return false }

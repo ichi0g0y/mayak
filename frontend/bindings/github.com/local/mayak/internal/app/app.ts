@@ -91,11 +91,13 @@ export function BrowserFavicon(rawURL: string, refresh: boolean): $CancellablePr
 
 /**
  * BrowserGameScroll turns a Client's page as its Host's wheel was turned in
- * the game: dy CSS pixels at the middle of the page shown. False tells the
- * shell to scroll by itself (no page view there, or not Windows).
+ * the game: dy CSS pixels at the middle of the page shown, by its wheel on
+ * Windows, by a script in the page view shown elsewhere (gliding with
+ * smooth). False tells the shell to scroll its own page (no page view shows
+ * on macOS or Linux).
  */
-export function BrowserGameScroll(dy: number): $CancellablePromise<boolean> {
-    return $Call.ByID(1647553405, dy);
+export function BrowserGameScroll(dy: number, smooth: boolean): $CancellablePromise<boolean> {
+    return $Call.ByID(1647553405, dy, smooth);
 }
 
 /**
