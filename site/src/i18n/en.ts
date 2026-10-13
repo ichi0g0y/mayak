@@ -18,6 +18,7 @@ export const en: Messages = {
     title: 'A map and squads,\nright in the app.',
     lead: 'The larger changes in this version. Every smaller one is in the changelog.',
     items: [
+      { title: 'The wheel in the game (experimental)', body: 'Work MAYAK without leaving EFT’s menus or inventory. Turning the wheel with Shift held scrolls MAYAK, with Ctrl held it switches tabs; Shift with the middle button closes the tab, Ctrl with it pins or unpins it. Turn it on under In-game controls in the settings (off by default). EFT may scroll too.' },
       { title: 'Capture by MAYAK (experimental)', body: 'Instead of EFT’s screenshot key, MAYAK can take the game’s screen and read it, without EFT’s screenshot notice in the game. Under Screenshots & auto recognition in the settings, set a key or turn on “Auto recognition”. Positions are not read, so take the screenshot with EFT’s key to show where you are on the map. It is off by default.' },
       { title: 'Where a key is used', body: 'Screenshot a key and the item panel shows where it is used: each map with the floor and the nearby place name of every door and safe. Press one and the map goes there, with the key’s markers glowing.' },
       { title: 'MAYAK’s own map', body: '“Map” at the top of the sidebar opens a map built on the same maps and data as tarkov.dev. Filters switch extracts, bosses, keys, task objectives and more on and off, and the floor switches with your height. Draw on it with your own pen, or turn the map on screen into a snap note.' },
@@ -104,7 +105,7 @@ export const en: Messages = {
     title: 'It never touches the game.',
     lead: 'MAYAK reads only the screenshots and logs the game saves, local settings files and public web APIs.',
     items: [
-      'No process memory reads, DLL injection, hooks or packet capture',
+      'No process memory reads, DLL injection or packet capture. No hooks by default either: only with the experimental “wheel in the game” turned on does a Windows mouse hook watch the wheel and buttons, while EFT shows its cursor (the game process is never touched)',
       'No recording or overlay. No screen capture by default either: only with the experimental “Capture by MAYAK” turned on does it copy the game’s screen once, when you press its key or click (the way RatScanner does it, with no input hook)',
       'No automated keyboard or mouse input to the game',
       'Screenshots are never uploaded; OCR and image analysis run locally (only a snap note you share with your squad and your character picture go to your squad, encrypted)',
@@ -144,7 +145,7 @@ export const en: Messages = {
     title: 'Questions',
     items: [
       { q: 'How do you say MAYAK, and what does it mean?', a: 'Ma-YAK. It is the Russian word for lighthouse (маяк), which is why the logo is one.' },
-      { q: 'Can this get me banned?', a: 'MAYAK never touches the game process; it only reads files the game saves itself (screenshots and logs). By default the screenshots it reads are the ones Tarkov’s own screenshot feature saves (the experimental “Capture by MAYAK” copies the screen once only when turned on, the way RatScanner does). It does nothing an anti-cheat looks for, such as reading memory or automating input. Whether you use a companion tool at all is still your own decision.' },
+      { q: 'Can this get me banned?', a: 'MAYAK never touches the game process; it only reads files the game saves itself (screenshots and logs). By default the screenshots it reads are the ones Tarkov’s own screenshot feature saves (the experimental “Capture by MAYAK” copies the screen once only when turned on, the way RatScanner does). The experimental “wheel in the game” uses a Windows mouse hook for the wheel and buttons, only when turned on (the game process is never touched). It does nothing an anti-cheat looks for, such as reading memory or automating input. Whether you use a companion tool at all is still your own decision.' },
       { q: 'Are my screenshots sent anywhere?', a: 'The screenshots themselves are not. OCR and image analysis run locally with the bundled Tesseract or Windows OCR. Only while you are in a squad do your position, the snap notes you share and the picture cut from your character screen go to your squad, encrypted with the squad code. The other services are listed under Safety, and no image goes to them.' },
       { q: 'Which resolutions and languages are supported?', a: 'Your position on the map works at any resolution. Tasks screen and item recognition are tuned for 2560×1440 and support common 16:9 and 16:10 resolutions and ultrawide (21:9, 32:9). The game can be in English or Japanese.' },
       { q: 'Why does SmartScreen warn about the installer?', a: 'MAYAK is an unsigned open-source app, so SmartScreen warns once. Click "More info", then "Run anyway" and setup completes; later starts and automatic updates show no warning. Code signing needs money and identity checks, so it is not in place yet.' },

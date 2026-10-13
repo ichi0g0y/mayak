@@ -4,29 +4,38 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
-## Nightly
+## v0.1.41 (2026-10-13)
 
 ### New
 
-- (Experimental) The wheel in the game works MAYAK: while EFT shows its cursor (menus, inventory), turning the wheel with a chosen button or key held scrolls the main page MAYAK shows; with another one held, it switches tabs (Shift with the middle button closes the tab shown, Ctrl with it pins or unpins it; the buttons can be changed), going through the sidebar from the top, the map, the squad, the screenshots and the like included. Turned on under In-game controls in the settings (off by default), Shift held scrolls and Ctrl held switches tabs; the right button, a side button or Alt can be chosen instead. EFT reads the mouse itself, so it may scroll too.
+- (Experimental) The wheel in the game works MAYAK. Turn it on under In-game controls in the settings (off by default). It works while EFT shows its cursor (menus, inventory).
+  - Turning the wheel with Shift held scrolls the main page MAYAK shows.
+  - Turning it with Ctrl held goes through the tabs, down the sidebar from the top, the map, the squad, the screenshots and the like included.
+  - Shift with the middle button closes the tab shown; Ctrl with it pins or unpins it.
+  - The buttons and keys can be changed, to the right button, a side button, Alt and so on.
+  - EFT reads the mouse itself, so it may scroll too.
+
+### Improved
+
+- The settings sidebar runs in the order things are set: Recognition comes before Screenshots & auto recognition, and TarkovTracker first of the links.
 
 ### Fixed
 
-- Closing a tab in the built-in browser could show a view such as the map or the screenshots while other tabs were left. A tab left shows; with none, the view opened last.
 - Auto recognition could take the Weapon Builds screen, the Flea Market or the main menu for a Tasks screen and report the task as not found.
+- Closing a tab in the built-in browser could show a view such as the map or the screenshots while other tabs were left. A tab left shows now; with none left, the view opened last.
 
 ## v0.1.40 (2026-10-13)
 
 ### Fixed
 
-- Pages of the official wiki (Fandom) and the Japanese wiki (task pages among them) sometimes took long to load in the built-in browser: the ad blocker put all its generic hiding rules (some 640 KB) on every page, and now puts only those that can match an element on the page. Collapsing the slots ads leave no longer goes over the whole page each time, so it is lighter too.
+- Pages of the official wiki (Fandom) and the Japanese wiki (task pages among them) sometimes took long to load in the built-in browser: the ad blocker put all its generic hiding rules on every page. Now it puts only those that can match an element on the page, and collapsing the slots ads leave is lighter too.
 - In the built-in browser, an ad slot at the top of a page (or the ad in it) could show for a moment before it went away. The stylesheet hiding ads now goes in as the page starts loading, not once it has been read.
 
 ## v0.1.39 (2026-10-13)
 
 ### Fixed
 
-- The built-in browser's reload button sometimes did nothing. A page still loading is stopped first; when the reload bypassing the cache is refused, a plain reload runs.
+- The built-in browser's reload button sometimes did nothing. A page still loading is stopped first, then read again.
 
 ## v0.1.38 (2026-10-13)
 
@@ -42,33 +51,38 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### Fixed
 
-- EFT's item search, sorting table and chat windows, and stash rows of coloured items, were taken for an item's inspection window, and "Item not found" showed. An item's window is now told by the magnifier left of its title, its handle down to the left.
+- EFT's item search, sorting table and chat windows, and stash rows of coloured items, were taken for an item's inspection window, and "Item not found" showed.
 
 ## v0.1.36 (2026-10-13)
 
 ### New
 
-- (Experimental) "MAYAK's capture key" and "Auto screenshot": set a key under Screenshots in the settings (symbol keys such as "Alt + ;" too), and pressing it with EFT in front makes MAYAK take the game's screen into the screenshots folder and read it like an EFT screenshot, without EFT's screenshot notice in the game. It works for tasks, item inspection and the character's Overall screen; note that positions are not read: to show where you are on the map, take the screenshot with EFT's screenshot key as before. EFT needs borderless or windowed mode. Nothing runs until the key is pressed, so it costs nothing while you play.
-- With "Auto screenshot" on, MAYAK takes and reads the screen after a click in EFT when it is one MAYAK reads, like RatScanner's automatic scan. The screens it reacts to (tasks, item inspection, the Overall screen) are chosen with check boxes. Clicks while aiming in a raid (the cursor hidden at the screen’s centre) are not counted. It takes one shot 0.25 s after the clicks stop and keeps nothing it cannot read; the same task or item is not taken again for a minute. A task is taken when you right-click the chosen one by default, so clicking through the list does not read each one; tasks can instead be taken on Shift + click after choosing one or as soon as one is chosen, and items as soon as the inspection opens (the default), or on a right click or Shift + click after opening it.
+- (Experimental) MAYAK can take the game's screen and read it, without EFT's screenshot notice in the game. It is set under Screenshots in the settings.
+  - With "MAYAK's capture key" set, pressing it with EFT in front takes the screen. It is saved in the screenshots folder and read like one of EFT's screenshots. Symbol keys such as "Alt + ;" work too.
+  - With "Auto screenshot" on, like RatScanner's automatic scan, MAYAK takes and reads the screen after a click in EFT when it shows something MAYAK reads. A screen it cannot read is not saved, and the same task or item is not taken again for a minute.
+  - It reads tasks, an item's inspection window and the character's Overall screen, chosen with check boxes.
+  - By default a task is read on a right click on the task open (not on each click through the list), and an item when its inspection window opens. Both can take a right click or Shift + click instead.
+  - Clicks while aiming in a raid (the cursor hidden in the middle of the screen) are left alone.
+  - It cannot read your position: for the map, take a screenshot with EFT's key as before.
+  - EFT has to run borderless or windowed.
 
 ### Improved
 
-- The first-run tutorial has a page "Read without EFT’s screenshot notice (experimental)": what the automatic screenshot does and does not, with a button turning it on.
-- Each settings page has a "Back to defaults" button. The first press lists what goes back ("now → default", the defaults coloured); a second press saves it. What would be missed if lost, such as the folders' paths and tarkov.dev's targets, is kept.
-- The settings have a "Screenshots" page: it shows the screenshot key set in EFT, and "Capture by MAYAK" has moved there. "Game & recognition" is now called "Recognition".
-- The squad's heading in the sidebar no longer shows the number of members in a dot: who is in it is listed under it, and whether it is connected shows when the pointer is over the heading.
-- With no snap note yet, the sidebar's snap notes section has a "New" button (it was text that could not be pressed); "Start from a blank sheet" on the list page is called "New" too.
-- The item panel shows each trader's face before its name (tarkov.dev's picture), and a store for the flea market.
-- When the flea market is where an item sells best, the item panel also shows the trader paying the most for it, and how much. Where it sells and the price sit apart, left and right, without the "Sells best to" words.
-- A screenshot is opened once for reading it. Each check of what screen it shows used to open it again, which took about 0.2 s more for a task screenshot.
+- The first-run tutorial has a page "Read without EFT’s screenshot notice (experimental)": what it does and does not, with a button turning it on.
+- Each settings page has a "Back to defaults" button. The first press lists what goes back ("now → default"); a second press saves it. What would be missed if lost, such as the folders' paths and tarkov.dev's targets, is kept.
+- The settings have a "Screenshots" page, showing the screenshot key set in EFT. "Game & recognition" is now called "Recognition".
+- The item panel shows each trader's face before its name, and a store for the flea market.
+- When the flea market is where an item sells best, the item panel also shows the trader paying the most for it, and how much.
+- The squad's heading in the sidebar no longer shows the number of members in a dot.
+- With no snap note yet, the sidebar's snap notes section has a "New" button.
+- Screenshots are read faster: about 0.2 s less for a task screenshot.
 
 ### Fixed
 
-- The character's Gear or Overall screen was taken for a trader's Tasks screen, and a task was looked for: since EFT 1.2.0.0 the Gear tab sits where the trader screen's mark is. The lit button of the bottom menu tells them apart too.
-- A stash row (with a reddish figurine at its end) was taken for an item's inspection window, and its names ("RayBench" and so on) were read. An open inspection window was also missed when its top line ran on into the stash's lines behind it.
-- Screenshots of story tasks (the Story tab of the character's Tasks screen) got no answer: EFT 1.2.0.0 made the Story tab narrower, and it was no longer seen as selected.
-- A task the Host recognized while a Client (a Mac, say) was in the background (behind other windows, minimized, or in the tray) was sometimes not open when the Client came back to the front. The Host now keeps the last thing it recognized of each kind (task, map, position, item) for 30 minutes and sends it again each time a Client connects again. A Client does not open the same one twice. When the window comes back, a link that heard nothing for a while is checked first and connected again only if needed, so what came in the background is not thrown away. On a Mac (macOS 14 and later), the Client keeps receiving from the Host while its window is not seen.
-- What a Client gets over the link (and how many seconds after the Host) and a quiet link connected again are written to the log (debug).
+- The character's Gear or Overall screen was taken for a trader's Tasks screen, and a task was looked for (since EFT 1.2.0.0).
+- A stash row (with a reddish figurine at its end) was taken for an item's inspection window, and its names ("RayBench" and so on) were read. An open inspection window was also sometimes missed.
+- Screenshots of story tasks (the Story tab of the character's Tasks screen) got no answer (since EFT 1.2.0.0).
+- A task the Host recognized while a Client (a Mac, say) was in the background (behind other windows, minimized, or in the tray) was sometimes not open when the Client came back to the front. The Host keeps the last thing it recognized of each kind (task, map, position, item) for 30 minutes and sends it again whenever a Client connects again. On a Mac (macOS 14 or later), a hidden window keeps getting the Host's.
 
 ## v0.1.35 (2026-10-12)
 
