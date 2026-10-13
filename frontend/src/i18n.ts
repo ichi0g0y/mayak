@@ -407,9 +407,10 @@ const messages = {
     keepPriority: 'ウィンドウの優先度を通常に保つ',
     keepPriorityHelp:
       'Process Lasso などの優先度管理ツールが、起動直後のCPU使用でMAYAKの優先度を下げると、ウィンドウ（WebView2）が低い優先度のまま残り、固まって見えることがあります。オンにすると10秒ごとに確認して通常に戻します。',
-    gameScrollTitle: 'ゲーム中のホイール（実験的）',
-    gameScrollDescription: 'EFT を前にしたまま、ホイールで MAYAK の画面をスクロールしたり、タブを切り替えたりします',
-    gameWheel: 'ゲーム中のホイールを MAYAK で使う',
+    gameScrollTitle: 'ウインドウを切り替えずに操作（実験的）',
+    gameScrollDescription:
+      'EFT を前に出したまま、ホイールとマウスのボタンで MAYAK をスクロールしたり、タブを切り替えたりします',
+    gameWheel: 'ウインドウを切り替えずに MAYAK を操作する',
     gameScrollCombo: '押しながらホイールでスクロール',
     gameTabCombo: '押しながらホイールでタブを切り替え',
     gameScroll_off: '使わない',
@@ -431,7 +432,7 @@ const messages = {
     gameTabButtonsHelp:
       '閉じるのはタブの一覧にあるタブだけで、ピン留めしたタブは閉じません。ピン留めは Web のタブだけです。',
     gameWheelNote:
-      'EFT でカーソルが出ているとき（メニューやインベントリ）に、選んだボタンかキーを押しながらホイールを回すと動きます。EFT はマウスを直接読むので、EFT 側も一緒にスクロールすることがあります。',
+      'メニューやインベントリなど、カーソルが出ている画面で使えます。EFT はマウスを直接読むので、EFT 側も一緒にスクロールすることがあります。',
     gameScrollRightHelp:
       '右クリックは EFT にも届くので、アイテムの上で使うとメニューが開きます。ホイールを回した右クリックでは自動認識しません。',
     startupTitle: '起動とウィンドウ',
@@ -905,9 +906,9 @@ const messages = {
     keepPriority: 'Keep the window at normal priority',
     keepPriorityHelp:
       "When a priority manager such as Process Lasso lowers MAYAK's priority during its start-up CPU work, the window (WebView2) can keep the lower priority and look frozen. This checks every 10 seconds and puts it back to normal.",
-    gameScrollTitle: 'The wheel in the game (experimental)',
-    gameScrollDescription: 'Scroll MAYAK or switch its tabs with the wheel while EFT stays in front',
-    gameWheel: "Use the game's wheel in MAYAK",
+    gameScrollTitle: 'Work MAYAK without switching windows (experimental)',
+    gameScrollDescription: 'Scroll MAYAK and switch its tabs with the wheel and mouse buttons, EFT staying in front',
+    gameWheel: 'Work MAYAK without switching windows',
     gameScrollCombo: 'Hold to scroll with the wheel',
     gameTabCombo: 'Hold to switch tabs with the wheel',
     gameScroll_off: 'Off',
@@ -928,7 +929,7 @@ const messages = {
     gameButton_altMiddle: 'Alt + middle button',
     gameTabButtonsHelp: 'Only a tab of the tab list closes, not a pinned one; only web tabs pin.',
     gameWheelNote:
-      'It works while EFT shows its cursor (menus, inventory), turning the wheel with the chosen button or key held. EFT reads the mouse itself, so it may scroll too.',
+      'It works on screens that show the cursor, such as menus and the inventory. EFT reads the mouse itself, so it may scroll too.',
     gameScrollRightHelp:
       'EFT gets the right click too, so over an item it opens its menu. A right click the wheel was turned with is not read by auto recognition.',
     startupTitle: 'Startup and window',

@@ -151,7 +151,7 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | `startup` | `launchAtStartup`, `startMinimized`, `autoStartMonitoring`, `minimizeToTray`, `closeToTray`, `autoUpdate` | — |
 | `status` | 表示のみ: Remote 接続状態、現在のマップ、レイド状態、スクリーンショット種別、TarkovTracker の状態、最後の検出結果、カタログの状態、アップデートの状態 | 最新スクリーンショットの解析、TarkovTracker の更新、カタログの更新、タスクページを開く、更新の確認・ダウンロード・再起動して更新、リリースノートを開く |
 | `logs` | 表示のみ（[ログ](#ログ) を参照） | フォルダを開く、ログの消去 |
-| `gameInput` | カード「ゲーム中のホイール（実験的）」: スイッチ `gameWheel`、その下で `gameScrollCombo` と `gameTabCombo` をそれぞれ選ぶ（「使わない」と 6 つの組み合わせ。もう一方で選んだものは選べない。スイッチがオフのあいだは選べない）。続けて `gameCloseTab` と `gamePinTab`（「使わない」と 6 つのボタン）。右ボタンを選んだときは、右クリックが EFT にも届く注意を出す | — |
+| `gameInput` | カード「ウインドウを切り替えずに操作（実験的）」: スイッチ `gameWheel`、その下で `gameScrollCombo` と `gameTabCombo` をそれぞれ選ぶ（「使わない」と 6 つの組み合わせ。もう一方で選んだものは選べない。スイッチがオフのあいだは選べない）。続けて `gameCloseTab` と `gamePinTab`（「使わない」と 6 つのボタン）。右ボタンを選んだときは、右クリックが EFT にも届く注意を出す | — |
 | `debug` | `debug`, `saveRecognitionDebug`。`debug` がオンのときは Hideout 診断フォルダ、候補一覧、crop、目標も表示 | `OpenHideoutDiagnostics` |
 
 ## ブラウザ設定（シェル側）

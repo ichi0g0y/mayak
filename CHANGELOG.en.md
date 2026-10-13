@@ -8,12 +8,12 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### New
 
-- (Experimental) The wheel in the game works MAYAK. Turn it on under In-game controls in the settings (off by default). It works while EFT shows its cursor (menus, inventory).
-  - Turning the wheel with Shift held scrolls the main page MAYAK shows.
-  - Turning it with Ctrl held goes through the tabs, down the sidebar from the top, the map, the squad, the screenshots and the like included.
+- (Experimental) MAYAK can be worked without switching windows: with EFT in front, the wheel and the mouse buttons read on through MAYAK's pages and switch its tabs. Turn it on under In-game controls in the settings (off by default).
+  - Shift with the wheel scrolls the main page MAYAK shows.
+  - Ctrl with the wheel goes through the tabs, down the sidebar from the top, the map, the squad, the screenshots and the like included.
   - Shift with the middle button closes the tab shown; Ctrl with it pins or unpins it.
   - The buttons and keys can be changed, to the right button, a side button, Alt and so on.
-  - EFT reads the mouse itself, so it may scroll too.
+  - It works on screens that show the cursor, such as menus and the inventory. EFT reads the mouse itself, so it may scroll too.
 
 ### Improved
 
