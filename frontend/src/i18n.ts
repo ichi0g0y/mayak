@@ -422,6 +422,14 @@ const messages = {
     gameScrollHelp: 'スクロールするのは、表示中のメインの画面です（サイドバーやアイテム欄ではなく）。',
     gameTabHelp:
       'サイドバーの上から順に切り替えます（TarkovTracker、マップ、分隊、スクリーンショット、スナップノート、ボス、タブ）。手前に回すと下へ、奥に回すと上へ進みます。',
+    gameCloseTab: 'タブを閉じる',
+    gamePinTab: 'ピン留めを切り替える',
+    gameButton_middle: '中ボタン',
+    gameButton_shiftMiddle: 'Shift＋中ボタン',
+    gameButton_ctrlMiddle: 'Ctrl＋中ボタン',
+    gameButton_altMiddle: 'Alt＋中ボタン',
+    gameTabButtonsHelp:
+      '閉じるのはタブの一覧にあるタブだけで、ピン留めしたタブは閉じません。ピン留めは Web のタブだけです。',
     gameWheelNote:
       'EFT でカーソルが出ているとき（メニューやインベントリ）に、選んだボタンかキーを押しながらホイールを回すと動きます。EFT はマウスを直接読むので、EFT 側も一緒にスクロールすることがあります。',
     gameScrollRightHelp:
@@ -912,6 +920,13 @@ const messages = {
     gameScrollHelp: 'It scrolls the main page shown (not the sidebar nor the item panel).',
     gameTabHelp:
       'It goes through the sidebar from the top (TarkovTracker, map, squad, screenshots, snap notes, bosses, tabs): turned towards you, down; away from you, up.',
+    gameCloseTab: 'Close the tab',
+    gamePinTab: 'Pin or unpin the tab',
+    gameButton_middle: 'Middle button',
+    gameButton_shiftMiddle: 'Shift + middle button',
+    gameButton_ctrlMiddle: 'Ctrl + middle button',
+    gameButton_altMiddle: 'Alt + middle button',
+    gameTabButtonsHelp: 'Only a tab of the tab list closes, not a pinned one; only web tabs pin.',
     gameWheelNote:
       'It works while EFT shows its cursor (menus, inventory), turning the wheel with the chosen button or key held. EFT reads the mouse itself, so it may scroll too.',
     gameScrollRightHelp:

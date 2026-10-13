@@ -745,6 +745,21 @@ const sidebarKinds = [
 ]
 // listedTabs are the tabs in the sidebar's tab list, in its order.
 const listedTabs = (tabs) => tabs.filter((tab) => !tab.fixed && !sidebarKinds.includes(tab.kind))
+// afterClose is the tab to show once tabs lost the shown one, which was
+// listed at place listedAt (-1: a view). A tab of the list is followed by the
+// one now at its place in the list, or the one before it; with none left, by
+// the view opened last (the settings and the bookmark and tab pages aside).
+// A view is followed by the tab now at its place in tabs, as before.
+const pageKinds = ['settings', 'bookmarks', 'tabs']
+function afterClose(tabs, index, listedAt) {
+  if (listedAt >= 0) {
+    const listed = listedTabs(tabs)
+    if (listed.length) return listed[Math.min(listedAt, listed.length - 1)].id
+    const views = tabs.filter((tab) => !pageKinds.includes(tab.kind))
+    if (views.length) return views[views.length - 1].id
+  }
+  return tabs[Math.min(index, tabs.length - 1)]?.id ?? ''
+}
 // viewRing is the sidebar from the top, as the wheel turned in the game goes
 // through it (GameTabCombo): the fixed views (TarkovTracker), the map and the
 // squad (where the squad works), the screenshots, the snap notes (where they
@@ -821,6 +836,7 @@ export {
   tabAt,
   cycleTab,
   listedTabs,
+  afterClose,
   viewRing,
   nextInRing,
   receivePosition,

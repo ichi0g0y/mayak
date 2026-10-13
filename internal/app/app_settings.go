@@ -242,8 +242,8 @@ func (a *App) saveSettings(s config.Settings, restartMonitor bool) error {
 	if old.CaptureKey != s.CaptureKey {
 		go a.applyCaptureKey(s.CaptureKey)
 	}
-	if old.GameWheel != s.GameWheel || old.GameScrollCombo != s.GameScrollCombo || old.GameTabCombo != s.GameTabCombo {
-		go a.applyGameWheel(a.gameWheelCombos(s))
+	if old.GameWheel != s.GameWheel || old.GameScrollCombo != s.GameScrollCombo || old.GameTabCombo != s.GameTabCombo || old.GameCloseTab != s.GameCloseTab || old.GamePinTab != s.GamePinTab {
+		go a.applyGameWheel(a.gameWheelSettings(s))
 	}
 	if old.CaptureAuto != s.CaptureAuto || old.CaptureSettleMs != s.CaptureSettleMs || old.CapturePollMs != s.CapturePollMs {
 		go a.applyCaptureAuto(s.CaptureAuto)
@@ -298,6 +298,12 @@ func normalizeSettings(s config.Settings) config.Settings {
 	}
 	if !slices.Contains(capture.WheelCombos, s.GameTabCombo) || s.GameTabCombo == s.GameScrollCombo {
 		s.GameTabCombo = ""
+	}
+	if !slices.Contains(capture.TabButtons, s.GameCloseTab) {
+		s.GameCloseTab = ""
+	}
+	if !slices.Contains(capture.TabButtons, s.GamePinTab) || s.GamePinTab == s.GameCloseTab {
+		s.GamePinTab = ""
 	}
 	s.CaptureSettleMs, s.CaptureRepeatSeconds, s.CapturePollMs = captureTuning(s.CaptureSettleMs, s.CaptureRepeatSeconds, s.CapturePollMs)
 	if s.UpdateChannel != update.ChannelNightly {

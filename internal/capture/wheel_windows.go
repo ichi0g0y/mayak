@@ -38,6 +38,8 @@ const (
 	whMouseLL          = 14
 	wmMouseWheel       = 0x020A
 	wmMouseHWheel      = 0x020E
+	wmMButtonDown      = 0x0207
+	wmXButtonDown      = 0x020B
 	pmRemove           = 0x0001
 	qsAllInput         = 0x04FF
 	mwmoInputAvailable = 0x0004
@@ -73,8 +75,10 @@ var wheel struct {
 	// last note was made (noteEvery).
 	tabTurn int
 	noted   time.Time
-	once    sync.Once
-	hookCB  uintptr
+	// buttonUp is the release of a button pressed for the tabs, to take too.
+	buttonUp uintptr
+	once     sync.Once
+	hookCB   uintptr
 }
 
 // ForwardWheel takes the wheel turned in EFT with the cursor shown to MAYAK
@@ -87,7 +91,7 @@ var wheel struct {
 // (raw input) too, so it may turn there as well.
 func ForwardWheel(o WheelOptions) (*WheelForwarder, error) {
 	scrollVK, tabsVK := comboKeys[o.Scroll], comboKeys[o.Tabs]
-	if (o.Scroll != "" && !slices.Contains(WheelCombos, o.Scroll)) || (o.Tabs != "" && !slices.Contains(WheelCombos, o.Tabs)) || scrollVK|tabsVK == 0 {
+	if (o.Scroll != "" && !slices.Contains(WheelCombos, o.Scroll)) || (o.Tabs != "" && !slices.Contains(WheelCombos, o.Tabs)) || (scrollVK|tabsVK == 0 && o.CloseTab == "" && o.PinTab == "") {
 		return nil, ErrUnsupported
 	}
 	wheel.opts.Store(&o)
@@ -163,6 +167,30 @@ var keyCombos = map[string]bool{"shift": true, "ctrl": true, "alt": true}
 // wheelHook takes a wheel turn made with the combo held to MAYAK; all else,
 // and a turn there is no MAYAK window to take, goes on to the game.
 func wheelHook(code, wParam uintptr, info *mouseHookInfo) uintptr {
+	// The button that closes the tab shown, or pins or unpins it
+	// (WheelOptions.CloseTab, PinTab). Its release is taken too.
+	if int32(code) == 0 && (wParam == wmMButtonDown || wParam == wmXButtonDown) {
+		if o := wheel.opts.Load(); o != nil && o.TabAction != nil {
+			action := ""
+			switch tabButton(wParam, info.mouseData) {
+			case "":
+			case o.CloseTab:
+				action = "close"
+			case o.PinTab:
+				action = "pin"
+			}
+			if action != "" {
+				go o.TabAction(action)
+				wheel.buttonUp = wParam + 1 // WM_MBUTTONUP, WM_XBUTTONUP
+				noteWheel("button: " + action + " the tab")
+				return 1
+			}
+		}
+	}
+	if int32(code) == 0 && wheel.buttonUp != 0 && wParam == wheel.buttonUp {
+		wheel.buttonUp = 0
+		return 1
+	}
 	if int32(code) == 0 && (wParam == wmMouseWheel || wParam == wmMouseHWheel) {
 		delta := int16(info.mouseData >> 16)
 		kind := "wheel"
@@ -224,6 +252,40 @@ func notchPixels() float64 {
 	}
 	return float64(lines) * 100 / 3
 }
+
+// tabButton names the button pressed (TabButtons): the middle one, alone or
+// with Shift, Ctrl or Alt held, or a side button.
+func tabButton(wParam uintptr, mouseData uint32) string {
+	if wParam == wmXButtonDown {
+		switch mouseData >> 16 {
+		case 1:
+			return "x1"
+		case 2:
+			return "x2"
+		}
+		return ""
+	}
+	// The middle button with one key held, or with none; two keys held make no button.
+	button := "middle"
+	for _, key := range []struct {
+		vk   uintptr
+		name string
+	}{{vkShift, "shift+middle"}, {vkControl, "ctrl+middle"}, {vkAlt, "alt+middle"}} {
+		if held(key.vk) {
+			if button != "middle" {
+				return ""
+			}
+			button = key.name
+		}
+	}
+	return button
+}
+
+// vkControl and vkAlt are the Ctrl and Alt keys.
+const (
+	vkControl = 0x11
+	vkAlt     = 0x12
+)
 
 // wheelNotch is one notch of the wheel (WHEEL_DELTA).
 const wheelNotch = 120

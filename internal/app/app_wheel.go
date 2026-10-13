@@ -15,62 +15,66 @@ import (
 // game (capture.ForwardWheel).
 type wheelState struct {
 	mu        sync.Mutex
-	combos    [2]string
+	current   [4]string // wheelButtons of the options running
 	forwarder *capture.WheelForwarder
 }
 
-// applyGameWheel starts taking the wheel with the combos held (to scroll, to
-// switch tabs), in place of those it was started with, or stops for none.
-func (a *App) applyGameWheel(scroll, tabs string) {
+// wheelButtons are o's buttons and keys.
+func wheelButtons(o capture.WheelOptions) [4]string {
+	return [4]string{o.Scroll, o.Tabs, o.CloseTab, o.PinTab}
+}
+
+// gameWheelSettings are the buttons and keys to take the wheel with, none
+// while GameWheel is off.
+func (a *App) gameWheelSettings(s config.Settings) capture.WheelOptions {
+	if !s.GameWheel {
+		return capture.WheelOptions{}
+	}
+	o := capture.WheelOptions{Scroll: s.GameScrollCombo, Tabs: s.GameTabCombo, CloseTab: s.GameCloseTab, PinTab: s.GamePinTab}
+	if o.Tabs == o.Scroll {
+		o.Tabs = "" // as normalizeSettings keeps it
+	}
+	return o
+}
+
+// applyGameWheel starts taking the wheel with the buttons and keys of o, in
+// place of those it was started with, or stops for none.
+func (a *App) applyGameWheel(o capture.WheelOptions) {
 	w := &a.wheel
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if a.quitting.Load() {
-		scroll, tabs = "", ""
+		o = capture.WheelOptions{}
 	}
-	if tabs == scroll {
-		tabs = "" // as normalizeSettings keeps it
-	}
-	combos := [2]string{scroll, tabs}
-	if combos == w.combos {
+	if wheelButtons(o) == w.current {
 		return
 	}
 	if w.forwarder != nil {
 		w.forwarder.Stop()
 		w.forwarder = nil
 	}
-	w.combos = [2]string{}
-	if scroll == "" && tabs == "" {
+	w.current = [4]string{}
+	if o.Scroll == "" && o.Tabs == "" && o.CloseTab == "" && o.PinTab == "" {
 		return
 	}
-	forwarder, err := capture.ForwardWheel(capture.WheelOptions{
-		Scroll:     scroll,
-		Tabs:       tabs,
-		SwitchTab:  func(step int) { a.emitEvent("browser:game-tab", step) },
-		ScrollPage: a.scrollPageFromGame,
-		Point: func() (int32, int32, bool) {
-			if a.browserViews == nil {
-				return 0, 0, false
-			}
-			return a.browserViews.PageMiddle()
-		},
-		Note: func(text string) { a.addLog("Debug", "Capture", "The "+text) },
-	})
+	set := o
+	o.SwitchTab = func(step int) { a.emitEvent("browser:game-tab", step) }
+	o.TabAction = func(action string) { a.emitEvent("browser:game-tab-action", action) }
+	o.ScrollPage = a.scrollPageFromGame
+	o.Point = func() (int32, int32, bool) {
+		if a.browserViews == nil {
+			return 0, 0, false
+		}
+		return a.browserViews.PageMiddle()
+	}
+	o.Note = func(text string) { a.addLog("Debug", "Capture", "The "+text) }
+	forwarder, err := capture.ForwardWheel(o)
 	if err != nil {
 		a.addLog("Warn", "Capture", "Could not take the wheel from EFT: "+err.Error())
 		return
 	}
-	w.combos, w.forwarder = combos, forwarder
-	a.addLog("Info", "Capture", "The wheel turned in EFT scrolls MAYAK with "+orNone(scroll)+" held, switches its tabs with "+orNone(tabs))
-}
-
-// gameWheelCombos are the combos to take the wheel with, none while
-// GameWheel is off.
-func (a *App) gameWheelCombos(s config.Settings) (scroll, tabs string) {
-	if !s.GameWheel {
-		return "", ""
-	}
-	return s.GameScrollCombo, s.GameTabCombo
+	w.current, w.forwarder = wheelButtons(set), forwarder
+	a.addLog("Info", "Capture", "The wheel turned in EFT scrolls MAYAK with "+orNone(set.Scroll)+" held, switches its tabs with "+orNone(set.Tabs)+" (close: "+orNone(set.CloseTab)+", pin: "+orNone(set.PinTab)+")")
 }
 
 // scrollPageFromGame turns the wheel of the page in hwnd with no key held.
@@ -84,3 +88,6 @@ func orNone(combo string) string {
 	}
 	return combo
 }
+
+// stopGameWheel takes the hook out, as MAYAK quits.
+func (a *App) stopGameWheel() { a.applyGameWheel(capture.WheelOptions{}) }

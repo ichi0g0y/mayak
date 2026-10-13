@@ -8,10 +8,11 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ### New
 
-- (Experimental) The wheel in the game works MAYAK: while EFT shows its cursor (menus, inventory), turning the wheel with a chosen button or key held scrolls the main page MAYAK shows; with another one held, it switches tabs, going through the sidebar from the top, the map, the squad, the screenshots and the like included. Turned on under In-game controls in the settings (off by default), Shift held scrolls and Ctrl held switches tabs; the right button, a side button or Alt can be chosen instead. EFT reads the mouse itself, so it may scroll too.
+- (Experimental) The wheel in the game works MAYAK: while EFT shows its cursor (menus, inventory), turning the wheel with a chosen button or key held scrolls the main page MAYAK shows; with another one held, it switches tabs (Shift with the middle button closes the tab shown, Ctrl with it pins or unpins it; the buttons can be changed), going through the sidebar from the top, the map, the squad, the screenshots and the like included. Turned on under In-game controls in the settings (off by default), Shift held scrolls and Ctrl held switches tabs; the right button, a side button or Alt can be chosen instead. EFT reads the mouse itself, so it may scroll too.
 
 ### Fixed
 
+- Closing a tab in the built-in browser could show a view such as the map or the screenshots while other tabs were left. A tab left shows; with none, the view opened last.
 - Auto recognition could take the Weapon Builds screen, the Flea Market or the main menu for a Tasks screen and report the task as not found.
 
 ## v0.1.40 (2026-10-13)

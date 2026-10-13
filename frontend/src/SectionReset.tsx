@@ -37,7 +37,7 @@ const pageKeys: Partial<Record<HostSection, (key: string) => boolean>> = {
       'keepPriority',
       'autoUpdate',
     ].includes(k),
-  gameInput: (k) => ['gameWheel', 'gameScrollCombo', 'gameTabCombo'].includes(k),
+  gameInput: (k) => ['gameWheel', 'gameScrollCombo', 'gameTabCombo', 'gameCloseTab', 'gamePinTab'].includes(k),
   debug: (k) => ['debug', 'saveRecognitionDebug'].includes(k),
 }
 
@@ -86,6 +86,8 @@ const labels: Record<string, MessageKey> = {
   gameWheel: 'gameWheel',
   gameScrollCombo: 'gameScrollCombo',
   gameTabCombo: 'gameTabCombo',
+  gameCloseTab: 'gameCloseTab',
+  gamePinTab: 'gamePinTab',
   debug: 'debugMode',
   saveRecognitionDebug: 'saveRecognitionDebug',
   soundsEnabled: 'soundsEnabled',
@@ -105,6 +107,17 @@ const wheelChoices: Record<string, MessageKey> = {
   alt: 'gameScroll_alt',
 }
 
+// The buttons that close and pin a tab (capture.TabButtons).
+const buttonChoices: Record<string, MessageKey> = {
+  '': 'gameScroll_off',
+  middle: 'gameButton_middle',
+  'shift+middle': 'gameButton_shiftMiddle',
+  'ctrl+middle': 'gameButton_ctrlMiddle',
+  'alt+middle': 'gameButton_altMiddle',
+  x1: 'gameScroll_x1',
+  x2: 'gameScroll_x2',
+}
+
 // Values shown as their names on the page.
 const choices: Record<string, Record<string, MessageKey>> = {
   gameMode: { auto: 'gameModeAuto', pve: 'gameModePVE', regular: 'gameModePVP', 'pvp-season': 'gameModeSeason' },
@@ -114,6 +127,8 @@ const choices: Record<string, Record<string, MessageKey>> = {
   captureItemTrigger: { click: 'captureItemClick', right: 'captureItemRight', shift: 'captureItemShift' },
   gameScrollCombo: wheelChoices,
   gameTabCombo: wheelChoices,
+  gameCloseTab: buttonChoices,
+  gamePinTab: buttonChoices,
 }
 
 type Row = { label: string; from: string; to: string }

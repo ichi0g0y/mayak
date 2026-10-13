@@ -286,6 +286,11 @@ func blank(img *image.RGBA) bool {
 	return true
 }
 
+// TabButtons are what can be pressed to close the tab shown or pin it
+// (WheelOptions.CloseTab, PinTab): the middle button, alone or with Shift,
+// Ctrl or Alt, or a side button.
+var TabButtons = []string{"middle", "shift+middle", "ctrl+middle", "alt+middle", "x1", "x2"}
+
 // WheelCombos are what can be held to scroll MAYAK or switch its tabs with
 // the wheel from EFT (ForwardWheel): the right button, the side buttons
 // (back, forward), Shift, Ctrl or Alt.
@@ -298,6 +303,11 @@ type WheelOptions struct {
 	Scroll, Tabs string
 	// SwitchTab is called with 1 for a notch turned towards the user, -1 away.
 	SwitchTab func(step int)
+	// CloseTab and PinTab are the buttons (TabButtons, "" for none) that
+	// close the tab shown and pin or unpin it; then TabAction is called with
+	// "close" or "pin".
+	CloseTab, PinTab string
+	TabAction        func(action string)
 	// ScrollPage turns the wheel of the page in MAYAK's window hwnd (a
 	// WebView's) at (x, y), CSS pixels, by dy (down for more than 0) with no
 	// key held: for a key held to scroll, Windows' wheel message would let the

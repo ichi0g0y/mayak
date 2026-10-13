@@ -29,6 +29,7 @@ import {
   cycleTab,
   viewRing,
   nextInRing,
+  afterClose,
   receivePosition,
   translatedURL,
   originalURL,
@@ -634,6 +635,26 @@ test('the wheel from the game goes through the sidebar from the top', () => {
     viewRing(s, { squad: false, screenshots: false, snapNotes: true }).map((p) => p.id || p.kind),
     ['tracker', 'snapnotes', 'bosses', 'a', 'b'],
   )
+})
+test('closing a tab of the list shows another one, or the view opened last', () => {
+  const tabs = [
+    { id: 'map', kind: 'livemap' },
+    { id: 'set', kind: 'settings' },
+    { id: 'a', kind: 'web' },
+    { id: 'shots', kind: 'screenshots' },
+    { id: 'c', kind: 'web' },
+  ]
+  // b was between a and the screenshots (index 3), second in the list.
+  assert.equal(afterClose(tabs, 3, 1), 'c')
+  // The last of the list: the one before it.
+  assert.equal(afterClose(tabs, 5, 2), 'c')
+  // None left: the view opened last, not the settings.
+  const views = tabs.filter((t) => t.kind !== 'web')
+  assert.equal(afterClose(views, 2, 0), 'shots')
+  assert.equal(afterClose([{ id: 'set', kind: 'settings' }], 1, 0), 'set')
+  assert.equal(afterClose([], 0, 0), '')
+  // A view closed: the tab at its place, as before.
+  assert.equal(afterClose(tabs, 1, -1), 'set')
 })
 test("pages translate through Google Translate's proxy and back", () => {
   const wiki = 'https://escapefromtarkov.fandom.com/wiki/Quests?x=1#top'

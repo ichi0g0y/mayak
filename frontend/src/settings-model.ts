@@ -31,6 +31,10 @@ export type Settings = {
   gameWheel?: boolean
   gameScrollCombo?: string
   gameTabCombo?: string
+  // Close the tab shown and pin it: "middle", "shift+middle",
+  // "ctrl+middle", "alt+middle", "x1", "x2", or "" for none.
+  gameCloseTab?: string
+  gamePinTab?: string
   logsDirectory: string
   remoteId: string
   remoteTargets: RemoteTarget[]
@@ -235,6 +239,8 @@ export const defaults: Settings = {
   gameWheel: false,
   gameScrollCombo: 'shift',
   gameTabCombo: 'ctrl',
+  gameCloseTab: 'shift+middle',
+  gamePinTab: 'ctrl+middle',
   logsDirectory: '',
   remoteId: '',
   remoteTargets: [],

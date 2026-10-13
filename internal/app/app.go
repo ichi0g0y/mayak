@@ -196,7 +196,7 @@ func (a *App) startup(ctx context.Context) {
 	}
 	a.browserClient.Store(a.browserStartsAsClient())
 	a.startUpdateChecks()
-	a.applyGameWheel(a.gameWheelCombos(a.settings))
+	a.applyGameWheel(a.gameWheelSettings(a.settings))
 
 	if a.browserClient.Load() {
 		return
@@ -258,7 +258,7 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) shutdown(context.Context) {
 	ocr.StopWindowsWorker()
 	a.stopCapture()
-	a.applyGameWheel("", "")
+	a.stopGameWheel()
 	a.stopHideoutDetector()
 	a.addLog("Info", "Application", "MAYAK stopped")
 	a.quitting.Store(true)

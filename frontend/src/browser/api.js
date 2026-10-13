@@ -34,6 +34,8 @@ import {
   cycleTab,
   viewRing,
   nextInRing,
+  listedTabs,
+  afterClose,
   siteOrder,
   syncTrackerTab,
   trackerTabID,
@@ -1251,6 +1253,7 @@ const ready = (async () => {
   // the shell, like one pressed in the shell itself.
   // The wheel turned in the game with GameTabCombo held (app_wheel.go).
   window.mayakDesktop.on('browser:game-tab', (step) => void window.mayak.action('cycleView', step < 0 ? -1 : 1))
+  window.mayakDesktop.on('browser:game-tab-action', (what) => void window.mayak.action('gameTabAction', what))
   window.mayakDesktop.on('browser:key', (key) => {
     if (key && typeof key.key === 'string')
       onKey({ key: key.key, ctrl: !!key.ctrl, shift: !!key.shift, alt: !!key.alt })
@@ -1972,6 +1975,7 @@ async function performOne(type, data) {
     case 'close': {
       const index = state.tabs.findIndex((t) => t.id === data && !t.pinned && !t.fixed)
       if (index < 0) break
+      const listedAt = listedTabs(state.tabs).findIndex((t) => t.id === data)
       await native('close', { id: data })
       views.delete(data)
       loadingViews.delete(data)
@@ -1980,8 +1984,7 @@ async function performOne(type, data) {
         closedTabs.push({ tab: closed, index })
         if (closedTabs.length > 20) closedTabs.shift()
       }
-      if (state.active === data) state.active = state.tabs[Math.min(index, state.tabs.length - 1)]?.id
-      if (!state.tabs.length) state.active = ''
+      if (state.active === data) state.active = afterClose(state.tabs, index, listedAt)
       break
     }
     // Ctrl+Shift+T: the last closed page comes back where it was, as a new tab.
@@ -2000,6 +2003,18 @@ async function performOne(type, data) {
     case 'cycleTab':
       if (!cycleTab(state, data < 0 ? -1 : 1)) return snapshot()
       break
+    // The middle button pressed in the game with GameTabCombo held: the tab
+    // shown closes (a tab of the list, not pinned), or is pinned or unpinned.
+    case 'gameTabAction': {
+      const shown = listedTabs(state.tabs).find((t) => t.id === state.active)
+      if (!shown) return snapshot()
+      if (data === 'pin') {
+        if (!togglePin(state, shown.id)) return snapshot()
+        break
+      }
+      if (shown.pinned) return snapshot()
+      return performOne('close', shown.id)
+    }
     // The wheel turned in the game with GameTabCombo held: the next place in
     // the sidebar, its view opened as from the sidebar. The game keeps the
     // keyboard: nothing here takes it.

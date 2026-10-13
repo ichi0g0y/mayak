@@ -89,6 +89,15 @@ import './style.css'
 
 // The buttons and keys held in EFT for the wheel (capture.WheelCombos).
 const wheelCombos = ['right', 'x1', 'x2', 'shift', 'ctrl', 'alt']
+// The buttons that close and pin a tab (capture.TabButtons).
+const tabButtons: [string, MessageKey][] = [
+  ['middle', 'gameButton_middle'],
+  ['shift+middle', 'gameButton_shiftMiddle'],
+  ['ctrl+middle', 'gameButton_ctrlMiddle'],
+  ['alt+middle', 'gameButton_altMiddle'],
+  ['x1', 'gameScroll_x1'],
+  ['x2', 'gameScroll_x2'],
+]
 
 function App() {
   const [settings, setSettings] = useState<Settings>(defaults)
@@ -1649,6 +1658,47 @@ function App() {
                   </Select>
                   <p className="help">{t('gameTabHelp')}</p>
                 </div>
+                <div className="field">
+                  <Label>{t('gameCloseTab')}</Label>
+                  <Select
+                    value={settings.gameCloseTab || 'off'}
+                    disabled={!settings.gameWheel}
+                    onValueChange={(value) => patch({ gameCloseTab: value === 'off' ? '' : value })}
+                  >
+                    <SelectTrigger aria-label={t('gameCloseTab')}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="off">{t('gameScroll_off')}</SelectItem>
+                      {tabButtons.map(([button, name]) => (
+                        <SelectItem key={button} value={button} disabled={settings.gamePinTab === button}>
+                          {t(name)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="field">
+                  <Label>{t('gamePinTab')}</Label>
+                  <Select
+                    value={settings.gamePinTab || 'off'}
+                    disabled={!settings.gameWheel}
+                    onValueChange={(value) => patch({ gamePinTab: value === 'off' ? '' : value })}
+                  >
+                    <SelectTrigger aria-label={t('gamePinTab')}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="off">{t('gameScroll_off')}</SelectItem>
+                      {tabButtons.map(([button, name]) => (
+                        <SelectItem key={button} value={button} disabled={settings.gameCloseTab === button}>
+                          {t(name)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="help">{t('gameTabButtonsHelp')}</p>
                 {settings.gameWheel && (settings.gameScrollCombo === 'right' || settings.gameTabCombo === 'right') && (
                   <p className="help">{t('gameScrollRightHelp')}</p>
                 )}
