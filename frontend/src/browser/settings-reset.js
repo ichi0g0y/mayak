@@ -62,12 +62,15 @@ async function changes(section) {
   }
   if (section === 'notifications') {
     for (const event of squadEvents) {
-      for (const [channel, list, on] of [
-        ['toast', 'toastsOff', (l) => !l.includes(event)],
-        ['desktop', 'desktopOn', (l) => l.includes(event)],
-      ]) {
-        const now = on(state[list] || [])
-        const then = on(host[list] || [])
+      // A toast shows unless its event is off; a desktop notification shows
+      // when it is on.
+      const channels = [
+        { channel: 'toast', list: 'toastsOff', shown: (l) => !l.includes(event) },
+        { channel: 'desktop', list: 'desktopOn', shown: (l) => l.includes(event) },
+      ]
+      for (const { channel, list, shown } of channels) {
+        const now = shown(state[list] || [])
+        const then = shown(host[list] || [])
         if (now === then) continue
         rows.push({
           label: `${t('notifyEvent_' + event)}（${t(channel === 'toast' ? 'notifyToast' : 'notifyDesktop')}）`,
