@@ -35,7 +35,6 @@ type Settings struct {
 	LogsDirectory       string         `json:"logsDirectory"`
 	RemoteID            string         `json:"remoteId"`
 	RemoteTargets       []RemoteTarget `json:"remoteTargets"`
-	BrowserRemoteID     string         `json:"browserRemoteId"`
 	Map                 string         `json:"map"`
 	GameMode            string         `json:"gameMode"`
 	OCREngine           string         `json:"ocrEngine"`
@@ -223,7 +222,7 @@ func Load() (Settings, error) {
 var deviceKeys = map[string]bool{
 	"screenshotDirectory": true, "logsDirectory": true, "tesseractPath": true,
 	"ocrEngine": true, "ocrDefaultRevision": true,
-	"remoteId": true, "remoteTargets": true, "browserRemoteId": true, "map": true,
+	"remoteId": true, "remoteTargets": true, "map": true,
 	"debug": true, "saveRecognitionDebug": true, "keepPriority": true, "launchAtStartup": true,
 	"windowX": true, "windowY": true, "windowWidth": true, "windowHeight": true, "windowConfigured": true,
 }

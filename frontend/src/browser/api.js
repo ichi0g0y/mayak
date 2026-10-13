@@ -12,7 +12,6 @@ import {
   defaults,
   restore,
   webURL,
-  pageURL,
   receiveTask,
   receiveMap,
   receivePosition,
@@ -262,6 +261,8 @@ const snapshot = () => ({
         : peerState.phase === 'connected'
           ? 'connected'
           : 'disconnected',
+  // Whether this PC is looked at from elsewhere (viewedElsewhere).
+  elsewhere: viewedElsewhere(),
   // paired: a pairing is kept for this mode.
   peer: { ...peerState, self: hostName, paired: !!state.connection.link && state.connection.link.role === linkRole() },
 })
@@ -533,11 +534,34 @@ function enqueue(fn) {
   queue = result.catch(messageError)
   return result.catch(() => snapshot())
 }
+// viewedElsewhere tells that MAYAK is looked at from elsewhere: another PC
+// connected over the link, or (on the Host) a tarkov.dev page open on a
+// registered Remote ID. Only then does this PC keep to what it is set to show
+// and stop adding task tabs while it is out of sight; alone it shows all.
+function viewedElsewhere() {
+  return peerState.phase === 'connected' || (state.connection.mode === 'local' && (host?.remoteViewers || 0) > 0)
+}
+// A detection asked for on this PC (the task page opened again, the latest
+// screenshot analysed) shows here whatever this PC is set to show. It comes a moment after the call (a task's site is asked for
+// in up to 8 seconds, a screenshot read in a few), so the ask holds for ms.
+let askedUntil = 0
+const ask =
+  (fn, ms) =>
+  (...args) => {
+    askedUntil = Math.max(askedUntil, Date.now() + ms)
+    return fn(...args)
+  }
 function display(message, remote = false) {
   return enqueue(async () => {
     if (remote ? state.connection.mode !== 'client' : state.connection.mode !== 'local') return
-    // A Client shows only what it takes from its Host.
-    if (remote && state.connection.receive?.[linkKind(message.event)] === false) return
+    // The Host passes every detection on, whatever it shows itself: its
+    // Clients choose their own, and one may be the only screen looked at.
+    if (!remote) peer.send(message)
+    // Looked at from elsewhere, this PC shows only what it is set to (a
+    // Client of its Host's detections, the Host of its own), but for what it
+    // asked for.
+    const asked = !remote && Date.now() < askedUntil
+    if (!asked && viewedElsewhere() && state.connection.receive?.[linkKind(message.event)] === false) return
     if (message.event === 'browser:item') {
       const next = itemInfo(message.args[0])
       if (!next) return
@@ -545,7 +569,6 @@ function display(message, remote = false) {
       itemOpen = true
       loadHistory()
       void persist().catch(() => {})
-      if (!remote) peer.send(message)
       update()
       await show()
       return
@@ -560,7 +583,7 @@ function display(message, remote = false) {
       (message.event === 'browser:position' && state.mapSettings?.openOnPosition === false)
     const tab =
       message.event === 'browser:task'
-        ? receiveTask(state, message.args[0])
+        ? receiveTask(state, message.args[0], document.visibilityState === 'hidden' && viewedElsewhere())
         : stay
           ? null
           : message.event === 'browser:map'
@@ -569,7 +592,6 @@ function display(message, remote = false) {
               ? receivePosition(state, message.args[0])
               : null
     if (!tab && mapEvent && stay) {
-      if (!remote) peer.send(message)
       if (state.tabs.find((t) => t.id === state.active)?.kind === 'livemap')
         window.dispatchEvent(new Event('mayak:map-follow'))
       return
@@ -578,7 +600,6 @@ function display(message, remote = false) {
     // needs the maps as when it is opened by hand.
     if (tab?.kind === 'livemap') void loadSquadMaps()
     if (tab) {
-      if (!remote) peer.send(message)
       // The map view follows the map played again (view-map.js).
       if (tab.kind === 'livemap') window.dispatchEvent(new Event('mayak:map-follow'))
       await changed()
@@ -592,6 +613,8 @@ function hostStatus(s) {
   if ('monitoring' in s) out.monitoring = !!s.monitoring
   if ('currentMap' in s) out.map = String(s.currentMap || '')
   if ('raidActive' in s) out.raid = !!s.raidActive
+  // The tarkov.dev pages open on the registered Remote IDs (app_remote_viewers.go).
+  if ('remoteViewers' in s) out.remoteViewers = Math.max(0, Number(s.remoteViewers) || 0)
   // The last position screenshot, for the map view (in game coordinates). A
   // status leaves it out when there is none (a raid started, a map changed):
   // every status is whole (it has raidActive), so none clears the last one.
@@ -1234,7 +1257,12 @@ const ready = (async () => {
   // The trusted settings document shares only the trusted parent's runtime.
   // External websites are native views and never receive this object.
   window.mayakDesktop = {
-    backend: AppService,
+    // Asked for on the Host's settings pages, they show on this PC (ask).
+    backend: {
+      ...AppService,
+      OpenQuestPage: ask(AppService.OpenQuestPage, 15000),
+      AnalyzeLatestScreenshot: ask(AppService.AnalyzeLatestScreenshot, 30000),
+    },
     on: (name, callback) => Events.On(name, (event) => callback(event.data)),
     openURL: (url) => void window.mayak.action('open', url),
   }
@@ -1437,7 +1465,7 @@ const ready = (async () => {
     // Following links inside the popup keeps its title and address current.
     if (event.id === popupID) {
       if (popup && webURL(event.url)) {
-        popup.url = pageURL(event.url)
+        popup.url = webURL(event.url)
         popup.title = String(event.title || popup.title).slice(0, 160)
       }
       return
@@ -1459,7 +1487,7 @@ const ready = (async () => {
       errorToast(t(state.language, 'translateRefused'), 'warn')
       return void openInTab(tab, originalURL(check.url))
     }
-    tab.url = pageURL(event.url)
+    tab.url = webURL(event.url)
     tab.title = String(event.title || tab.title || tab.url).slice(0, 160)
     // A new page drops the old favicon until its own one is known.
     if (event.favicon) {

@@ -643,7 +643,7 @@ function browserSettings(key) {
           ['reuse', t('reuse')],
         ],
         state.taskMode,
-      )}</div><p class="hint">${esc(t('taskSiteHelp'))}${local ? '' : ' ' + esc(t('taskSiteClientHelp'))} ${t('taskHelp')}</p><label class="check"><input type="checkbox" data-action="translateWiki" ${state.translateWiki ? 'checked' : ''}>${esc(t('translateWiki'))}</label><p class="hint">${esc(t('translateWikiHelp'))}</p></section>`
+      )}</div><p class="hint">${esc(t('taskSiteHelp'))}${local ? '' : ' ' + esc(t('taskSiteClientHelp'))} ${t('taskHelp')} ${esc(t('taskModeAway'))}</p><label class="check"><input type="checkbox" data-action="translateWiki" ${state.translateWiki ? 'checked' : ''}>${esc(t('translateWiki'))}</label><p class="hint">${esc(t('translateWikiHelp'))}</p></section>`
     }
     // The kinds of notices over the pages, each on or off (this PC's).
     case 'notifications':
@@ -683,7 +683,7 @@ function browserSettings(key) {
               'connection',
             )
           : `<p class="connection-only">${esc(t('clientConnection'))}</p>`
-      }${state.connection.mode === 'local' ? `<p class="hint">${t('localHelp')}</p>` : state.connection.mode === 'client' ? `<p class="hint">${t('clientHelp')}</p>` : ''}</section>${peerPanel()}`
+      }${state.connection.mode === 'local' ? `<p class="hint">${t('localHelp')}</p>${state.localHost ? receiveFields('linkReceiveHostHelp') : ''}` : state.connection.mode === 'client' ? `<p class="hint">${t('clientHelp')}</p>` : ''}</section>${peerPanel()}`
   }
 }
 // The pairing code a Client types: eight boxes of one digit (code-boxes.js),
@@ -749,20 +749,31 @@ function peerPanel() {
       ? `<form id="peer-join-form"><div class="field"><span>${t('enterPairCode')}</span><span class="secret-field code-boxes-field">${pairDigits()}${revealButton('pairInput')}</span></div><button class="primary" type="submit" ${disabled}>${t('joinPair')}</button></form><details class="peer-manual"><summary>${t('manualExchange')}</summary><form id="peer-offer-form"><label class="field"><span>${t('enterOffer')}</span><span class="secret-field"><textarea name="peerOffer" class="${maskedClass('offerInput')}" required spellcheck="false" maxlength="4096" rows="3">${esc(peerDrafts.offer)}</textarea>${revealButton('offerInput')}</span></label><button type="submit" ${disabled}>${t('acceptInvite')}</button></form></details>`
       : ''
   // What this Client takes from its Host (the others choose their own).
-  const takes = receive
-    ? `<fieldset class="link-receive"><legend>${t('linkReceive')}</legend>${['task', 'map', 'item']
-        .map(
-          (k) =>
-            `<label class="check"><input type="checkbox" data-action="linkReceive" data-id="${k}" ${state.connection.receive?.[k] !== false ? 'checked' : ''}>${esc(t('linkReceive_' + k))}</label>`,
-        )
-        .join('')}<p class="hint">${t('linkReceiveHelp')}</p></fieldset>`
-    : ''
+  const takes = receive ? receiveFields('linkReceiveHelp') : ''
   const end = p.paired
     ? `<button class="peer-unpair" data-action="peerClose" ${disabled}>${t(receive ? 'unpairPeer' : 'unpairAll')}</button>`
     : joining
       ? `<button data-action="peerCancel" ${disabled}>${t('cancelPairing')}</button>`
       : ''
   return `<section class="panel peer-panel"><h2>${t(receive ? 'p2pReceive' : 'p2pTitle')}</h2><p class="hint">${t('p2pHelp')}</p><p class="peer-status" role="status" data-phase="${esc(p.phase)}">${esc(t(linkStatus(p, receive)).replace('{n}', String(p.peers || 0)))}</p>${peerNames(p, receive)}${invite}${hostCode}${clientForms}${takes}${end}<p class="hint">${t('p2pLimit')}</p></section>`
+}
+// What this PC shows of the detections (state.js receiveOf). The Host keeps
+// to it only while it is looked at from elsewhere (api.js viewedElsewhere),
+// which it says; a Host showing none may as well start in the tray.
+function receiveFields(help) {
+  const shown = (k) => state.connection.receive?.[k] !== false
+  const host = state.connection.mode === 'local'
+  const now = host ? `<p class="hint">${esc(t(state.elsewhere ? 'linkReceiveActive' : 'linkReceiveIdle'))}</p>` : ''
+  const none =
+    host && !['task', 'map', 'item'].some(shown)
+      ? `<p class="hint">${esc(t('linkReceiveNone'))} <button type="button" class="link" data-action="settingsSection" data-id="startup">${esc(t('linkReceiveStartup'))}</button></p>`
+      : ''
+  return `<fieldset class="link-receive"><legend>${t('linkReceive')}</legend>${['task', 'map', 'item']
+    .map(
+      (k) =>
+        `<label class="check"><input type="checkbox" data-action="linkReceive" data-id="${k}" ${shown(k) ? 'checked' : ''}>${esc(t('linkReceive_' + k))}</label>`,
+    )
+    .join('')}<p class="hint">${t(help)}</p>${now}${none}</fieldset>`
 }
 function settingsHost() {
   return (

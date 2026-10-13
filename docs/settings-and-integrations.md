@@ -53,7 +53,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 - 書き込みは一時ファイル経由のアトミック置換（パーミッション `0600`）です。書き込み前に、有効な JSON であれば直前の内容を `settings.json.bak` に退避します。
 - 読み込み時に JSON が壊れていれば `.bak` から復元し、それも失敗した場合は既定値を使います。
 - 設定ページは項目を変更するたびに `PersistSettings` を呼んで即時保存します。実行中のサービスは再起動しません。どちらも同じ `saveSettings` を通り、変更された項目（自動起動、TarkovTracker、ゲームモード、言語、マーカー、スクショ整理）だけを反映します。明示的な保存（エラー時の「再試行」）は `SaveSettings` を使い、監視中にフォルダが変わった場合はウォッチャーも張り替えます。
-- どちらの保存でも `normalizeSettings` が値を補正します。また `keepWindowSettings` により、`windowX/Y/Width/Height/Configured`、`browserRemoteId`、`ocrDefaultRevision` はフロントエンドから上書きできません。
+- どちらの保存でも `normalizeSettings` が値を補正します。また `keepWindowSettings` により、`windowX/Y/Width/Height/Configured`、`ocrDefaultRevision` はフロントエンドから上書きできません。
 - `launchAtStartup` の変更は保存より先にレジストリへ適用され、保存に失敗すると元に戻します。
 
 ### マイグレーション
@@ -64,7 +64,6 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `remoteId` → `remoteTargets` | `remoteTargets` が空で `remoteId` があれば、`{id, name:"Remote 1", map:true, tasks:true}` の 1 件に変換する。保存後の `remoteId` は常に先頭ターゲットの ID |
 | `ocrDefaultRevision` | `< 1` のとき、`ocrEngine:"windows"` を Tesseract が使えれば `tesseract` に一度だけ移行し、`1` を記録する |
 | OCR フォールバック | `ocrEngine` が `tesseract` で `tesseractPath` が空なのに、同梱版も PATH 上の `tesseract` も無い場合は `windows` にする |
-| `browserRemoteId` | 12 文字 `[A-Z0-9]` でなければ起動時に生成する（以前の 4 文字の ID も作り直す） |
 | `map` | `laboratory`→`the-lab`、`labyrinth`→`the-labyrinth`、`factory4_night`→`night-factory` |
 | フォルダ | `screenshotDirectory` / `logsDirectory` が空なら、起動時に `eftdetect` で自動検出した値を入れる |
 | ウィンドウ位置 | `window.json` が未設定で旧 `windowConfigured` が真なら、旧 `windowX/Y/Width/Height` を初期位置に使う |
@@ -85,7 +84,6 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `logsDirectory` | `""` | EFT の Logs フォルダ |
 | `remoteId` | `""` | 旧形式の Remote Control ID。互換用 |
 | `remoteTargets` | `[]` | tarkov.dev Remote Control の送信先。`{id, name, map, tasks}`。空 ID と重複 ID は除去し、名前が空なら `Remote N` |
-| `browserRemoteId` | 自動生成 | 内蔵ブラウザで開いた tarkov.dev のマップページ用 Remote Control ID（12 文字） |
 | `map` | `""` | マップ未検出時に使うマップ。空なら自動 |
 | `gameMode` | `"auto"` | `auto` / `regular` / `pve` / `pvp-season`。変更するとカタログを再取得 |
 | `ocrEngine` | `"tesseract"` | `tesseract` / `windows`。それ以外は `tesseract` |
@@ -169,9 +167,9 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | `bookmarkView` | `"grid"` | `grid` / `list` |
 | `itemPanelWidth` / `itemPanel` | `320` / `{open:false,id:"",mode:""}` | アイテム欄の幅と、再起動後に復元する状態（[item-panel.md](item-panel.md)） |
 | `adblock` | `true` | 広告ブロック。切り替えると表示中のページを再読み込みする |
-| `taskMode` | `"new"` | 検出したタスクの開き方。`new`（新しいタブを追加）/ `reuse`（固定していないタスクタブを更新） |
+| `taskMode` | `"new"` | 検出したタスクの開き方。`new`（新しいタブを追加）/ `reuse`（固定していないタスクタブを更新）。`new` でも、リモートから見られていて MAYAK が隠れているあいだは `reuse` と同じ（[tasks-and-maps.md](tasks-and-maps.md#ブラウザでのタスクタブ)） |
 | `questSite` | `"host"` | 以前のブラウザ側のサイト選択。Host で起動したときに Host の順番の先頭へ移して `host` に戻す。今は使わない |
-| `connection` | `{mode:"local", link:null, receive:{task:true, map:true, item:true}}` | 接続方法、ペアリングの鍵と役割、Client で出すもの（[Host / Client モード](#host--client-モード)） |
+| `connection` | `{mode:"local", link:null, receive:{task:true, map:true, item:true}}` | 接続方法、ペアリングの鍵と役割、この PC に出すもの（[Host / Client モード](#host--client-モード)） |
 | `mapHidden` / `mapSettings` / `mapCollapsed` / `squadName` / `squadColor` / `squadCollapsed` / `squadCode` / `squadRecent` | `[]` / 下記 / `[]` / `""` / `""` / `false` / `""` / `[]` | マップと分隊（[browser-shell.md](browser-shell.md#マップ)、[ユーザーデータの保存](user-data.md)）。`mapSettings` の既定は `{snipers:true, extracts:false, activeTasks:false, subtleLabels:false, extractText:100, labelText:100, fade:20, style:"svg", mode:"auto"}` |
 | `bookmarks` / `bookmarkRevision` | 既定のブックマーク / `3` | 最大 100 件。revision 1 でブックマークを追加し、revision 2 で TarkovTracker を `.org` に移行、revision 3 で tarkov.dev と TarkovTracker をサイドバーにピン留めしたブックマークにする（以前の固定タブの代わり） |
 | `favicons` | `{}` | ホスト名ごとのアイコン URL（最大 200 件） |
@@ -186,7 +184,7 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | `appearance` | 表示言語、テーマ、時刻表示、タブとアイテム情報の位置、「チュートリアルを表示」 |
 | `tasks` | 開くサイトの順番（Host の `questSites`）をドラッグで並べ替える（`questSites` アクション）。Host 上（`local`）では Host の設定を直接変え、Client では Host へ送る。どちらでも `taskMode` を設定する |
 | `adblock` | 有効化のチェックボックス。EasyList、EasyPrivacy、AdGuard 日本語フィルタを使う。tarkov.dev は対象外 |
-| `connection` | 接続方法（`local` は Windows のみ / `client`。前の版の `off` は `client` に読み替える）。Host では接続コードの発行（ペアリング済みなら「別の PC を追加」）とすべての PC との解除、Client では接続コードの入力（長いコードの貼り付けも可）、この PC に出すもの（`connection.receive`）、この PC の解除 |
+| `connection` | 接続方法（`local` は Windows のみ / `client`。前の版の `off` は `client` に読み替える）、この PC に出すもの（`connection.receive`。Host では接続方法の下、Client ではペアリングの欄。Host では、いまリモートにつながっているかも出す。Host で 3 つとも外すと「起動とウィンドウ」への案内を出す）。Host では接続コードの発行（ペアリング済みなら「別の PC を追加」）とすべての PC との解除、Client では接続コードの入力（長いコードの貼り付けも可）とこの PC の解除 |
 | `about` | 名前とバージョン（`GetVersion`。開発ビルドでは「開発ビルド」）、公式サイト・ソースコード・変更履歴へのリンク、ライセンスとクレジット、アップデート（現在の版・最新の版・最終確認、「更新を確認」`CheckForUpdates`、「ダウンロード」`DownloadUpdate`、「再起動して適用」`InstallUpdate`）。タスクトレイの右クリックにも「更新を確認」がある |
 
 - 以前、ブラウザ側で `questSite` を選んでいた場合は、Windows の Host で起動したときに一度だけそのサイトを Host の `questSites` の先頭へ移し、ブラウザ側を `host` に戻します。
@@ -318,9 +316,10 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - `internal/remote` が `wss://socket.tarkov.dev` に接続し、`remoteTargets` の各 ID にマップ、タスク、位置を送ります。
   - `map` 役のターゲット: マップと位置を受け取る
   - `tasks` 役のターゲット: タスクを受け取る
-- 内蔵ブラウザで開いた tarkov.dev のマップページ（`/map/…` と `/maps/`。どのタブでも）は `browserRemoteId` で自動接続します。ドキュメントスクリプトが `?connection=<ID>` を付与し、保存するタブの URL からは取り除きます。アドレスに `?connection=` があればその ID を優先します。この ID はマップと位置だけを受け取り、タスクはシェルが自分でタブを開きます。マップの検出そのものは、MAYAK の [マップ](browser-shell.md#マップ) に出ます。
+- 登録した ID が無ければ、tarkov.dev の socket にはつなぎません。内蔵ブラウザで開いた tarkov.dev のマップは Remote Control に接続させません（マップの検出は MAYAK の [マップ](browser-shell.md#マップ) に出ます）。
 - ID への接続に失敗しただけ（例: `websocket: bad handshake`）なら、その ID に何もつながっていないというだけなので、警告をログに出すだけです。接続状態をエラーにせず、通知音も鳴らしません。接続したあとの送信の失敗はエラーとして扱います（[tasks-and-maps.md](tasks-and-maps.md#接続の失敗)）。
 - 起動時、`remoteTargets` があれば接続テストをバックグラウンドで実行します。
+- Host は 20 秒ごとに、登録した ID（同じ ID は 1 回）に tarkov.dev のページがつながっているかを問い合わせ、その数を状態の `remoteViewers` に入れます（`app_remote_viewers.go`）。問い合わせは socket の `isConnected` で、答えは `connectionStatus {connected}` です（`remote.Client.Viewing`）。socket は、ページがなくても MAYAK の接続を受け付けるので、つながったこと自体はページがある印になりません。シェルはこの数で、リモートから見られているかを判断します（[この PC に出すもの](#リンク)）。
 - 詳細は [tasks-and-maps.md](tasks-and-maps.md) を参照してください。
 
 ## Host / Client モード
@@ -376,7 +375,10 @@ MAYAK は [GitHub Releases](https://github.com/ichi0g0y/mayak/releases) から�
 - **つなぎ直し**: 切れたら 2 秒、4 秒…と間隔を倍にしながら（最大 1 分）つなぎ直します。30 秒ごとに `ping` を送り（中継のランタイムが `pong` を返すので、Durable Object は起きません）、75 秒何も届かなければ切ってつなぎ直します。
 - **中継の部屋**: `LinkRoom` は 10 本まで（Host と Client に、中継がまだ気づいていない切れた接続の分の余裕を足したもの）、1 メッセージ 128 KB まで、1 本 10 秒に 120 件まで。何も保存せず、あとから入った人に前のメッセージを送り直すこともしません。
 - **共有する内容**: Host から Client へは `browser:task`（タスク）、`browser:map`（マップ）、`browser:position`（位置）、`browser:item`（アイテム情報）を送ります（アプリ側で 64 KiB を超えるものは送りません）。参加中の分隊（`squad:sync`）は両方向です（[browser-shell.md](browser-shell.md#マップ)）。設定、API キー、トークンは送りません。
-- **Client で出すもの**: 各 Client は、Host から届いたもののうちこの PC で開くもの（タスク・マップと位置・アイテム）を選べます（`connection.receive`、この PC のデータ）。選ばなかったものは Client で捨てます。1 台はマップ、もう 1 台はタスク、のように分けられます。
+- **この PC に出すもの**: 各 Client は、Host から届いたもののうちこの PC で開くもの（タスク・マップと位置・アイテム）を選べます（`connection.receive`、この PC のデータ）。選ばなかったものは Client で捨てます。1 台はマップ、もう 1 台はタスク、のように分けられます。
+  - Host も同じ 3 つを選べます。外したものは Host のシェルでは開きませんが、Client への転送はします（`api.js` の `display()` は、自分で出すかを決める前に `peer.send` で送る）。tarkov.dev の Remote Control への送信は Go 側なので、この設定とは関係ありません。別の PC や tarkov.dev だけで見るときは、Host で 3 つとも外します。Host のタブが上限の 80 個に達していても、Client には届きます。
+  - この設定が効くのは、リモートから見られているあいだだけです（`api.js` の `viewedElsewhere`）。リンクで相手の PC とつながっている（`peerState.phase` が `connected`）か、Host で登録した tarkov.dev のページが開いている（Host の状態の `remoteViewers` が 1 以上。[tarkov.dev Remote Control](#tarkovdev-remote-control)）ときです。どこにもつながっていない Host は、選択にかかわらずすべてを出します。
+  - Host で手で頼んだものは、この設定にかかわらず Host に出します。ステータスの「タスクを開く」（`OpenQuestPage`）と「最新スクリーンショットを再解析」（`AnalyzeLatestScreenshot`）です。シェルは Host の設定ページに渡す `window.mayakDesktop.backend` でこの 2 つを包み、呼んでからしばらく（順に 15 秒、30 秒）届いた検出をこの PC にも出します（`api.js` の `ask`）。そのあいだに自動で認識したものも出ます。
 - **状態**: 接続しています → 相手を待っています（Host には「相手の PC を待っています」、Client には「Host を待っています」）→ 接続中（Host では台数）、中継に届かないときは「つなぎ直します」。
 
 ## 分隊ルーム

@@ -127,7 +127,8 @@ const messages = {
     remoteMapRole: 'マップ・現在位置',
     remoteTaskRole: 'タスク表示',
     remoteHelp: '各tarkov.dev画面の左下でRemote Controlを有効にし、そのIDを登録してください。',
-    browserRemote: 'MAYAK内で開いたtarkov.devのマップは自動で接続されます（ID: {id}）。登録は不要です。',
+    remoteOnlyHelp:
+      'tarkov.dev だけで見て、このPCではタスクやマップを開かないときは、「他のPCとの接続」の「この PC に出すもの」で外します。',
     openTarkovDevRemote: 'tarkov.devを開く',
     remotePlaceholder: '例: ABCD',
     detectRemote: '自動取得',
@@ -626,7 +627,8 @@ const messages = {
     remoteMapRole: 'Map and position',
     remoteTaskRole: 'Task display',
     remoteHelp: 'Enable Remote Control at the bottom-left of each tarkov.dev screen and add its ID.',
-    browserRemote: 'tarkov.dev maps opened inside MAYAK connect automatically (ID: {id}). No need to add them.',
+    remoteOnlyHelp:
+      'To look only on tarkov.dev, with no tasks or maps opening on this PC, leave them out under Other computers → Show on this PC.',
     openTarkovDevRemote: 'Open tarkov.dev',
     remotePlaceholder: 'e.g. ABCD',
     detectRemote: 'Auto-detect',

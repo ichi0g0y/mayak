@@ -1341,9 +1341,18 @@ clickHandlers.push(async (type, id, button) => {
     if (note) void action('snapFavorite', { id, favorite: !note.favorite })
     return true
   }
+  // A note's position shows on MAYAK's map, centred with a ring on its floor,
+  // and goes to the tarkov.dev maps registered for Remote Control (if any).
   if (type === 'snapShowSpot') {
+    const sn = state.snapNotes
+    const spot = (sn?.open?.note.id === id ? sn.open.note : sn?.list.find((n) => n.id === id))?.spot
+    if (!spot?.map) return true
     try {
       await request('snapShowSpot', id)
+      await action('squadMaps')
+      window.dispatchEvent(
+        new CustomEvent('mayak:map-show', { detail: { map: spot.map, x: spot.x, y: spot.y, z: spot.z, c: '#ffd166' } }),
+      )
       shareDone(t('snapSpotShown'))
     } catch {}
     return true

@@ -15,7 +15,7 @@ import (
 func TestSettingsSplitIntoDeviceAndPreferences(t *testing.T) {
 	dir := t.TempDir()
 	p := filepath.Join(dir, "settings.json")
-	old := `{"language":"en","soundVolume":40,"screenshotDirectory":"C:/shots","browserRemoteId":"ABC"}`
+	old := `{"language":"en","soundVolume":40,"screenshotDirectory":"C:/shots","logsDirectory":"C:/logs"}`
 	if err := os.WriteFile(p, []byte(old), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +29,7 @@ func TestSettingsSplitIntoDeviceAndPreferences(t *testing.T) {
 	var device map[string]any
 	b, _ := os.ReadFile(p)
 	_ = json.Unmarshal(b, &device)
-	if device["screenshotDirectory"] != "C:/shots" || device["browserRemoteId"] != "ABC" || device["language"] != nil || device["soundVolume"] != nil {
+	if device["screenshotDirectory"] != "C:/shots" || device["logsDirectory"] != "C:/logs" || device["language"] != nil || device["soundVolume"] != nil {
 		t.Fatalf("settings.json %v", device)
 	}
 	var prefs struct {
@@ -42,7 +42,7 @@ func TestSettingsSplitIntoDeviceAndPreferences(t *testing.T) {
 		t.Fatalf("preferences.json %+v", prefs)
 	}
 	back, err := loadFile(p)
-	if err != nil || back.Language != "en" || back.SoundVolume != 40 || back.ScreenshotDirectory != "C:/shots" || back.BrowserRemoteID != "ABC" {
+	if err != nil || back.Language != "en" || back.SoundVolume != 40 || back.ScreenshotDirectory != "C:/shots" || back.LogsDirectory != "C:/logs" {
 		t.Fatalf("reloaded %+v, %v", back, err)
 	}
 }

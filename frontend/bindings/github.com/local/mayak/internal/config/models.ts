@@ -68,7 +68,6 @@ export class Settings {
     "logsDirectory": string;
     "remoteId": string;
     "remoteTargets": RemoteTarget[];
-    "browserRemoteId": string;
     "map": string;
     "gameMode": string;
     "ocrEngine": string;
@@ -271,9 +270,6 @@ export class Settings {
         }
         if (!("remoteTargets" in $$source)) {
             this["remoteTargets"] = [];
-        }
-        if (!("browserRemoteId" in $$source)) {
-            this["browserRemoteId"] = "";
         }
         if (!("map" in $$source)) {
             this["map"] = "";
@@ -503,10 +499,10 @@ export class Settings {
         const $$createField3_0 = $$createType0;
         const $$createField4_0 = $$createType0;
         const $$createField10_0 = $$createType2;
-        const $$createField18_0 = $$createType0;
-        const $$createField50_0 = $$createType3;
+        const $$createField17_0 = $$createType0;
+        const $$createField49_0 = $$createType3;
+        const $$createField50_0 = $$createType4;
         const $$createField51_0 = $$createType4;
-        const $$createField52_0 = $$createType4;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("questSites" in $$parsedSource) {
             $$parsedSource["questSites"] = $$createField2_0($$parsedSource["questSites"]);
@@ -521,16 +517,16 @@ export class Settings {
             $$parsedSource["remoteTargets"] = $$createField10_0($$parsedSource["remoteTargets"]);
         }
         if ("captureAutoOff" in $$parsedSource) {
-            $$parsedSource["captureAutoOff"] = $$createField18_0($$parsedSource["captureAutoOff"]);
+            $$parsedSource["captureAutoOff"] = $$createField17_0($$parsedSource["captureAutoOff"]);
         }
         if ("soundVoices" in $$parsedSource) {
-            $$parsedSource["soundVoices"] = $$createField50_0($$parsedSource["soundVoices"]);
+            $$parsedSource["soundVoices"] = $$createField49_0($$parsedSource["soundVoices"]);
         }
         if ("soundVolumeOffsets" in $$parsedSource) {
-            $$parsedSource["soundVolumeOffsets"] = $$createField51_0($$parsedSource["soundVolumeOffsets"]);
+            $$parsedSource["soundVolumeOffsets"] = $$createField50_0($$parsedSource["soundVolumeOffsets"]);
         }
         if ("soundDelays" in $$parsedSource) {
-            $$parsedSource["soundDelays"] = $$createField52_0($$parsedSource["soundDelays"]);
+            $$parsedSource["soundDelays"] = $$createField51_0($$parsedSource["soundDelays"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }

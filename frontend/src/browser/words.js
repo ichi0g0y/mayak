@@ -279,11 +279,13 @@ export const words = {
     japanese: '日本語Wiki',
     taskHelp:
       '表示中のタスクは、上のサイト選択で英語Wiki・日本語Wikiを切り替えられます。固定したタブは自動更新の対象外です。',
+    taskModeAway:
+      '別の PC やタブレットとつないでいるあいだは、MAYAK を最小化しているかトレイに入れていると、新しいタブを追加せず、同じタブを更新します。',
     connection: 'Host接続',
     mode: '接続方法',
     local: 'Host：このPCでタルコフを起動する',
     localHelp:
-      'Escape from Tarkov を遊ぶPCで選びます。スクショやログから検出したタスク・マップ・アイテムをこのPCのタブに出し、つないだ別のPCにも送ります。',
+      'Escape from Tarkov を遊ぶPCで選びます。スクショやログから検出したタスク・マップ・アイテムをこのPCに出し、つないだ別のPCにも送ります。',
     clientHelp:
       'Escape from Tarkov は別のPC（Host）で遊び、そのPCの MAYAK が検出したものをこのPCに出します。下で Host とつないでください。',
     bookmarkHelp: 'カードをクリックして開く。名前と分類は編集できます。',
@@ -397,6 +399,12 @@ export const words = {
     linkReceive_item: 'アイテム',
     linkReceiveHelp:
       'Host が検出したもののうち、この PC で開くものを選びます（1 台はマップ、もう 1 台はタスク、のように分けられます）。',
+    linkReceiveHostHelp:
+      '別の PC の MAYAK か、登録した tarkov.dev のページがつながっているあいだ、この PC で開くものを選びます。外したものも、つないだ PC と tarkov.dev には送ります。別の PC やタブレットだけで見るなら、3 つとも外します。どこにもつながっていないときは、すべてこの PC に出します。',
+    linkReceiveActive: 'いまはリモートにつながっているので、この選択どおりに出します。',
+    linkReceiveIdle: 'いまはリモートにつながっていないので、すべてこの PC に出します。',
+    linkReceiveNone: 'この PC では何も開きません。MAYAK をトレイに入れたまま起動するには',
+    linkReceiveStartup: '起動とウィンドウで設定します',
     linkOffline: '中継サーバーに届きません。自動でつなぎ直します…',
     linkFailed: '接続できませんでした。',
     p2pExpired: '接続コードの有効期限が切れました。',
@@ -502,8 +510,9 @@ export const words = {
     snapFont: 'フォント',
     snapSpot: '撮った場所',
     snapFacing: '向き',
-    snapShowSpot: 'tarkov.dev で位置を表示',
-    snapShowSpotHint: '地図タブ（とリモート接続した地図）に、撮った位置と向きを表示します',
+    snapShowSpot: 'マップで位置を表示',
+    snapShowSpotHint:
+      'MAYAK のマップに、撮った位置を表示します。tarkov.dev の接続先を登録していれば、そちらにも位置と向きを送ります',
     snapPickMap: 'マップを選ぶ',
     snapPickMapHint: 'このスクショのマップが分かりませんでした。選ぶと地図に表示できます',
     snapSpotShown: '地図に位置を表示しました',
@@ -703,7 +712,6 @@ export const words = {
     adblockHelp:
       'EasyList・EasyPrivacy・AdGuard日本語フィルタで広告を止め、広告があった場所の空欄も詰めます。フィルタは EasyList（easylist.to）と AdGuard が公開しているリストで、自動で更新されます。tarkov.dev は広告で運営されているため対象外です。切り替えると表示中のページを再読み込みします。',
     mapTab: 'TARKOV.DEV',
-    mapTabHelp: 'tarkov.dev のマップ。Remote Control で接続済みのまま、検出したマップと位置を表示します。',
     tabs: 'タブ',
     bookmarks: 'ブックマーク',
     hostMode: 'Hostモード',
@@ -1141,11 +1149,13 @@ export const words = {
     japanese: 'Japanese Wiki',
     taskHelp:
       'Switch the current task between English and Japanese wikis using the website selector above. Pinned tabs are never replaced automatically.',
+    taskModeAway:
+      'While another PC or a tablet is connected and MAYAK is minimized or in the tray, the task tab is reused rather than a new one added.',
     connection: 'Host connection',
     mode: 'Connection mode',
     local: 'Host: Escape from Tarkov runs on this PC',
     localHelp:
-      'Choose this on the PC you play on: tasks, maps and items found in screenshots and logs open in tabs here and go to the PCs paired with it.',
+      'Choose this on the PC you play on: tasks, maps and items found in screenshots and logs show here and go to the PCs paired with it.',
     clientHelp:
       'Escape from Tarkov runs on another PC (the Host); what its MAYAK finds shows here. Pair with the Host below.',
     bookmarkHelp: 'Click a card to open it. Names and categories are editable.',
@@ -1258,6 +1268,12 @@ export const words = {
     linkReceive_map: 'Maps and positions',
     linkReceive_item: 'Items',
     linkReceiveHelp: 'Which of the Host’s detections open on this PC (one PC the map, another the tasks, for example).',
+    linkReceiveHostHelp:
+      'Which of the detections open on this PC while MAYAK on another PC or a registered tarkov.dev page is connected. What is left out still goes to the paired PCs and to tarkov.dev; to look only on another PC or a tablet, leave all three out. With nothing connected, everything shows here.',
+    linkReceiveActive: 'Something is connected now, so this choice applies.',
+    linkReceiveIdle: 'Nothing is connected now, so everything shows here.',
+    linkReceiveNone: 'Nothing opens on this PC. To start MAYAK in the tray,',
+    linkReceiveStartup: 'set it under Startup & window',
     linkOffline: 'The relay cannot be reached; trying again…',
     linkFailed: 'Could not connect.',
     p2pExpired: 'The pairing code has expired.',
@@ -1364,9 +1380,9 @@ export const words = {
     snapFont: 'Font',
     snapSpot: 'Taken at',
     snapFacing: 'facing',
-    snapShowSpot: 'Show on tarkov.dev',
+    snapShowSpot: 'Show on the map',
     snapShowSpotHint:
-      'Shows where it was taken, and the direction, on the map tab (and the maps connected by Remote Control)',
+      "Shows where it was taken on MAYAK's map; the position and the direction also go to the tarkov.dev maps registered for Remote Control",
     snapPickMap: 'Choose the map',
     snapPickMapHint: 'The map of this screenshot is not known; choose it to show the position',
     snapSpotShown: 'Shown on the map',
@@ -1566,7 +1582,6 @@ export const words = {
     adblockHelp:
       'Blocks ads with EasyList, EasyPrivacy and the AdGuard Japanese filter, and closes the gaps they leave. The filter lists are published by EasyList (easylist.to) and AdGuard and update automatically. tarkov.dev is excluded because ads fund it. Changing this reloads the current page.',
     mapTab: 'TARKOV.DEV',
-    mapTabHelp: 'tarkov.dev map, kept connected via Remote Control. Detected maps and positions appear here.',
     tabs: 'Tabs',
     bookmarks: 'Bookmarks',
     hostMode: 'Host mode',

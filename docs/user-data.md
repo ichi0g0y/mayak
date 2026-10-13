@@ -50,7 +50,7 @@ MAYAK が `%AppData%\Mayak`（`internal/appdir`。`task dev` の開発ビルド�
 |---|---|---|
 | `connection.mode` | `browser.json` | `local`（Host）/ `client`（Client。以前の `webrtc` は読み込み時に `client` にする）/ `off`。以前の `stun` は読み込まず、次の保存で消える |
 | `connection.link` | `browser.json` | ペアリング `{key, role}`。`key` は 32 バイトの鍵の base64url（43 文字）、`role` は `host` / `client`。なければ `null`。鍵は PC ごとのもので、同期しない（[settings-and-integrations.md](settings-and-integrations.md#ペアリング)） |
-| `connection.receive` | `browser.json` | Client で出すもの `{task, map, item}`（真偽値、既定はすべて `true`。`map` は位置も含む） |
+| `connection.receive` | `browser.json` | この PC に出すもの `{task, map, item}`（Host でも Client でも使う。真偽値、既定はすべて `true`。`map` は位置も含む） |
 | `squadCode` | `browser.json` | 参加中の分隊コード（`ABCD-1234`）。起動時に入り直す |
 | `squadRecent` | `browser.json` | 最近の分隊 `[{code, at}]`（新しい順に最大 5 件、30 日より古いものは捨てる） |
 | `squadName` | `browser-preferences.json` | 分隊での表示名（24 文字まで） |

@@ -33,16 +33,6 @@ function webURL(value) {
     return null
   }
 }
-// The Host injects ?connection=<ID> into tarkov.dev map pages to enable Remote
-// Control. Tabs keep the plain URL so map tabs are still matched and reused.
-function pageURL(value) {
-  const href = webURL(value)
-  if (!href) return null
-  const url = new URL(href)
-  if (url.hostname !== 'tarkov.dev' || !url.searchParams.has('connection')) return href
-  url.searchParams.delete('connection')
-  return url.href
-}
 // Color themes defined in ../themes.css. "system" follows the OS light/dark mode.
 const themes = [
   'system',
@@ -125,8 +115,9 @@ function recentSquadsOf(raw, now = Date.now()) {
 // rememberSquad puts code first in the recent squads.
 const rememberSquad = (list, code, now = Date.now()) =>
   squadCodePattern.test(code) ? recentSquadsOf([{ code, at: now }, ...(list || [])], now) : recentSquadsOf(list, now)
-// What a Client shows of its Host's detections: tasks, maps (and positions)
-// and items, each on or off (one PC the map, another the tasks).
+// What this PC shows of the detections, a Client of its Host's and the Host
+// of its own: tasks, maps (and positions) and items, each on or off (one PC
+// the map, another the tasks; a Host looked at only from elsewhere none).
 const linkReceiveAll = { task: true, map: true, item: true }
 const receiveOf = (raw) => ({ task: raw?.task !== false, map: raw?.map !== false, item: raw?.item !== false })
 // linkKind is the kind of a detection sent over the link.
@@ -296,7 +287,7 @@ function defaults() {
     squadCode: '',
     squadRecent: [],
     // The mode, the pairing kept (transport.js): its key and which side this
-    // PC is ("host" or "client"), and what a Client takes from its Host.
+    // PC is ("host" or "client"), and what this PC shows of the detections.
     connection: { mode: 'local', link: null, receive: { ...linkReceiveAll } },
     bookmarks: structuredClone(defaultBookmarks),
     tabs: [
@@ -476,7 +467,10 @@ function validTask(task) {
     sites.every((s) => webURL(task.urls[s]))
   )
 }
-function receiveTask(state, task) {
+// away tells that MAYAK is out of sight (minimized, in the tray) while it is
+// looked at from elsewhere (api.js viewedElsewhere): a task then takes the
+// task tab of before, as with taskMode "reuse", so no tabs pile up unseen.
+function receiveTask(state, task, away = false) {
   if (!validTask(task)) return null
   // The site is chosen before (the first in the Host's order with the page).
   const site = sites.includes(task.site) ? task.site : sites[0]
@@ -496,7 +490,7 @@ function receiveTask(state, task) {
     state.tabs.find((t) => t.kind === 'web' && t.task?.id === task.id && samePage(t.url, url)) ||
     state.tabs.find((t) => t.kind === 'web' && samePage(t.url, url))
   const same = !!tab
-  if (!tab && state.taskMode === 'reuse') tab = state.tabs.find((t) => t.role === 'task' && !t.pinned)
+  if (!tab && (state.taskMode === 'reuse' || away)) tab = state.tabs.find((t) => t.role === 'task' && !t.pinned)
   if (!tab) {
     if (state.tabs.length >= 80) return null
     tab = { id: randomUUID(), kind: 'web', role: 'task' }
@@ -809,7 +803,6 @@ export {
   defaults,
   restore,
   webURL,
-  pageURL,
   receiveTask,
   receiveMap,
   receiveOf,

@@ -1251,9 +1251,15 @@ window.addEventListener('mayak:map-show', (event) => {
   view.map = key
   view.floor = 'auto'
   view.spot = d.spot ? { map: key, id: String(d.spot) } : null
-  // A view shared: its floor, centre and zoom too.
+  // A view shared: its floor, centre and zoom too; a place in the game
+  // (a snap note's) is on the floor its height says.
   if (Number.isFinite(d.x) && Number.isFinite(d.z)) {
-    view.floor = typeof d.floor === 'string' ? d.floor : 'auto'
+    view.floor =
+      typeof d.floor === 'string'
+        ? d.floor
+        : Number.isFinite(d.y)
+          ? floorFor(findMap(state.squad?.maps, key), { x: d.x, y: d.y, z: d.z })
+          : 'auto'
     const points = Array.isArray(d.points) ? d.points.filter((p) => p.every(Number.isFinite)) : null
     view.focus = { map: key, x: d.x, z: d.z, zoom: d.zoom, pulse: points?.length > 1 ? '' : d.c || '#ffd166', points }
   }

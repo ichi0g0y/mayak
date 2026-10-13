@@ -21,7 +21,6 @@ import {
   goHome,
   openLocal,
   webURL,
-  pageURL,
   resolveAddress,
   searchURL,
   shortcut,
@@ -122,6 +121,18 @@ test('reuse preserves pinned tasks and deduplicates repeated detections', () => 
   assert.equal(first.task.id, 'Debut')
   assert.equal(s.tabs.length, 4)
 })
+test('new tabs: away (out of sight, looked at elsewhere) the task tab of before is reused', () => {
+  const s = defaults()
+  s.taskMode = 'new'
+  const first = receiveTask(s, task('Debut'))
+  const second = receiveTask(s, task('Checking'))
+  assert.notEqual(first.id, second.id)
+  first.pinned = true
+  assert.equal(receiveTask(s, task('Search'), true).id, second.id)
+  assert.equal(second.task.id, 'Search')
+  assert.equal(first.task.id, 'Debut')
+  assert.notEqual(receiveTask(s, task('Shooter')).id, second.id)
+})
 test('new-tab mode and selected wiki survive restoration', () => {
   const s = defaults()
   s.taskMode = 'new'
@@ -178,7 +189,7 @@ test('a detected map or position brings the map view forward; the fixed views ar
   const restored = restore({
     tabs: [
       { id: 'x', kind: 'blank' },
-      { id: 'map', kind: 'web', url: 'https://tarkov.dev/map/customs?connection=AB12' },
+      { id: 'map', kind: 'web', url: 'https://tarkov.dev/map/customs' },
       { id: 'tracker', kind: 'web', url: 'https://tarkovtracker.org/' },
       { id: 'old', kind: 'web', role: 'map', url: 'https://tarkov.dev/map/woods' },
     ],
@@ -232,13 +243,6 @@ test('legacy home tabs are removed without losing bookmarks or web tabs', () => 
   assert.deepEqual(restored.bookmarks, s.bookmarks)
   assert.deepEqual(restore({ tabs: [], active: '' }).tabs, [])
   assert.equal(restore({}).active, liveMapTabID)
-})
-
-test('pageURL strips the injected tarkov.dev connection only', () => {
-  assert.equal(pageURL('https://tarkov.dev/map/customs?connection=AB12'), 'https://tarkov.dev/map/customs')
-  assert.equal(pageURL('https://tarkov.dev/map/customs?connection=AB12&x=1'), 'https://tarkov.dev/map/customs?x=1')
-  assert.equal(pageURL('https://example.com/?connection=AB12'), 'https://example.com/?connection=AB12')
-  assert.equal(pageURL('javascript:alert(1)'), null)
 })
 
 test('ad blocking defaults on and keeps an explicit off', () => {

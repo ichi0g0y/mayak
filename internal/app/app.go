@@ -85,11 +85,6 @@ type App struct {
 	status            model.Status
 	watcher           *watcher.Watcher
 	remotes           map[string]*remote.Client
-	// The watch on the browser's Remote ID and the commands sent to it
-	// (app_browser_remote.go).
-	browserRemoteMu   sync.Mutex
-	browserRemoteStop chan struct{}
-	browserRemoteSent map[string]time.Time
 	logDetector       *logdetect.Detector
 	trackerDetector   *trackerlog.Detector
 	questClient       *questapi.Client
@@ -176,12 +171,10 @@ func (a *App) startup(ctx context.Context) {
 	loadedSettings, loadErr := config.Load()
 	settings := normalizeSettings(loadedSettings)
 	importSoundFiles(&settings)
-	ensureBrowserRemoteID(&settings)
 	// The window's hooks read the settings concurrently (see main.go).
 	a.mu.Lock()
 	a.settings = settings
 	a.mu.Unlock()
-	a.setupBrowserRemote()
 	a.setupAdblock()
 	startTray(a)
 	if document, err := a.trackerStore.Load(); err != nil {

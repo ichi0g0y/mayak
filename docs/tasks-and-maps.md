@@ -51,7 +51,8 @@ Host 設定の「タスクを開く」（`OpenQuestPage`）は、最後に認識
 
 - **開くサイト**: 届いた `site` を使います（Host が順番とページの有無で決めたもの）。
 - **同じタスクのタブ**: 同じタスク ID・同じページのタブが既にあれば、そのタブをアクティブにします。無ければ、同じページを開いているタブ（ブックマークやリンクから開いたもの。翻訳しているかどうか、`#` 以降、末尾の `/` は見ない: `samePage`）をそのタスクのタブにします。スクリーンショットを繰り返し撮ってもタブは増えません。
-- **`taskMode`**: 既定の `new` は新しいタブを追加します。`reuse` は固定（ピン留め）されていない最初のタスクタブを更新します。
+- **`taskMode`**: 既定の `new` は新しいタブを追加します。`reuse` は固定（ピン留め）されていない最初のタスクタブを更新します。`new` でも、リモートから見られていて（`api.js` の `viewedElsewhere`。[settings-and-integrations.md](settings-and-integrations.md#リンク)）、MAYAK を最小化しているかトレイに入れているあいだ（シェルの `document.visibilityState` が `hidden`。Wails は最小化と非表示で WebView2 を隠す）は、`reuse` と同じように同じタブを更新します（`receiveTask` の `away`）。1 台だけで使うときは変わりません。`taskMode` は Host と Client で共有しますが、見えているかどうかは PC ごとに判定します。
+- **この PC に出すもの**: リモートから見られているあいだ、`connection.receive.task` を外した PC では開きません（Host でも Client でも。[settings-and-integrations.md](settings-and-integrations.md#リンク)）。Host で「タスクを開く」を押したときは、外していても Host で開きます。
 - **上限**: タブが 80 個に達していれば開きません。
 - **タスクタブのツールバー**:
   - サイト選択（`#task-site`）で 3 サイトの URL を切り替えられます。
@@ -65,26 +66,14 @@ Host 設定の「タスクを開く」（`OpenQuestPage`）は、最後に認識
 
 ## Remote Control（tarkov.dev）
 
-tarkov.dev のマップ・タスクページは、`wss://socket.tarkov.dev` 経由で Remote Control の命令を受けます。
+tarkov.dev のマップ・タスクページは、`wss://socket.tarkov.dev` 経由で Remote Control の命令を受けます。MAYAK が送るのは、設定で登録した外部の ID（`RemoteTargets`）だけです。各 ID に `Map` / `Tasks` の役割を指定します。旧設定の `RemoteID` は `Remote 1`（両方の役割）へ移行します。スマホやタブレットなど、MAYAK が動かない端末で見るためのものです。
 
-### 送信先 ID
-
-| 種類 | 内容 |
-|---|---|
-| `RemoteTargets` | 設定で登録する外部の ID。各 ID に `Map` / `Tasks` の役割を指定。旧設定の `RemoteID` は `Remote 1`（両方の役割）へ移行 |
-| `BrowserRemoteID` | 内蔵ブラウザで開いた tarkov.dev のマップページ用の ID |
-
-- `BrowserRemoteID` は初回起動時に `A-Z0-9` の 12 文字を `crypto/rand` で生成して保存します（`app_browser_remote.go`）。設定を保存しても値は保たれます。tarkov.dev 自身の ID は 4 文字で、ほかのページとかぶりえます。この ID は MAYAK の中だけで使うので、かぶらず推測もされない長さにしています。
-- MAYAK はこの ID の Remote Control セッションに、ページと同じ受け手としても接続します（`remote.Watch`）。この ID へは MAYAK しか送らないので、MAYAK が直前（15 秒以内）に送っていない命令が届いたら、ほかのページが同じ ID を使っていると判断します。そのときは新しい ID を生成して保存し、警告をログに出し、`browser:remote-id` を送ります（今のシェルはこのイベントでタブを開き直さないので、新しい ID はそのあとに開いたタブから使われます）。ほかの端末からこの ID でマップページを操作した場合も同じ扱いになり、ID が変わります。
-- `BrowserRemoteID` はマップ系の命令（`map` チャンネル）の送信先にだけ加わります。タスクは内蔵ブラウザ自身が開くので、Remote Control では送りません。
-- 内蔵ブラウザは tarkov.dev の `/map/` ページとマップ一覧（`/maps/`）にだけ `?connection=<ID>` を付けて Remote Control に接続させます。tarkov.dev はページを開いた時点で localStorage に残っている `sessionId` で接続するため、ドキュメントスクリプトはこの ID を localStorage にも先に書き込みます。
-  - Host は tarkov.dev のスクリプトより先に実行するドキュメントスクリプトで付与します。どのタブで開いたマップページも対象です（固定のマップタブは無くなり、tarkov.dev はサイドバーにピン留めしたブックマークです）。
-  - タスクページは接続させません（マップ命令でページが移動してしまうため）。
-  - 保存するタブ URL からはこのパラメータを取り除きます（`pageURL`）。
+- 登録した ID が無ければ、MAYAK は tarkov.dev の socket につなぎません。
+- 以前は内蔵ブラウザで開いた tarkov.dev のマップページも、専用の ID（`browserRemoteId`）で自動接続していました。MAYAK 自身の [マップ](browser-shell.md#マップ) が同じ役目を持つので、やめました。古い設定に残った `browserRemoteId` は読み込まず、次の保存で消えます。
 
 ### 接続の失敗
 
-- ID への接続（`wss://socket.tarkov.dev` への WebSocket の接続やハンドシェイク。例: `websocket: bad handshake`）に失敗するのは、その ID に何もつながっていないときです。このときは警告（カテゴリ Remote）をログに出すだけで、Remote の接続状態をエラーにせず、「マップ連携のエラー」の通知音も鳴らしません（`remote.ErrUnreachable`）。登録した送信先も `BrowserRemoteID` も同じです。
+- ID への接続（`wss://socket.tarkov.dev` への WebSocket の接続やハンドシェイク。例: `websocket: bad handshake`）に失敗するのは、その ID に何もつながっていないときです。このときは警告（カテゴリ Remote）をログに出すだけで、Remote の接続状態をエラーにせず、「マップ連携のエラー」の通知音も鳴らしません（`remote.ErrUnreachable`）。
 - 接続したあとの送信に失敗したときは、接続状態をエラーにして（`LastError`）、通知音を鳴らします。
 
 ### タスク確定時の送信
@@ -144,7 +133,7 @@ tarkov.dev のマップ・タスクページは、`wss://socket.tarkov.dev` 経�
 - ログでマップかレイド状態が変わると `handleMap` が現在のマップを状態に反映します。
 - レイド中で `OpenMapOnRaidStart` がオンなら `sendMapTargets` を呼び、次の 2 つを行います。
   - 内蔵ブラウザへ `browser:map` を送ります。
-  - `Map` 役割の送信先と `BrowserRemoteID` へ `map/<name>` を送ります。
+  - `Map` 役割の送信先へ `map/<name>` を送ります。
 - `RaidStarted` から 1.5 秒後に同じ送信をもう一度行います。tarkov.dev が再接続した直後で、最初の命令を受け取れないことがあるためです。
 
 ### 座標付きスクリーンショット（`NavigateMapOnShot`、既定オン）
@@ -153,7 +142,7 @@ tarkov.dev のマップ・タスクページは、`wss://socket.tarkov.dev` 経�
 2. ログでレイド中と分かるときだけ位置として扱います。レイド外の座標は無視します（EFT はメニュー画面のスクリーンショットにも古い座標を付けるため）。
 3. マップはログの最新マップを使います。レイド中でもマップが分からなければ、設定の `Map` を使います。
    - `Map` の値は正規化されます: `laboratory` → `the-lab`、`labyrinth` → `the-labyrinth`、`factory4_night` → `night-factory`。
-4. `Map` 役割の送信先と `BrowserRemoteID` に `playerPosition` を送ります。`NavigateMapOnShot` がオンなら、続けて `map` 命令も送ります。位置を先に送るのは、座標の高さから正しい階を選べるようにするためです。
+4. `Map` 役割の送信先に `playerPosition` を送ります。`NavigateMapOnShot` がオンなら、続けて `map` 命令も送ります。位置を先に送るのは、座標の高さから正しい階を選べるようにするためです。
 5. `ground-zero-21` は tarkov.dev では `ground-zero` として送ります。
 
 位置の送信では `browser:map` を送りません。内蔵ブラウザや外部で開いた tarkov.dev のマップページは Remote Control 接続で追従します。代わりに `browser:position`（マップ名）を送り、シェルはマップのビューを開くか前面にします（`state.js` の `receivePosition`。`receiveMap` と同じ）。最後に認識したもの（タスク → タスクのページ、位置 → マップ、アイテム → アイテム欄）が表示されるようにするためです。Client にもリンクで同じイベントを送ります（[settings-and-integrations.md](settings-and-integrations.md#リンク)）。

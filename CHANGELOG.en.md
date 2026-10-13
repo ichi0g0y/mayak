@@ -4,6 +4,22 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### Improved
+
+- Looking on another PC or a tablet, tabs no longer pile up on the Host PC. MAYAK used on one PC alone works as before.
+  - The Host PC can choose what it shows too (tasks, maps and positions, items), under Other computers → Show on this PC. It applies while MAYAK on another PC or a registered tarkov.dev page is connected: what is left out does not open on the Host, and still goes to the paired PCs and to tarkov.dev.
+  - What is asked for on the Host (Open task, Analyze latest screenshot) shows on the Host even so.
+  - While another PC or a tablet is connected and MAYAK is minimized or in the tray, a recognized task reuses the task tab rather than adding one.
+
+- tarkov.dev maps opened in a MAYAK tab no longer connect to Remote Control by themselves: the maps and positions detected show on MAYAK's map. With no tarkov.dev destination registered, MAYAK no longer talks to tarkov.dev at all.
+- A snap note's "Show on the map" shows where it was taken on MAYAK's map; registered tarkov.dev destinations still get it too.
+
+### Fixed
+
+- With 80 tabs open on the Host, the paired PCs stopped getting tasks too.
+
 ## v0.1.41 (2026-10-13)
 
 ### New

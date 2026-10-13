@@ -815,8 +815,8 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .license-list dt{font-weight:600}
 .license-list dd{margin:2px 0 0;font-size:13px}
 .license-terms{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;color:var(--muted)}
-.license-terms .link{padding:0;border:0;background:none;color:var(--accent);cursor:pointer;font:inherit}
-.license-terms .link:hover{text-decoration:underline}
+.license-terms .link,.link-receive .link{padding:0;border:0;background:none;color:var(--accent);cursor:pointer;font:inherit}
+.license-terms .link:hover,.link-receive .link:hover{text-decoration:underline}
 .about-links button{display:inline-flex;align-items:center;gap:8px}
 .about-links button .icon{width:16px;height:16px}
 /* The update channel: its own block under the update status, with a rule

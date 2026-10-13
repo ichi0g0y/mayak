@@ -254,14 +254,6 @@ export function BrowserProfilePicture(): $CancellablePromise<string> {
 }
 
 /**
- * BrowserRemoteID lets the browser shell open its fixed map view with
- * ?connection=<ID> directly, instead of waiting for the document script.
- */
-export function BrowserRemoteID(): $CancellablePromise<string> {
-    return $Call.ByID(625165601);
-}
-
-/**
  * BrowserReportGoons submits a Goons sighting to tarkov.dev, for an account and
  * mode seen in the logs, on a map the Goons spawn on, once per raid.
  */
@@ -801,9 +793,10 @@ export function SnapNoteSetMap(id: string, mapName: string): $CancellablePromise
 }
 
 /**
- * SnapNoteShowSpot shows a note's position on the tarkov.dev map: the
- * built-in browser brings its map forward, and the position (with the map)
- * goes to the maps connected by Remote Control, as a screenshot's would.
+ * SnapNoteShowSpot sends a note's position (with its map) to the tarkov.dev
+ * maps registered for Remote Control, as a screenshot's would; the shell
+ * shows it on MAYAK's own map itself (view-snapnotes.js). With none
+ * registered there is nothing to send.
  */
 export function SnapNoteShowSpot(id: string): $CancellablePromise<void> {
     return $Call.ByID(3347874839, id);

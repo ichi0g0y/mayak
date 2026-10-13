@@ -38,7 +38,6 @@ export type Settings = {
   logsDirectory: string
   remoteId: string
   remoteTargets: RemoteTarget[]
-  browserRemoteId?: string
   map: string
   gameMode: string
   ocrEngine: string

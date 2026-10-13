@@ -32,9 +32,6 @@ func (a *App) remoteClient(remoteID string) *remote.Client {
 		return client
 	}
 	client := remote.New(remoteID)
-	if remoteID == a.settings.BrowserRemoteID {
-		client.OnSend(a.noteBrowserRemoteSend)
-	}
 	if a.remotes == nil {
 		a.remotes = make(map[string]*remote.Client)
 	}

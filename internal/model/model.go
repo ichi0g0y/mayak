@@ -103,6 +103,9 @@ type Status struct {
 	ItemCandidates    []ItemCandidate  `json:"itemCandidates"`
 	LastRemoteCommand string           `json:"lastRemoteCommand"`
 	Tracker           TrackerStatus    `json:"tracker"`
+	// RemoteViewers is how many registered Remote IDs have a tarkov.dev page
+	// open now (app_remote_viewers.go): the Host is looked at from elsewhere.
+	RemoteViewers int `json:"remoteViewers"`
 }
 
 type CatalogStatus struct {

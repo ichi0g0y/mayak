@@ -99,7 +99,12 @@ func (a *App) startBrowserHostBackground() {
 	if goruntime.GOOS != "windows" || a.browserClient.Load() {
 		return
 	}
-	a.browserBackgroundOnce.Do(func() { go a.watchCatalog(); go a.watchScreenshotMaintenance(); go a.watchGame() })
+	a.browserBackgroundOnce.Do(func() {
+		go a.watchCatalog()
+		go a.watchScreenshotMaintenance()
+		go a.watchGame()
+		go a.watchRemoteViewers()
+	})
 }
 
 func browserStatePath() (string, error) {

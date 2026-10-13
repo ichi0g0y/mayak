@@ -1114,15 +1114,6 @@ function App() {
                     ))
                   )}
                 </div>
-                {settings.browserRemoteId && (
-                  <p className="help secret-help">
-                    {t('browserRemote').replace(
-                      '{id}',
-                      shownRemoteIds.has(-1) ? settings.browserRemoteId : settings.browserRemoteId.replace(/S/g, '•'),
-                    )}
-                    {revealRemoteId(-1)}
-                  </p>
-                )}
                 <p className="help remote-help">
                   <span>{t('remoteHelp')}</span>
                   <button type="button" className="inline-link" onClick={() => BrowserOpenURL('https://tarkov.dev/')}>
@@ -1130,6 +1121,7 @@ function App() {
                     {t('openTarkovDevRemote')}
                   </button>
                 </p>
+                <p className="help">{t('remoteOnlyHelp')}</p>
                 <div className="field remote-map-fallback">
                   <Label>{t('mapFallback')}</Label>
                   <Select

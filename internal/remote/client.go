@@ -15,7 +15,8 @@ import (
 	"github.com/local/mayak/internal/version"
 )
 
-const endpoint = "wss://socket.tarkov.dev"
+// endpoint is tarkov.dev's socket (a variable for the tests).
+var endpoint = "wss://socket.tarkov.dev"
 
 // userAgent is the User-Agent the remote client sends.
 func userAgent() string { return version.UserAgent() }
@@ -24,9 +25,8 @@ type Client struct {
 	remoteID string
 	mu       sync.Mutex
 	conn     *websocket.Conn
-	// onSend sees each command (CommandKey) just before it is written, so a
-	// Watch on the same ID can tell its own commands from someone else's.
-	onSend func(key string)
+	// viewing takes the answer to an isConnected question (Viewing).
+	viewing chan bool
 }
 
 // ErrUnreachable marks a failure to connect to tarkov.dev's socket for an ID
@@ -37,18 +37,6 @@ var ErrUnreachable = errors.New("remote control not reachable")
 func New(remoteID string) *Client  { return &Client{remoteID: remoteID} }
 func (c *Client) RemoteID() string { return c.remoteID }
 
-// OnSend sets the function told about each command before it is sent.
-func (c *Client) OnSend(fn func(key string)) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.onSend = fn
-}
-
-func (c *Client) noteSendLocked(msg []byte) {
-	if c.onSend != nil {
-		c.onSend(CommandKey(msg))
-	}
-}
 func (c *Client) Connect(ctx context.Context) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -90,8 +78,25 @@ func (c *Client) readLoop(conn *websocket.Conn) {
 		}
 		var message struct {
 			Type string `json:"type"`
+			Data struct {
+				Connected bool `json:"connected"`
+			} `json:"data"`
 		}
-		if json.Unmarshal(body, &message) != nil || message.Type != "ping" {
+		if json.Unmarshal(body, &message) != nil {
+			continue
+		}
+		if message.Type == "connectionStatus" {
+			c.mu.Lock()
+			if c.viewing != nil {
+				select {
+				case c.viewing <- message.Data.Connected:
+				default:
+				}
+			}
+			c.mu.Unlock()
+			continue
+		}
+		if message.Type != "ping" {
 			continue
 		}
 		c.mu.Lock()
@@ -102,6 +107,44 @@ func (c *Client) readLoop(conn *websocket.Conn) {
 		c.mu.Unlock()
 	}
 }
+
+// Viewing asks tarkov.dev whether a page is connected on the ID (its map or
+// task page with Remote Control on): the socket answers an isConnected
+// question with a connectionStatus. MAYAK's own connection is no sign of a
+// page, as the socket takes it with or without one.
+func (c *Client) Viewing(ctx context.Context) (bool, error) {
+	c.mu.Lock()
+	if err := c.connectLocked(ctx); err != nil {
+		c.mu.Unlock()
+		return false, err
+	}
+	answer := make(chan bool, 1)
+	c.viewing = answer
+	_ = c.conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	err := c.conn.WriteJSON(map[string]string{"type": "isConnected", "sessionID": c.remoteID})
+	if err != nil {
+		_ = c.conn.Close()
+		c.conn = nil
+	}
+	c.mu.Unlock()
+	if err != nil {
+		return false, err
+	}
+	defer func() {
+		c.mu.Lock()
+		if c.viewing == answer {
+			c.viewing = nil
+		}
+		c.mu.Unlock()
+	}()
+	select {
+	case connected := <-answer:
+		return connected, nil
+	case <-ctx.Done():
+		return false, ctx.Err()
+	}
+}
+
 func (c *Client) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -182,7 +225,6 @@ func (c *Client) SendPosition(ctx context.Context, mapName string, p model.Posit
 	// Store the marker first so optional navigation can immediately select the
 	// correct floor from the position's Y coordinate.
 	for _, msg := range messages {
-		c.noteSendLocked(msg)
 		_ = c.conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
 		if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
 			_ = c.conn.Close()
@@ -212,7 +254,6 @@ func (c *Client) send(ctx context.Context, msg []byte, payloadErr error) error {
 	if err := c.connectLocked(ctx); err != nil {
 		return err
 	}
-	c.noteSendLocked(msg)
 	_ = c.conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
 	if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
 		_ = c.conn.Close()

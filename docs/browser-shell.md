@@ -94,7 +94,7 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 - `openOrFocus` で開く `tarkovtracker.org` のページ（通知のボタン、設定のリンク）は、同じページのタブが無ければこのビューで開きます。ログインがこのビューにあるためです。
 
 - 以前の `browser.json` は、`bookmarkRevision` 3 への移行で 2 つをブックマークに加えてサイドバーにピン留めします（同じ ID か URL のブックマークがあればそれをピン留め）。保存されていた固定ビューのタブ（ID `map`・`tracker`、`formerFixedTabIDs`）は捨てます。
-- tarkov.dev のマップページ（`/map/…`）とマップ一覧（`/maps/`）は、どのタブで開いても Host のドキュメントスクリプトが `?connection=<Remote Control ID>` を付けて Remote Control につなぎます（[tasks-and-maps.md](tasks-and-maps.md#remote-controltarkovdev)）。保存されるタブの URL からは取り除きます（`pageURL()`）。
+- tarkov.dev のマップページは、ほかのページと同じ普通のタブです。Remote Control にはつなぎません（検出したマップと位置は MAYAK の [マップ](#マップ) に出ます。[tasks-and-maps.md](tasks-and-maps.md#remote-controltarkovdev)）。
 
 ### ピン留め・並べ替え・閉じる
 
@@ -136,7 +136,7 @@ MAYAK のメインウインドウは、自前のブラウザシェル（`fronten
 | `bookmarks` | 最大 100 件 |
 | `tabs`, `active` | タブ一覧とアクティブなタブ |
 | `mapHidden`, `mapSettings`, `mapCollapsed`, `squadName`, `squadColor`, `squadCollapsed`, `squadCode`, `squadRecent` | マップの隠した層・設定・畳んだまとまり、分隊の表示名・分隊カラー・サイドバーのセクションを畳んだか・参加中のコード・最近の分隊（[マップ](#マップ)、[user-data.md](user-data.md)） |
-| `connection` | `{mode, link, receive}`。接続モード（`local` / `client`。前の版の `off` は `client` にする）、ペアリングの鍵と役割（`link: {key, role}`、なければ `null`）、Client で出すもの（`receive: {task, map, item}`）。接続コードは保存しません（[settings-and-integrations.md](settings-and-integrations.md#host--client-モード)） |
+| `connection` | `{mode, link, receive}`。接続モード（`local` / `client`。前の版の `off` は `client` にする）、ペアリングの鍵と役割（`link: {key, role}`、なければ `null`）、この PC に出すもの（`receive: {task, map, item}`。Host でも Client でも使う）。接続コードは保存しません（[settings-and-integrations.md](settings-and-integrations.md#host--client-モード)） |
 
 ウインドウの位置とサイズは `browser.json` には保存しません（`window.json`）。以前のファイルにある `window` は読み込まず、次の保存で消えます。
 
@@ -193,6 +193,7 @@ Host がスクリーンショットを解析するたびに、何と判定した
 - **撮影**: Web ページのツールバーの付箋のボタン（スナップノートのアイコン。ペンの鉛筆やスクリーンショットのカメラと見分けるため付箋）でメニューを開き、「見えている範囲を撮る」か「ページ全体を撮る」を選びます。メニューはページを隠さず、その上に別ウインドウで開きます（[ページの上のメニュー](#ページの上のメニュー)）。翻訳表示のページでは、撮る直前に Google 翻訳のバー（`gt-` で始まる ID の要素と翻訳のフレーム）と、そのためにページ上端に空けてある余白を隠し、撮った直後に戻します（`app_snapnote_translate.go`。DevTools の `Runtime.evaluate`）。撮影は WebView2 の DevTools 呼び出し（`Page.captureScreenshot`。全体は `Page.getLayoutMetrics` の大きさで `captureBeyondViewport`）で、高さは 15000 CSS px で切ります（`browserview.MaxCaptureHeight`）。画像は画面の画素で返るので、表示倍率が高いときは縦 20000・横 8192 画素に収まるよう縮小して撮ります（`captureClip`）。ページの中の枠だけがスクロールするサイト（マップなど）は、全体でも見えている範囲と同じになります。
 - **ページとの紐付け**: 撮ったノートは URL・タイトルを覚えて紐付きます。同じページかは、翻訳表示の元の URL で、`#` 以降と末尾の `/` を除いて比べます（`snapPageKey`）。紐付いたノートがあるページではボタンに件数が付き、メニューからそのページのノートを開けます。ノートからは「元のページを開く」で戻れます。「ページとの紐付けを外す」と単独のノートになりますが、URL は残り、あとで付け直せます。
 - **スクリーンショットから**: スクリーンショットのビューアーの「スナップノートにする」で、そのスクショから単独のノートを作り、すぐ書き込み画面で開きます（`SnapNoteFromScreenshot`。Screenshots フォルダ直下の画像ファイルだけ。タイトルは「スクリーンショット」と撮った日時）。
+- **撮った位置**: 座標付きのスクショから作ったノートは、マップと座標と向きを持ちます（マップが分からなければ選ぶ欄を出す）。「マップで位置を表示」で、MAYAK の [マップ](#マップ) をその地図と、高さから決めた階にして、位置に寄せて輪を出します（`mayak:map-show`）。tarkov.dev の送信先を登録していれば、そちらにも位置と向きを送ります（`SnapNoteShowSpot`。登録が無ければ何もしない）。
 - **単独のノート**: 一覧ページの「新規作成」（1600×1000 の白い紙。ノートが 1 つも無いときは、サイドバーのスナップノートの欄にも同じボタンが出ます）、「画像ファイルから作る」、または一覧ページでの Ctrl+V（クリップボードの画像）で作ります。画像はシェルで PNG にしてから渡します。
 - **見るのと書き込むの**: ノートは、開くとまず見るだけ（プレビュー）です。道具の列は「編集」とズームだけで、レイヤー欄は出さず、タイトルは書き換えられず、描けません（数字キーや Ctrl+Z も効かない）。「編集」で書き込み画面になり、道具の列の先頭の「完了」で見るだけに戻ります（ノートごとに開くたび見るだけから）。作ったばかりのノート（撮った・白紙・画像から。作ってから 15 秒以内に開いたもの）は描くために作るので、最初から書き込み画面です。分隊の仲間から届いたノートは見るだけで開きます。個人のノートも共有のノートも同じです。
 - **送った人**: 分隊の仲間から届いたスナップノート（分隊の欄・分隊ページから開いて取り込んだもの）は、送った人の名前と分隊カラーを覚えます（`SnapNoteSetFrom`、ノートの `from`）。一覧のカードと、開いたノートの上の行に「(名前) から」と出します。

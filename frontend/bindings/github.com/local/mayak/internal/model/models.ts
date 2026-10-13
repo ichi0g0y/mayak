@@ -490,6 +490,12 @@ export class Status {
     "lastRemoteCommand": string;
     "tracker": TrackerStatus;
 
+    /**
+     * RemoteViewers is how many registered Remote IDs have a tarkov.dev page
+     * open now (app_remote_viewers.go): the Host is looked at from elsewhere.
+     */
+    "remoteViewers": number;
+
     /** Creates a new Status instance. */
     constructor($$source: Partial<Status> = {}) {
         if (!("hideout" in $$source)) {
@@ -596,6 +602,9 @@ export class Status {
         }
         if (!("tracker" in $$source)) {
             this["tracker"] = (new TrackerStatus());
+        }
+        if (!("remoteViewers" in $$source)) {
+            this["remoteViewers"] = 0;
         }
 
         Object.assign(this, $$source);

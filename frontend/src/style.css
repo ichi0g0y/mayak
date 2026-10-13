@@ -144,7 +144,6 @@ button, input, select { font: inherit; }
 .masked { -webkit-text-security: disc; }
 .secret-field { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .secret-field > .input { flex: 1; min-width: 0; }
-.secret-help { display: flex; align-items: center; gap: 4px; }
 .reveal { flex: none; color: var(--muted); }
 .reveal[aria-pressed='true'] { color: var(--text); }
 .remote-target-roles { display: flex; flex-wrap: wrap; gap: 14px; }

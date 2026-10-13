@@ -201,9 +201,10 @@ func (a *App) SnapNoteSetMap(id, mapName string) (snapnote.Note, error) {
 	return note, nil
 }
 
-// SnapNoteShowSpot shows a note's position on the tarkov.dev map: the
-// built-in browser brings its map forward, and the position (with the map)
-// goes to the maps connected by Remote Control, as a screenshot's would.
+// SnapNoteShowSpot sends a note's position (with its map) to the tarkov.dev
+// maps registered for Remote Control, as a screenshot's would; the shell
+// shows it on MAYAK's own map itself (view-snapnotes.js). With none
+// registered there is nothing to send.
 func (a *App) SnapNoteShowSpot(id string) error {
 	store, err := snapNotes()
 	if err != nil {
@@ -222,9 +223,8 @@ func (a *App) SnapNoteShowSpot(id string) error {
 	settings.Map = note.Spot.Map
 	settings.NavigateMapOnShot = true
 	if len(remoteTargetIDs(settings, "map")) == 0 {
-		return errors.New("no tarkov.dev map is connected")
+		return nil
 	}
-	a.emitEvent("browser:position", settings.Map)
 	return a.sendPosition(settings, model.Position{X: note.Spot.X, Y: note.Spot.Y, Z: note.Spot.Z, Rotation: note.Spot.Rotation})
 }
 

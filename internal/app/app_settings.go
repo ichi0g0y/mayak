@@ -429,11 +429,6 @@ func remoteTargetIDs(settings config.Settings, channel string) []string {
 			ids = append(ids, target.ID)
 		}
 	}
-	// The built-in browser's tarkov.dev map pages receive map and position
-	// commands. Tasks are opened by the browser itself, not via Remote Control.
-	if id := settings.BrowserRemoteID; id != "" && (channel == "all" || channel == "map") && !slices.Contains(ids, id) {
-		ids = append(ids, id)
-	}
 	return ids
 }
 
@@ -456,7 +451,6 @@ func (a *App) keepWindowSettings(s config.Settings) config.Settings {
 	s.WindowWidth = a.settings.WindowWidth
 	s.WindowHeight = a.settings.WindowHeight
 	s.WindowConfigured = a.settings.WindowConfigured
-	s.BrowserRemoteID = a.settings.BrowserRemoteID
 	s.OCRDefaultRevision = a.settings.OCRDefaultRevision
 	return s
 }
