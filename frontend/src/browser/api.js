@@ -266,7 +266,34 @@ const snapshot = () => ({
   // paired: a pairing is kept for this mode.
   peer: { ...peerState, self: hostName, paired: !!state.connection.link && state.connection.link.role === linkRole() },
 })
-const update = () => notify(snapshot())
+const update = () => {
+  tellLinkClients()
+  notify(snapshot())
+}
+// The Host's Go side hears how many Clients are connected: with in-game
+// controls set to work the Clients, the wheel then goes to them
+// (app_wheel.go gameAway).
+let linkClientsTold = -1
+function tellLinkClients() {
+  if (!state || !go || platform !== 'windows') return
+  const n = state.connection.mode === 'local' && peerState.phase === 'connected' ? peerState.peers || 0 : 0
+  if (n === linkClientsTold) return
+  linkClientsTold = n
+  void go.BrowserLinkClients(n).catch(() => {})
+}
+// A Client works itself with its Host's wheel and buttons: a tab switch, a
+// tab closed or pinned, a scroll of the page shown (its Go side turns a page
+// view's wheel; else, or not on Windows, the shell's page area scrolls).
+async function gameInput(input) {
+  if (state.connection.mode !== 'client') return
+  if (input.kind === 'tab') return window.mayak.action('cycleView', input.step)
+  if (input.kind === 'action') return window.mayak.action('gameTabAction', input.action)
+  let scrolled = false
+  try {
+    scrolled = await go.BrowserGameScroll(input.dy)
+  } catch {}
+  if (!scrolled) document.querySelector('main')?.scrollBy({ top: input.dy })
+}
 // An error shows as a notice over the pages (app_toast.go), until closed; a
 // newer one replaces it. level "warn" is a note that goes after a while.
 const errorToast = (text, level = 'error') => {
@@ -898,6 +925,7 @@ let hostName = ''
 // linkRole is the side this PC takes in the mode chosen.
 const linkRole = () => (state.connection.mode === 'local' ? 'host' : state.connection.mode === 'client' ? 'client' : '')
 const peer = new /** @type {any} */ (globalThis).MayakLink({
+  onGame: (input) => void gameInput(input).catch(() => {}),
   onState: (next) => {
     peerState = { ...peerState, ...next, busy: false }
     if (next.joined) {
@@ -1280,6 +1308,8 @@ const ready = (async () => {
   // A shortcut pressed inside a page view (Ctrl+T and the like) is handled by
   // the shell, like one pressed in the shell itself.
   // The wheel turned in the game with GameTabCombo held (app_wheel.go).
+  // The wheel and the buttons of the game, for the Clients (app_wheel.go).
+  window.mayakDesktop.on('browser:game-remote', (input) => void peer.sendGame(input))
   window.mayakDesktop.on('browser:game-tab', (step) => void window.mayak.action('cycleView', step < 0 ? -1 : 1))
   window.mayakDesktop.on('browser:game-tab-action', (what) => void window.mayak.action('gameTabAction', what))
   window.mayakDesktop.on('browser:key', (key) => {

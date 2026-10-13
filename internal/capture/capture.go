@@ -319,4 +319,9 @@ type WheelOptions struct {
 	Point func() (x, y int32, ok bool)
 	// Note tells what a turn with a combo held did, at most once a second.
 	Note func(text string)
+	// Away, when it says so, sends a scroll on to the PC MAYAK is worked
+	// from instead of this PC's window: ScrollAway gets the pixels (as
+	// ScrollPage's dy), and the turn is taken from the game all the same.
+	Away       func() bool
+	ScrollAway func(dy float64)
 }

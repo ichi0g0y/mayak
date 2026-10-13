@@ -66,6 +66,9 @@ type Settings struct {
 	// Ctrl with the middle button by default.
 	GameCloseTab string `json:"gameCloseTab"`
 	GamePinTab   string `json:"gamePinTab"`
+	// GameRemote sends the wheel and the buttons on to the PCs paired with
+	// the Host while one is connected, in place of the Host's own MAYAK.
+	GameRemote bool `json:"gameRemote"`
 	// CaptureSettleMs is how long after the last click the screen is taken
 	// (EFT draws what the click opened meanwhile), CaptureRepeatSeconds how
 	// long the same screen is not taken again (0: always), and CapturePollMs

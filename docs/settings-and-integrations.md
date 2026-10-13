@@ -95,6 +95,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `gameWheel` | `false` | EFT で回したホイールを MAYAK で使う（実験的）。オフのあいだは下の 2 つを使わず、フックも入れない |
 | `gameCloseTab` / `gamePinTab` | `"shift+middle"` / `"ctrl+middle"` | 表示中のタブを閉じる / ピン留めを切り替えるボタン。`middle` / `shift+middle` / `ctrl+middle` / `alt+middle`（中ボタンと、押しているキー 1 つ。2 つ押していれば数えない）/ `x1` / `x2`、空なら使わない。それ以外は空にし、2 つが同じならピン留めの方を空にする |
 | `gameScrollCombo` / `gameTabCombo` | `"shift"` / `"ctrl"` | EFT で押しながらホイールを回すと、MAYAK がスクロールする / タブを切り替えるボタンかキー。`right`（右ボタン）/ `x1`・`x2`（サイドボタンの戻る・進む）/ `shift` / `ctrl` / `alt`、空なら使わない。それ以外は空にし、2 つが同じならタブの方を空にする。EFT が前でカーソルが出ているあいだ（狙っていないあいだ）だけ低レベルのマウスフックを入れる（`capture.ForwardWheel`）。スクロールは、表示中のメインの画面（シェルが `show` / `hideAll` で渡すページの範囲。サイドバーとアイテム欄を除く）の中央へ送る（`browserview.Manager.PageMiddle`。まだ範囲が届いていなければ一番大きいウィンドウの中央）。ボタンなら `WM_MOUSEWHEEL` として、キー（`shift` / `ctrl` / `alt`）なら、ページがキーを読んで横スクロールや拡大にしないよう、その WebView の DevTools の `Input.dispatchMouseEvent`（修飾キーなし）として送る（`browserview.GameWheel`）。タブは 1 ノッチごとに `browser:game-tab` イベント（手前に回すと 1、奥に回すと -1）をシェルに送る。`gameCloseTab` / `gamePinTab` のボタンを押すと `browser:game-tab-action`（`close` / `pin`）を送り、シェルは表示中のタブ（タブの一覧にあるもの）を閉じる（ピン留めは閉じない）か、ピン留めを切り替える（Web のタブだけ）。フックはそのホイールを EFT のウィンドウメッセージから外すが、EFT はマウスを Raw Input でも読むので、EFT 側も動くことがある。ホイールを回した右クリックは自動認識しない。Windows のみ。設定画面は「ゲーム中の操作」 |
+| `gameRemote` | `false` | オンで、リンクで Client がつながっているあいだは、ホイールとボタンを Host の MAYAK ではなく Client に送る。シェルはつながっている Client の数を `BrowserLinkClients` で Go に伝え、Go はこの設定とその数で決める（`app_wheel.go` の `gameAway`）。そのあいだ、スクロールはフックがゲームから取ったうえで `browser:game-remote`（`{kind: "scroll", dy}`。dy は CSS ピクセル）、タブは `{kind: "tab", step}`、ボタンは `{kind: "action", action}` としてシェルに送り、シェルがリンクの `game:input` で Client に渡す（`sendGame`。受けた側は `gameInputOf` で確かめる）。Client はタブとボタンを自分の `cycleView` / `gameTabAction` で行い、スクロールは `BrowserGameScroll` で表示中のページの中央へ Host と同じく送る（`capture.ScrollAt`。Windows のみ）。送れなければ、シェルのページの範囲（`main`）をスクロールする。Client が何台あっても、全部に送る。tarkov.dev のページは操作しない |
 | `captureAutoOff` | `[]` | クリックで撮らない画面（`profile` / `item` / `tasks`）。知らない値は除き、この順に並べる（`captureKindList`） |
 | `ocrDefaultRevision` | `0` | OCR 既定値移行の記録（内部用） |
 | `debug` | `false` | デバッグ表示（crop プレビュー、候補、Hideout 診断） |
@@ -149,7 +150,7 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | `startup` | `launchAtStartup`, `startMinimized`, `autoStartMonitoring`, `minimizeToTray`, `closeToTray`, `autoUpdate` | — |
 | `status` | 表示のみ: Remote 接続状態、現在のマップ、レイド状態、スクリーンショット種別、TarkovTracker の状態、最後の検出結果、カタログの状態、アップデートの状態 | 最新スクリーンショットの解析、TarkovTracker の更新、カタログの更新、タスクページを開く、更新の確認・ダウンロード・再起動して更新、リリースノートを開く |
 | `logs` | 表示のみ（[ログ](#ログ) を参照） | フォルダを開く、ログの消去 |
-| `gameInput` | カード「ウインドウを切り替えずに操作（実験的）」: スイッチ `gameWheel`、その下で `gameScrollCombo` と `gameTabCombo` をそれぞれ選ぶ（「使わない」と 6 つの組み合わせ。もう一方で選んだものは選べない。スイッチがオフのあいだは選べない）。続けて `gameCloseTab` と `gamePinTab`（「使わない」と 6 つのボタン）。右ボタンを選んだときは、右クリックが EFT にも届く注意を出す | — |
+| `gameInput` | カード「ウインドウを切り替えずに操作（実験的）」: スイッチ `gameWheel`、その下で `gameScrollCombo` と `gameTabCombo` をそれぞれ選ぶ（「使わない」と 6 つの組み合わせ。もう一方で選んだものは選べない。スイッチがオフのあいだは選べない）。続けて `gameCloseTab` と `gamePinTab`（「使わない」と 6 つのボタン）。右ボタンを選んだときは、右クリックが EFT にも届く注意を出す。最後にスイッチ `gameRemote`（`gameWheel` がオフのあいだは選べない） | — |
 | `debug` | `debug`, `saveRecognitionDebug`。`debug` がオンのときは Hideout 診断フォルダ、候補一覧、crop、目標も表示 | `OpenHideoutDiagnostics` |
 
 ## ブラウザ設定（シェル側）

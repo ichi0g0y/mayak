@@ -34,6 +34,9 @@ func ForwardWheel(WheelOptions) (*WheelForwarder, error) { return nil, ErrUnsupp
 // Stop does nothing here.
 func (f *WheelForwarder) Stop() {}
 
+// ScrollAt has no window to turn the wheel of here.
+func ScrollAt(int32, int32, float64, func(uintptr, float64, float64, float64)) bool { return false }
+
 // WheelTurnedSince reports no wheel turns here.
 func WheelTurnedSince(time.Time) bool { return false }
 

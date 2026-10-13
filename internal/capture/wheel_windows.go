@@ -217,6 +217,13 @@ func wheelHook(code, wParam uintptr, info *mouseHookInfo) uintptr {
 		}
 		wheel.tabTurn = 0
 		if held(wheel.scrollVK.Load()) {
+			// Worked from another PC, the scroll goes there (WheelOptions.Away).
+			if o := wheel.opts.Load(); o != nil && o.Away != nil && o.ScrollAway != nil && o.Away() {
+				lastWheel.Store(time.Now().UnixNano())
+				go o.ScrollAway(notchDy(delta))
+				noteWheel(kind + " sent to the PC MAYAK is worked from")
+				return 1
+			}
 			target, ok := sendWheel(delta)
 			if ok {
 				lastWheel.Store(time.Now().UnixNano())
@@ -304,6 +311,36 @@ type mouseHookInfo struct {
 	mouseData uint32
 }
 
+// notchDy is how far delta scrolls a page, in CSS pixels: a notch as far as
+// in Chromium; up is back.
+func notchDy(delta int16) float64 { return -float64(delta) / wheelNotch * notchPixels() }
+
+// scrollPageAt turns the page in MAYAK's window hwnd at the screen point at
+// (packPoint) by dy CSS pixels with scroll, in the window's CSS pixels.
+func scrollPageAt(hwnd, at uintptr, dy float64, scroll func(hwnd uintptr, x, y, dy float64)) {
+	pt := struct{ x, y int32 }{int32(uint32(at)), int32(uint32(at >> 32))}
+	procScreenToClient.Call(hwnd, uintptr(unsafe.Pointer(&pt)))
+	dpi, _, _ := procGetDpiForWindow.Call(hwnd)
+	if dpi == 0 {
+		dpi = 96
+	}
+	scale := 96 / float64(dpi)
+	go scroll(hwnd, float64(pt.x)*scale, float64(pt.y)*scale, dy)
+}
+
+// ScrollAt turns MAYAK's page at the screen point (x, y) by dy CSS pixels
+// with scroll (as WheelOptions.ScrollPage): a Client's, for the wheel turned
+// in its Host's game. It tells whether MAYAK's window is there.
+func ScrollAt(x, y int32, dy float64, scroll func(hwnd uintptr, x, y, dy float64)) bool {
+	at := packPoint(x, y)
+	hwnd := ownWindowAt(at, windows.GetCurrentProcessId())
+	if hwnd == 0 {
+		return false
+	}
+	scrollPageAt(hwnd, at, dy, scroll)
+	return true
+}
+
 // sendWheel turns MAYAK's wheel by delta at the cursor's last place over it,
 // or the middle of its window; target says where it went.
 func sendWheel(delta int16) (target string, ok bool) {
@@ -316,16 +353,7 @@ func sendWheel(delta int16) (target string, ok bool) {
 		if o == nil || o.ScrollPage == nil {
 			return "", false
 		}
-		pt := struct{ x, y int32 }{int32(uint32(at)), int32(uint32(at >> 32))}
-		procScreenToClient.Call(hwnd, uintptr(unsafe.Pointer(&pt)))
-		dpi, _, _ := procGetDpiForWindow.Call(hwnd)
-		if dpi == 0 {
-			dpi = 96
-		}
-		scale := 96 / float64(dpi)
-		// A notch scrolls as far as in Chromium; up is back.
-		dy := -float64(delta) / wheelNotch * notchPixels()
-		go o.ScrollPage(hwnd, float64(pt.x)*scale, float64(pt.y)*scale, dy)
+		scrollPageAt(hwnd, at, notchDy(delta), o.ScrollPage)
 		return "the page script of " + className(hwnd), true
 	}
 	x, y := int16(int32(uint32(at))), int16(int32(uint32(at>>32)))
@@ -350,20 +378,27 @@ func wheelTarget() (uintptr, uintptr, bool) {
 		}
 	}
 	at := packPoint(x, y)
-	if w, _, _ := procWindowFromPoint.Call(at); ownWindow(w, pid) {
-		target = w
-	}
-	if target == 0 {
+	if target = ownWindowAt(at, pid); target == 0 {
 		return 0, 0, false
+	}
+	return target, at, true
+}
+
+// ownWindowAt is MAYAK's window at the screen point at (packPoint), 0 when
+// another's is there.
+func ownWindowAt(at uintptr, pid uint32) uintptr {
+	w, _, _ := procWindowFromPoint.Call(at)
+	if !ownWindow(w, pid) {
+		return 0
 	}
 	// Chromium draws over its page with a window of its own that takes no
 	// input; the page's is under it.
-	if className(target) == "Intermediate D3D Window" {
-		if parent, _, _ := procGetParent.Call(target); parent != 0 {
-			target = parent
+	if className(w) == "Intermediate D3D Window" {
+		if parent, _, _ := procGetParent.Call(w); parent != 0 {
+			w = parent
 		}
 	}
-	return target, at, true
+	return w
 }
 
 // WheelTurnedSince reports whether a wheel turn was sent to MAYAK after t.

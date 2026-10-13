@@ -26,6 +26,16 @@ const PROBE_MS = 10_000
 // taken until a welcome tells.
 const LINK_LIMITS = { rate: 120, rateWindow: 10000, bytes: 16 * 1024 * 1024, bytesWindow: 60000 }
 const questSites = ['official-wiki', 'japanese-wiki', 'tarkov-dev']
+// gameInputOf keeps what is sound of the wheel and the buttons the Host
+// passes on (app_wheel.go gameRemote): a tab switch (step 1 or -1), a tab
+// closed or pinned, or a scroll by dy CSS pixels; else null.
+export function gameInputOf(g) {
+  if (!g || typeof g !== 'object') return null
+  if (g.kind === 'tab' && (g.step === 1 || g.step === -1)) return { kind: 'tab', step: g.step }
+  if (g.kind === 'action' && ['close', 'pin'].includes(g.action)) return { kind: 'action', action: g.action }
+  if (g.kind === 'scroll' && Number.isFinite(g.dy)) return { kind: 'scroll', dy: Math.max(-5000, Math.min(5000, g.dy)) }
+  return null
+}
 // hostInfoOf keeps what is sound of the Host's info: its game mode, the
 // map it plays (a map key), whether in a raid, and its last position (game
 // coordinates and facing, when it was taken), else null.
@@ -128,6 +138,7 @@ class MayakLink {
     onMap = /** @type {(map:{hidden:any[],collapsed:any[],settings:object,initial:boolean})=>void} */ (() => {}),
     onPrefs = /** @type {(prefs:object)=>void} */ (() => {}),
     onBookmarks = /** @type {(list:{list:any[],initial:boolean})=>void} */ (() => {}),
+    onGame = /** @type {(input:{kind:string,step?:number,action?:string,dy?:number})=>void} */ (() => {}),
     onLog = /** @type {(text:string)=>void} */ (() => {}),
     relay = LINK_RELAY,
   } = {}) {
@@ -135,6 +146,7 @@ class MayakLink {
     this.onMap = onMap
     this.onPrefs = onPrefs
     this.onBookmarks = onBookmarks
+    this.onGame = onGame
     this.onState = onState
     this.onMessage = onMessage
     this.onHost = onHost
@@ -372,6 +384,13 @@ class MayakLink {
         this.onBookmarks({ list: b.list.slice(0, 500), initial: b.initial === true })
       return
     }
+    // The wheel and the buttons of the Host's game, for a Client to work
+    // itself with (sendGame).
+    if (message.event === 'game:input' && this.role === 'client' && message.r === 'host') {
+      const g = gameInputOf(message.args?.[0])
+      if (g) this.onGame(g)
+      return
+    }
     // What the Host is (its game mode), for its Clients to follow.
     if (message.event === 'host:info' && this.role === 'client' && message.r === 'host') {
       const h = message.args?.[0]
@@ -433,6 +452,13 @@ class MayakLink {
   sendHost(info) {
     if (this.role !== 'host' || !this.connected) return false
     void this.say(this.ws, { event: 'host:info', args: [info] }).catch(() => {})
+    return true
+  }
+  // sendGame passes the wheel or a button of the Host's game on to the
+  // Clients (in-game controls set to work the PC MAYAK is looked at on).
+  sendGame(input) {
+    if (this.role !== 'host' || !this.connected || !gameInputOf(input)) return false
+    void this.say(this.ws, { event: 'game:input', args: [gameInputOf(input)] }).catch(() => {})
     return true
   }
   // sendSquad tells the other PC the squad joined here (code "" for none),

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { hostInfoOf, limitsOf, paceWait } from './transport.js'
+import { gameInputOf, hostInfoOf, limitsOf, paceWait } from './transport.js'
 
 const { linkSecrets, newLinkKey, validLinkKey } = /** @type {any} */ (globalThis)
 
@@ -116,4 +116,16 @@ test('a Client missing a detection gets it at the next hello, and one it got doe
   host.sendRecent()
   await deliver()
   assert.deepEqual(got, ['a', 'b'])
+})
+
+test("the Host's wheel and buttons reach a Client only as a tab step, a tab action or a bounded scroll", () => {
+  assert.deepEqual(gameInputOf({ kind: 'tab', step: -1 }), { kind: 'tab', step: -1 })
+  assert.equal(gameInputOf({ kind: 'tab', step: 3 }), null)
+  assert.deepEqual(gameInputOf({ kind: 'action', action: 'pin' }), { kind: 'action', action: 'pin' })
+  assert.equal(gameInputOf({ kind: 'action', action: 'quit' }), null)
+  assert.deepEqual(gameInputOf({ kind: 'scroll', dy: 100 }), { kind: 'scroll', dy: 100 })
+  assert.deepEqual(gameInputOf({ kind: 'scroll', dy: -1e9 }), { kind: 'scroll', dy: -5000 })
+  assert.equal(gameInputOf({ kind: 'scroll', dy: Number.NaN }), null)
+  assert.equal(gameInputOf({ kind: 'eval', code: 'x' }), null)
+  assert.equal(gameInputOf(null), null)
 })

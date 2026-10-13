@@ -37,7 +37,8 @@ const pageKeys: Partial<Record<HostSection, (key: string) => boolean>> = {
       'keepPriority',
       'autoUpdate',
     ].includes(k),
-  gameInput: (k) => ['gameWheel', 'gameScrollCombo', 'gameTabCombo', 'gameCloseTab', 'gamePinTab'].includes(k),
+  gameInput: (k) =>
+    ['gameWheel', 'gameScrollCombo', 'gameTabCombo', 'gameCloseTab', 'gamePinTab', 'gameRemote'].includes(k),
   debug: (k) => ['debug', 'saveRecognitionDebug'].includes(k),
 }
 
@@ -88,6 +89,7 @@ const labels: Record<string, MessageKey> = {
   gameTabCombo: 'gameTabCombo',
   gameCloseTab: 'gameCloseTab',
   gamePinTab: 'gamePinTab',
+  gameRemote: 'gameRemote',
   debug: 'debugMode',
   saveRecognitionDebug: 'saveRecognitionDebug',
   soundsEnabled: 'soundsEnabled',

@@ -119,6 +119,12 @@ export class Settings {
     "gamePinTab": string;
 
     /**
+     * GameRemote sends the wheel and the buttons on to the PCs paired with
+     * the Host while one is connected, in place of the Host's own MAYAK.
+     */
+    "gameRemote": boolean;
+
+    /**
      * CaptureSettleMs is how long after the last click the screen is taken
      * (EFT draws what the click opened meanwhile), CaptureRepeatSeconds how
      * long the same screen is not taken again (0: always), and CapturePollMs
@@ -313,6 +319,9 @@ export class Settings {
         if (!("gamePinTab" in $$source)) {
             this["gamePinTab"] = "";
         }
+        if (!("gameRemote" in $$source)) {
+            this["gameRemote"] = false;
+        }
         if (!("captureSettleMs" in $$source)) {
             this["captureSettleMs"] = 0;
         }
@@ -500,9 +509,9 @@ export class Settings {
         const $$createField4_0 = $$createType0;
         const $$createField10_0 = $$createType2;
         const $$createField17_0 = $$createType0;
-        const $$createField49_0 = $$createType3;
-        const $$createField50_0 = $$createType4;
+        const $$createField50_0 = $$createType3;
         const $$createField51_0 = $$createType4;
+        const $$createField52_0 = $$createType4;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("questSites" in $$parsedSource) {
             $$parsedSource["questSites"] = $$createField2_0($$parsedSource["questSites"]);
@@ -520,13 +529,13 @@ export class Settings {
             $$parsedSource["captureAutoOff"] = $$createField17_0($$parsedSource["captureAutoOff"]);
         }
         if ("soundVoices" in $$parsedSource) {
-            $$parsedSource["soundVoices"] = $$createField49_0($$parsedSource["soundVoices"]);
+            $$parsedSource["soundVoices"] = $$createField50_0($$parsedSource["soundVoices"]);
         }
         if ("soundVolumeOffsets" in $$parsedSource) {
-            $$parsedSource["soundVolumeOffsets"] = $$createField50_0($$parsedSource["soundVolumeOffsets"]);
+            $$parsedSource["soundVolumeOffsets"] = $$createField51_0($$parsedSource["soundVolumeOffsets"]);
         }
         if ("soundDelays" in $$parsedSource) {
-            $$parsedSource["soundDelays"] = $$createField51_0($$parsedSource["soundDelays"]);
+            $$parsedSource["soundDelays"] = $$createField52_0($$parsedSource["soundDelays"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }

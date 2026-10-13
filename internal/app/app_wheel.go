@@ -2,6 +2,7 @@ package app
 
 import (
 	"sync"
+	"sync/atomic"
 
 	"github.com/local/mayak/internal/browserview"
 	"github.com/local/mayak/internal/capture"
@@ -17,6 +18,34 @@ type wheelState struct {
 	mu        sync.Mutex
 	current   [4]string // wheelButtons of the options running
 	forwarder *capture.WheelForwarder
+	// remote is config GameRemote; clients the Clients connected over the
+	// link, as the shell tells (BrowserLinkClients).
+	remote  atomic.Bool
+	clients atomic.Int32
+}
+
+// gameAway tells that the wheel and the buttons go to the Clients: GameRemote
+// is on and one is connected. The shell passes them on (browser:game-remote).
+func (a *App) gameAway() bool { return a.wheel.remote.Load() && a.wheel.clients.Load() > 0 }
+
+// BrowserLinkClients is how many Clients the Host's link has now.
+func (a *App) BrowserLinkClients(n int) { a.wheel.clients.Store(int32(max(0, min(n, 100)))) }
+
+// gameRemote sends the shell what the wheel or a button did, for the Clients.
+func (a *App) gameRemote(input map[string]any) { a.emitEvent("browser:game-remote", input) }
+
+// BrowserGameScroll turns a Client's page as its Host's wheel was turned in
+// the game: dy CSS pixels at the middle of the page shown. False tells the
+// shell to scroll by itself (no page view there, or not Windows).
+func (a *App) BrowserGameScroll(dy float64) bool {
+	if a.browserViews == nil || dy != dy {
+		return false
+	}
+	x, y, ok := a.browserViews.PageMiddle()
+	if !ok {
+		return false
+	}
+	return capture.ScrollAt(x, y, max(-5000, min(dy, 5000)), a.scrollPageFromGame)
 }
 
 // wheelButtons are o's buttons and keys.
@@ -58,9 +87,23 @@ func (a *App) applyGameWheel(o capture.WheelOptions) {
 		return
 	}
 	set := o
-	o.SwitchTab = func(step int) { a.emitEvent("browser:game-tab", step) }
-	o.TabAction = func(action string) { a.emitEvent("browser:game-tab-action", action) }
+	o.SwitchTab = func(step int) {
+		if a.gameAway() {
+			a.gameRemote(map[string]any{"kind": "tab", "step": step})
+			return
+		}
+		a.emitEvent("browser:game-tab", step)
+	}
+	o.TabAction = func(action string) {
+		if a.gameAway() {
+			a.gameRemote(map[string]any{"kind": "action", "action": action})
+			return
+		}
+		a.emitEvent("browser:game-tab-action", action)
+	}
 	o.ScrollPage = a.scrollPageFromGame
+	o.Away = a.gameAway
+	o.ScrollAway = func(dy float64) { a.gameRemote(map[string]any{"kind": "scroll", "dy": dy}) }
 	o.Point = func() (int32, int32, bool) {
 		if a.browserViews == nil {
 			return 0, 0, false

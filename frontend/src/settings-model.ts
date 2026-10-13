@@ -35,6 +35,7 @@ export type Settings = {
   // "ctrl+middle", "alt+middle", "x1", "x2", or "" for none.
   gameCloseTab?: string
   gamePinTab?: string
+  gameRemote?: boolean
   logsDirectory: string
   remoteId: string
   remoteTargets: RemoteTarget[]
@@ -240,6 +241,7 @@ export const defaults: Settings = {
   gameTabCombo: 'ctrl',
   gameCloseTab: 'shift+middle',
   gamePinTab: 'ctrl+middle',
+  gameRemote: false,
   logsDirectory: '',
   remoteId: '',
   remoteTargets: [],

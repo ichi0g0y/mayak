@@ -1691,6 +1691,18 @@ function App() {
                   </Select>
                 </div>
                 <p className="help">{t('gameTabButtonsHelp')}</p>
+                <div className="switch-row">
+                  <div>
+                    <Label htmlFor="game-remote">{t('gameRemote')}</Label>
+                    <p className="help">{t('gameRemoteHelp')}</p>
+                  </div>
+                  <Switch
+                    id="game-remote"
+                    checked={!!settings.gameRemote}
+                    disabled={!settings.gameWheel}
+                    onCheckedChange={(gameRemote) => patch({ gameRemote })}
+                  />
+                </div>
                 {settings.gameWheel && (settings.gameScrollCombo === 'right' || settings.gameTabCombo === 'right') && (
                   <p className="help">{t('gameScrollRightHelp')}</p>
                 )}

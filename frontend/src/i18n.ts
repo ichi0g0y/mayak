@@ -432,6 +432,9 @@ const messages = {
     gameButton_altMiddle: 'Alt＋中ボタン',
     gameTabButtonsHelp:
       '閉じるのはタブの一覧にあるタブだけで、ピン留めしたタブは閉じません。ピン留めは Web のタブだけです。',
+    gameRemote: 'リモートにつないでいるときは、つないだ PC を操作する',
+    gameRemoteHelp:
+      '別の PC の MAYAK とつながっているあいだは、スクロールもタブの操作も、その PC の MAYAK に効きます。この PC の MAYAK は動きません。macOS と Linux の PC では、Web ページはスクロールしません。',
     gameWheelNote:
       'メニューやインベントリなど、カーソルが出ている画面で使えます。EFT はマウスを直接読むので、EFT 側も一緒にスクロールすることがあります。',
     gameScrollRightHelp:
@@ -930,6 +933,9 @@ const messages = {
     gameButton_ctrlMiddle: 'Ctrl + middle button',
     gameButton_altMiddle: 'Alt + middle button',
     gameTabButtonsHelp: 'Only a tab of the tab list closes, not a pinned one; only web tabs pin.',
+    gameRemote: 'Work the PC connected while connected remotely',
+    gameRemoteHelp:
+      "While MAYAK on another PC is connected, the scrolling and the tabs work that PC's MAYAK, not this one's. On a Mac or Linux PC, web pages do not scroll.",
     gameWheelNote:
       'It works on screens that show the cursor, such as menus and the inventory. EFT reads the mouse itself, so it may scroll too.',
     gameScrollRightHelp:

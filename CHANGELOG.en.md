@@ -6,6 +6,11 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Nightly
 
+### New
+
+- In-game controls can work the PC connected while connected remotely (off by default): while MAYAK on another PC is connected, the wheel and the buttons scroll that PC's MAYAK and switch, close and pin its tabs, and this PC's MAYAK stays as it is.
+  - On a Mac or Linux PC, web pages do not scroll.
+
 ### Improved
 
 - Looking on another PC or a tablet, tabs no longer pile up on the Host PC. MAYAK used on one PC alone works as before.

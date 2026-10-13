@@ -90,6 +90,15 @@ export function BrowserFavicon(rawURL: string, refresh: boolean): $CancellablePr
 }
 
 /**
+ * BrowserGameScroll turns a Client's page as its Host's wheel was turned in
+ * the game: dy CSS pixels at the middle of the page shown. False tells the
+ * shell to scroll by itself (no page view there, or not Windows).
+ */
+export function BrowserGameScroll(dy: number): $CancellablePromise<boolean> {
+    return $Call.ByID(1647553405, dy);
+}
+
+/**
  * BrowserGoonReportInfo returns what a Goons report can be about: the raid in
  * progress or the last one, and the accounts and modes seen in the logs.
  */
@@ -135,6 +144,13 @@ export function BrowserItemSearch(query: string): $CancellablePromise<$models.It
     return $Call.ByID(3753157553, query).then(($result: any) => {
         return $$createType7($result);
     });
+}
+
+/**
+ * BrowserLinkClients is how many Clients the Host's link has now.
+ */
+export function BrowserLinkClients(n: number): $CancellablePromise<void> {
+    return $Call.ByID(1789455778, n);
 }
 
 /**

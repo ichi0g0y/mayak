@@ -242,6 +242,7 @@ func (a *App) saveSettings(s config.Settings, restartMonitor bool) error {
 	if old.CaptureKey != s.CaptureKey {
 		go a.applyCaptureKey(s.CaptureKey)
 	}
+	a.wheel.remote.Store(s.GameRemote)
 	if old.GameWheel != s.GameWheel || old.GameScrollCombo != s.GameScrollCombo || old.GameTabCombo != s.GameTabCombo || old.GameCloseTab != s.GameCloseTab || old.GamePinTab != s.GamePinTab {
 		go a.applyGameWheel(a.gameWheelSettings(s))
 	}
