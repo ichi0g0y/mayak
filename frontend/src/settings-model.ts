@@ -25,6 +25,12 @@ export type Settings = {
   // or "click" (CaptureKeyField).
   captureTasksTrigger?: string
   captureItemTrigger?: string
+  // The wheel turned in EFT goes to MAYAK (experimental): held to scroll it,
+  // and to go through its tabs: "right", "x1", "x2", "shift", "ctrl", "alt",
+  // or "" for none.
+  gameWheel?: boolean
+  gameScrollCombo?: string
+  gameTabCombo?: string
   logsDirectory: string
   remoteId: string
   remoteTargets: RemoteTarget[]
@@ -226,6 +232,9 @@ export const defaults: Settings = {
   captureAutoOff: [],
   captureTasksTrigger: 'right',
   captureItemTrigger: 'click',
+  gameWheel: false,
+  gameScrollCombo: 'shift',
+  gameTabCombo: 'ctrl',
   logsDirectory: '',
   remoteId: '',
   remoteTargets: [],
@@ -397,6 +406,7 @@ export const hostSections = [
   'tracker',
   'sounds',
   'startup',
+  'gameInput',
   'debug',
 ] as const
 export type HostSection = (typeof hostSections)[number]
@@ -417,6 +427,7 @@ export const sectionTitles: Record<HostSection, Parameters<typeof translate>[1]>
   tracker: 'secTracker',
   sounds: 'secSounds',
   startup: 'secStartup',
+  gameInput: 'secGameInput',
   debug: 'secDebug',
 }
 

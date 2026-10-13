@@ -102,6 +102,16 @@ export class Settings {
     "captureItemTrigger": string;
 
     /**
+     * GameWheel takes the wheel turned in EFT to MAYAK (experimental):
+     * GameScrollCombo held scrolls it, GameTabCombo held switches its tabs
+     * (capture.WheelCombos; not the same; "" for none). Shift and Ctrl by
+     * default.
+     */
+    "gameWheel": boolean;
+    "gameScrollCombo": string;
+    "gameTabCombo": string;
+
+    /**
      * CaptureSettleMs is how long after the last click the screen is taken
      * (EFT draws what the click opened meanwhile), CaptureRepeatSeconds how
      * long the same screen is not taken again (0: always), and CapturePollMs
@@ -283,6 +293,15 @@ export class Settings {
         }
         if (!("captureItemTrigger" in $$source)) {
             this["captureItemTrigger"] = "";
+        }
+        if (!("gameWheel" in $$source)) {
+            this["gameWheel"] = false;
+        }
+        if (!("gameScrollCombo" in $$source)) {
+            this["gameScrollCombo"] = "";
+        }
+        if (!("gameTabCombo" in $$source)) {
+            this["gameTabCombo"] = "";
         }
         if (!("captureSettleMs" in $$source)) {
             this["captureSettleMs"] = 0;
@@ -471,9 +490,9 @@ export class Settings {
         const $$createField4_0 = $$createType0;
         const $$createField10_0 = $$createType2;
         const $$createField18_0 = $$createType0;
-        const $$createField45_0 = $$createType3;
-        const $$createField46_0 = $$createType4;
-        const $$createField47_0 = $$createType4;
+        const $$createField48_0 = $$createType3;
+        const $$createField49_0 = $$createType4;
+        const $$createField50_0 = $$createType4;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("questSites" in $$parsedSource) {
             $$parsedSource["questSites"] = $$createField2_0($$parsedSource["questSites"]);
@@ -491,13 +510,13 @@ export class Settings {
             $$parsedSource["captureAutoOff"] = $$createField18_0($$parsedSource["captureAutoOff"]);
         }
         if ("soundVoices" in $$parsedSource) {
-            $$parsedSource["soundVoices"] = $$createField45_0($$parsedSource["soundVoices"]);
+            $$parsedSource["soundVoices"] = $$createField48_0($$parsedSource["soundVoices"]);
         }
         if ("soundVolumeOffsets" in $$parsedSource) {
-            $$parsedSource["soundVolumeOffsets"] = $$createField46_0($$parsedSource["soundVolumeOffsets"]);
+            $$parsedSource["soundVolumeOffsets"] = $$createField49_0($$parsedSource["soundVolumeOffsets"]);
         }
         if ("soundDelays" in $$parsedSource) {
-            $$parsedSource["soundDelays"] = $$createField47_0($$parsedSource["soundDelays"]);
+            $$parsedSource["soundDelays"] = $$createField50_0($$parsedSource["soundDelays"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }

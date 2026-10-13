@@ -32,6 +32,8 @@ import {
   openLocal,
   tabAt,
   cycleTab,
+  viewRing,
+  nextInRing,
   siteOrder,
   syncTrackerTab,
   trackerTabID,
@@ -402,7 +404,8 @@ async function openPopup(next) {
 async function show() {
   const tab = state.tabs.find((t) => t.id === state.active)
   if (overlay || tab?.kind !== 'web') {
-    await native('hideAll', { id: 'shell' })
+    // The page area goes along: the wheel turned in the game scrolls its middle.
+    await native('hideAll', { id: 'shell', ...bounds() })
     return
   }
   const previous = views.get(tab.id)
@@ -1246,6 +1249,8 @@ const ready = (async () => {
   window.mayakDesktop.on('browser:position', (map) => void display({ event: 'browser:position', args: [map] }))
   // A shortcut pressed inside a page view (Ctrl+T and the like) is handled by
   // the shell, like one pressed in the shell itself.
+  // The wheel turned in the game with GameTabCombo held (app_wheel.go).
+  window.mayakDesktop.on('browser:game-tab', (step) => void window.mayak.action('cycleView', step < 0 ? -1 : 1))
   window.mayakDesktop.on('browser:key', (key) => {
     if (key && typeof key.key === 'string')
       onKey({ key: key.key, ctrl: !!key.ctrl, shift: !!key.shift, alt: !!key.alt })
@@ -1995,6 +2000,21 @@ async function performOne(type, data) {
     case 'cycleTab':
       if (!cycleTab(state, data < 0 ? -1 : 1)) return snapshot()
       break
+    // The wheel turned in the game with GameTabCombo held: the next place in
+    // the sidebar, its view opened as from the sidebar. The game keeps the
+    // keyboard: nothing here takes it.
+    case 'cycleView': {
+      const ring = viewRing(state, {
+        squad: squad.available,
+        screenshots: !!shotsAvailable(),
+        snapNotes: !!snapsAvailable(),
+      })
+      const next = nextInRing(state, ring, data < 0 ? -1 : 1)
+      if (!next) return snapshot()
+      if (next.id) state.active = next.id
+      else return performOne(next.open)
+      break
+    }
     case 'tabAt':
       if (!tabAt(state, Number(data))) return snapshot()
       break

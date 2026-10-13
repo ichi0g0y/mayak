@@ -49,6 +49,11 @@ type Manager struct {
 	notify func(Event)
 	native nativeManager
 
+	// pageArea is the shell's page area (Options' margins, DIPs), from its
+	// last show or hideAll.
+	areaMu   sync.Mutex
+	pageArea [4]int
+
 	scriptMu       sync.Mutex
 	documentScript string
 	blocker        ContentBlocker
@@ -90,8 +95,24 @@ func (m *Manager) SetDocumentScript(script string) {
 func New(window *application.WebviewWindow, notify func(Event)) *Manager {
 	return &Manager{window: window, notify: notify}
 }
-func (m *Manager) Command(command string, o Options) error { return m.command(command, o) }
-func (m *Manager) Close()                                  { m.close() }
+func (m *Manager) Command(command string, o Options) error {
+	if command == "show" || command == "hideAll" {
+		m.areaMu.Lock()
+		m.pageArea = [4]int{o.Left, o.Top, o.Right, o.Bottom}
+		m.areaMu.Unlock()
+	}
+	return m.command(command, o)
+}
+
+// PageMiddle is the middle of the window's page area (where a page view or the
+// shell's own page shows), in screen pixels.
+func (m *Manager) PageMiddle() (x, y int32, ok bool) {
+	m.areaMu.Lock()
+	area := m.pageArea
+	m.areaMu.Unlock()
+	return m.pageMiddle(area)
+}
+func (m *Manager) Close() { m.close() }
 
 // Capture takes a PNG of tab id: what is on screen, or with full the whole
 // page. prepare runs in the page before (to hide a bar) and restore after.

@@ -11,6 +11,7 @@ import {
   FolderOpen,
   MapPinned,
   MonitorCog,
+  Mouse,
   Play,
   Plus,
   RefreshCw,
@@ -85,6 +86,9 @@ import { CaptureKeyField } from './CaptureKeyField'
 import { ResetPanel, resetValues, resettable } from './SectionReset'
 import { Metric } from './Metric'
 import './style.css'
+
+// The buttons and keys held in EFT for the wheel (capture.WheelCombos).
+const wheelCombos = ['right', 'x1', 'x2', 'shift', 'ctrl', 'alt']
 
 function App() {
   const [settings, setSettings] = useState<Settings>(defaults)
@@ -1575,6 +1579,79 @@ function App() {
                   </Select>
                 </div>
                 <p className="help">{t('notifyEventsHelp')}</p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        <TabsContent value="gameInput">
+          <div className="settings-stack">
+            <Card>
+              <CardHeader>
+                <div className="icon-title">
+                  <Mouse />
+                  <div>
+                    <CardTitle>{t('gameScrollTitle')}</CardTitle>
+                    <CardDescription>{t('gameScrollDescription')}</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="switch-row">
+                  <div>
+                    <Label htmlFor="game-wheel">{t('gameWheel')}</Label>
+                    <p className="help">{t('gameWheelNote')}</p>
+                  </div>
+                  <Switch
+                    id="game-wheel"
+                    checked={!!settings.gameWheel}
+                    onCheckedChange={(gameWheel) => patch({ gameWheel })}
+                  />
+                </div>
+                <div className="field">
+                  <Label>{t('gameScrollCombo')}</Label>
+                  <Select
+                    value={settings.gameScrollCombo || 'off'}
+                    disabled={!settings.gameWheel}
+                    onValueChange={(value) => patch({ gameScrollCombo: value === 'off' ? '' : value })}
+                  >
+                    <SelectTrigger aria-label={t('gameScrollCombo')}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="off">{t('gameScroll_off')}</SelectItem>
+                      {wheelCombos.map((combo) => (
+                        <SelectItem key={combo} value={combo} disabled={settings.gameTabCombo === combo}>
+                          {t(`gameScroll_${combo}` as MessageKey)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="help">{t('gameScrollHelp')}</p>
+                </div>
+                <div className="field">
+                  <Label>{t('gameTabCombo')}</Label>
+                  <Select
+                    value={settings.gameTabCombo || 'off'}
+                    disabled={!settings.gameWheel}
+                    onValueChange={(value) => patch({ gameTabCombo: value === 'off' ? '' : value })}
+                  >
+                    <SelectTrigger aria-label={t('gameTabCombo')}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="off">{t('gameScroll_off')}</SelectItem>
+                      {wheelCombos.map((combo) => (
+                        <SelectItem key={combo} value={combo} disabled={settings.gameScrollCombo === combo}>
+                          {t(`gameScroll_${combo}` as MessageKey)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="help">{t('gameTabHelp')}</p>
+                </div>
+                {settings.gameWheel && (settings.gameScrollCombo === 'right' || settings.gameTabCombo === 'right') && (
+                  <p className="help">{t('gameScrollRightHelp')}</p>
+                )}
               </CardContent>
             </Card>
           </div>

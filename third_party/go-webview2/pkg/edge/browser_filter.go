@@ -7,6 +7,7 @@ package edge
 // they also run while a tab is being closed. All calls run on the UI thread.
 import (
 	"errors"
+	"sync"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -181,6 +182,47 @@ func removeDocumentScript(w *ICoreWebView2, id string) {
 		return
 	}
 	w.vtbl.RemoveScriptToExecuteOnDocumentCreated.Call(uintptr(unsafe.Pointer(w)), uintptr(unsafe.Pointer(p)))
+}
+
+// embedded are the WebViews by the window each is in (MAYAK: the wheel
+// turned in the game goes to the one under a point, ForWindow).
+var (
+	embeddedMu sync.Mutex
+	embedded   = map[uintptr]*Chromium{}
+)
+
+func rememberEmbedded(hwnd uintptr, e *Chromium) {
+	embeddedMu.Lock()
+	defer embeddedMu.Unlock()
+	for w, other := range embedded {
+		if other.shuttingDown || !windowAlive(w) {
+			delete(embedded, w)
+		}
+	}
+	embedded[hwnd] = e
+}
+
+var (
+	procIsWindow  = windows.NewLazySystemDLL("user32.dll").NewProc("IsWindow")
+	procGetParent = windows.NewLazySystemDLL("user32.dll").NewProc("GetParent")
+)
+
+func windowAlive(hwnd uintptr) bool {
+	ok, _, _ := procIsWindow.Call(hwnd)
+	return ok != 0
+}
+
+// ForWindow is the WebView whose page hwnd is (a window inside it: its
+// browser process's), the nearest of those it is in; nil for none.
+func ForWindow(hwnd uintptr) *Chromium {
+	embeddedMu.Lock()
+	defer embeddedMu.Unlock()
+	for w := hwnd; w != 0; w, _, _ = procGetParent.Call(w) {
+		if e := embedded[w]; e != nil && !e.shuttingDown {
+			return e
+		}
+	}
+	return nil
 }
 
 // SetDefaultBackground sets the color shown before a page paints. Unlike

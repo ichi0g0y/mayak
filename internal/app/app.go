@@ -42,6 +42,7 @@ type App struct {
 	// capture is MAYAK's own capture (app_capture.go), shotImages the
 	// screenshots decoded last (app_shot_image.go).
 	capture              captureState
+	wheel                wheelState
 	shotImages           shotImages
 	window               *application.WebviewWindow
 	windowPlacementReady atomic.Bool
@@ -195,6 +196,7 @@ func (a *App) startup(ctx context.Context) {
 	}
 	a.browserClient.Store(a.browserStartsAsClient())
 	a.startUpdateChecks()
+	a.applyGameWheel(a.gameWheelCombos(a.settings))
 
 	if a.browserClient.Load() {
 		return
@@ -256,6 +258,7 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) shutdown(context.Context) {
 	ocr.StopWindowsWorker()
 	a.stopCapture()
+	a.applyGameWheel("", "")
 	a.stopHideoutDetector()
 	a.addLog("Info", "Application", "MAYAK stopped")
 	a.quitting.Store(true)

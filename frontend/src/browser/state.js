@@ -672,6 +672,7 @@ const hostSections = [
   'tracker',
   'sounds',
   'startup',
+  'gameInput',
   'debug',
 ]
 // The address bar takes a URL or a search. Anything that is not an address
@@ -730,6 +731,43 @@ function cycleTab(state, delta) {
   state.active = tab.id
   return tab
 }
+// The views with a place of their own in the sidebar (not in its tab list).
+const sidebarKinds = [
+  'bookmarks',
+  'settings',
+  'screenshots',
+  'snapnotes',
+  'livemap',
+  'squad',
+  'bosses',
+  'notifications',
+  'tabs',
+]
+// listedTabs are the tabs in the sidebar's tab list, in its order.
+const listedTabs = (tabs) => tabs.filter((tab) => !tab.fixed && !sidebarKinds.includes(tab.kind))
+// viewRing is the sidebar from the top, as the wheel turned in the game goes
+// through it (GameTabCombo): the fixed views (TarkovTracker), the map and the
+// squad (where the squad works), the screenshots, the snap notes (where they
+// show), the bosses, then the tabs listed. A view not open yet is opened by
+// its action (open); one open is a tab by its kind.
+function viewRing(state, shown) {
+  const ring = state.tabs.filter((tab) => tab.fixed).map((tab) => ({ id: tab.id }))
+  if (shown.squad) ring.push({ kind: 'livemap', open: 'livemap' }, { kind: 'squad', open: 'squadPage' })
+  if (shown.screenshots) ring.push({ kind: 'screenshots', open: 'screenshots' })
+  if (shown.snapNotes) ring.push({ kind: 'snapnotes', open: 'snapnotes' })
+  ring.push({ kind: 'bosses', open: 'bosses' })
+  for (const tab of listedTabs(state.tabs)) ring.push({ id: tab.id })
+  return ring
+}
+// nextInRing is the place delta (±1) from the one shown; from a page not in
+// the ring (the settings, the bookmarks), the first or the last.
+function nextInRing(state, ring, delta) {
+  if (!ring.length) return null
+  const kind = state.tabs.find((tab) => tab.id === state.active)?.kind
+  const at = ring.findIndex((place) => (place.id ? place.id === state.active : place.kind === kind))
+  if (at < 0) return delta > 0 ? ring[0] : ring[ring.length - 1]
+  return ring[(at + delta + ring.length) % ring.length]
+}
 // A detected position brings the map view forward too, where it shows.
 function receivePosition(state, name) {
   return receiveMap(state, name)
@@ -782,5 +820,8 @@ export {
   shortcut,
   tabAt,
   cycleTab,
+  listedTabs,
+  viewRing,
+  nextInRing,
   receivePosition,
 }

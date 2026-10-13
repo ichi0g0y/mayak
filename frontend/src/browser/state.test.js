@@ -27,6 +27,8 @@ import {
   shortcut,
   tabAt,
   cycleTab,
+  viewRing,
+  nextInRing,
   receivePosition,
   translatedURL,
   originalURL,
@@ -600,6 +602,38 @@ test('tab switching by number and cycling covers every tab', () => {
   s.tabs = []
   assert.equal(cycleTab(s, 1), null)
   assert.equal(tabAt(s, 1), null)
+})
+test('the wheel from the game goes through the sidebar from the top', () => {
+  const s = defaults()
+  s.tabs = [
+    { id: 'tracker', kind: 'web', fixed: true },
+    { id: 'map', kind: 'livemap' },
+    { id: 'set', kind: 'settings' },
+    { id: 'a', kind: 'web', url: 'https://a.example/' },
+    { id: 'shots', kind: 'screenshots' },
+    { id: 'b', kind: 'blank' },
+  ]
+  const ring = viewRing(s, { squad: true, screenshots: true, snapNotes: false })
+  assert.deepEqual(
+    ring.map((p) => p.id || p.kind),
+    ['tracker', 'livemap', 'squad', 'screenshots', 'bosses', 'a', 'b'],
+  )
+  s.active = 'map'
+  assert.deepEqual(nextInRing(s, ring, 1), { kind: 'squad', open: 'squadPage' })
+  s.active = 'shots'
+  assert.deepEqual(nextInRing(s, ring, 1), { kind: 'bosses', open: 'bosses' })
+  assert.deepEqual(nextInRing(s, ring, -1), { kind: 'squad', open: 'squadPage' })
+  s.active = 'b'
+  assert.deepEqual(nextInRing(s, ring, 1), { id: 'tracker' })
+  // From the settings: the first going down, the last going up.
+  s.active = 'set'
+  assert.deepEqual(nextInRing(s, ring, 1), { id: 'tracker' })
+  assert.deepEqual(nextInRing(s, ring, -1), { id: 'b' })
+  // Without the squad, no map nor squad page.
+  assert.deepEqual(
+    viewRing(s, { squad: false, screenshots: false, snapNotes: true }).map((p) => p.id || p.kind),
+    ['tracker', 'snapnotes', 'bosses', 'a', 'b'],
+  )
 })
 test("pages translate through Google Translate's proxy and back", () => {
   const wiki = 'https://escapefromtarkov.fandom.com/wiki/Quests?x=1#top'

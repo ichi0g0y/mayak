@@ -175,6 +175,7 @@ func (e *Chromium) startEmbed(hwnd uintptr) error {
 	var err error
 
 	e.hwnd = hwnd
+	rememberEmbedded(hwnd, e)
 
 	dataPath := e.DataPath
 	if dataPath == "" {

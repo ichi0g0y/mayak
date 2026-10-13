@@ -37,6 +37,7 @@ const pageKeys: Partial<Record<HostSection, (key: string) => boolean>> = {
       'keepPriority',
       'autoUpdate',
     ].includes(k),
+  gameInput: (k) => ['gameWheel', 'gameScrollCombo', 'gameTabCombo'].includes(k),
   debug: (k) => ['debug', 'saveRecognitionDebug'].includes(k),
 }
 
@@ -82,6 +83,9 @@ const labels: Record<string, MessageKey> = {
   closeToTray: 'closeToTray',
   keepPriority: 'keepPriority',
   autoUpdate: 'autoUpdate',
+  gameWheel: 'gameWheel',
+  gameScrollCombo: 'gameScrollCombo',
+  gameTabCombo: 'gameTabCombo',
   debug: 'debugMode',
   saveRecognitionDebug: 'saveRecognitionDebug',
   soundsEnabled: 'soundsEnabled',
@@ -90,6 +94,17 @@ const labels: Record<string, MessageKey> = {
 }
 const groupLabel = (key: string): MessageKey => (key.startsWith('capture') ? 'resetCaptureTimes' : 'notifyEventsTitle')
 
+// The wheel's combos (capture.WheelCombos), as the In-game controls page names them.
+const wheelChoices: Record<string, MessageKey> = {
+  '': 'gameScroll_off',
+  right: 'gameScroll_right',
+  x1: 'gameScroll_x1',
+  x2: 'gameScroll_x2',
+  shift: 'gameScroll_shift',
+  ctrl: 'gameScroll_ctrl',
+  alt: 'gameScroll_alt',
+}
+
 // Values shown as their names on the page.
 const choices: Record<string, Record<string, MessageKey>> = {
   gameMode: { auto: 'gameModeAuto', pve: 'gameModePVE', regular: 'gameModePVP', 'pvp-season': 'gameModeSeason' },
@@ -97,6 +112,8 @@ const choices: Record<string, Record<string, MessageKey>> = {
   gameLanguage: { auto: 'gameLanguageAuto' },
   captureTasksTrigger: { right: 'captureTasksRight', shift: 'captureTasksShift', click: 'captureTasksClick' },
   captureItemTrigger: { click: 'captureItemClick', right: 'captureItemRight', shift: 'captureItemShift' },
+  gameScrollCombo: wheelChoices,
+  gameTabCombo: wheelChoices,
 }
 
 type Row = { label: string; from: string; to: string }
@@ -106,7 +123,7 @@ function rows(values: Values, current: Values, t: (key: MessageKey) => string): 
     if (typeof value === 'boolean') return t(value ? 'resetOn' : 'resetOff')
     if (typeof value === 'number') return String(value)
     if (typeof value === 'string')
-      return value === '' ? t('resetEmpty') : choices[key]?.[value] ? t(choices[key][value]) : value
+      return choices[key]?.[value] ? t(choices[key][value]) : value === '' ? t('resetEmpty') : value
     return ''
   }
   const out: Row[] = []

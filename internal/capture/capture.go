@@ -285,3 +285,28 @@ func blank(img *image.RGBA) bool {
 	}
 	return true
 }
+
+// WheelCombos are what can be held to scroll MAYAK or switch its tabs with
+// the wheel from EFT (ForwardWheel): the right button, the side buttons
+// (back, forward), Shift, Ctrl or Alt.
+var WheelCombos = []string{"right", "x1", "x2", "shift", "ctrl", "alt"}
+
+// WheelOptions are what ForwardWheel does with the wheel turned in EFT.
+type WheelOptions struct {
+	// Scroll and Tabs are the combos (WheelCombos, "" for none) held to
+	// scroll MAYAK and to switch its tabs.
+	Scroll, Tabs string
+	// SwitchTab is called with 1 for a notch turned towards the user, -1 away.
+	SwitchTab func(step int)
+	// ScrollPage turns the wheel of the page in MAYAK's window hwnd (a
+	// WebView's) at (x, y), CSS pixels, by dy (down for more than 0) with no
+	// key held: for a key held to scroll, Windows' wheel message would let the
+	// page read it as Shift's sideways scroll or Ctrl's zoom. A button's goes
+	// as the message.
+	ScrollPage func(hwnd uintptr, x, y, dy float64)
+	// Point is where in MAYAK a scroll goes, in screen pixels: the middle of
+	// the page shown (not the sidebar nor the item panel).
+	Point func() (x, y int32, ok bool)
+	// Note tells what a turn with a combo held did, at most once a second.
+	Note func(text string)
+}

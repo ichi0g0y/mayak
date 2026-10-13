@@ -179,7 +179,7 @@ func WatchClicks(poll, settle time.Duration, settled func(Click)) *ClickWatcher 
 		defer timer.Stop()
 		var front uintptr
 		var inGame, wasLeft, wasRight bool
-		var due time.Time
+		var due, rightDown time.Time
 		var last Click
 		for {
 			select {
@@ -200,7 +200,12 @@ func WatchClicks(poll, settle time.Duration, settled func(Click)) *ClickWatcher 
 					return state&0x8000 != 0
 				}
 				left, right := pressed(vkLButton), pressed(vkRButton)
-				if ((wasLeft && !left) || (wasRight && !right)) && !aiming(front) {
+				if right && !wasRight {
+					rightDown = now
+				}
+				// A right button held to turn MAYAK's wheel (ForwardWheel) made no click.
+				scrolled := wasRight && !right && WheelTurnedSince(rightDown)
+				if ((wasLeft && !left) || (wasRight && !right)) && !aiming(front) && !scrolled {
 					last, due = Click{Right: wasRight && !right, Shift: pressed(vkShift)}, now.Add(settle)
 				}
 				wasLeft, wasRight = left, right

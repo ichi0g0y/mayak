@@ -55,6 +55,13 @@ type Settings struct {
 	// click by default, so going through the list with clicks reads nothing.
 	CaptureTasksTrigger string `json:"captureTasksTrigger"`
 	CaptureItemTrigger  string `json:"captureItemTrigger"`
+	// GameWheel takes the wheel turned in EFT to MAYAK (experimental):
+	// GameScrollCombo held scrolls it, GameTabCombo held switches its tabs
+	// (capture.WheelCombos; not the same; "" for none). Shift and Ctrl by
+	// default.
+	GameWheel       bool   `json:"gameWheel"`
+	GameScrollCombo string `json:"gameScrollCombo"`
+	GameTabCombo    string `json:"gameTabCombo"`
 	// CaptureSettleMs is how long after the last click the screen is taken
 	// (EFT draws what the click opened meanwhile), CaptureRepeatSeconds how
 	// long the same screen is not taken again (0: always), and CapturePollMs
@@ -184,7 +191,7 @@ type WindowState struct {
 func Defaults() Settings { return defaults() }
 
 func defaults() Settings {
-	return Settings{DesktopOn: []string{"matchFound", "prestige", "trackerFailed"}, Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: false, QuestSoundEnabled: true, ErrorSoundEnabled: true, TaskNotMatchedSoundEnabled: true, RemoteErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, MatchFoundSound: true, RaidStartSound: true, RunThroughSound: true, AutoUpdate: true, CaptureSettleMs: 250, CaptureRepeatSeconds: 60, CapturePollMs: 30, CaptureTasksTrigger: "right", CaptureItemTrigger: "click"}
+	return Settings{DesktopOn: []string{"matchFound", "prestige", "trackerFailed"}, Language: "ja", GameMode: "auto", OCREngine: "tesseract", ScreenshotRetainCount: 500, ScreenshotRetainHours: 168, SoundsEnabled: false, QuestSoundEnabled: true, ErrorSoundEnabled: true, TaskNotMatchedSoundEnabled: true, RemoteErrorSoundEnabled: true, SoundVolume: 28, AutoStartMonitoring: true, OpenMapOnRaidStart: true, NavigateMapOnShot: true, RunThroughSeconds: 430, MatchFoundSound: true, RaidStartSound: true, RunThroughSound: true, AutoUpdate: true, GameScrollCombo: "shift", GameTabCombo: "ctrl", CaptureSettleMs: 250, CaptureRepeatSeconds: 60, CapturePollMs: 30, CaptureTasksTrigger: "right", CaptureItemTrigger: "click"}
 }
 func path() (string, error) {
 	d, err := os.UserConfigDir()

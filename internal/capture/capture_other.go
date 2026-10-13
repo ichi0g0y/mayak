@@ -25,5 +25,17 @@ func WatchClicks(time.Duration, time.Duration, func(Click)) *ClickWatcher { retu
 // Stop does nothing here.
 func (w *ClickWatcher) Stop() {}
 
+// WheelForwarder sends the wheel to MAYAK; there is none here.
+type WheelForwarder struct{}
+
+// ForwardWheel cannot watch the wheel on this platform.
+func ForwardWheel(WheelOptions) (*WheelForwarder, error) { return nil, ErrUnsupported }
+
+// Stop does nothing here.
+func (f *WheelForwarder) Stop() {}
+
+// WheelTurnedSince reports no wheel turns here.
+func WheelTurnedSince(time.Time) bool { return false }
+
 // Grab cannot take the screen on this platform.
 func Grab() (*image.RGBA, error) { return nil, ErrUnsupported }

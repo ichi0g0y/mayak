@@ -4,6 +4,16 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### New
+
+- (Experimental) The wheel in the game works MAYAK: while EFT shows its cursor (menus, inventory), turning the wheel with a chosen button or key held scrolls the main page MAYAK shows; with another one held, it switches tabs, going through the sidebar from the top, the map, the squad, the screenshots and the like included. Turned on under In-game controls in the settings (off by default), Shift held scrolls and Ctrl held switches tabs; the right button, a side button or Alt can be chosen instead. EFT reads the mouse itself, so it may scroll too.
+
+### Fixed
+
+- Auto recognition could take the Weapon Builds screen, the Flea Market or the main menu for a Tasks screen and report the task as not found.
+
 ## v0.1.40 (2026-10-13)
 
 ### Fixed

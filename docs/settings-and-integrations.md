@@ -22,6 +22,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | | `screenshots` | スクリーンショットと自動認識 | Host |
 | | `recognition` | 認識方法 | Host |
 | | `tasks` | タスクの開き方 | ブラウザ |
+| | `gameInput` | ゲーム中の操作 | Host |
 | 連携 | `remote` | tarkov.dev 連携 | Host |
 | | `tracker` | TarkovTracker | Host |
 | | `connection` | 他のPCとの接続 | ブラウザ |
@@ -92,6 +93,8 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `captureAuto` | `false` | EFT でクリックしたあと、読める画面なら MAYAK が撮る（実験的） |
 | `captureTasksTrigger` / `captureItemTrigger` | `"right"` / `"click"` | タスクの画面・アイテムの窓を撮る操作。`right`（右クリック）/ `shift`（Shift＋クリック）/ `click`（どのクリックでも。タスクは開いた時、アイテムは詳細を開いた時に読む）。それ以外は初期値 |
 | `captureSettleMs` / `captureRepeatSeconds` / `capturePollMs` | `250` / `60` / `30` | クリックから撮るまでの待ち時間（50〜2000 ms）、同じ画面を撮り直さない時間（0〜3600 秒、0 で毎回）、ボタンを認識する間隔（10〜100 ms）。範囲外は初期値。設定画面には出さない |
+| `gameWheel` | `false` | EFT で回したホイールを MAYAK で使う（実験的）。オフのあいだは下の 2 つを使わず、フックも入れない |
+| `gameScrollCombo` / `gameTabCombo` | `"shift"` / `"ctrl"` | EFT で押しながらホイールを回すと、MAYAK がスクロールする / タブを切り替えるボタンかキー。`right`（右ボタン）/ `x1`・`x2`（サイドボタンの戻る・進む）/ `shift` / `ctrl` / `alt`、空なら使わない。それ以外は空にし、2 つが同じならタブの方を空にする。EFT が前でカーソルが出ているあいだ（狙っていないあいだ）だけ低レベルのマウスフックを入れる（`capture.ForwardWheel`）。スクロールは、表示中のメインの画面（シェルが `show` / `hideAll` で渡すページの範囲。サイドバーとアイテム欄を除く）の中央へ送る（`browserview.Manager.PageMiddle`。まだ範囲が届いていなければ一番大きいウィンドウの中央）。ボタンなら `WM_MOUSEWHEEL` として、キー（`shift` / `ctrl` / `alt`）なら、ページがキーを読んで横スクロールや拡大にしないよう、その WebView の DevTools の `Input.dispatchMouseEvent`（修飾キーなし）として送る（`browserview.GameWheel`）。タブは 1 ノッチごとに `browser:game-tab` イベント（手前に回すと 1、奥に回すと -1）をシェルに送る。フックはそのホイールを EFT のウィンドウメッセージから外すが、EFT はマウスを Raw Input でも読むので、EFT 側も動くことがある。ホイールを回した右クリックは自動認識しない。Windows のみ。設定画面は「ゲーム中の操作」 |
 | `captureAutoOff` | `[]` | クリックで撮らない画面（`profile` / `item` / `tasks`）。知らない値は除き、この順に並べる（`captureKindList`） |
 | `ocrDefaultRevision` | `0` | OCR 既定値移行の記録（内部用） |
 | `debug` | `false` | デバッグ表示（crop プレビュー、候補、Hideout 診断） |
@@ -146,6 +149,7 @@ $1| `autoStartMonitoring` | `true` | 起動時に監視を開始する |
 | `startup` | `launchAtStartup`, `startMinimized`, `autoStartMonitoring`, `minimizeToTray`, `closeToTray`, `autoUpdate` | — |
 | `status` | 表示のみ: Remote 接続状態、現在のマップ、レイド状態、スクリーンショット種別、TarkovTracker の状態、最後の検出結果、カタログの状態、アップデートの状態 | 最新スクリーンショットの解析、TarkovTracker の更新、カタログの更新、タスクページを開く、更新の確認・ダウンロード・再起動して更新、リリースノートを開く |
 | `logs` | 表示のみ（[ログ](#ログ) を参照） | フォルダを開く、ログの消去 |
+| `gameInput` | カード「ゲーム中のホイール（実験的）」: スイッチ `gameWheel`、その下で `gameScrollCombo` と `gameTabCombo` をそれぞれ選ぶ（「使わない」と 6 つの組み合わせ。もう一方で選んだものは選べない。スイッチがオフのあいだは選べない）。右ボタンを選んだときは、右クリックが EFT にも届く注意を出す | — |
 | `debug` | `debug`, `saveRecognitionDebug`。`debug` がオンのときは Hideout 診断フォルダ、候補一覧、crop、目標も表示 | `OpenHideoutDiagnostics` |
 
 ## ブラウザ設定（シェル側）

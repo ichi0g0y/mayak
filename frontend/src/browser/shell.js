@@ -17,6 +17,7 @@ import {
   toolOrderOf,
   mergeToolOrder,
   siteOrder,
+  listedTabs as listedOf,
 } from './state.js'
 import { Window, Browser } from '@wailsio/runtime'
 import morphdom from 'morphdom'
@@ -142,20 +143,7 @@ const tabName = (tab) =>
                           ? t('allTabs')
                           : tab.title || tab.url
 // Tabs listed in the tab section (the strip sizes itself by their number).
-const listedTabs = () =>
-  state.tabs.filter(
-    (tab) =>
-      !tab.fixed &&
-      tab.kind !== 'bookmarks' &&
-      tab.kind !== 'settings' &&
-      tab.kind !== 'screenshots' &&
-      tab.kind !== 'snapnotes' &&
-      tab.kind !== 'livemap' &&
-      tab.kind !== 'squad' &&
-      tab.kind !== 'bosses' &&
-      tab.kind !== 'notifications' &&
-      tab.kind !== 'tabs',
-  )
+const listedTabs = () => listedOf(state.tabs)
 const tabCount = () => listedTabs().length
 function tabs() {
   return listedTabs()
@@ -485,6 +473,7 @@ const sectionIcons = {
   tracker: 'tracker',
   sounds: 'volume',
   startup: 'power',
+  gameInput: 'mouse',
   debug: 'bug',
   licenses: 'file',
 }
@@ -492,7 +481,7 @@ const sectionIcons = {
 // some the Host's (its page in a frame); that split is not shown.
 const settingsGroups = /** @type {[string,string[]][]} */ ([
   ['grpGeneral', ['appearance', 'notifications', 'startup', 'sounds']],
-  ['grpGame', ['folders', 'screenshots', 'recognition', 'tasks']],
+  ['grpGame', ['folders', 'screenshots', 'recognition', 'tasks', 'gameInput']],
   ['grpLinks', ['remote', 'tracker', 'connection']],
   ['grpBrowser', ['adblock']],
   ['grpDiagnostics', ['status', 'logs', 'debug']],
