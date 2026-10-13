@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   itemInfo,
   bestSale,
+  fleaFee,
   price,
   age,
   historyPoints,
@@ -112,7 +113,7 @@ test('trader offers are validated with the task that unlocks them', () => {
 
 test('best sale compares the flea market with the best trader', () => {
   const base = { traders: [{ trader: 'Therapist', priceRub: 100000 }] }
-  assert.deepEqual(bestSale({ ...base, flea: { lastLow: 700000 } }), { where: 'flea', priceRub: 700000 })
+  assert.deepEqual(bestSale({ ...base, flea: { lastLow: 700000 } }), { where: 'flea', priceRub: 700000, fee: null })
   assert.deepEqual(bestSale({ ...base, flea: null }), { where: 'Therapist', priceRub: 100000 })
   assert.equal(bestSale({ traders: [], flea: null }), null)
 })
@@ -193,4 +194,35 @@ test("traders' pictures keep web addresses only", () => {
   })
   assert.deepEqual(item.traderImages, { Prapor: 'https://assets.tarkov.dev/prapor.webp' })
   assert.deepEqual(itemInfo({ id: 'x', name: 'X', traderImages: 'junk' }).traderImages, {})
+})
+
+test("the flea market's fee is tarkov.dev's, the Intel Center's level 3 taking 30% off", () => {
+  const rates = { offerRate: 0.05, requirementRate: 0.05, intel: null }
+  // tarkov.dev's API gives 5968 for this item (base 67397, listed at 47776).
+  const item = { basePrice: 67397, flea: { lastLow: 47776 }, fleaFee: rates, traders: [] }
+  assert.equal(fleaFee(item), 5968)
+  assert.equal(fleaFee({ ...item, fleaFee: { ...rates, intel: true } }), 4178)
+  assert.equal(fleaFee({ ...item, fleaFee: { ...rates, intel: false } }), 5968)
+  // Listed above the base price, the asked part grows.
+  assert.ok(fleaFee(item, 200000) > fleaFee(item, 100000))
+  assert.equal(fleaFee({ ...item, fleaFee: null }), null)
+  assert.equal(fleaFee({ ...item, basePrice: 0 }), null)
+  assert.equal(fleaFee({ ...item, flea: null }), null)
+})
+
+test('the best sale compares what is left after the fee with the best trader', () => {
+  const rates = { offerRate: 0.05, requirementRate: 0.05, intel: null }
+  const item = {
+    basePrice: 67397,
+    flea: { lastLow: 47776 },
+    fleaFee: rates,
+    traders: [{ trader: 'Therapist', priceRub: 45000 }],
+  }
+  // 47776 is more than the trader's 45000, but 47776 - 5968 is not.
+  assert.deepEqual(bestSale(item), { where: 'Therapist', priceRub: 45000 })
+  assert.deepEqual(bestSale({ ...item, traders: [{ trader: 'Therapist', priceRub: 40000 }] }), {
+    where: 'flea',
+    priceRub: 47776 - 5968,
+    fee: 5968,
+  })
 })

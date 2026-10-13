@@ -18,7 +18,7 @@ func (s fixedSource) Refresh(context.Context, string, bool) (*catalog.Snapshot, 
 
 func testSnapshot() *catalog.Snapshot {
 	raw := map[string]string{
-		"items":      `{"data":{"items":{"gpu":{"id":"gpu","name":"gpu Name","shortName":"gpu Short","width":2,"height":1,"lastLowPrice":400000,"avg24hPrice":410000,"changeLast48hPercent":-2.5,"lastOfferCount":12,"minLevelForFlea":20,"updated":"2026-09-23T12:00:00.000Z","sellToTrader":[{"trader":"prapor","price":90000,"priceRUB":90000,"currency":"RUB"},{"trader":"therapist","price":120000,"priceRUB":120000,"currency":"RUB"}],"buyFromTrader":[{"trader":"therapist","price":1000,"priceRUB":150000,"currency":"USD","minTraderLevel":2,"taskUnlock":"t2","buyLimit":3},{"trader":"prapor","price":140000,"priceRUB":140000,"currency":"RUB","minTraderLevel":1,"taskUnlock":null,"buyLimit":null},{"trader":"gone","price":1,"priceRUB":1,"currency":"RUB"}]},"thermo":{"id":"thermo","name":"thermo Name","shortName":"thermo Short","iconLink":"https://example.com/thermo.webp"}}}}`,
+		"items":      `{"data":{"items":{"gpu":{"id":"gpu","name":"gpu Name","shortName":"gpu Short","width":2,"height":1,"lastLowPrice":400000,"avg24hPrice":410000,"changeLast48hPercent":-2.5,"lastOfferCount":12,"minLevelForFlea":20,"updated":"2026-09-23T12:00:00.000Z","sellToTrader":[{"trader":"prapor","price":90000,"priceRUB":90000,"currency":"RUB"},{"trader":"therapist","price":120000,"priceRUB":120000,"currency":"RUB"}],"buyFromTrader":[{"trader":"therapist","price":1000,"priceRUB":150000,"currency":"USD","minTraderLevel":2,"taskUnlock":"t2","buyLimit":3},{"trader":"prapor","price":140000,"priceRUB":140000,"currency":"RUB","minTraderLevel":1,"taskUnlock":null,"buyLimit":null},{"trader":"gone","price":1,"priceRUB":1,"currency":"RUB"}]},"thermo":{"id":"thermo","name":"thermo Name","shortName":"thermo Short","iconLink":"https://example.com/thermo.webp"}},"fleaMarket":{"sellOfferFeeRate":0.05,"sellRequirementFeeRate":0.04}}}`,
 		"items_en":   `{"data":{"gpu Name":"Graphics card","gpu Short":"GPU","thermo Name":"Analog thermometer","thermo Short":"Termo"}}`,
 		"items_ja":   `{"data":{"thermo Name":"アナログ温度計"}}`,
 		"barters":    `{"data":[{"trader":"prapor","minTraderLevel":2,"taskUnlock":"t2","buyLimit":6,"requiredItems":[{"item":"thermo","count":1}],"offeredItem":{"item":"gpu","count":1}},{"trader":"therapist","minTraderLevel":1,"taskUnlock":null,"buyLimit":4,"requiredItems":[{"item":"gpu","count":7.51}],"offeredItem":{"item":"gpu","count":2}},{"trader":"prapor","requiredItems":[{"item":"unknown","count":1}],"offeredItem":{"item":"gpu","count":1}},{"trader":"prapor","requiredItems":[{"item":"gpu","count":1}],"offeredItem":{"item":"thermo","count":1}}]}`,
@@ -27,7 +27,7 @@ func testSnapshot() *catalog.Snapshot {
 		"tasks":      `{"data":{"tasks":{"t1":{"id":"t1","name":"t1 name","trader":"prapor","objectives":[{"type":"findItem","items":["gpu"],"count":2,"foundInRaid":true},{"type":"giveItem","items":["gpu","other"],"count":2}]},"t2":{"id":"t2","name":"t2 name","trader":"prapor","objectives":[{"type":"visit"}]}}}}`,
 		"tasks_en":   `{"data":{"t1 name":"Farming - Part 4","t2 name":"Other"}}`,
 		"tasks_ja":   `{"data":{"t1 name":"農業 4"}}`,
-		"hideout":    `{"data":{"s":{"id":"s","name":"s name","levels":[{"id":"s-2","level":2,"itemRequirements":[{"item":"gpu","count":1,"attributes":{"foundInRaid":true}}]}]}}}`,
+		"hideout":    `{"data":{"s":{"id":"s","name":"s name","levels":[{"id":"s-2","level":2,"itemRequirements":[{"item":"gpu","count":1,"attributes":{"foundInRaid":true}}]}]},"ic":{"id":"ic","name":"ic name","normalizedName":"intelligence-center","levels":[{"id":"ic-2","level":2},{"id":"ic-3","level":3}]}}}`,
 		"hideout_en": `{"data":{"s name":"Bitcoin farm"}}`,
 		"maps":       `{"data":{"maps":{"m1":{"normalizedName":"customs","locks":[{"key":"gpu","position":{"x":10,"y":2,"z":-5}},{"key":"other","position":{"x":1,"y":1,"z":1}}]},"m2":{"normalizedName":"bigmap-none","locks":[]}}}}`,
 	}
@@ -105,6 +105,27 @@ func TestProgress(t *testing.T) {
 	}
 	if done := Progress(info, map[string]string{"t2": "completed"}, nil); done.Offers[1].Task.State != "completed" {
 		t.Fatalf("completed offer task = %+v", done.Offers[1].Task)
+	}
+	// The flea market's fee: the mode's rates, and the Intel Center's level 3
+	// from the hideout's progress (not known without it).
+	if f := info.FleaFee; f == nil || f.OfferRate != 0.05 || f.RequirementRate != 0.04 || f.Intel != nil {
+		t.Fatalf("catalog fee = %+v", info.FleaFee)
+	}
+	if f := unknown.FleaFee; f == nil || f.Intel != nil {
+		t.Fatalf("unknown fee = %+v", f)
+	}
+	if f := known.FleaFee; f == nil || f.Intel == nil || *f.Intel {
+		t.Fatalf("no Intel Center 3 = %+v", f)
+	}
+	if f := Progress(info, nil, map[string]bool{"ic-3": true}).FleaFee; f == nil || f.Intel == nil || !*f.Intel {
+		t.Fatalf("Intel Center 3 = %+v", f)
+	}
+	if info.FleaFee.Intel != nil {
+		t.Fatal("Progress changed the catalog's fee")
+	}
+	// An item off the flea has no fee.
+	if thermo, _ := New(fixedSource{testSnapshot()}).Catalog(context.Background(), "pve", "thermo"); thermo.FleaFee != nil {
+		t.Fatalf("thermometer fee = %+v", thermo.FleaFee)
 	}
 }
 

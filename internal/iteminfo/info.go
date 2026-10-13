@@ -34,7 +34,11 @@ type Info struct {
 	Height     int               `json:"height"`
 	BasePrice  int               `json:"basePrice"`
 	// Flea is nil when the item cannot be sold on the flea market.
-	Flea    *Flea         `json:"flea"`
+	Flea *Flea `json:"flea"`
+	// FleaFee is what the flea market's fee for listing it is worked out
+	// with (the sidebar's item.js fleaFee), nil without flea prices.
+	FleaFee *FleaFee `json:"fleaFee,omitempty"`
+	// Traders are the traders buying it, the best first.
 	Traders []TraderPrice `json:"traders"`
 	// TraderImages are the traders' pictures (tarkov.dev, 128 px) by name,
 	// for every trader the catalog has: the sidebar puts one before a
@@ -79,6 +83,20 @@ type Flea struct {
 	ChangePercent float64 `json:"changePercent"`
 	Offers        int     `json:"offers"`
 	MinLevel      int     `json:"minLevel"`
+}
+
+// FleaFee holds what the flea market's fee depends on besides the item's
+// base price and the price asked: tarkov.dev's fee rates of the game mode
+// (fleaMarket.sellOfferFeeRate, sellRequirementFeeRate), and whether the
+// Intel Center is at level 3, which takes 30% off (TarkovTracker's hideout,
+// nil when not known; Progress). The Hideout Management skill, which takes
+// a little more off, is not known.
+type FleaFee struct {
+	OfferRate       float64 `json:"offerRate"`
+	RequirementRate float64 `json:"requirementRate"`
+	Intel           *bool   `json:"intel"`
+	// intelLevel is the Intel Center level 3's ID in the hideout's progress.
+	intelLevel string
 }
 
 type TraderPrice struct {
@@ -228,6 +246,15 @@ func Progress(info Info, tasks map[string]string, hideout map[string]bool) Info 
 			}
 		}
 	}
+	if info.FleaFee != nil {
+		fee := *info.FleaFee
+		fee.Intel = nil
+		if hideout != nil && fee.intelLevel != "" {
+			built := hideout[fee.intelLevel]
+			fee.Intel = &built
+		}
+		info.FleaFee = &fee
+	}
 	info.Hideout = append([]HideoutNeed(nil), info.Hideout...)
 	for i := range info.Hideout {
 		info.Hideout[i].Complete = nil
@@ -307,6 +334,10 @@ type index struct {
 	tasks   map[string][]TaskNeed
 	hideout map[string][]HideoutNeed
 	locks   map[string][]Lock
+	// feeRates are the flea market's fee rates of the mode (0 when the
+	// catalog has none); intelLevel is the Intel Center level 3's ID.
+	feeRates   [2]float64
+	intelLevel string
 }
 
 func build(snapshot *catalog.Snapshot) (*index, error) {
@@ -319,7 +350,11 @@ func build(snapshot *catalog.Snapshot) (*index, error) {
 	}
 	var items struct {
 		Data struct {
-			Items map[string]rawItem `json:"items"`
+			Items      map[string]rawItem `json:"items"`
+			FleaMarket struct {
+				SellOfferFeeRate       float64 `json:"sellOfferFeeRate"`
+				SellRequirementFeeRate float64 `json:"sellRequirementFeeRate"`
+			} `json:"fleaMarket"`
 		} `json:"data"`
 	}
 	var text, traderText, taskText, hideoutText struct {
@@ -412,8 +447,12 @@ func build(snapshot *catalog.Snapshot) (*index, error) {
 			ix.tasks[item] = append(ix.tasks[item], *need)
 		}
 	}
+	ix.feeRates = [2]float64{items.Data.FleaMarket.SellOfferFeeRate, items.Data.FleaMarket.SellRequirementFeeRate}
 	for _, station := range stations.Data {
 		for _, level := range station.Levels {
+			if station.NormalizedName == "intelligence-center" && level.Level == 3 {
+				ix.intelLevel = level.ID
+			}
 			for _, r := range level.ItemRequirements {
 				ix.hideout[r.Item] = append(ix.hideout[r.Item], HideoutNeed{LevelID: level.ID, Station: localized(hideoutText.Data, station.Name), Level: level.Level, Count: int(r.Count), FoundInRaid: r.Attributes.FoundInRaid})
 			}
@@ -509,6 +548,9 @@ func (ix *index) info(id string) (Info, bool) {
 	}
 	if item.LastLowPrice != nil || item.Avg24hPrice != nil {
 		info.Flea = &Flea{LastLow: deref(item.LastLowPrice), Avg24h: deref(item.Avg24hPrice), Low24h: deref(item.Low24hPrice), High24h: deref(item.High24hPrice), ChangePercent: item.ChangePercent, Offers: item.LastOfferCount, MinLevel: item.MinLevelForFlea}
+		if ix.feeRates[0] > 0 || ix.feeRates[1] > 0 {
+			info.FleaFee = &FleaFee{OfferRate: ix.feeRates[0], RequirementRate: ix.feeRates[1], intelLevel: ix.intelLevel}
+		}
 	}
 	for _, sale := range item.SellToTrader {
 		info.Traders = append(info.Traders, TraderPrice{Trader: ix.traders[sale.Trader], Price: sale.Price, Currency: sale.Currency, PriceRUB: sale.PriceRUB})

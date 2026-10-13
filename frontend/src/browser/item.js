@@ -70,6 +70,17 @@ export function itemInfo(raw) {
     height: Math.max(1, count(raw.height)),
     basePrice: count(raw.basePrice),
     flea,
+    // The flea market's fee rates and whether the Intel Center is at level 3
+    // (info.go FleaFee; intel null when not known).
+    fleaFee:
+      raw.fleaFee &&
+      [raw.fleaFee.offerRate, raw.fleaFee.requirementRate].every((r) => Number.isFinite(r) && r >= 0 && r < 1)
+        ? {
+            offerRate: raw.fleaFee.offerRate,
+            requirementRate: raw.fleaFee.requirementRate,
+            intel: typeof raw.fleaFee.intel === 'boolean' ? raw.fleaFee.intel : null,
+          }
+        : null,
     // The traders' pictures by name (info.go TraderImages).
     traderImages: Object.fromEntries(
       Object.entries(raw.traderImages && typeof raw.traderImages === 'object' ? raw.traderImages : {})
@@ -143,12 +154,31 @@ export function offerNeeds(offer) {
   return { level: offer.playerLevel, reputation: offer.reputation.toFixed(2) }
 }
 
+// fleaFee is the flea market's fee for listing one at price (the lowest
+// offer by default), as tarkov.dev works it out (its API's fleaMarketFee):
+// V0·Ti·4^P0 + VR·Tr·4^PR, with V0 the base price, VR the price asked,
+// P0 = log10(V0/VR) and PR = log10(VR/V0), the one of them that is not
+// negative raised to 1.08; 30% off with the Intel Center at level 3. Null
+// without the rates or the prices.
+export function fleaFee(item, price = item.flea?.lastLow) {
+  const rates = item.fleaFee
+  const v0 = item.basePrice
+  if (!rates || !(v0 > 0) || !(price > 0)) return null
+  let p0 = Math.log10(v0 / price)
+  let pr = Math.log10(price / v0)
+  if (price < v0) p0 = p0 ** 1.08
+  else pr = pr ** 1.08
+  const fee = v0 * rates.offerRate * 4 ** p0 + price * rates.requirementRate * 4 ** pr
+  return Math.round(rates.intel ? fee * 0.7 : fee)
+}
+
 // bestSale is where the item sells for the most roubles: the flea market's
-// lowest offer or the best trader.
+// lowest offer, less its fee when it is known (fee), or the best trader.
 export function bestSale(item) {
   const trader = item.traders[0]
-  const flea = item.flea?.lastLow || 0
-  if (flea > (trader?.priceRub || 0)) return { where: 'flea', priceRub: flea }
+  const fee = fleaFee(item)
+  const flea = Math.max(0, (item.flea?.lastLow || 0) - (fee || 0))
+  if (flea > (trader?.priceRub || 0)) return { where: 'flea', priceRub: flea, fee }
   return trader ? { where: trader.trader, priceRub: trader.priceRub } : null
 }
 

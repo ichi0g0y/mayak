@@ -825,6 +825,13 @@ export const words = {
     perSlot: '1マス',
     flea: 'フリーマーケット',
     fleaLow: '最安値',
+    fleaFee: '出品手数料',
+    fleaNet: '手取り',
+    fleaAfterFee: 'フリマ（手数料を引いた額）',
+    fleaFeeIntel: '最安値で 1 個出品したときの手数料です。情報センター Lv3 の 30% 引きを入れています。',
+    fleaFeeNoIntel: '最安値で 1 個出品したときの手数料です。情報センターが Lv3 でないので、割引は入れていません。',
+    fleaFeeUnknown:
+      '最安値で 1 個出品したときの手数料です。情報センターのレベルが分からないので、Lv3 の 30% 引きは入れていません（TarkovTracker とつなぐと反映します）。',
     fleaAvg: '24時間平均',
     fleaRange: '24時間の幅',
     fleaChange: '48時間の変動',
@@ -1696,6 +1703,14 @@ export const words = {
     perSlot: 'per slot',
     flea: 'Flea market',
     fleaLow: 'Lowest offer',
+    fleaFee: 'Listing fee',
+    fleaNet: 'You get',
+    fleaAfterFee: 'Flea (after the fee)',
+    fleaFeeIntel: "The fee for listing one at the lowest offer, with the Intel Center level 3's 30% off.",
+    fleaFeeNoIntel:
+      'The fee for listing one at the lowest offer; the Intel Center is not at level 3, so nothing is taken off.',
+    fleaFeeUnknown:
+      "The fee for listing one at the lowest offer. The Intel Center's level is not known, so its level 3's 30% off is left out (connect TarkovTracker for it).",
     fleaAvg: '24h average',
     fleaRange: '24h range',
     fleaChange: '48h change',

@@ -436,6 +436,9 @@ button.item-page-link:hover h2{color:var(--accent)}
 .item-row b{font-weight:500;font-variant-numeric:tabular-nums;text-align:right}
 .item-row b small{color:var(--muted);font-weight:400}
 .item-row.best span,.item-row.best b{color:var(--text);font-weight:600}
+/* What is left of the lowest offer after the flea market's fee, and what the fee assumes. */
+.item-row.net b{color:var(--text);font-weight:600}
+.item-fee-note{margin:4px 0 6px;font-size:11.5px;line-height:1.5;color:var(--muted)}
 .item-row.up b{color:var(--success)}
 .item-row.down b{color:var(--danger)}
 .item-needs{list-style:none;margin:0;padding:0;display:grid;gap:2px}
