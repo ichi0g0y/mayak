@@ -19,7 +19,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | | `startup` | 起動とウィンドウ | Host |
 | | `sounds` | 通知 | Host |
 | ゲーム | `folders` | フォルダと保存 | Host |
-| | `screenshots` | スクリーンショット | Host |
+| | `screenshots` | スクリーンショットと自動認識 | Host |
 | | `recognition` | 認識方法 | Host |
 | | `tasks` | タスクの開き方 | ブラウザ |
 | 連携 | `remote` | tarkov.dev 連携 | Host |

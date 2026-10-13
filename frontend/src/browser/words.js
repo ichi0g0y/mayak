@@ -425,10 +425,10 @@ export const words = {
     tutCapture:
       'EFT のスクリーンショットキーの代わりに、MAYAK がゲームの画面を撮って読むこともできます。ゲーム内に EFT の撮影の通知が出ません。自動認識をオンにすると、アイテムの詳細やキャラクター画面「全般」を開いたときと、開いたタスクを右クリックしたときに読みます。撃つときのクリックには反応しません。',
     tutCaptureNote:
-      '位置情報は読めないので、マップに現在地を出すときは EFT のキーで撮ってください。画面の写し方は RatScanner と同じですが、BSG が認めた方式ではありません。使うかどうかはご自身で決めてください。あとから設定の「スクリーンショット」で変えられます。',
+      '位置情報は読めないので、マップに現在地を出すときは EFT のキーで撮ってください。画面の写し方は RatScanner と同じですが、BSG が認めた方式ではありません。使うかどうかはご自身で決めてください。あとから設定の「スクリーンショットと自動認識」で変えられます。',
     tutCaptureOn: '自動認識をオンにする',
     tutCaptureIsOn: '自動認識はオンです',
-    tutCaptureSettings: '設定の「スクリーンショット」を開く',
+    tutCaptureSettings: '設定の「スクリーンショットと自動認識」を開く',
     tutKeyTitle: 'スクリーンショットキーを押しやすい場所に',
     tutKey:
       'EFT の Settings → Controls → Screenshot。既定は PrintScreen ですが、戦闘中は手が届きにくいので、マウスのサイドボタンや左手で届く空きキーに割り当てるのがおすすめです。',
@@ -743,7 +743,7 @@ export const words = {
     sec_status: 'ステータス',
     sec_logs: 'ログ',
     sec_folders: 'フォルダと保存',
-    sec_screenshots: 'スクリーンショット',
+    sec_screenshots: 'スクリーンショットと自動認識',
     resetButton: '初期値に戻す',
     resetCommit: 'もう一度押して確定',
     resetTitle: 'このページで初期値に戻る項目（まだ保存していません）',
@@ -1286,10 +1286,10 @@ export const words = {
     tutCapture:
       "Instead of EFT's screenshot key, MAYAK can take the game's screen and read it, without EFT's screenshot notice in the game. With auto recognition on, it reads an item's inspection or the character's Overall screen when you open them, and a task when you right-click the one opened. Clicks to shoot are left alone.",
     tutCaptureNote:
-      "Positions are not read: to show where you are on the map, take the screenshot with EFT's key. The screen is copied the way RatScanner does it, but BSG has not approved it; whether to use it is your call. It can be changed later under Screenshots in the settings.",
+      "Positions are not read: to show where you are on the map, take the screenshot with EFT's key. The screen is copied the way RatScanner does it, but BSG has not approved it; whether to use it is your call. It can be changed later under Screenshots & auto recognition in the settings.",
     tutCaptureOn: 'Turn auto recognition on',
     tutCaptureIsOn: 'Auto recognition is on',
-    tutCaptureSettings: 'Open Screenshots in the settings',
+    tutCaptureSettings: 'Open Screenshots & auto recognition in the settings',
     tutKeyTitle: 'Put the screenshot key within reach',
     tutKey:
       'In EFT: Settings → Controls → Screenshot. The default is PrintScreen, which is hard to reach mid-fight, so bind it to a mouse side button or a free key near your left hand.',
@@ -1605,7 +1605,7 @@ export const words = {
     sec_status: 'Status',
     sec_logs: 'Logs',
     sec_folders: 'Folders & storage',
-    sec_screenshots: 'Screenshots',
+    sec_screenshots: 'Screenshots & auto recognition',
     resetButton: 'Back to defaults',
     resetCommit: 'Press again to confirm',
     resetTitle: 'What goes back to its default on this page (nothing is saved yet)',
