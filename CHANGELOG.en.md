@@ -15,6 +15,8 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 - Each settings page has a "Back to defaults" button. The first press lists what goes back ("now → default", the defaults coloured); a second press saves it. What would be missed if lost, such as the folders' paths and tarkov.dev's targets, is kept.
 - The settings have a "Screenshots" page: it shows the screenshot key set in EFT, and "Capture by MAYAK" has moved there. "Game & recognition" is now called "Recognition".
+- The squad's heading in the sidebar no longer shows the number of members in a dot: who is in it is listed under it, and whether it is connected shows when the pointer is over the heading.
+- With no snap note yet, the sidebar's snap notes section has a "New" button (it was text that could not be pressed); "Start from a blank sheet" on the list page is called "New" too.
 - When the flea market is where an item sells best, the item panel also shows the trader paying the most for it, and how much. Where it sells and the price sit apart, left and right, without the "Sells best to" words.
 - A screenshot is opened once for reading it. Each check of what screen it shows used to open it again, which took about 0.2 s more for a task screenshot.
 

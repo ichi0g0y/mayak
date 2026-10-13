@@ -462,8 +462,8 @@ export const words = {
     snapCapturing: '撮影しています…',
     snapCaptureFailed: 'ページを撮影できませんでした: ',
     snapEmpty:
-      'スナップノートはまだありません。ページを開いてツールバーのペンのボタンから撮るか、白紙や画像から作れます。',
-    snapNewBlank: '白紙から作る',
+      'スナップノートはまだありません。ページを開いてツールバーのペンのボタンから撮るか、新規作成や画像ファイルから作れます。',
+    snapNewBlank: '新規作成',
     snapNewImage: '画像ファイルから作る',
     snapPasteHint: 'Ctrl+V で、クリップボードの画像からも作れます。',
     snapFilterAll: 'すべて',
@@ -1315,8 +1315,8 @@ export const words = {
     snapCapturing: 'Capturing…',
     snapCaptureFailed: 'Could not capture the page: ',
     snapEmpty:
-      'No snap notes yet. Open a page and capture it with the pen button in the toolbar, or start from a blank sheet or an image.',
-    snapNewBlank: 'Start from a blank sheet',
+      'No snap notes yet. Open a page and capture it with the pen button in the toolbar, or make a new one or one from an image file.',
+    snapNewBlank: 'New',
     snapNewImage: 'Start from an image file',
     snapPasteHint: 'Ctrl+V starts one from an image on the clipboard too.',
     snapFilterAll: 'All',

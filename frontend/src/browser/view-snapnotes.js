@@ -154,7 +154,7 @@ export function snapSection() {
   const latest = notes.list[0]
   const preview = latest
     ? `<button class="shot-latest snap-latest" data-action="snapOpen" data-id="${esc(latest.id)}" title="${esc(latest.title)}">${thumbHTML(latest)}<span class="shot-age">${esc(noteTime(latest))}</span></button>`
-    : `<p class="shot-empty">${esc(t('snapNewBlank'))}…</p>`
+    : `<button class="squad-start snap-start" data-action="snapNewBlank">${icon('plus')}${esc(t('snapNewBlank'))}</button>`
   return `<div class="section-label screenshot-section-label snap-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSnapSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('snapNotes'))}${icon('chevron', 'section-chevron')}</button><button class="new-tab shots-open" data-action="snapnotes" title="${esc(t('snapNotesAll'))}" aria-label="${esc(t('snapNotesAll'))}" aria-pressed="${open}">${icon('snap')}</button></div>${folded ? '' : `<div class="shot-section">${preview}</div>`}`
 }
 

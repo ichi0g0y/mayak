@@ -244,18 +244,16 @@ function sharesCard() {
   return `<section class="panel squad-shares-card"><div class="squad-shares-head"><h2>${esc(t('squadShares'))}</h2><div class="segmented" role="group">${chip('all', 'squadSharesAll')}${chip('tab', 'squadSharesTabs')}${chip('snap', 'snapNotes')}${chip('shot', 'squadSharesShots')}${chip('view', 'squadSharesView')}${chip('draw', 'squadSharesDraw')}</div></div>${who}<p class="hint">${esc(t('squadSharesHint'))}</p>${list.length ? `<ul class="squad-shares">${list.map((s) => shareRow(s, true)).join('')}</ul>` : `<p class="shot-empty">${esc(t('squadSharesEmpty'))}</p>`}</section>`
 }
 
-// The sidebar's section: the heading (with how many are in the squad and
-// whether it is connected) folds it; the button at its end opens the page,
-// and in a squad the one before it leaves (pressed twice).
+// The sidebar's section: the heading folds it (its title says whether the
+// squad is connected; who is in it is listed under it); the button at its end
+// opens the page, and in a squad the one before it leaves (pressed twice).
 export function squadSection() {
   if (!state.squad) return ''
   const s = state.squad.state
   const open = activeKind() === 'squad'
   const folded = state.squadCollapsed
-  const count = s
-    ? `<span class="squad-section-count" data-phase="${esc(s.phase)}" title="${esc(t('squadPhase_' + s.phase))}">${players(s.members).length}</span>`
-    : ''
-  const head = `<div class="section-label squad-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSquadSection" aria-expanded="${!folded}" title="${esc(t(folded ? 'expandSection' : 'collapseSection'))}">${esc(t('squad'))}${count}${icon('chevron', 'section-chevron')}</button>${s ? leaveButton() : ''}<button class="new-tab squad-open" data-action="squadPage" title="${esc(t('squadOpen'))}" aria-label="${esc(t('squadOpen'))}" aria-pressed="${open}">${icon('squad')}${waiting().length ? `<span class="squad-open-count">${waiting().length}</span>` : ''}</button></div>`
+  const fold = t(folded ? 'expandSection' : 'collapseSection')
+  const head = `<div class="section-label squad-section-label ${open ? 'active' : ''}"><button class="section-link" data-action="toggleSquadSection" aria-expanded="${!folded}" title="${esc(s ? `${t('squadPhase_' + s.phase)} · ${fold}` : fold)}">${esc(t('squad'))}${icon('chevron', 'section-chevron')}</button>${s ? leaveButton() : ''}<button class="new-tab squad-open" data-action="squadPage" title="${esc(t('squadOpen'))}" aria-label="${esc(t('squadOpen'))}" aria-pressed="${open}">${icon('squad')}${waiting().length ? `<span class="squad-open-count">${waiting().length}</span>` : ''}</button></div>`
   if (folded) return head
   const body = s
     ? `<ul class="squad-chips squad-section">${players(s.members).map(memberChip).join('')}</ul>`

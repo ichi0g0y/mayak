@@ -1284,9 +1284,6 @@ body[data-page=livemap][data-frame=shell][data-layout=vertical][data-nav=left]:n
 /* The map's squad panel: its members, and a way to the squad's page. */
 /* The sidebar's squad section: how many are in the squad (coloured by the
    connection) after its name, and who they are. */
-.squad-section-count{min-width:17px;height:17px;padding:0 5px;margin-left:2px;border-radius:9px;font-size:10.5px;line-height:17px;text-align:center;background:var(--muted);color:var(--bg)}
-.squad-section-count[data-phase=connected]{background:var(--success)}
-.squad-section-count[data-phase=offline],.squad-section-count[data-phase=full]{background:var(--warn)}
 .squad-chips{list-style:none;margin:0;padding:0 6px 8px 10px;display:flex;flex-direction:column;gap:1px}
 /* A member in the sidebar: their row (shows them on the map) with the count
    of what they shared unread (opens it on the squad's page), and under it
@@ -1378,6 +1375,8 @@ body[data-sidebar=collapsed] .squad-leave-quick,[data-layout=horizontal] .squad-
 @keyframes map-look{from{transform:scale(.3);opacity:1}to{transform:scale(1.4);opacity:0}}
 .map-fresh{flex:none;width:7px;height:7px;margin-left:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
 .squad-start{width:100%;height:30px;font-size:12.5px;font-weight:500}
+/* No snap note yet: the sidebar's section starts a blank one. */
+.snap-start .icon{width:14px;height:14px}
 .squad-section-label.active .squad-open{background:var(--selected);color:var(--text)}
 body[data-sidebar=collapsed] .squad-section-label .section-link,body[data-sidebar=collapsed] .squad-section{display:none}
 body[data-sidebar=collapsed] .squad-open{width:40px;height:32px}
