@@ -405,17 +405,22 @@ button.item-page-link:hover h2{color:var(--accent)}
 .fresh-dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
 .item-fresh.live{color:var(--text-2)}
 .item-fresh.live .fresh-dot{background:var(--success);box-shadow:0 0 0 3px color-mix(in srgb,var(--success) 25%,transparent)}
-.item-best{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 10px;padding:12px 14px;border-radius:10px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
-/* Where it sells best on the left, the price and its per-slot share on the
-   right, as the best trader's row under it. */
-.item-best span{min-width:0;font-size:12px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.item-best strong{font-size:22px;font-weight:650;letter-spacing:-.01em;font-variant-numeric:tabular-nums;text-align:right}
-.item-best small{grid-column:2;color:var(--text-2);font-variant-numeric:tabular-nums;text-align:right}
+.item-best{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:0 10px;padding:12px 14px;border-radius:10px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+/* The picture on the left, as tall as the two lines beside it: where it
+   sells best and the price, then the per-slot share; the best trader's row
+   under it the same, smaller. */
+.item-best>.trader-avatar,.item-best-trader>.trader-avatar{grid-column:1;grid-row:1/span 2}
+.item-best>.best-where,.item-best-trader>.best-where{grid-column:2;grid-row:1/span 2;align-self:center}
+.item-best>strong,.item-best-trader>b{grid-column:3;grid-row:1}
+.item-best>small,.item-best-trader>small{grid-column:3;grid-row:2}
+.item-best .best-where{min-width:0;font-size:12.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-best strong{font-size:19px;line-height:22px;font-weight:650;letter-spacing:-.01em;font-variant-numeric:tabular-nums;text-align:right}
+.item-best small{grid-column:3;line-height:14px;color:var(--text-2);font-variant-numeric:tabular-nums;text-align:right}
 /* The best trader, under the flea market when that pays more. */
-.item-best-trader{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:0 10px;margin-top:8px;padding-top:8px;border-top:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
-.item-best-trader span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.item-best-trader b{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
-.item-best-trader small{grid-column:2;text-align:right}
+.item-best-trader{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:0 10px;margin-top:8px;padding-top:8px;border-top:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
+.item-best-trader .best-where{font-size:12.5px}
+.item-best-trader b{font-size:16px;line-height:20px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.item-best-trader small{grid-column:3;line-height:16px;font-size:11px;text-align:right}
 .item-section{margin-top:16px}
 .item-section h3{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--text-2)}
 .item-section h3 .count{margin-left:auto;min-width:20px;padding:1px 7px;border-radius:10px;background:var(--surface-2);color:var(--text-2);font-size:11.5px;text-align:center}
@@ -454,7 +459,6 @@ button.need-row:hover .need-name{color:var(--accent)}
    limit, then the task unlocking the offer. */
 .item-offers{list-style:none;margin:0;padding:0;display:grid;gap:4px}
 .item-offers li{display:grid;gap:2px;padding:6px 8px;border-radius:8px;background:var(--surface-2)}
-.offer-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .offer-trader{display:flex;align-items:baseline;gap:6px;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden}
 .offer-ll{flex:none;padding:0 5px;border-radius:5px;font-size:10.5px;font-weight:600;color:var(--text-2);border:1px solid var(--border-strong)}
 .offer-price{flex:none;font-weight:500;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
@@ -1514,3 +1518,25 @@ body.toast-page{margin:0;background:var(--sidebar,var(--bg));overflow:hidden}
 .reset-to{font-weight:600;color:var(--accent)}
 .reset-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .reset-actions .reset-panel-title{margin:0 auto 0 0}
+/* A trader's picture, round, before its name in the item panel; the flea
+   market's store in the same circle. */
+.trader-avatar{flex:none;width:30px;height:30px;border-radius:50%;object-fit:cover;background:var(--surface-2);border:1px solid var(--border)}
+span.trader-avatar.flea{display:inline-grid;place-items:center;color:var(--text-2)}
+span.trader-avatar.flea .icon{width:17px;height:17px}
+/* As tall as the lines beside it: the best sale's two and the best trader's
+   two alike (36 px: 22 + 14 and 20 + 16), an offer's price and terms, a sale
+   row's one. */
+.item-best>.trader-avatar,.item-best-trader>.trader-avatar{width:36px;height:36px}
+.item-best>span.trader-avatar.flea .icon{width:20px;height:20px}
+.offer-top>.trader-avatar{width:36px;height:36px}
+.item-row .trader-avatar{width:26px;height:26px}
+.item-row span.trader-avatar.flea .icon{width:15px;height:15px}
+.trader-avatar.item-icon-missing{display:inline-grid;place-items:center;font-size:13px}
+.with-avatar{display:inline-flex;align-items:center;gap:9px;min-width:0}
+.item-row:has(.with-avatar){align-items:center}
+.offer-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:0 10px;min-width:0}
+.offer-top>.trader-avatar{grid-column:1;grid-row:1/span 2}
+.offer-top>.offer-trader{grid-column:2;grid-row:1/span 2;align-self:center}
+.offer-top>.offer-price,.offer-top>.offer-barter-tag{grid-column:3;grid-row:1;justify-self:end}
+.offer-top>.offer-notes{grid-column:3;grid-row:2;justify-content:flex-end;text-align:right}
+span.trader-avatar.initial{display:inline-grid;place-items:center;font-size:13px;font-weight:600;color:var(--text-2)}

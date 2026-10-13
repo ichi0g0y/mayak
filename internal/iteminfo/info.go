@@ -36,6 +36,10 @@ type Info struct {
 	// Flea is nil when the item cannot be sold on the flea market.
 	Flea    *Flea         `json:"flea"`
 	Traders []TraderPrice `json:"traders"`
+	// TraderImages are the traders' pictures (tarkov.dev, 128 px) by name,
+	// for every trader the catalog has: the sidebar puts one before a
+	// trader's name, the live prices' too.
+	TraderImages map[string]string `json:"traderImages,omitempty"`
 	// Offers are the traders selling the item, for cash or in a barter
 	// (offers.go).
 	Offers  []TraderOffer `json:"offers,omitempty"`
@@ -292,6 +296,8 @@ type index struct {
 	// resource (items, tasks; kept apart so their keys cannot collide), then key.
 	languages map[string]map[string]map[string]string
 	traders   map[string]string
+	// traderImages are the traders' pictures by name.
+	traderImages map[string]string
 	// levels are the traders' loyalty levels and taskByID every task, for
 	// the offers (offers.go).
 	levels   map[string][]traderLevel
@@ -321,8 +327,9 @@ func build(snapshot *catalog.Snapshot) (*index, error) {
 	}
 	var traders struct {
 		Data map[string]struct {
-			Name   string        `json:"name"`
-			Levels []traderLevel `json:"levels"`
+			Name      string        `json:"name"`
+			Levels    []traderLevel `json:"levels"`
+			ImageLink string        `json:"imageLink"`
 		} `json:"data"`
 	}
 	var tasks struct {
@@ -369,10 +376,13 @@ func build(snapshot *catalog.Snapshot) (*index, error) {
 		}
 		return key
 	}
-	ix := &index{snapshot: snapshot, items: items.Data.Items, text: text.Data, languages: languages, traders: make(map[string]string), levels: make(map[string][]traderLevel), taskByID: make(map[string]TaskNeed), barters: make(map[string][]rawBarter), tasks: make(map[string][]TaskNeed), hideout: make(map[string][]HideoutNeed), locks: make(map[string][]Lock)}
+	ix := &index{snapshot: snapshot, items: items.Data.Items, text: text.Data, languages: languages, traders: make(map[string]string), traderImages: make(map[string]string), levels: make(map[string][]traderLevel), taskByID: make(map[string]TaskNeed), barters: make(map[string][]rawBarter), tasks: make(map[string][]TaskNeed), hideout: make(map[string][]HideoutNeed), locks: make(map[string][]Lock)}
 	for id, trader := range traders.Data {
 		ix.traders[id] = localized(traderText.Data, trader.Name)
 		ix.levels[id] = trader.Levels
+		if trader.ImageLink != "" {
+			ix.traderImages[ix.traders[id]] = trader.ImageLink
+		}
 	}
 	for _, task := range tasks.Data.Tasks {
 		base := TaskNeed{ID: task.ID, Name: localized(taskText.Data, task.Name), Trader: ix.traders[task.Trader], NormalizedName: task.NormalizedName, WikiLink: task.WikiLink}
@@ -505,6 +515,7 @@ func (ix *index) info(id string) (Info, bool) {
 	}
 	sortTraders(info.Traders)
 	info.Offers = ix.offers(item)
+	info.TraderImages = ix.traderImages
 	info.Tasks = append([]TaskNeed(nil), ix.tasks[id]...)
 	info.Hideout = append([]HideoutNeed(nil), ix.hideout[id]...)
 	info.Locks = append([]Lock(nil), ix.locks[id]...)

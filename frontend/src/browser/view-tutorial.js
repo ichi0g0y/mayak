@@ -11,7 +11,7 @@ export let tutorialOpen = false,
   tutorialSettings = null,
   tutorialKey = null
 
-const tutorialSteps = ['welcome', 'folders', 'key', 'map', 'remote', 'tracker', 'done']
+const tutorialSteps = ['welcome', 'folders', 'key', 'capture', 'map', 'remote', 'tracker', 'done']
 export function tutorialHTML() {
   const key = tutorialSteps[tutorialStep],
     last = tutorialStep === tutorialSteps.length - 1,
@@ -20,6 +20,9 @@ export function tutorialHTML() {
     welcome: `<p>${esc(t('tutWelcome'))}</p>${appVersion ? `<p class="hint">MAYAK ${esc(appVersion)}</p>` : ''}`,
     folders: `<p>${esc(t('tutFolders'))}</p><div class="tutorial-status"><span>${esc(t('tutFoldersScreens'))}: <code>${esc(tutorialSettings?.screenshotDirectory || t('tutNotFound'))}</code></span><span>${esc(t('tutFoldersLogs'))}: <code>${esc(tutorialSettings?.logsDirectory || t('tutNotFound'))}</code></span></div><button data-action="tutorialFolders">${icon('folder')}${esc(t('tutOpenFolders'))}</button>`,
     key: `<p>${esc(t('tutKey'))}</p>${keyStatus()}<p class="hint">${esc(t('tutKeyNote'))}</p>`,
+    // MAYAK's own screenshots (experimental, off until turned on here or in
+    // the settings): the player decides, so it says what it cannot do too.
+    capture: `<p>${esc(t('tutCapture'))}</p>${captureStatus()}<p class="hint">${esc(t('tutCaptureNote'))}</p><button data-action="tutorialScreenshots">${icon('settings')}${esc(t('tutCaptureSettings'))}</button>`,
     map: `<p>${esc(t('tutMap'))}</p><button data-action="tutorialMap">${icon('map')}${esc(t('tutOpenMap'))}</button>`,
     remote: `<p>${esc(t('tutRemote'))}</p><button data-action="tutorialRemote">${icon('linked')}${esc(t('tutOpenRemote'))}</button>`,
     tracker: `<p>${esc(t('tutTracker'))}</p><button data-action="tutorialTracker">${icon('tracker')}${esc(t('tutOpenTracker'))}</button>`,
@@ -31,6 +34,7 @@ export function tutorialHTML() {
       welcome: 'tutWelcomeTitle',
       folders: 'tutFoldersTitle',
       key: 'tutKeyTitle',
+      capture: 'tutCaptureTitle',
       map: 'tutMapTitle',
       remote: 'tutRemoteTitle',
       tracker: 'tutTrackerTitle',
@@ -52,6 +56,13 @@ function keyStatus() {
   return tutorialKey.keys?.length
     ? `<div class="tutorial-status"><span>${esc(t('tutKeyNow'))}: <code>${esc(tutorialKey.keys.join(' / '))}</code></span></div>`
     : `<div class="tutorial-status warn"><span>${esc(t('tutKeyNone'))}</span></div>`
+}
+// The automatic screenshot on, or a button turning it on.
+function captureStatus() {
+  if (!tutorialSettings) return ''
+  return tutorialSettings.captureAuto
+    ? `<div class="tutorial-status"><span>${icon('check')}${esc(t('tutCaptureIsOn'))}</span></div>`
+    : `<button class="primary" data-action="tutorialCaptureOn">${icon('camera')}${esc(t('tutCaptureOn'))}</button>`
 }
 export async function openTutorial() {
   tutorialOpen = true
@@ -101,14 +112,35 @@ export async function handleTutorial(type) {
     case 'tutorialMap':
       await closeTutorial()
       return action('livemap')
+    // Turns the automatic screenshot on, as its switch in the settings does.
+    case 'tutorialCaptureOn': {
+      const backend = window.mayakDesktop?.backend
+      try {
+        const settings = await backend?.GetSettings?.()
+        if (!settings) return
+        settings.captureAuto = true
+        await backend.PersistSettings(settings)
+        tutorialSettings = settings
+      } catch {
+        return
+      }
+      render()
+      return
+    }
     case 'tutorialFolders':
+    case 'tutorialScreenshots':
     case 'tutorialRemote':
     case 'tutorialTracker': {
       await closeTutorial()
       await action('settings')
       return action(
         'settingsSection',
-        { tutorialFolders: 'folders', tutorialRemote: 'remote', tutorialTracker: 'tracker' }[type],
+        {
+          tutorialFolders: 'folders',
+          tutorialScreenshots: 'screenshots',
+          tutorialRemote: 'remote',
+          tutorialTracker: 'tracker',
+        }[type],
       )
     }
   }

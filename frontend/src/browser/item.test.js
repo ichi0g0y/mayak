@@ -180,3 +180,17 @@ test("a key's wiki usage is one of two words, else none", () => {
   assert.equal(key('<b>'), '')
   assert.equal(key(undefined), '')
 })
+
+test("traders' pictures keep web addresses only", () => {
+  const item = itemInfo({
+    id: 'x',
+    name: 'X',
+    traderImages: {
+      Prapor: 'https://assets.tarkov.dev/prapor.webp',
+      Bad: 'javascript:alert(1)',
+      '': 'https://a.b/c.webp',
+    },
+  })
+  assert.deepEqual(item.traderImages, { Prapor: 'https://assets.tarkov.dev/prapor.webp' })
+  assert.deepEqual(itemInfo({ id: 'x', name: 'X', traderImages: 'junk' }).traderImages, {})
+})

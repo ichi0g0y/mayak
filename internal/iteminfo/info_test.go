@@ -22,7 +22,7 @@ func testSnapshot() *catalog.Snapshot {
 		"items_en":   `{"data":{"gpu Name":"Graphics card","gpu Short":"GPU","thermo Name":"Analog thermometer","thermo Short":"Termo"}}`,
 		"items_ja":   `{"data":{"thermo Name":"アナログ温度計"}}`,
 		"barters":    `{"data":[{"trader":"prapor","minTraderLevel":2,"taskUnlock":"t2","buyLimit":6,"requiredItems":[{"item":"thermo","count":1}],"offeredItem":{"item":"gpu","count":1}},{"trader":"therapist","minTraderLevel":1,"taskUnlock":null,"buyLimit":4,"requiredItems":[{"item":"gpu","count":7.51}],"offeredItem":{"item":"gpu","count":2}},{"trader":"prapor","requiredItems":[{"item":"unknown","count":1}],"offeredItem":{"item":"gpu","count":1}},{"trader":"prapor","requiredItems":[{"item":"gpu","count":1}],"offeredItem":{"item":"thermo","count":1}}]}`,
-		"traders":    `{"data":{"prapor":{"name":"prapor Nickname","levels":[{"level":1,"requiredPlayerLevel":0,"requiredReputation":0},{"level":2,"requiredPlayerLevel":6,"requiredReputation":0.7}]},"therapist":{"name":"therapist Nickname","levels":[{"level":1,"requiredPlayerLevel":0},{"level":2,"requiredPlayerLevel":5,"requiredReputation":0.6}]}}}`,
+		"traders":    `{"data":{"prapor":{"name":"prapor Nickname","imageLink":"https://assets.tarkov.dev/prapor.webp","levels":[{"level":1,"requiredPlayerLevel":0,"requiredReputation":0},{"level":2,"requiredPlayerLevel":6,"requiredReputation":0.7}]},"therapist":{"name":"therapist Nickname","levels":[{"level":1,"requiredPlayerLevel":0},{"level":2,"requiredPlayerLevel":5,"requiredReputation":0.6}]}}}`,
 		"traders_en": `{"data":{"prapor Nickname":"Prapor","therapist Nickname":"Therapist"}}`,
 		"tasks":      `{"data":{"tasks":{"t1":{"id":"t1","name":"t1 name","trader":"prapor","objectives":[{"type":"findItem","items":["gpu"],"count":2,"foundInRaid":true},{"type":"giveItem","items":["gpu","other"],"count":2}]},"t2":{"id":"t2","name":"t2 name","trader":"prapor","objectives":[{"type":"visit"}]}}}}`,
 		"tasks_en":   `{"data":{"t1 name":"Farming - Part 4","t2 name":"Other"}}`,
@@ -51,6 +51,10 @@ func TestCatalogInfo(t *testing.T) {
 	}
 	if len(info.Traders) != 2 || info.Traders[0].Trader != "Therapist" {
 		t.Fatalf("traders = %+v", info.Traders)
+	}
+	// The traders' pictures by name; one without stays out.
+	if len(info.TraderImages) != 1 || info.TraderImages["Prapor"] != "https://assets.tarkov.dev/prapor.webp" {
+		t.Fatalf("trader images = %v", info.TraderImages)
 	}
 	if len(info.Tasks) != 1 || info.Tasks[0].Name != "Farming - Part 4" || info.Tasks[0].Names["ja"] != "農業 4" || info.Tasks[0].Count != 2 || !info.Tasks[0].FoundInRaid || info.Tasks[0].Trader != "Prapor" {
 		t.Fatalf("tasks = %+v", info.Tasks)

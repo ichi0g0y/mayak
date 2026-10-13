@@ -70,6 +70,13 @@ export function itemInfo(raw) {
     height: Math.max(1, count(raw.height)),
     basePrice: count(raw.basePrice),
     flea,
+    // The traders' pictures by name (info.go TraderImages).
+    traderImages: Object.fromEntries(
+      Object.entries(raw.traderImages && typeof raw.traderImages === 'object' ? raw.traderImages : {})
+        .slice(0, 40)
+        .map(([name, url]) => [text(name, 40), webURL(url) || ''])
+        .filter(([name, url]) => name && url),
+    ),
     traders: list(raw.traders, 12).map((s) => ({
       trader: text(s.trader, 40),
       price: count(s.price),

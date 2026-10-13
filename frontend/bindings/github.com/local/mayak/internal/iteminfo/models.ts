@@ -168,6 +168,13 @@ export class Info {
     "traders": TraderPrice[];
 
     /**
+     * TraderImages are the traders' pictures (tarkov.dev, 128 px) by name,
+     * for every trader the catalog has: the sidebar puts one before a
+     * trader's name, the live prices' too.
+     */
+    "traderImages"?: { [_ in string]?: string };
+
+    /**
      * Offers are the traders selling the item, for cash or in a barter
      * (offers.go).
      */
@@ -267,11 +274,12 @@ export class Info {
         const $$createField5_0 = $$createType0;
         const $$createField12_0 = $$createType2;
         const $$createField13_0 = $$createType4;
-        const $$createField14_0 = $$createType6;
-        const $$createField15_0 = $$createType8;
-        const $$createField16_0 = $$createType10;
-        const $$createField17_0 = $$createType12;
-        const $$createField21_0 = $$createType13;
+        const $$createField14_0 = $$createType0;
+        const $$createField15_0 = $$createType6;
+        const $$createField16_0 = $$createType8;
+        const $$createField17_0 = $$createType10;
+        const $$createField18_0 = $$createType12;
+        const $$createField22_0 = $$createType13;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("names" in $$parsedSource) {
             $$parsedSource["names"] = $$createField4_0($$parsedSource["names"]);
@@ -285,20 +293,23 @@ export class Info {
         if ("traders" in $$parsedSource) {
             $$parsedSource["traders"] = $$createField13_0($$parsedSource["traders"]);
         }
+        if ("traderImages" in $$parsedSource) {
+            $$parsedSource["traderImages"] = $$createField14_0($$parsedSource["traderImages"]);
+        }
         if ("offers" in $$parsedSource) {
-            $$parsedSource["offers"] = $$createField14_0($$parsedSource["offers"]);
+            $$parsedSource["offers"] = $$createField15_0($$parsedSource["offers"]);
         }
         if ("tasks" in $$parsedSource) {
-            $$parsedSource["tasks"] = $$createField15_0($$parsedSource["tasks"]);
+            $$parsedSource["tasks"] = $$createField16_0($$parsedSource["tasks"]);
         }
         if ("hideout" in $$parsedSource) {
-            $$parsedSource["hideout"] = $$createField16_0($$parsedSource["hideout"]);
+            $$parsedSource["hideout"] = $$createField17_0($$parsedSource["hideout"]);
         }
         if ("locks" in $$parsedSource) {
-            $$parsedSource["locks"] = $$createField17_0($$parsedSource["locks"]);
+            $$parsedSource["locks"] = $$createField18_0($$parsedSource["locks"]);
         }
         if ("questSites" in $$parsedSource) {
-            $$parsedSource["questSites"] = $$createField21_0($$parsedSource["questSites"]);
+            $$parsedSource["questSites"] = $$createField22_0($$parsedSource["questSites"]);
         }
         return new Info($$parsedSource as Partial<Info>);
     }

@@ -31,6 +31,7 @@ var (
 	procClientToScreen         = user32.NewProc("ClientToScreen")
 	procGetAsyncKeyState       = user32.NewProc("GetAsyncKeyState")
 	procVkKeyScanW             = user32.NewProc("VkKeyScanW")
+	procGetCursorInfo          = user32.NewProc("GetCursorInfo")
 	procGetDC                  = user32.NewProc("GetDC")
 	procReleaseDC              = user32.NewProc("ReleaseDC")
 	procCreateCompatibleDC     = gdi32.NewProc("CreateCompatibleDC")
@@ -131,6 +132,31 @@ const (
 	vkShift   = 0x10
 )
 
+// aiming reports whether the player is aiming in the game window hwnd: the
+// cursor hidden and held at the window's centre, as EFT holds it while the
+// player moves and shoots. On the menus and the character screen (Tab) the
+// cursor is shown, or at least moves. A click while aiming is a shot, no
+// click on a screen to read.
+func aiming(hwnd uintptr) bool {
+	info := struct {
+		size, flags uint32
+		cursor      uintptr
+		x, y        int32
+	}{}
+	info.size = uint32(unsafe.Sizeof(info))
+	if ok, _, _ := procGetCursorInfo.Call(uintptr(unsafe.Pointer(&info))); ok == 0 || info.flags&1 != 0 { // CURSOR_SHOWING
+		return false
+	}
+	var rect struct{ left, top, right, bottom int32 }
+	if ok, _, _ := procGetClientRect.Call(hwnd, uintptr(unsafe.Pointer(&rect))); ok == 0 {
+		return false
+	}
+	centre := struct{ x, y int32 }{rect.right / 2, rect.bottom / 2}
+	procClientToScreen.Call(hwnd, uintptr(unsafe.Pointer(&centre)))
+	dx, dy := info.x-centre.x, info.y-centre.y
+	return dx >= -2 && dx <= 2 && dy >= -2 && dy <= 2
+}
+
 // ClickWatcher watches the mouse buttons while the game is in front.
 type ClickWatcher struct {
 	stop chan struct{}
@@ -139,7 +165,8 @@ type ClickWatcher struct {
 
 // WatchClicks calls settled once a mouse button (the left or the right) has
 // been let go in the game and no other click came for settle: a burst of
-// clicks is one call, told how its last click was made (Click).
+// clicks is one call, told how its last click was made (Click). A click
+// while aiming (a shot) is not one.
 // It looks at the button's state every poll (no input hook; a click is held
 // 50 ms or more, so 30 ms misses none) while the window in front is the
 // game's, and only for the game every awayPoll while it is not; the window's
@@ -173,7 +200,7 @@ func WatchClicks(poll, settle time.Duration, settled func(Click)) *ClickWatcher 
 					return state&0x8000 != 0
 				}
 				left, right := pressed(vkLButton), pressed(vkRButton)
-				if (wasLeft && !left) || (wasRight && !right) {
+				if ((wasLeft && !left) || (wasRight && !right)) && !aiming(front) {
 					last, due = Click{Right: wasRight && !right, Shift: pressed(vkShift)}, now.Add(settle)
 				}
 				wasLeft, wasRight = left, right

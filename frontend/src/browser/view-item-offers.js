@@ -9,6 +9,17 @@ import { t, state, esc, icon } from './shell-core.js'
 // unlocking the offer, which opens like the item's tasks and shows when
 // TarkovTracker has it done. Nothing for an item no trader sells. iconHTML
 // draws an item's picture (view-item.js).
+// traderAvatar is a trader's picture, round, before its name (iconHTML
+// draws it, a "?" when it does not load); "flea" is the flea market's store,
+// and a trader without a picture its initial, so the rows keep their shape.
+export function traderAvatar(item, name, iconHTML) {
+  if (name === 'flea') return `<span class="trader-avatar flea">${icon('store')}</span>`
+  const url = item.traderImages?.[name]
+  return url
+    ? iconHTML(url, 'trader-avatar', 'loading="lazy"')
+    : `<span class="trader-avatar initial" aria-hidden="true">${esc([...String(name)][0]?.toUpperCase() || '?')}</span>`
+}
+
 export function itemOffers(item, iconHTML) {
   if (!item.offers.length) return ''
   const lang = state.language
@@ -28,7 +39,9 @@ export function itemOffers(item, iconHTML) {
     const takes = barter
       ? `<div class="offer-barter">${o.barter.map((b) => barterItem(b, number, iconHTML)).join('')}</div>`
       : ''
-    return `<li><div class="offer-head"><span class="offer-trader">${esc(o.trader)}<span class="offer-ll">LL${o.level}</span></span>${cost}</div>${takes}${notes.length ? `<div class="offer-notes">${notes.map((n) => `<span>${esc(n)}</span>`).join('')}</div>` : ''}${o.task ? offerTask(o.task) : ''}</li>`
+    // The trader's picture, its name beside it in the middle, and on the right
+    // the price over the terms, as tall as the picture.
+    return `<li><div class="offer-top">${traderAvatar(item, o.trader, iconHTML)}<span class="offer-trader">${esc(o.trader)}<span class="offer-ll">LL${o.level}</span></span>${cost}${notes.length ? `<div class="offer-notes">${notes.map((n) => `<span>${esc(n)}</span>`).join('')}</div>` : ''}</div>${takes}${o.task ? offerTask(o.task) : ''}</li>`
   })
   return `<section class="item-section"><h3>${esc(t('itemOffers'))}<span class="count">${item.offers.length}</span></h3><ul class="item-offers">${rows.join('')}</ul></section>`
 }

@@ -2,7 +2,7 @@ import { price, chartSeries, chartPath, itemPanelHeights, itemPanelWidths, itemP
 import { t, state, esc, icon, siteChoices, render, action, clickHandlers } from './shell-core.js'
 import { siteOrder } from './state.js'
 import { lockPlace } from './view-map.js'
-import { itemOffers } from './view-item-offers.js'
+import { itemOffers, traderAvatar } from './view-item-offers.js'
 
 // An item's picture that did not load (a failed download the page's cache
 // keeps, say) is asked for once more under another address (a query the
@@ -210,7 +210,9 @@ function itemDetails() {
     best = bestSale(item),
     flea = item.flea
   const money = (v, c = 'RUB') => esc(price(v, c, lang))
-  const row = (label, value, cls = '') => `<div class="item-row ${cls}"><span>${esc(label)}</span><b>${value}</b></div>`
+  // A row's label; a trader's has its picture before it (avatar: the trader's name).
+  const row = (label, value, cls = '', avatar = '') =>
+    `<div class="item-row ${cls}"><span${avatar ? ' class="with-avatar"' : ''}>${avatar ? traderAvatar(item, avatar, itemIconHTML) : ''}${esc(label)}</span><b>${value}</b></div>`
   const change = flea?.changePercent || 0
   const done = (s) => s.state === 'completed' || s.complete === true
   // Rows with an action (tasks) are buttons that open their page.
@@ -234,7 +236,7 @@ function itemDetails() {
      : `<div class="item-page-link">${inner}</div>`
  })()}</div>
  <p class="item-fresh ${item.live ? 'live' : ''}"><span class="fresh-dot"></span>${esc(item.live ? t('itemLive') : t('itemCatalog'))} · ${esc(t('itemPriced'))} <span class="item-age" data-time="${esc(item.pricedAt)}">${esc(age(item.pricedAt, lang))}</span><button class="item-refresh" data-action="itemRefresh" title="${esc(t('itemRefresh'))}" aria-label="${esc(t('itemRefresh'))}" aria-busy="${!!state.itemBusy}">${icon('reload', state.itemBusy ? 'icon spin' : 'icon')}</button></p>
- ${best ? `<div class="item-best"><span title="${esc(t('bestSale'))}">${esc(best.where === 'flea' ? t('flea') : best.where)}</span><strong>${money(best.priceRub)}</strong><small>${money(best.priceRub / slots)} / ${esc(t('perSlot'))}</small>${best.where === 'flea' && item.traders[0] ? `<div class="item-best-trader"><span>${esc(item.traders[0].trader)}</span><b>${money(item.traders[0].priceRub)}</b><small>${money(item.traders[0].priceRub / slots)} / ${esc(t('perSlot'))}</small></div>` : ''}</div>` : ''}
+ ${best ? `<div class="item-best">${traderAvatar(item, best.where, itemIconHTML)}<span class="best-where" title="${esc(t('bestSale'))}">${esc(best.where === 'flea' ? t('flea') : best.where)}</span><strong>${money(best.priceRub)}</strong><small>${money(best.priceRub / slots)} / ${esc(t('perSlot'))}</small>${best.where === 'flea' && item.traders[0] ? `<div class="item-best-trader">${traderAvatar(item, item.traders[0].trader, itemIconHTML)}<span class="best-where">${esc(item.traders[0].trader)}</span><b>${money(item.traders[0].priceRub)}</b><small>${money(item.traders[0].priceRub / slots)} / ${esc(t('perSlot'))}</small></div>` : ''}</div>` : ''}
  ${(() => {
    const locks = itemLocks(item)
    return locks.length
@@ -255,7 +257,7 @@ function itemDetails() {
  })()}
  ${itemChart(item)}
  <section class="item-section"><h3>${esc(t('flea'))}</h3>${flea ? row(t('fleaLow'), money(flea.lastLow)) + row(t('fleaAvg'), money(flea.avg24h)) + (flea.low24h && flea.high24h ? row(t('fleaRange'), `${money(flea.low24h)} – ${money(flea.high24h)}`) : '') + row(t('fleaChange'), `${change > 0 ? '+' : ''}${change.toFixed(1)}%`, change > 0 ? 'up' : change < 0 ? 'down' : '') + row(t('fleaOffers'), flea.offers.toLocaleString()) + (flea.minLevel ? row(t('fleaLevel'), 'Lv.' + flea.minLevel) : '') : `<p class="item-empty">${t('noFlea')}</p>`}</section>
- <section class="item-section"><h3>${esc(t('traders'))}</h3>${item.traders.map((s, i) => row(s.trader, s.currency === 'RUB' ? money(s.price) : `${money(s.price, s.currency)} <small>(${money(s.priceRub)})</small>`, i === 0 ? 'best' : '')).join('') || `<p class="item-empty">${t('noNeeds')}</p>`}</section>
+ <section class="item-section"><h3>${esc(t('traders'))}</h3>${item.traders.map((s, i) => row(s.trader, s.currency === 'RUB' ? money(s.price) : `${money(s.price, s.currency)} <small>(${money(s.priceRub)})</small>`, i === 0 ? 'best' : '', s.trader)).join('') || `<p class="item-empty">${t('noNeeds')}</p>`}</section>
  ${itemOffers(item, itemIconHTML)}
  <section class="item-section"><h3>${esc(t('itemTasks'))}<span class="count">${open(item.tasks)}</span></h3>${needs(item.tasks, (s) => `<span class="need-name" title="${esc(s.name)}">${esc(localName(s.names, s.name))}<small>${esc(s.trader)}</small></span>`, 'itemTask')}</section>
  <section class="item-section"><h3>${esc(t('itemHideout'))}<span class="count">${open(item.hideout)}</span></h3>${needs(item.hideout, (s) => `<span class="need-name">${esc(s.station)}<small>Lv.${s.level}</small></span>`)}</section>
