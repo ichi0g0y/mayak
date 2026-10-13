@@ -480,9 +480,9 @@ const sectionIcons = {
 // Sections grouped by what they are about. Some are the browser's own and
 // some the Host's (its page in a frame); that split is not shown.
 const settingsGroups = /** @type {[string,string[]][]} */ ([
-  ['grpGeneral', ['appearance', 'notifications', 'startup', 'sounds']],
-  ['grpGame', ['folders', 'screenshots', 'recognition', 'tasks', 'gameInput']],
-  ['grpLinks', ['remote', 'tracker', 'connection']],
+  ['grpGeneral', ['appearance', 'notifications', 'sounds', 'startup']],
+  ['grpGame', ['folders', 'recognition', 'screenshots', 'tasks', 'gameInput']],
+  ['grpLinks', ['tracker', 'remote', 'connection']],
   ['grpBrowser', ['adblock']],
   ['grpDiagnostics', ['status', 'logs', 'debug']],
   ['grpAbout', ['about', 'licenses']],
