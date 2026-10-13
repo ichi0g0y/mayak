@@ -8,6 +8,19 @@ import (
 	"github.com/local/mayak/internal/imaging"
 )
 
+// tabLabels draws the character screen's tab labels (Gear, Health, …) in
+// TabRow, clear of the trader screen's tabs.
+func tabLabels(img *image.RGBA) {
+	r := Preset2560.TabRow
+	for y := r.Y + 15; y < r.Y+35; y++ {
+		for x := 520; x < r.X+r.W; x++ {
+			if (x/6)%3 == 0 {
+				img.Set(x, y, color.RGBA{200, 200, 195, 255})
+			}
+		}
+	}
+}
+
 func TestRejectResolution(t *testing.T) {
 	// 4:3 is not supported; 16:9 (and 16:10) of any size is scaled.
 	if _, err := Analyze(image.NewRGBA(image.Rect(0, 0, 1600, 1200)), Preset2560); err == nil {
@@ -96,6 +109,7 @@ func TestDetectRaidCharacterTasksTab(t *testing.T) {
 		}
 	}
 
+	tabLabels(img)
 	got, err := Analyze(img, Preset2560)
 	if err != nil || !got.IsTasks || got.Layout != "character-tasks" {
 		t.Fatalf("result=%+v err=%v", got, err)
@@ -126,6 +140,7 @@ func TestStoryTabSelectsTheChapterTitle(t *testing.T) {
 		}
 	}
 	fill(Preset2560.CharacterAnchor)
+	tabLabels(img)
 	got, err := Analyze(img, Preset2560)
 	if err != nil || !got.IsTasks || got.Layout != "character-tasks" {
 		t.Fatalf("side list: result=%+v err=%v", got, err)
@@ -153,6 +168,7 @@ func TestStoryChapterWithAPictureCounts(t *testing.T) {
 			img.Set(x, y, color.RGBA{210, 210, 205, 255})
 		}
 	}
+	tabLabels(img)
 	got, err := Analyze(img, Preset2560)
 	if err != nil || got.IsTasks {
 		t.Fatalf("no Story tab: result=%+v err=%v", got, err)
@@ -226,6 +242,7 @@ func TestMenuTasksTabSince120(t *testing.T) {
 			}
 		}
 	}
+	tabLabels(img)
 	lit, dark := color.RGBA{210, 210, 205, 255}, color.RGBA{18, 20, 19, 255}
 	for i, tab := range Preset2560.TasksTabs {
 		fill(tab.Tab, lit)
@@ -234,6 +251,12 @@ func TestMenuTasksTabSince120(t *testing.T) {
 			t.Fatalf("tab %d: result=%+v err=%v", i, got, err)
 		}
 		fill(tab.Tab, dark)
+	}
+	// The Flea Market lights its tab there, with no tabs left of it.
+	fill(Preset2560.TabRow, dark)
+	fill(Preset2560.TasksTabs[1].Tab, lit)
+	if got, _ := Analyze(img, Preset2560); got.IsTasks {
+		t.Fatalf("flea market: %+v", got)
 	}
 }
 
@@ -256,6 +279,7 @@ func TestSideSubTabSaysTasks(t *testing.T) {
 	}
 	lit := color.RGBA{210, 210, 205, 255}
 	fill(Rect{290, 62, 170, 54}, lit)
+	tabLabels(img)
 	got, err := Analyze(img, Preset2560)
 	if err != nil || !got.IsTasks || got.Layout != "character-tasks" {
 		t.Fatalf("Side lit: result=%+v err=%v", got, err)
@@ -301,6 +325,8 @@ func TestCharacterScreenIsNoTradersTasks(t *testing.T) {
 	for name, lit := range map[string][]Rect{
 		"gear tab":       {Preset2560.AnchorNeighbor},
 		"character menu": {fromBottom(Preset2560.MenuCharacter)},
+		// Weapon Builds: the build name box lights Anchor and the Trading tab.
+		"build name box": {Preset2560.TradingTab, fromBottom(Preset2560.MenuTraders)},
 	} {
 		if got, _ := Analyze(screen(lit...), Preset2560); got.Layout == "trader-tasks" && got.IsTasks {
 			t.Errorf("%s taken for a trader's tasks: %+v", name, got)
