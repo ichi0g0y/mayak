@@ -361,7 +361,10 @@ export const words = {
     allBosses: 'ボスの詳細',
     bossesLoading: 'ボス情報を読み込み中…',
     noGoons: '最近の報告なし',
-    goonFreshTip: '丸の色は報告の新しさです（緑：1 時間以内、黄：3 時間以内、赤：それより前）',
+    goonFreshTip: '丸の色は報告の新しさ',
+    goonFresh_new: '1 時間以内',
+    goonFresh_recent: '3 時間以内',
+    goonFresh_old: 'それより前',
     noBosses: 'ボスは出ません',
     escorts: '取り巻き',
     goonHint:
@@ -1259,7 +1262,10 @@ export const words = {
     allBosses: 'Boss details',
     bossesLoading: 'Loading bosses…',
     noGoons: 'no recent reports',
-    goonFreshTip: 'The dot tells how recent the report is (green: within an hour, yellow: within 3 hours, red: older)',
+    goonFreshTip: 'How recent the report is',
+    goonFresh_new: 'Within an hour',
+    goonFresh_recent: 'Within 3 hours',
+    goonFresh_old: 'Older',
     noBosses: 'No bosses',
     escorts: 'Escorts',
     goonHint:

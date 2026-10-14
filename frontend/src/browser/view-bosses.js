@@ -80,6 +80,14 @@ export function goonFresh(time) {
   const minutes = (Date.now() - Date.parse(time)) / 60000
   return !(minutes >= 0) ? 'old' : minutes <= 60 ? 'new' : minutes <= 180 ? 'recent' : 'old'
 }
+// What the dot's colour means, as dots: how recent a report is (goonFresh).
+// The row's tooltip in the sidebar marks the kind of the report shown; the
+// boss page has the line under its heading.
+const goonKinds = ['new', 'recent', 'old']
+const goonKeys = (on = '') =>
+  `<div class="goon-legend">${goonKinds.map((k) => `<span class="goon-key ${k} ${k === on ? 'on' : ''}"><i></i>${esc(t('goonFresh_' + k))}</span>`).join('')}</div>`
+const goonTip = (on) =>
+  `<span class="goon-tip" role="tooltip"><span class="goon-tip-title">${esc(t('goonFreshTip'))}</span>${goonKinds.map((k) => `<span class="goon-key ${k} ${k === on ? 'on' : ''}"><i></i>${esc(t('goonFresh_' + k))}</span>`).join('')}</span>`
 const goonLabel = (goon) =>
   goon ? `Goons · ${goon.map} · ${age(goon.time, state.language)}` : `Goons · ${t('noGoons')}`
 export function bossSection() {
@@ -92,7 +100,7 @@ export function bossSection() {
     const latest = !info
       ? `<p class="shot-empty">${esc(t('bossesLoading'))}</p>`
       : goon
-        ? `<button class="goon-latest" data-action="bosses" data-fresh="${goonFresh(goon.time)}" title="${esc(goonLabel(goon) + '\n' + t('goonFreshTip'))}"><span class="goon-dot"></span><span class="goon-name">Goons</span><span class="goon-age" data-goon-time="${esc(goon.time)}">${esc(age(goon.time, state.language))}</span><b>${esc(goon.map)}</b></button>`
+        ? `<button class="goon-latest" data-action="bosses" data-fresh="${goonFresh(goon.time)}" aria-label="${esc(goonLabel(goon))}"><span class="goon-dot"></span><span class="goon-name">Goons</span><span class="goon-age" data-goon-time="${esc(goon.time)}">${esc(age(goon.time, state.language))}</span><b>${esc(goon.map)}</b>${goonTip(goonFresh(goon.time))}</button>`
         : `<p class="shot-empty">Goons · ${esc(t('noGoons'))}</p>`
     const map = info?.maps.find((m) => m.key === (state.bossMap || info.current))
     const here = !info
@@ -120,7 +128,7 @@ export function bossesPage() {
     .slice(0, 10)
     .map(
       (g, i) =>
-        `<li class="${i === 0 ? 'latest' : ''}" data-fresh="${goonFresh(g.time)}" title="${esc(t('goonFreshTip'))}"><span class="goon-dot"></span><b>${esc(g.map)}</b><span class="goon-age" data-goon-time="${esc(g.time)}">${esc(age(g.time, state.language))}</span><time>${esc(clock(g.time))}</time></li>`,
+        `<li class="${i === 0 ? 'latest' : ''}" data-fresh="${goonFresh(g.time)}"><span class="goon-dot"></span><b>${esc(g.map)}</b><span class="goon-age" data-goon-time="${esc(g.time)}">${esc(age(g.time, state.language))}</span><time>${esc(clock(g.time))}</time></li>`,
     )
     .join('')
   const goonMaps = info.maps
@@ -149,7 +157,7 @@ export function bossesPage() {
         .join('')
     : ''
   return `<div class="page bosses-page"><div class="bookmarks-head"><h1>${esc(t('bosses'))}</h1>${bossPick(info)}</div>
- <section class="panel goon-panel"><div class="goon-head"><h2>Goons</h2><button data-action="goonReportOpen">${icon('flag')}<span>${esc(t('goonReport'))}</span></button></div>${goons ? `<ul class="goon-list">${goons}</ul>` : `<p class="shot-empty">${esc(t('noGoons'))}</p>`}<p class="hint">${esc(t('goonHint'))}</p>${goonMaps ? `<h3 class="goon-maps-head">${esc(t('goonMaps'))}</h3><div class="boss-chips">${goonMaps}</div>` : ''}</section>
+ <section class="panel goon-panel"><div class="goon-head"><h2>Goons</h2><button data-action="goonReportOpen">${icon('flag')}<span>${esc(t('goonReport'))}</span></button></div>${goonKeys()}${goons ? `<ul class="goon-list">${goons}</ul>` : `<p class="shot-empty">${esc(t('noGoons'))}</p>`}<p class="hint">${esc(t('goonHint'))}</p>${goonMaps ? `<h3 class="goon-maps-head">${esc(t('goonMaps'))}</h3><div class="boss-chips">${goonMaps}</div>` : ''}</section>
  <section class="boss-maps"><div class="boss-map-tabs" role="group" aria-label="${esc(t('bossMaps'))}">${maps}</div><div class="boss-grid">${cards}</div></section></div>${state.goonReport ? goonReportDialog(info) : ''}`
 }
 const clock = (time) => {
