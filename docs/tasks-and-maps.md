@@ -50,7 +50,7 @@ Host 設定の「タスクを開く」（`OpenQuestPage`）は、最後に認識
 `receiveTask`（`frontend/src/browser/state.js`）の動作です。
 
 - **開くサイト**: 届いた `site` を使います（Host が順番とページの有無で決めたもの）。
-- **同じタスクのタブ**: 同じタスク ID・同じページのタブが既にあれば、そのタブをアクティブにします。無ければ、同じページを開いているタブ（ブックマークやリンクから開いたもの。翻訳しているかどうか、`#` 以降、末尾の `/` は見ない: `samePage`）をそのタスクのタブにします。スクリーンショットを繰り返し撮ってもタブは増えません。
+- **同じタスクのタブ**: 同じタスク ID・同じページのタブが既にあれば、そのタブをアクティブにします。無ければ、同じページを開いているタブ（ブックマークやリンクから開いたもの。翻訳しているかどうか、`#` 以降、末尾の `/`、パスのエスケープは見ない: `samePage`）をそのタスクのタブにします。スクリーンショットを繰り返し撮ってもタブは増えません。
 - **`taskMode`**: 既定の `new` は新しいタブを追加します。`reuse` は固定（ピン留め）されていない最初のタスクタブを更新します。`new` でも、リモートから見られていて（`api.js` の `viewedElsewhere`。[settings-and-integrations.md](settings-and-integrations.md#リンク)）、MAYAK を最小化しているかトレイに入れているあいだ（シェルの `document.visibilityState` が `hidden`。Wails は最小化と非表示で WebView2 を隠す）は、`reuse` と同じように同じタブを更新します（`receiveTask` の `away`）。1 台だけで使うときは変わりません。`taskMode` は Host と Client で共有しますが、見えているかどうかは PC ごとに判定します。
 - **この PC に出すもの**: リモートから見られているあいだ、`connection.receive.task` を外した PC では開きません（Host でも Client でも。[settings-and-integrations.md](settings-and-integrations.md#リンク)）。Host で「タスクを開く」を押したときは、外していても Host で開きます。
 - **上限**: タブが 80 個に達していれば開きません。

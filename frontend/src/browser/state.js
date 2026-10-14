@@ -501,15 +501,19 @@ function receiveTask(state, task, away = false) {
   return tab
 }
 // samePage tells two addresses of one page: translated or not, with or
-// without a heading (#…) or a trailing slash.
+// without a heading (#…) or a trailing slash, its path escaped or not (the
+// Host escapes a task's "(" as %28, where the wiki's address keeps it, and a
+// task tab opened again for every recognition of a Prestige task).
 function samePage(a, b) {
   const page = (value) => {
     const url = originalURL(value)
     if (!url) return null
     const u = new URL(url)
-    u.hash = ''
-    if (u.pathname.length > 1) u.pathname = u.pathname.replace(/\/+$/, '')
-    return u.href
+    let path = u.pathname.length > 1 ? u.pathname.replace(/\/+$/, '') : u.pathname
+    try {
+      path = decodeURIComponent(path)
+    } catch {}
+    return u.origin + path + u.search
   }
   const x = page(a)
   return x !== null && x === page(b)

@@ -2024,14 +2024,16 @@ async function performOne(type, data) {
     case 'activate':
       if (state.tabs.some((t) => t.id === data)) state.active = data
       break
-    // openOrFocus goes to a tab already showing the address, if any, so a
-    // link pressed twice (the changelog, About) does not open a second tab.
+    // open (and openOrFocus, its old name) goes to a tab already showing the
+    // page, if any, however it is opened (a bookmark, a link a page opens a
+    // new window with, a page of the settings), so it never opens twice;
+    // navigate shows it in the tab shown.
     case 'open':
     case 'navigate':
     case 'openOrFocus': {
       const url = webURL(data)
       if (!url) throw new Error(t(state.language, 'enterWebURL'))
-      if (type === 'openOrFocus') {
+      if (type !== 'navigate') {
         // The same page (state.js samePage): translated or not, with or
         // without a heading or a trailing slash.
         const same = state.tabs.find((t) => t.kind === 'web' && samePage(t.url, url))
@@ -2271,9 +2273,17 @@ async function performOne(type, data) {
     case 'popupClose':
       if (popup) await closePopup()
       return snapshot()
-    // "Open in a tab" moves the popup's current page into a tab of its own.
+    // "Open in a tab" moves the popup's current page into a tab of its own,
+    // or to the tab already showing it (the task it is for kept on it).
     case 'popupToTab': {
       if (!popup) return snapshot()
+      const same = state.tabs.find((t) => t.kind === 'web' && samePage(t.url, popup.url))
+      if (same) {
+        if (popup.task && !same.task) same.task = structuredClone(popup.task)
+        state.active = same.id
+        await closePopup()
+        break
+      }
       if (state.tabs.length >= 80) throw new Error('tab-limit')
       const next = { id: randomUUID(), kind: 'web', url: popup.url, title: popup.title }
       if (popup.task) next.task = structuredClone(popup.task)

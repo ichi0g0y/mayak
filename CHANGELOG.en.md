@@ -4,6 +4,13 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### Fixed
+
+- A task with brackets in its name (the Prestige tasks) opened its page in another tab each time it was recognized.
+- A page already open in a tab opened in another one from a bookmark in the menu, a link a page opens a new window with, or Open in a tab in the item sidebar's popup; it now switches to the tab open, a translated one included.
+
 ## v0.1.43 (2026-10-14)
 
 ### Fixed

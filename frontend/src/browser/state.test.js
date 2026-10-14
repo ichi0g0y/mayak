@@ -109,6 +109,33 @@ test('a tab already showing a task page, not opened for the task, becomes its ta
   assert.equal(samePage('https://tarkov.dev/item/ledx/', 'https://tarkov.dev/item/ledx#price'), true)
   assert.equal(samePage('https://tarkov.dev/item/ledx', 'https://tarkov.dev/item/ledx-2'), false)
 })
+test('a task tab is found whether its address is escaped or not, translated too', () => {
+  const s = defaults()
+  s.taskMode = 'new'
+  const urls = {
+    'official-wiki': 'https://escapefromtarkov.fandom.com/wiki/New_Beginning_%28Prestige_1%29',
+    'japanese-wiki': 'https://wikiwiki.jp/eft/Prapor/New',
+    'tarkov-dev': 'https://tarkov.dev/tasks/',
+  }
+  const prestige = {
+    id: 'wiki:New Beginning (Prestige 1)',
+    name: 'New Beginning (Prestige 1)',
+    site: 'official-wiki',
+    urls,
+  }
+  const first = receiveTask(s, prestige)
+  // The wiki's address keeps the brackets the Host escaped.
+  first.url = 'https://escapefromtarkov.fandom.com/wiki/New_Beginning_(Prestige_1)'
+  const count = s.tabs.length
+  assert.equal(receiveTask(s, prestige).id, first.id)
+  first.url =
+    'https://escapefromtarkov-fandom-com.translate.goog/wiki/New_Beginning_(Prestige_1)?_x_tr_sl=auto&_x_tr_tl=ja'
+  assert.equal(receiveTask(s, prestige).id, first.id)
+  assert.equal(s.tabs.length, count)
+  assert.equal(samePage('https://example.com/a%20b', 'https://example.com/a b'), true)
+  assert.equal(samePage('https://example.com/a?x=1', 'https://example.com/a?x=2'), false)
+  assert.equal(samePage('https://example.com/%E0%A4%A', 'https://example.com/%E0%A4%A'), true)
+})
 test('reuse preserves pinned tasks and deduplicates repeated detections', () => {
   const s = defaults()
   s.taskMode = 'reuse'
