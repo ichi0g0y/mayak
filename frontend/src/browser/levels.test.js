@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { allLevelsOf, ladderOf, levelTargetOf, shortNumber } from './levels.js'
+import { allLevelsOf, badgeStyle, ladderOf, levelTargetOf, shortNumber } from './levels.js'
 
 // PvE's levels 31 to 40, as the catalog has them (app_levels.go levelSteps).
 const steps = [
@@ -82,4 +82,13 @@ test('the levels page has every level: reached, the one played, the next and tho
   assert.ok(next.done > 0 && next.done < 1)
   assert.equal(next.more, 196685 - 180344)
   assert.equal(all.target, 33)
+})
+
+test('a badge drawn low in its picture is moved up into the middle of its ring', () => {
+  assert.equal(badgeStyle('https://assets.tarkov.dev/player-level-group-7.png'), 'translate:0 -2.5%')
+  assert.equal(badgeStyle('https://assets.tarkov.dev/player-level-group-5.png'), 'translate:0 0.5%')
+  // One drawn in the middle, a picture not known, and none: left as they are.
+  assert.equal(badgeStyle('https://assets.tarkov.dev/player-level-group-6.png'), '')
+  assert.equal(badgeStyle('https://example.com/badge.png'), '')
+  assert.equal(badgeStyle(''), '')
 })

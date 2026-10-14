@@ -1,5 +1,5 @@
 import { age } from './item.js'
-import { allLevelsOf, ladderOf, shortNumber } from './levels.js'
+import { allLevelsOf, badgeStyle, ladderOf, shortNumber } from './levels.js'
 import { t, state, esc, icon, clickHandlers, action } from './shell-core.js'
 
 // The level line first in the sidebar: the level's badge in a ring filled
@@ -40,7 +40,7 @@ export function levelSection() {
   // The badge in a ring filled as far as the level is made, to the next (a
   // level's ring, whatever level is aimed at: what is left to that one is
   // the text's).
-  const ring = `<span class="level-ring" style="--p:${(ladder.toNext * 100).toFixed(1)}">${ladder.badge ? `<img src="${esc(ladder.badge)}" alt="" loading="lazy" draggable="false">` : ''}</span>`
+  const ring = `<span class="level-ring" style="--p:${(ladder.toNext * 100).toFixed(1)}">${ladder.badge ? `<img src="${esc(ladder.badge)}" style="${badgeStyle(ladder.badge)}" alt="" loading="lazy" draggable="false">` : ''}</span>`
   const line = `<button class="level-line" data-action="levelLadder" aria-expanded="${open}" title="${esc(t(open ? 'levelClose' : 'levelOpen'))}">${ring}<span class="level-now">Lv${ladder.level}</span>${leftHTML(ladder)}<span class="level-what">${esc(unlocksText(ladder.unlocks) || t('levelNothing'))}</span></button>`
   const rows = open
     ? `<div class="level-card"><div class="level-ladder" role="list">${ladder.rows
@@ -91,7 +91,7 @@ export function levelsPage() {
       const bar = `<span class="level-step"><i style="width:${((r.exp / all.widest) * 100).toFixed(1)}%"></i>${r.done ? `<em style="width:${((r.exp / all.widest) * r.done * 100).toFixed(1)}%"></em>` : ''}</span>`
       const num =
         r.state === 'now' && all.badge
-          ? `<img class="levels-badge" src="${esc(all.badge)}" alt="" loading="lazy" draggable="false">${r.level}`
+          ? `<img class="levels-badge" src="${esc(all.badge)}" style="${badgeStyle(all.badge)}" alt="" loading="lazy" draggable="false">${r.level}`
           : String(r.level)
       const left =
         r.state === 'now' ? esc(t('levelNow')) : r.state === 'reached' ? icon('check', 'levels-check') : number(r.left)
