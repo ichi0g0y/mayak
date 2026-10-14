@@ -741,14 +741,15 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 /* The badges differ in shape (a triangle, a hexagon, a disc): each sits on a dark disc inside the ring, a little smaller, so all read as one round medal. */
 .level-ring::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--surface-2)}
 .level-ring img{position:relative;z-index:1;width:26px;height:26px;object-fit:contain}
+/* What the level aimed at unlocks goes right, under that level, not under the level played (it would read as the level played's); it keeps the whole row's width. */
 .level-now{font-size:15px;font-weight:700;line-height:20px;white-space:nowrap}
 .level-left{grid-column:3;grid-row:1;min-width:0;font-size:11.5px;color:var(--text-2);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* The amount in full, or short (2.12M) where the line is too narrow for it (widths are the line's inside: the sidebar's less 32px); a million and more needs a wider line. Narrower still (the sidebar near its least), what is left goes under the level. */
 .level-left .n-short{display:none}
 @container (max-width:189px){.level-left .n-full{display:none}.level-left .n-short{display:inline}}
 @container (max-width:204px){.level-left.big .n-full{display:none}.level-left.big .n-short{display:inline}}
-@container (max-width:170px){.level-line .level-left{grid-column:2/-1;grid-row:2;text-align:left}.level-line .level-what{grid-row:3}.level-line .level-ring{grid-row:1/span 3}}
-.level-what{grid-column:2/-1;grid-row:2;min-width:0;font-size:11.5px;line-height:16px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@container (max-width:170px){.level-line .level-left{grid-column:2/-1;grid-row:2;text-align:left}.level-line .level-what{grid-column:2/-1;grid-row:3;text-align:left}.level-line .level-ring{grid-row:1/span 3}}
+.level-what{grid-column:2/-1;grid-row:2;min-width:0;text-align:right;font-size:11.5px;line-height:16px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .level-ladder{display:grid;gap:1px}
 .level-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:1px 6px;width:100%;padding:3px 8px 3px 10px;border:0;border-radius:6px;background:transparent;font-size:12px;font-weight:400;text-align:left}
 .level-row:hover{background:var(--hover)}
