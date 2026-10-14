@@ -220,6 +220,75 @@ export class ItemSearchHit {
 }
 
 /**
+ * LevelStep is one level: the experience it takes from the level before
+ * (Exp) and from the start (Total), its badge's picture (tarkov.dev's), and
+ * what reaching it unlocks.
+ */
+export class LevelStep {
+    "level": number;
+    "exp": number;
+    "total": number;
+    "badge"?: string;
+    "unlocks"?: LevelUnlock[];
+
+    /** Creates a new LevelStep instance. */
+    constructor($$source: Partial<LevelStep> = {}) {
+        if (!("level" in $$source)) {
+            this["level"] = 0;
+        }
+        if (!("exp" in $$source)) {
+            this["exp"] = 0;
+        }
+        if (!("total" in $$source)) {
+            this["total"] = 0;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new LevelStep instance from a string or object.
+     */
+    static createFrom($$source: any = {}): LevelStep {
+        const $$createField4_0 = $$createType6;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("unlocks" in $$parsedSource) {
+            $$parsedSource["unlocks"] = $$createField4_0($$parsedSource["unlocks"]);
+        }
+        return new LevelStep($$parsedSource as Partial<LevelStep>);
+    }
+}
+
+/**
+ * LevelUnlock is what a level unlocks: a trader's loyalty level ("trader",
+ * Name and Loyalty, Image its picture), the flea market ("flea"), or a new
+ * level badge ("badge", Image the badge).
+ */
+export class LevelUnlock {
+    "kind": string;
+    "name"?: string;
+    "loyalty"?: number;
+    "image"?: string;
+
+    /** Creates a new LevelUnlock instance. */
+    constructor($$source: Partial<LevelUnlock> = {}) {
+        if (!("kind" in $$source)) {
+            this["kind"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new LevelUnlock instance from a string or object.
+     */
+    static createFrom($$source: any = {}): LevelUnlock {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new LevelUnlock($$parsedSource as Partial<LevelUnlock>);
+    }
+}
+
+/**
  * MenuFact is one line of a card: a label and its value.
  */
 export class MenuFact {
@@ -301,7 +370,7 @@ export class MenuItem {
      * Creates a new MenuItem instance from a string or object.
      */
     static createFrom($$source: any = {}): MenuItem {
-        const $$createField6_0 = $$createType6;
+        const $$createField6_0 = $$createType8;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("facts" in $$parsedSource) {
             $$parsedSource["facts"] = $$createField6_0($$parsedSource["facts"]);
@@ -354,7 +423,7 @@ export class MenuRequest {
      * Creates a new MenuRequest instance from a string or object.
      */
     static createFrom($$source: any = {}): MenuRequest {
-        const $$createField4_0 = $$createType8;
+        const $$createField4_0 = $$createType10;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("items" in $$parsedSource) {
             $$parsedSource["items"] = $$createField4_0($$parsedSource["items"]);
@@ -488,7 +557,7 @@ export class ScreenshotEntry {
      * Creates a new ScreenshotEntry instance from a string or object.
      */
     static createFrom($$source: any = {}): ScreenshotEntry {
-        const $$createField2_0 = $$createType10;
+        const $$createField2_0 = $$createType12;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("meta" in $$parsedSource) {
             $$parsedSource["meta"] = $$createField2_0($$parsedSource["meta"]);
@@ -522,7 +591,7 @@ export class ScreenshotKey {
      * Creates a new ScreenshotKey instance from a string or object.
      */
     static createFrom($$source: any = {}): ScreenshotKey {
-        const $$createField1_0 = $$createType11;
+        const $$createField1_0 = $$createType13;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("keys" in $$parsedSource) {
             $$parsedSource["keys"] = $$createField1_0($$parsedSource["keys"]);
@@ -555,7 +624,7 @@ export class SnapNoteData {
      * Creates a new SnapNoteData instance from a string or object.
      */
     static createFrom($$source: any = {}): SnapNoteData {
-        const $$createField0_0 = $$createType12;
+        const $$createField0_0 = $$createType14;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("note" in $$parsedSource) {
             $$parsedSource["note"] = $$createField0_0($$parsedSource["note"]);
@@ -674,7 +743,7 @@ export class Toast {
      */
     static createFrom($$source: any = {}): Toast {
         const $$createField6_0 = $$createType4;
-        const $$createField10_0 = $$createType14;
+        const $$createField10_0 = $$createType16;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("params" in $$parsedSource) {
             $$parsedSource["params"] = $$createField6_0($$parsedSource["params"]);
@@ -721,13 +790,15 @@ const $$createType1 = $Create.Nullable($$createType0);
 const $$createType2 = GoonIdentity.createFrom;
 const $$createType3 = $Create.Array($$createType2);
 const $$createType4 = $Create.Map($Create.Any, $Create.Any);
-const $$createType5 = MenuFact.createFrom;
+const $$createType5 = LevelUnlock.createFrom;
 const $$createType6 = $Create.Array($$createType5);
-const $$createType7 = MenuItem.createFrom;
+const $$createType7 = MenuFact.createFrom;
 const $$createType8 = $Create.Array($$createType7);
-const $$createType9 = screenshotstore$0.Record.createFrom;
-const $$createType10 = $Create.Nullable($$createType9);
-const $$createType11 = $Create.Array($Create.Any);
-const $$createType12 = snapnote$0.Note.createFrom;
-const $$createType13 = ToastAction.createFrom;
-const $$createType14 = $Create.Array($$createType13);
+const $$createType9 = MenuItem.createFrom;
+const $$createType10 = $Create.Array($$createType9);
+const $$createType11 = screenshotstore$0.Record.createFrom;
+const $$createType12 = $Create.Nullable($$createType11);
+const $$createType13 = $Create.Array($Create.Any);
+const $$createType14 = snapnote$0.Note.createFrom;
+const $$createType15 = ToastAction.createFrom;
+const $$createType16 = $Create.Array($$createType15);

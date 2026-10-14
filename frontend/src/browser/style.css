@@ -712,6 +712,62 @@ body[data-sidebar=collapsed] .boss-section-label .section-link,body[data-sidebar
 body[data-sidebar=collapsed] .bosses-open{width:40px;height:32px}
 body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;padding-top:0}
 [data-layout=horizontal] .boss-section-label .section-link,[data-layout=horizontal] .boss-section{display:none!important}
+/* The level line (view-levels.js), a row as wide as the tabs', without a card around it: the badge in a ring filled as far as the way to the level aimed at, the level, what is left and what it unlocks; open, the levels ahead, each bar as long as the level takes, the part made filled, and what each unlocks under it. */
+.level-section{display:grid;gap:2px;padding:4px 0 2px}
+.level-line{container-type:inline-size;display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:baseline;gap:0 8px;width:100%;padding:6px 8px;border:0;border-radius:8px;background:transparent;color:var(--text);font-weight:400;text-align:left}
+.level-line:hover{background:var(--hover)}
+.level-line[aria-expanded=true]{background:var(--selected)}
+.level-ring{position:relative;grid-row:1/span 2;align-self:center;display:grid;place-items:center;width:38px;height:38px;margin-right:2px}
+.level-ring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p) * 1%),var(--border) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px))}
+.level-ring img{position:relative;width:26px;height:26px;object-fit:contain}
+.level-now{font-size:15px;font-weight:700;line-height:20px;white-space:nowrap}
+.level-left{grid-column:3;grid-row:1;min-width:0;font-size:11.5px;color:var(--text-2);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* The amount in full, or short (2.12M) where the line is too narrow for it (widths are the line's inside: the sidebar's less 32px); a million and more needs a wider line. Narrower still (the sidebar near its least), what is left goes under the level. */
+.level-left .n-short{display:none}
+@container (max-width:189px){.level-left .n-full{display:none}.level-left .n-short{display:inline}}
+@container (max-width:204px){.level-left.big .n-full{display:none}.level-left.big .n-short{display:inline}}
+@container (max-width:170px){.level-line .level-left{grid-column:2/-1;grid-row:2;text-align:left}.level-line .level-what{grid-row:3}.level-line .level-ring{grid-row:1/span 3}}
+.level-what{grid-column:2/-1;grid-row:2;min-width:0;font-size:11.5px;line-height:16px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.level-ladder{display:grid;gap:1px}
+.level-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:1px 6px;width:100%;padding:3px 8px 3px 10px;border:0;border-radius:6px;background:transparent;font-size:12px;font-weight:400;text-align:left}
+.level-row:hover{background:var(--hover)}
+.level-row.target{background:var(--accent-soft)}
+.level-num{color:var(--text-2);font-variant-numeric:tabular-nums;text-align:right}
+.level-step{position:relative;height:6px}
+.level-step i,.level-step em{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.level-step i{background:var(--border-strong)}
+.level-step em{background:var(--accent)}
+.level-row-left{font-size:11.5px;color:var(--text-2);font-variant-numeric:tabular-nums;text-align:right}
+.level-unlocks{grid-column:2/-1;min-width:0;font-size:11px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.level-note{margin:2px 0 0;padding:0 8px 0 10px;font-size:11px;line-height:1.5;color:var(--muted)}
+.level-more{justify-content:flex-start;gap:2px;width:calc(100% - 18px);height:24px;margin:2px 8px 0 10px;padding:0;border:0;background:transparent!important;color:var(--accent);font-size:12px;font-weight:500}
+.level-more-chevron{width:14px;height:14px;transform:rotate(-90deg)}
+/* What opens under the line (the ladder, the way to every level, the note) is a card; the line stays a row. */
+.level-card{display:grid;gap:2px;margin:2px 0 6px;padding:6px 0;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+/* The levels page: every level ahead, in columns. */
+.levels-list{display:grid;gap:2px;max-width:960px}
+.levels-row{display:grid;grid-template-columns:44px minmax(150px,200px) 140px 130px minmax(0,1fr);align-items:center;gap:14px;width:100%;padding:8px 12px;border:0;border-radius:8px;background:transparent;color:var(--text);font-size:13px;font-weight:400;text-align:left;font-variant-numeric:tabular-nums}
+button.levels-row:hover{background:var(--hover)}
+.levels-row.target{background:var(--accent-soft)}
+.levels-head{padding-top:0;padding-bottom:4px;color:var(--muted);font-size:12px;font-weight:600}
+.levels-row.reached{color:var(--muted)}
+.levels-row.reached .levels-exp b,.levels-row.reached .levels-more{color:var(--muted)}
+.levels-row.reached .level-step em{background:var(--border-strong)}
+.levels-row.now{background:var(--selected)}
+.levels-row.now .levels-left{color:var(--accent);font-weight:600}
+.levels-check{width:15px;height:15px;color:var(--success)}
+.levels-badge{width:24px;height:24px;object-fit:contain;margin-right:4px}
+.levels-num{display:inline-flex;align-items:center;justify-content:flex-end;font-weight:650}
+.levels-exp{display:grid;gap:4px}
+.levels-exp b{font-weight:500}
+.levels-more,.levels-left{color:var(--text-2)}
+.levels-unlocks{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--accent)}
+.level-unlock{display:inline-flex;align-items:center;gap:6px}
+.level-unlock-img{width:22px;height:22px;border-radius:50%;object-fit:cover;background:var(--surface-2)}
+.level-unlock-img.badge{border-radius:0;object-fit:contain;background:transparent}
+.level-unlock-icon{display:inline-grid;place-items:center;width:22px;height:22px}
+.level-unlock-icon .icon{width:16px;height:16px}
+body[data-sidebar=collapsed] .level-section,[data-layout=horizontal] .level-section{display:none!important}
 [data-layout=horizontal] .new-tab.bosses-open{order:-1;flex:none;width:32px;height:32px;margin-right:6px}
 /* The boss page. */
 .bosses-page{max-width:1080px}

@@ -12,6 +12,8 @@ export {
     GoonReport,
     GoonReportInfo,
     ItemSearchHit,
+    LevelStep,
+    LevelUnlock,
     MenuFact,
     MenuItem,
     MenuRequest,

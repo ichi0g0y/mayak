@@ -4,6 +4,12 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### New
+
+- A level line at the top of the sidebar shows the next level that unlocks something (a trader's loyalty level, a badge) and the experience left to it; pressed, it lists the levels ahead with what each takes and unlocks, and a level pressed becomes the aim; See every level opens the whole list from level 1. The experience comes from the character's Overall screenshot.
+
 ## v0.1.45 (2026-10-14)
 
 ### Fixed

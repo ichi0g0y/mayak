@@ -49,6 +49,7 @@ import {
   maskedClass,
 } from './shell-core.js'
 import { goonFresh, bossSection, bossesPage } from './view-bosses.js'
+import { levelSection, levelsPage } from './view-levels.js'
 import { resetHead, resetPanel } from './settings-reset.js'
 import { notificationsPage } from './view-notifications.js'
 import { shotBadges, screenshotsPage } from './view-screenshots.js'
@@ -127,21 +128,23 @@ const tabName = (tab) =>
           ? t('settings')
           : tab.kind === 'bosses'
             ? t('bosses')
-            : tab.kind === 'notifications'
-              ? t('notifications')
-              : tab.kind === 'screenshots'
-                ? t('screenshots')
-                : tab.kind === 'snapnotes'
-                  ? t('snapNotes')
-                  : tab.kind === 'livemap'
-                    ? t('liveMap')
-                    : tab.kind === 'squad'
-                      ? t('squad')
-                      : tab.kind === 'bookmarks'
-                        ? t('bookmarks')
-                        : tab.kind === 'tabs'
-                          ? t('allTabs')
-                          : tab.title || tab.url
+            : tab.kind === 'levels'
+              ? t('levelsPage')
+              : tab.kind === 'notifications'
+                ? t('notifications')
+                : tab.kind === 'screenshots'
+                  ? t('screenshots')
+                  : tab.kind === 'snapnotes'
+                    ? t('snapNotes')
+                    : tab.kind === 'livemap'
+                      ? t('liveMap')
+                      : tab.kind === 'squad'
+                        ? t('squad')
+                        : tab.kind === 'bookmarks'
+                          ? t('bookmarks')
+                          : tab.kind === 'tabs'
+                            ? t('allTabs')
+                            : tab.title || tab.url
 // Tabs listed in the tab section (the strip sizes itself by their number).
 const listedTabs = () => listedOf(state.tabs)
 const tabCount = () => listedTabs().length
@@ -890,7 +893,7 @@ function render() {
       })
       .filter(Boolean)
   )
-  const html = `<div class="sidebar-resizer" role="separator" aria-orientation="vertical" aria-valuemin="${sidebarWidths.min}" aria-valuemax="${sidebarWidths.max}" aria-valuenow="${state.sidebarWidth}" title="${esc(t('resizeSidebar'))}"></div>${brandBar()}<nav class="tab-strip ${tab?.kind === 'settings' ? 'settings-strip' : ''}" aria-label="${esc(t(tab?.kind === 'settings' ? 'settings' : 'tabHelp'))}">${tab?.kind === 'settings' ? settingsSidebar() : `${mapEntry()}${squadSection()}${screenshotSection()}${snapSection()}${bossSection()}${bookmarkSection()}<div class="section-label tabs-section-label ${tab?.kind === 'tabs' ? 'active' : ''}"><button class="section-link" data-action="tabsPage" title="${esc(t('allTabs'))}">${esc(t('tabs'))}</button><button class="new-tab tabs-open" data-action="tabsPage" title="${esc(t('allTabs'))}" aria-label="${esc(t('allTabs'))}" aria-pressed="${tab?.kind === 'tabs'}">${icon('tabs')}</button><button class="new-tab" data-action="newTab" title="${esc(t('newTab'))}" aria-label="${esc(t('newTab'))}">${icon('plus')}</button></div><div class="tabs" role="tablist" style="--n:${tabCount()}">${tabs()}</div>`}</nav><div class="layout-dock">${state.layout === 'vertical' ? sidebarToggle() : ''}${layoutToggle()}${itemToggle()}<button class="dock-button dock-notifications ${tab?.kind === 'notifications' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'notifications'}" data-action="notifications" title="${esc(t('notifications'))}" aria-label="${esc(t('notifications'))}">${icon('bell')}</button><button class="dock-button dock-settings ${tab?.kind === 'settings' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'settings'}" data-action="settings" title="${esc(t('settings'))}" aria-label="${esc(t('settings'))}">${icon('settings')}</button>${state.layout === 'horizontal' ? `<span class="dock-indicators">${indicators()}</span>` : ''}</div>${windowControls()}<div class="toolbar">${
+  const html = `<div class="sidebar-resizer" role="separator" aria-orientation="vertical" aria-valuemin="${sidebarWidths.min}" aria-valuemax="${sidebarWidths.max}" aria-valuenow="${state.sidebarWidth}" title="${esc(t('resizeSidebar'))}"></div>${brandBar()}<nav class="tab-strip ${tab?.kind === 'settings' ? 'settings-strip' : ''}" aria-label="${esc(t(tab?.kind === 'settings' ? 'settings' : 'tabHelp'))}">${tab?.kind === 'settings' ? settingsSidebar() : `${levelSection()}${mapEntry()}${squadSection()}${screenshotSection()}${snapSection()}${bossSection()}${bookmarkSection()}<div class="section-label tabs-section-label ${tab?.kind === 'tabs' ? 'active' : ''}"><button class="section-link" data-action="tabsPage" title="${esc(t('allTabs'))}">${esc(t('tabs'))}</button><button class="new-tab tabs-open" data-action="tabsPage" title="${esc(t('allTabs'))}" aria-label="${esc(t('allTabs'))}" aria-pressed="${tab?.kind === 'tabs'}">${icon('tabs')}</button><button class="new-tab" data-action="newTab" title="${esc(t('newTab'))}" aria-label="${esc(t('newTab'))}">${icon('plus')}</button></div><div class="tabs" role="tablist" style="--n:${tabCount()}">${tabs()}</div>`}</nav><div class="layout-dock">${state.layout === 'vertical' ? sidebarToggle() : ''}${layoutToggle()}${itemToggle()}<button class="dock-button dock-notifications ${tab?.kind === 'notifications' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'notifications'}" data-action="notifications" title="${esc(t('notifications'))}" aria-label="${esc(t('notifications'))}">${icon('bell')}</button><button class="dock-button dock-settings ${tab?.kind === 'settings' ? 'selected' : ''}" aria-pressed="${tab?.kind === 'settings'}" data-action="settings" title="${esc(t('settings'))}" aria-label="${esc(t('settings'))}">${icon('settings')}</button>${state.layout === 'horizontal' ? `<span class="dock-indicators">${indicators()}</span>` : ''}</div>${windowControls()}<div class="toolbar">${
     tab?.fixed
       ? `<button data-action="back" aria-label="${t('back')}" title="${t('back')}" ${!tab.canBack ? 'disabled' : ''}>${icon('back')}</button><button data-action="forward" aria-label="${t('forward')}" title="${t('forward')}" ${!tab.canForward ? 'disabled' : ''}>${icon('forward')}</button><button data-action="reload" aria-label="${t('reload')}" title="${t('reload')}">${icon('reload')}</button><button data-action="home" aria-label="${esc(t('home'))}" title="${esc(t('homeHelp'))}" ${tab.url === tab.home ? 'disabled' : ''}>${icon('home')}</button><form id="address-form" class="readonly">${icon('globe', 'address-icon')}<input id="address" readonly aria-readonly="true" aria-label="${esc(tabName(tab))}" title="${esc(t('fixedAddress'))}" value="${esc(tab.url)}">${loadBar(tab)}</form>`
       : tab?.kind === 'snapnotes'
@@ -898,6 +901,7 @@ function render() {
         : tab?.kind === 'bookmarks' ||
             tab?.kind === 'screenshots' ||
             tab?.kind === 'bosses' ||
+            tab?.kind === 'levels' ||
             tab?.kind === 'notifications' ||
             tab?.kind === 'livemap' ||
             tab?.kind === 'squad'
@@ -911,7 +915,7 @@ function render() {
                       .join('')}</select>`
                   : ''
               }`
-  }${toolIcons(tab)}${state.layout === 'vertical' ? '<div class="titlebar-grip"></div>' : ''}</div><main>${tab?.kind === 'settings' ? settings() : tab?.kind === 'bookmarks' ? bookmarksPage() : tab?.kind === 'tabs' ? tabsPage() : tab?.kind === 'screenshots' ? screenshotsPage() : tab?.kind === 'snapnotes' ? snapNotesPage() : tab?.kind === 'bosses' ? bossesPage() : tab?.kind === 'notifications' ? notificationsPage() : tab?.kind === 'livemap' ? liveMapPage() : tab?.kind === 'squad' ? squadPage() : !tab ? `<p class="empty-tabs">${t('noTabs')}</p>` : ''}</main>${tab?.kind === 'settings' ? `<button class="page-close" data-action="closeSettings" title="${esc(t('closeSettings'))}" aria-label="${esc(t('closeSettings'))}">${icon('x')}</button>` : ''}${itemPanel()}${contextMenuHTML()}${placeMenuHTML()}${snapMenuHTML()}${tutorialOpen ? tutorialHTML() : ''}`
+  }${toolIcons(tab)}${state.layout === 'vertical' ? '<div class="titlebar-grip"></div>' : ''}</div><main>${tab?.kind === 'settings' ? settings() : tab?.kind === 'bookmarks' ? bookmarksPage() : tab?.kind === 'tabs' ? tabsPage() : tab?.kind === 'screenshots' ? screenshotsPage() : tab?.kind === 'snapnotes' ? snapNotesPage() : tab?.kind === 'bosses' ? bossesPage() : tab?.kind === 'levels' ? levelsPage() : tab?.kind === 'notifications' ? notificationsPage() : tab?.kind === 'livemap' ? liveMapPage() : tab?.kind === 'squad' ? squadPage() : !tab ? `<p class="empty-tabs">${t('noTabs')}</p>` : ''}</main>${tab?.kind === 'settings' ? `<button class="page-close" data-action="closeSettings" title="${esc(t('closeSettings'))}" aria-label="${esc(t('closeSettings'))}">${icon('x')}</button>` : ''}${tab?.kind === 'levels' ? `<button class="page-close" data-action="close" data-id="${esc(tab.id)}" title="${esc(t('close'))}" aria-label="${esc(t('close'))}">${icon('x')}</button>` : ''}${itemPanel()}${contextMenuHTML()}${placeMenuHTML()}${snapMenuHTML()}${tutorialOpen ? tutorialHTML() : ''}`
   // The DOM is morphed to the new markup rather than rebuilt: elements that
   // stay keep their node, so hover, focus, a press in flight and scroll
   // positions survive a render, and a render costs only its differences.

@@ -253,6 +253,11 @@ function defaults() {
     squadCollapsed: false,
     toolOrder: toolKeys.slice(),
     bossesView: 'full',
+    // The level line in the sidebar (view-levels.js): the line ("line") or
+    // the ladder open under it ("ladder"); the level aimed at (0: the next
+    // that unlocks something).
+    levelsView: 'line',
+    levelTarget: 0,
     bossMap: '',
     bossMode: '',
     sidebarWidth: 224,
@@ -326,6 +331,9 @@ function restore(raw = {}) {
     : raw.bossesCollapsed === true
       ? 'closed'
       : 'full'
+  state.levelsView = raw.levelsView === 'ladder' ? 'ladder' : 'line'
+  state.levelTarget =
+    Number.isInteger(raw.levelTarget) && raw.levelTarget > 1 && raw.levelTarget < 200 ? raw.levelTarget : 0
   state.bossMap = typeof raw.bossMap === 'string' && /^[a-z0-9-]{1,40}$/.test(raw.bossMap) ? raw.bossMap : ''
   state.bossMode = ['regular', 'pve'].includes(raw.bossMode) ? raw.bossMode : ''
   state.sidebarWidth = clampSidebar(raw.sidebarWidth)
@@ -391,6 +399,7 @@ function restore(raw = {}) {
       liveMapPage = false,
       squadPage = false,
       bossesPage = false,
+      levelsPage = false,
       notificationsPage = false,
       tabsPage = false
     state.tabs = raw.tabs
@@ -424,6 +433,9 @@ function restore(raw = {}) {
         } else if (t.kind === 'bosses') {
           if (bossesPage) return false
           bossesPage = true
+        } else if (t.kind === 'levels') {
+          if (levelsPage) return false
+          levelsPage = true
         } else if (t.kind === 'notifications') {
           if (notificationsPage) return false
           notificationsPage = true
@@ -738,6 +750,7 @@ const sidebarKinds = [
   'livemap',
   'squad',
   'bosses',
+  'levels',
   'notifications',
   'tabs',
 ]

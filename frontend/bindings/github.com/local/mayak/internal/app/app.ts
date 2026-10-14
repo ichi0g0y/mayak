@@ -241,6 +241,15 @@ export function BrowserPlatform(): $CancellablePromise<string> {
 }
 
 /**
+ * BrowserPlayerLevels is the level ladder of the mode played.
+ */
+export function BrowserPlayerLevels(): $CancellablePromise<$models.LevelStep[]> {
+    return $Call.ByID(2432926636).then(($result: any) => {
+        return $$createType12($result);
+    });
+}
+
+/**
  * BrowserPopupClose closes the popup.
  */
 export function BrowserPopupClose(): $CancellablePromise<void> {
@@ -302,7 +311,7 @@ export function BrowserScreenshotImage(name: string, thumbnail: boolean): $Cance
  */
 export function BrowserScreenshots(limit: number): $CancellablePromise<$models.ScreenshotEntry[]> {
     return $Call.ByID(356321515, limit).then(($result: any) => {
-        return $$createType12($result);
+        return $$createType14($result);
     });
 }
 
@@ -360,7 +369,7 @@ export function BrowserSquadMapImage(name: string, layer: string, fade: number):
  */
 export function BrowserSquadMaps(): $CancellablePromise<mapdata$0.Map[]> {
     return $Call.ByID(397465127).then(($result: any) => {
-        return $$createType14($result);
+        return $$createType16($result);
     });
 }
 
@@ -398,7 +407,7 @@ export function BrowserToastEnd(key: string): $CancellablePromise<void> {
  */
 export function BrowserToastHistory(): $CancellablePromise<$models.Toast[]> {
     return $Call.ByID(299105859).then(($result: any) => {
-        return $$createType16($result);
+        return $$createType18($result);
     });
 }
 
@@ -415,7 +424,7 @@ export function BrowserToastHistoryClear(): $CancellablePromise<void> {
  */
 export function BrowserToastList(): $CancellablePromise<$models.Toast[]> {
     return $Call.ByID(745023117).then(($result: any) => {
-        return $$createType16($result);
+        return $$createType18($result);
     });
 }
 
@@ -437,7 +446,7 @@ export function BrowserView(command: string, v: browserview$0.Options): $Cancell
  */
 export function CheckForUpdates(): $CancellablePromise<model$0.UpdateStatus> {
     return $Call.ByID(3891257649).then(($result: any) => {
-        return $$createType17($result);
+        return $$createType19($result);
     });
 }
 
@@ -472,7 +481,7 @@ export function ConfirmTrackerPrestigeReset(accountID: string, profileID: string
  */
 export function DefaultSettings(): $CancellablePromise<config$0.Settings> {
     return $Call.ByID(4019472634).then(($result: any) => {
-        return $$createType18($result);
+        return $$createType20($result);
     });
 }
 
@@ -499,7 +508,7 @@ export function DownloadUpdate(): $CancellablePromise<void> {
  */
 export function EFTScreenshotKey(): $CancellablePromise<$models.ScreenshotKey> {
     return $Call.ByID(807603978).then(($result: any) => {
-        return $$createType19($result);
+        return $$createType21($result);
     });
 }
 
@@ -509,25 +518,25 @@ export function EFTScreenshotKey(): $CancellablePromise<$models.ScreenshotKey> {
  */
 export function GameLanguages(): $CancellablePromise<string[]> {
     return $Call.ByID(241665187).then(($result: any) => {
-        return $$createType20($result);
+        return $$createType22($result);
     });
 }
 
 export function GetLogs(): $CancellablePromise<model$0.LogEntry[]> {
     return $Call.ByID(3489936509).then(($result: any) => {
-        return $$createType22($result);
+        return $$createType24($result);
     });
 }
 
 export function GetSettings(): $CancellablePromise<config$0.Settings> {
     return $Call.ByID(1576393379).then(($result: any) => {
-        return $$createType18($result);
+        return $$createType20($result);
     });
 }
 
 export function GetStatus(): $CancellablePromise<model$0.Status> {
     return $Call.ByID(1528916376).then(($result: any) => {
-        return $$createType23($result);
+        return $$createType25($result);
     });
 }
 
@@ -536,7 +545,7 @@ export function GetStatus(): $CancellablePromise<model$0.Status> {
  */
 export function GetUpdateStatus(): $CancellablePromise<model$0.UpdateStatus> {
     return $Call.ByID(2737290697).then(($result: any) => {
-        return $$createType17($result);
+        return $$createType19($result);
     });
 }
 
@@ -641,7 +650,7 @@ export function QuestSiteFor(order: string[], urls: { [_ in string]?: string }):
  */
 export function QuestSiteURLs(id: string, name: string): $CancellablePromise<{ [_ in string]?: string }> {
     return $Call.ByID(2662235009, id, name).then(($result: any) => {
-        return $$createType24($result);
+        return $$createType26($result);
     });
 }
 
@@ -696,7 +705,7 @@ export function SetTrackerProfileKey(accountID: string, profileID: string, mode:
  */
 export function SnapNoteCapture(viewID: string, pageURL: string, pageTitle: string, full: boolean, translated: boolean): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(2024184632, viewID, pageURL, pageTitle, full, translated).then(($result: any) => {
-        return $$createType25($result);
+        return $$createType27($result);
     });
 }
 
@@ -714,7 +723,7 @@ export function SnapNoteCopyImage(pngDataURL: string): $CancellablePromise<void>
  */
 export function SnapNoteCreate(imageDataURL: string, title: string): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(173459086, imageDataURL, title).then(($result: any) => {
-        return $$createType25($result);
+        return $$createType27($result);
     });
 }
 
@@ -739,7 +748,7 @@ export function SnapNoteExport(pngDataURL: string, name: string): $CancellablePr
  */
 export function SnapNoteFavorite(id: string, favorite: boolean): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(3862972790, id, favorite).then(($result: any) => {
-        return $$createType25($result);
+        return $$createType27($result);
     });
 }
 
@@ -750,7 +759,7 @@ export function SnapNoteFavorite(id: string, favorite: boolean): $CancellablePro
  */
 export function SnapNoteFromScreenshot(name: string, title: string): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(3622921050, name, title).then(($result: any) => {
-        return $$createType25($result);
+        return $$createType27($result);
     });
 }
 
@@ -759,7 +768,7 @@ export function SnapNoteFromScreenshot(name: string, title: string): $Cancellabl
  */
 export function SnapNoteLink(id: string, linked: boolean): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(2416529170, id, linked).then(($result: any) => {
-        return $$createType25($result);
+        return $$createType27($result);
     });
 }
 
@@ -768,7 +777,7 @@ export function SnapNoteLink(id: string, linked: boolean): $CancellablePromise<s
  */
 export function SnapNoteList(): $CancellablePromise<snapnote$0.Note[]> {
     return $Call.ByID(2495635670).then(($result: any) => {
-        return $$createType26($result);
+        return $$createType28($result);
     });
 }
 
@@ -777,7 +786,7 @@ export function SnapNoteList(): $CancellablePromise<snapnote$0.Note[]> {
  */
 export function SnapNoteOpen(id: string): $CancellablePromise<$models.SnapNoteData> {
     return $Call.ByID(625471842, id).then(($result: any) => {
-        return $$createType27($result);
+        return $$createType29($result);
     });
 }
 
@@ -787,7 +796,7 @@ export function SnapNoteOpen(id: string): $CancellablePromise<$models.SnapNoteDa
  */
 export function SnapNoteSave(id: string, title: string, strokes: string, thumbDataURL: string): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(4245433319, id, title, strokes, thumbDataURL).then(($result: any) => {
-        return $$createType25($result);
+        return $$createType27($result);
     });
 }
 
@@ -797,7 +806,7 @@ export function SnapNoteSave(id: string, title: string, strokes: string, thumbDa
  */
 export function SnapNoteSetFrom(id: string, name: string, color: string): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(449245886, id, name, color).then(($result: any) => {
-        return $$createType25($result);
+        return $$createType27($result);
     });
 }
 
@@ -806,7 +815,7 @@ export function SnapNoteSetFrom(id: string, name: string, color: string): $Cance
  */
 export function SnapNoteSetMap(id: string, mapName: string): $CancellablePromise<snapnote$0.Note> {
     return $Call.ByID(683081412, id, mapName).then(($result: any) => {
-        return $$createType25($result);
+        return $$createType27($result);
     });
 }
 
@@ -935,7 +944,7 @@ export function SquadSharePicture(on: boolean): $CancellablePromise<void> {
  */
 export function SquadShot(name: string, size: string): $CancellablePromise<$models.SquadShot> {
     return $Call.ByID(1307805452, name, size).then(($result: any) => {
-        return $$createType28($result);
+        return $$createType30($result);
     });
 }
 
@@ -945,7 +954,7 @@ export function SquadShot(name: string, size: string): $CancellablePromise<$mode
  */
 export function SquadShotHash(name: string): $CancellablePromise<$models.SquadShot> {
     return $Call.ByID(2001589452, name).then(($result: any) => {
-        return $$createType28($result);
+        return $$createType30($result);
     });
 }
 
@@ -954,7 +963,7 @@ export function SquadShotHash(name: string): $CancellablePromise<$models.SquadSh
  */
 export function SquadState(): $CancellablePromise<squad$0.State | null> {
     return $Call.ByID(2725117137).then(($result: any) => {
-        return $$createType30($result);
+        return $$createType32($result);
     });
 }
 
@@ -992,7 +1001,7 @@ export function SyncTrackerProfileHistory(accountID: string, profileID: string, 
  */
 export function SystemFonts(): $CancellablePromise<string[]> {
     return $Call.ByID(2671723451).then(($result: any) => {
-        return $$createType20($result);
+        return $$createType22($result);
     });
 }
 
@@ -1022,7 +1031,7 @@ export function TrackerDismissTasks(ids: string[]): $CancellablePromise<void> {
  */
 export function VoicePacks(): $CancellablePromise<sound$0.VoicePack[]> {
     return $Call.ByID(2023705626).then(($result: any) => {
-        return $$createType32($result);
+        return $$createType34($result);
     });
 }
 
@@ -1038,25 +1047,27 @@ const $$createType7 = $Create.Array($$createType6);
 const $$createType8 = mapdata$0.MapMarkers.createFrom;
 const $$createType9 = $models.MenuRequest.createFrom;
 const $$createType10 = $Create.Nullable($$createType9);
-const $$createType11 = $models.ScreenshotEntry.createFrom;
+const $$createType11 = $models.LevelStep.createFrom;
 const $$createType12 = $Create.Array($$createType11);
-const $$createType13 = mapdata$0.Map.createFrom;
+const $$createType13 = $models.ScreenshotEntry.createFrom;
 const $$createType14 = $Create.Array($$createType13);
-const $$createType15 = $models.Toast.createFrom;
+const $$createType15 = mapdata$0.Map.createFrom;
 const $$createType16 = $Create.Array($$createType15);
-const $$createType17 = model$0.UpdateStatus.createFrom;
-const $$createType18 = config$0.Settings.createFrom;
-const $$createType19 = $models.ScreenshotKey.createFrom;
-const $$createType20 = $Create.Array($Create.Any);
-const $$createType21 = model$0.LogEntry.createFrom;
-const $$createType22 = $Create.Array($$createType21);
-const $$createType23 = model$0.Status.createFrom;
-const $$createType24 = $Create.Map($Create.Any, $Create.Any);
-const $$createType25 = snapnote$0.Note.createFrom;
-const $$createType26 = $Create.Array($$createType25);
-const $$createType27 = $models.SnapNoteData.createFrom;
-const $$createType28 = $models.SquadShot.createFrom;
-const $$createType29 = squad$0.State.createFrom;
-const $$createType30 = $Create.Nullable($$createType29);
-const $$createType31 = sound$0.VoicePack.createFrom;
-const $$createType32 = $Create.Array($$createType31);
+const $$createType17 = $models.Toast.createFrom;
+const $$createType18 = $Create.Array($$createType17);
+const $$createType19 = model$0.UpdateStatus.createFrom;
+const $$createType20 = config$0.Settings.createFrom;
+const $$createType21 = $models.ScreenshotKey.createFrom;
+const $$createType22 = $Create.Array($Create.Any);
+const $$createType23 = model$0.LogEntry.createFrom;
+const $$createType24 = $Create.Array($$createType23);
+const $$createType25 = model$0.Status.createFrom;
+const $$createType26 = $Create.Map($Create.Any, $Create.Any);
+const $$createType27 = snapnote$0.Note.createFrom;
+const $$createType28 = $Create.Array($$createType27);
+const $$createType29 = $models.SnapNoteData.createFrom;
+const $$createType30 = $models.SquadShot.createFrom;
+const $$createType31 = squad$0.State.createFrom;
+const $$createType32 = $Create.Nullable($$createType31);
+const $$createType33 = sound$0.VoicePack.createFrom;
+const $$createType34 = $Create.Array($$createType33);

@@ -167,6 +167,26 @@ async function nextIcon() {
 // the map pictures loaded (by "map|floor") and the markers (by
 // "map|language").
 const squad = { available: false, state: null, maps: null, mapsError: false, images: {}, markers: {}, pictures: {} }
+// The level aimed at, reached (or passed: the Overall screen is read now and
+// then), is let go: the next that unlocks something is aimed at again, and
+// no old aim comes back after a Prestige starts the levels over.
+function dropReachedTarget() {
+  if (!state?.levelTarget || !(host?.level >= state.levelTarget)) return
+  state.levelTarget = 0
+  void persist().catch(() => {})
+}
+// The catalog's levels for the level ladder (app_levels.go), on the Host:
+// loaded at start and again when the mode played changes.
+let levelSteps = null
+async function loadLevels() {
+  if (platform !== 'windows' || state.connection.mode !== 'local') return
+  try {
+    levelSteps = (await go.BrowserPlayerLevels()) || null
+  } catch {
+    levelSteps = null
+  }
+  update()
+}
 async function loadSquadMaps() {
   if (!squad.available || squad.maps) return
   try {
@@ -233,6 +253,12 @@ const snapshot = () => ({
   desktopOn,
   desktopAlways,
   goonReport,
+  // The level ladder: the catalog's levels and the Host's level and
+  // experience (from the Overall screen), on the Host.
+  levels:
+    levelSteps && host?.level
+      ? { steps: levelSteps, level: host.level, exp: host.exp, at: host.profileAt || '' }
+      : null,
   bosses: bosses && { ...bosses, current: (state.connection.mode === 'client' ? remoteHost?.map : host?.map) || '' },
   screenshots: shotsAvailable()
     ? { list: shots.list, thumbs: shots.thumbs, viewing: shots.viewing, full: shots.full[shots.viewing] || '' }
@@ -493,6 +519,8 @@ async function persist() {
     squadCollapsed,
     toolOrder,
     bossesView,
+    levelsView,
+    levelTarget,
     bossMap,
     bossMode,
     sidebarWidth,
@@ -536,6 +564,8 @@ async function persist() {
       squadCollapsed,
       toolOrder,
       bossesView,
+      levelsView,
+      levelTarget,
       bossMap,
       bossMode,
       sidebarWidth,
@@ -704,6 +734,11 @@ function hostStatus(s) {
   // When the character's Overall screen was last read (its picture goes to
   // the squad).
   if ('profile' in s) out.profileAt = String(s.profile?.at || '')
+  // The level and experience it read, for the level ladder (view-levels.js).
+  if ('profile' in s) {
+    out.level = Number.isInteger(s.profile?.level) ? s.profile.level : 0
+    out.exp = Number.isInteger(s.profile?.exp) ? s.profile.exp : 0
+  }
   return out
 }
 // The task sites in the order the Host tries them: its current setting on
@@ -1353,6 +1388,7 @@ const ready = (async () => {
   if (platform === 'windows') {
     try {
       host = hostStatus(await go.GetStatus())
+      dropReachedTarget()
       const s = await go.GetSettings()
       hostQuestSites = siteOrder(s.questSites, s.questSite)
     } catch {}
@@ -1379,11 +1415,13 @@ const ready = (async () => {
         identity = host?.identity,
         place = hostPlace()
       host = { ...host, ...hostStatus(next) }
+      dropReachedTarget()
       if (host.tracker !== tracker || host.trackerKeys !== keys)
         void enqueue(async () => {
           if (await applyTrackerTab()) await changed()
         })
       if (host.tracker !== tracker || host.mode !== mode) void loadBosses()
+      if (host.mode !== mode) void loadLevels()
       if (host.mode !== mode || hostPlace() !== place) void shareHostInfo()
       if (identity !== undefined && host.identity !== identity) void reloadItem()
       if (host.profileAt && host.profileAt !== profileAt) void shareSquadPicture()
@@ -1505,6 +1543,7 @@ const ready = (async () => {
   void loadSnaps()
   void loadShots()
   void loadBosses()
+  void loadLevels()
   setInterval(() => {
     if (document.visibilityState === 'visible') void loadBosses()
   }, bossesEvery)
@@ -1630,6 +1669,10 @@ async function performOne(type, data) {
     case 'bosses':
       openLocal(state, 'bosses')
       void loadBosses()
+      break
+    // Every level ahead, each with what it takes and unlocks (view-levels.js).
+    case 'levelsPage':
+      openLocal(state, 'levels')
       break
     case 'goonReportOpen': {
       // The raid and profile lookup may go to the network; it fills the dialog
@@ -2149,6 +2192,8 @@ async function performOne(type, data) {
       state.squadCollapsed = next.squadCollapsed
       state.toolOrder = next.toolOrder
       state.bossesView = next.bossesView
+      state.levelsView = next.levelsView
+      state.levelTarget = next.levelTarget
       state.bossMap = next.bossMap
       state.bossMode = next.bossMode
       if (data && 'bossMode' in data) void loadBosses()
