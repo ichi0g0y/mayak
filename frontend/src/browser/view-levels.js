@@ -42,7 +42,8 @@ function leftHTML(ladder) {
 export function levelSection() {
   // The Host's own level: a Client has no Overall screen of its own. Nothing
   // shows before the Overall screen is read, nor past the last level.
-  if (!state.localHost || state.connection.mode !== 'local') return ''
+  // The `task dev` build shows it on any PC, to try the levels there.
+  if (!devInstance && (!state.localHost || state.connection.mode !== 'local')) return ''
   const info = state.levels
   const now = info && shown(info)
   const ladder = info && ladderOf(info.steps, now.level, now.exp, state.levelTarget)

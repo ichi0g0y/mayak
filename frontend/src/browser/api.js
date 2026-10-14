@@ -51,6 +51,8 @@ const menuListeners = /** @type {((choice:string)=>void)[]} */ ([])
 let state,
   go,
   platform,
+  // The `task dev` build: it shows the level line on any PC (view-levels.js).
+  devBuild = false,
   returnTo = '',
   host = null,
   hostQuestSites = siteOrder(),
@@ -179,7 +181,8 @@ function dropReachedTarget() {
 // loaded at start and again when the mode played changes.
 let levelSteps = null
 async function loadLevels() {
-  if (platform !== 'windows' || state.connection.mode !== 'local') return
+  // The `task dev` build loads them on any PC, to try the levels there.
+  if (!devBuild && (platform !== 'windows' || state.connection.mode !== 'local')) return
   try {
     levelSteps = (await go.BrowserPlayerLevels()) || null
   } catch {
@@ -254,10 +257,11 @@ const snapshot = () => ({
   desktopAlways,
   goonReport,
   // The level ladder: the catalog's levels and the Host's level and
-  // experience (from the Overall screen), on the Host.
+  // experience (from the Overall screen), on the Host. The `task dev` build
+  // starts at level 1 before (or without) the Overall screen.
   levels:
-    levelSteps && host?.level
-      ? { steps: levelSteps, level: host.level, exp: host.exp, at: host.profileAt || '' }
+    levelSteps && (host?.level || devBuild)
+      ? { steps: levelSteps, level: host?.level || 1, exp: host?.level ? host.exp : 0, at: host?.profileAt || '' }
       : null,
   bosses: bosses && { ...bosses, current: (state.connection.mode === 'client' ? remoteHost?.map : host?.map) || '' },
   screenshots: shotsAvailable()
@@ -1300,6 +1304,7 @@ async function pairing(type, data) {
 const ready = (async () => {
   go = AppService
   platform = await go.BrowserPlatform()
+  devBuild = !!(await go.DevInstance().catch(() => false))
   let migrated = false
   try {
     const saved = JSON.parse(await go.BrowserLoad())
