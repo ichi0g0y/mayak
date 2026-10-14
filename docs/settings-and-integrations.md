@@ -99,7 +99,7 @@ MAYAK の設定は保存場所の異なる 2 系統に分かれています。
 | `gameRemoteSmooth` | `true` | Client に送るスクロールを、macOS と Linux の Client でなめらかに動かす（ページビューの `scrollSmooth` 命令と `scrollShell` の `behavior: 'smooth'`）。前のスクロールが動いているあいだ（600 ms 以内）に次が来たら、その行き先に足す。Windows の Client は本物のホイールとして送るので、この設定によらずなめらか。スクロールのメッセージの `smooth` で Client に伝える |
 | `captureAutoOff` | `[]` | クリックで撮らない画面（`profile` / `item` / `tasks`）。知らない値は除き、この順に並べる（`captureKindList`） |
 | `ocrDefaultRevision` | `0` | OCR 既定値移行の記録（内部用） |
-| `debug` | `false` | デバッグ表示（crop プレビュー、候補、Hideout 診断） |
+| `debug` | `false` | デバッグ表示（crop プレビュー、候補、Hideout 診断）。ログ（`mayak.log`）に書く内容は変えない（`Debug` のレベルもいつも記録する） |
 | `saveRecognitionDebug` | `false` | 認識データを `Screenshots\Mayak-Debug` に保存する |
 | `screenshotCleanup` | `false` | 古いスクリーンショットを自動で削除する |
 | `screenshotRetainCount` | `500` | 残す最大枚数。範囲は 0–100000 で、0 はこの条件を使わない |

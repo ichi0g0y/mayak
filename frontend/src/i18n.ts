@@ -300,7 +300,7 @@ const messages = {
     tesseractPath: 'Tesseract実行ファイル（任意）',
     tesseractPlaceholder: '空欄なら同梱版を使用',
     debugMode: 'デバッグモード',
-    debugHelp: 'cropプレビューと詳細な解析結果を表示',
+    debugHelp: 'cropプレビューと詳細な解析結果を表示します。ログの量は変わりません（ログはいつもすべて残します）',
     soundsTitle: '通知音',
     notifyAllTitle: '通知音の全体',
     notifyAllDescription:
@@ -806,7 +806,7 @@ const messages = {
     tesseractPath: 'Tesseract executable (optional)',
     tesseractPlaceholder: 'Leave empty to use the bundled one',
     debugMode: 'Debug mode',
-    debugHelp: 'Show crop preview and detailed analysis',
+    debugHelp: 'Show crop preview and detailed analysis. The log is the same either way: everything is always kept',
     soundsTitle: 'Sounds',
     notifyAllTitle: 'Sounds for all',
     notifyAllDescription:
