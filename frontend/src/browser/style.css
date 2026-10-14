@@ -738,7 +738,8 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .level-line[aria-expanded=true]{background:var(--selected)}
 .level-ring{position:relative;grid-row:1/span 2;align-self:center;display:grid;place-items:center;width:42px;height:42px;margin-right:2px}
 .level-ring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p) * 1%),var(--border) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px))}
-.level-ring img{position:relative;width:35px;height:35px;object-fit:contain}
+/* tarkov.dev draws most badges a little low in their pictures (more room above): all go up 2% of their height, nearly the middle for each. */
+.level-ring img{position:relative;width:35px;height:35px;object-fit:contain;translate:0 -2%}
 /* What the level aimed at unlocks goes right, under that level, not under the level played (it would read as the level played's); it keeps the whole row's width. */
 .level-now{font-size:15px;font-weight:700;line-height:20px;white-space:nowrap}
 .level-left{grid-column:3;grid-row:1;min-width:0;font-size:11.5px;color:var(--text-2);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -776,7 +777,7 @@ button.levels-row:hover{background:var(--hover)}
 .levels-row.now{background:var(--selected)}
 .levels-row.now .levels-left{color:var(--accent);font-weight:600}
 .levels-check{width:15px;height:15px;color:var(--success)}
-.levels-badge{width:24px;height:24px;object-fit:contain;margin-right:4px}
+.levels-badge{width:24px;height:24px;object-fit:contain;margin-right:4px;translate:0 -2%}
 .levels-num{display:inline-flex;align-items:center;justify-content:flex-end;font-weight:650}
 .levels-exp{display:grid;gap:4px}
 .levels-exp b{font-weight:500}

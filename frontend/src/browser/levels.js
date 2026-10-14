@@ -13,36 +13,22 @@ export function shortNumber(n) {
   return String(Math.round(n))
 }
 
-// The badges (tarkov.dev's player-level-group-N.png, 100 by 100) do not
-// sit in the middle of their pictures: most are drawn lower, leaving more
-// room above. How far the middle of what is drawn is below the picture's
-// middle, in percent of its height, by badge (measured from the pictures);
-// the badge is moved up as much, so it sits in the middle of its ring.
-const badgeLow = {
-  1: 3,
-  2: 3,
-  3: 1.5,
-  4: 1.5,
-  5: -0.5,
-  6: 0,
-  7: 2.5,
-  8: 1.5,
-  9: 0,
-  10: 2.5,
-  11: 2,
-  12: 1,
-  13: 2,
-  14: 4.5,
-  15: 2,
-  16: 0.5,
-}
-
-// badgeStyle is the style that puts a badge's drawing in the middle of its
-// box: "" for a picture not known.
-export function badgeStyle(url) {
-  const n = /\/player-level-group-(\d+)\.png$/.exec(String(url || ''))?.[1]
-  const low = n ? badgeLow[Number(n)] || 0 : 0
-  return low ? `translate:0 ${-low}%` : ''
+// triedLevel is the level and experience shown when the `task dev` build
+// tries another level (by tries, up or down from the player's): as far into
+// that level as the player is into theirs, between the first level and
+// the one before the last (the last has nothing ahead to show).
+export function triedLevel(steps, level, exp, tries) {
+  if (!tries || !Array.isArray(steps) || !steps.length) return { level, exp }
+  const at = (l) => steps.find((s) => s.level === l)
+  const here = at(level),
+    next = at(level + 1)
+  const into = here && next ? Math.min(1, Math.max(0, (exp - here.total) / next.exp)) : 0
+  const levels = steps.map((s) => s.level)
+  const shown = Math.min(Math.max(...levels) - 1, Math.max(Math.min(...levels), level + tries))
+  const start = at(shown),
+    after = at(shown + 1)
+  if (!start || !after) return { level, exp }
+  return { level: shown, exp: Math.round(start.total + into * after.exp) }
 }
 
 // The levels ahead shown at least, when the one aimed at is nearer.

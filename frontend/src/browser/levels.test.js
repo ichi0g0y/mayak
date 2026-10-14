@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { allLevelsOf, badgeStyle, ladderOf, levelTargetOf, shortNumber } from './levels.js'
+import { allLevelsOf, ladderOf, levelTargetOf, shortNumber, triedLevel } from './levels.js'
 
 // PvE's levels 31 to 40, as the catalog has them (app_levels.go levelSteps).
 const steps = [
@@ -84,11 +84,14 @@ test('the levels page has every level: reached, the one played, the next and tho
   assert.equal(all.target, 33)
 })
 
-test('a badge drawn low in its picture is moved up into the middle of its ring', () => {
-  assert.equal(badgeStyle('https://assets.tarkov.dev/player-level-group-7.png'), 'translate:0 -2.5%')
-  assert.equal(badgeStyle('https://assets.tarkov.dev/player-level-group-5.png'), 'translate:0 0.5%')
-  // One drawn in the middle, a picture not known, and none: left as they are.
-  assert.equal(badgeStyle('https://assets.tarkov.dev/player-level-group-6.png'), '')
-  assert.equal(badgeStyle('https://example.com/badge.png'), '')
-  assert.equal(badgeStyle(''), '')
+test('the dev build tries a level up or down, as far into it as the player is into theirs', () => {
+  // Halfway into 32 (to 33: 196,685): halfway into 34 (to 35: 233,690).
+  const half = 1846664 + 196685 / 2
+  assert.deepEqual(triedLevel(steps, 32, half, 0), { level: 32, exp: half })
+  assert.deepEqual(triedLevel(steps, 32, half, 2), { level: 34, exp: Math.round(2258436 + 233690 / 2) })
+  assert.deepEqual(triedLevel(steps, 32, half, -1), { level: 31, exp: Math.round(1666320 + 180344 / 2) })
+  // Kept between the first level and the one before the last.
+  assert.equal(triedLevel(steps, 32, half, -10).level, 31)
+  assert.equal(triedLevel(steps, 32, half, 50).level, 39)
+  assert.equal(ladderOf(steps, 39, triedLevel(steps, 32, half, 50).exp).target, 40)
 })
