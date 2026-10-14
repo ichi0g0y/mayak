@@ -190,6 +190,19 @@ async function loadLevels() {
   }
   update()
 }
+// The player's character picture (the Overall screen's, app_profile.go) for
+// their own card under the level line, on the Host: loaded at start and
+// again when the screen is read anew.
+let ownPicture = ''
+async function loadOwnPicture() {
+  if (platform !== 'windows' || state.connection.mode !== 'local') return
+  try {
+    ownPicture = host?.profile?.picture ? String((await go.BrowserProfilePicture()) || '') : ''
+  } catch {
+    ownPicture = ''
+  }
+  update()
+}
 async function loadSquadMaps() {
   if (!squad.available || squad.maps) return
   try {
@@ -261,7 +274,13 @@ const snapshot = () => ({
   // starts at level 1 before (or without) the Overall screen.
   levels:
     levelSteps && (host?.level || devBuild)
-      ? { steps: levelSteps, level: host?.level || 1, exp: host?.level ? host.exp : 0, at: host?.profileAt || '' }
+      ? {
+          steps: levelSteps,
+          level: host?.level || 1,
+          exp: host?.level ? host.exp : 0,
+          at: host?.profileAt || '',
+          me: host?.profile ? { ...host.profile, picture: ownPicture } : null,
+        }
       : null,
   bosses: bosses && { ...bosses, current: (state.connection.mode === 'client' ? remoteHost?.map : host?.map) || '' },
   screenshots: shotsAvailable()
@@ -742,6 +761,17 @@ function hostStatus(s) {
   if ('profile' in s) {
     out.level = Number.isInteger(s.profile?.level) ? s.profile.level : 0
     out.exp = Number.isInteger(s.profile?.exp) ? s.profile.exp : 0
+    // The rest of the screen, for the player's own card under the level line.
+    const p = s.profile || {}
+    out.profile = {
+      name: String(p.name || ''),
+      raids: Number(p.raids) || 0,
+      kills: Number(p.kills) || 0,
+      sr: Number(p.survivalRate) || 0,
+      kd: Number(p.kd) || 0,
+      hours: Number(p.hours) || 0,
+      picture: !!p.picture,
+    }
   }
   return out
 }
@@ -1429,7 +1459,10 @@ const ready = (async () => {
       if (host.mode !== mode) void loadLevels()
       if (host.mode !== mode || hostPlace() !== place) void shareHostInfo()
       if (identity !== undefined && host.identity !== identity) void reloadItem()
-      if (host.profileAt && host.profileAt !== profileAt) void shareSquadPicture()
+      if (host.profileAt && host.profileAt !== profileAt) {
+        void shareSquadPicture()
+        void loadOwnPicture()
+      }
       update()
     })
   }
@@ -1549,6 +1582,7 @@ const ready = (async () => {
   void loadShots()
   void loadBosses()
   void loadLevels()
+  void loadOwnPicture()
   setInterval(() => {
     if (document.visibilityState === 'visible') void loadBosses()
   }, bossesEvery)

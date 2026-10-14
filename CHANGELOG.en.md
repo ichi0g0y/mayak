@@ -4,15 +4,16 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
-## Nightly
+## v0.1.46 (2026-10-14)
 
 ### New
 
-- A level line at the top of the sidebar shows the next level that unlocks something (a trader's loyalty level, a badge) and the experience left to it; pressed, it lists the levels ahead with what each takes and unlocks, and a level pressed becomes the aim; See every level opens the whole list from level 1. The experience comes from the character's Overall screenshot.
+- A level line at the top of the sidebar shows the next level that unlocks something (a trader's loyalty level, a badge) and the experience left to it; pressed, it lists the levels ahead with what each takes and unlocks, and a level pressed becomes the aim; See every level opens the whole list from level 1. The experience comes from the character's Overall screenshot. The card it opens starts with your own character: the picture, the name, raids, kills, survival rate, K/D and time played (press the picture to see it larger).
 
 ### Improved
 
 - The sidebar's boss section is quieter: the latest Goons is one line with no box around it, and the map and mode pickers are words only, so it no longer looks always chosen.
+- What the colour of the dot before a Goons report means (how recent it is) is shown with coloured dots: under the sidebar's row when the pointer is on it, and always under the boss page's heading.
 
 ## v0.1.45 (2026-10-14)
 

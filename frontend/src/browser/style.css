@@ -765,6 +765,18 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .level-more-chevron{width:14px;height:14px;transform:rotate(-90deg)}
 /* What opens under the line (the ladder, the way to every level, the note) is a card; the line stays a row. */
 .level-card{display:grid;gap:2px;margin:2px 0 6px;padding:6px 0;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)}
+/* The player's own card at the card's top: the character's picture small beside the nickname and numbers; the picture pressed shows whole, the card's width, the numbers under it. */
+.level-me{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:start;gap:10px;margin:0 8px 6px 10px;padding:0 0 8px;border-bottom:1px solid var(--border)}
+.level-me.big{grid-template-columns:minmax(0,1fr)}
+.level-me-picture{display:block;width:64px;height:97px;padding:0;border:0;border-radius:6px;overflow:hidden;background:#000}
+.level-me.big .level-me-picture{width:100%;height:auto}
+.level-me-picture img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 30%}
+.level-me.big .level-me-picture img{height:auto;object-fit:contain}
+.level-me-name{font-size:12.5px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.level-me dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:4px 8px;margin:4px 0 0}
+.level-me dl div{min-width:0}
+.level-me dt{color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.level-me dd{margin:0;font-size:12px;font-weight:600;white-space:nowrap}
 /* The levels page: every level ahead, in columns. */
 .levels-list{display:grid;gap:2px;max-width:960px}
 .levels-row{display:grid;grid-template-columns:44px minmax(150px,200px) 140px 130px minmax(0,1fr);align-items:center;gap:14px;width:100%;padding:8px 12px;border:0;border-radius:8px;background:transparent;color:var(--text);font-size:13px;font-weight:400;text-align:left;font-variant-numeric:tabular-nums}

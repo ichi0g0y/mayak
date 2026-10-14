@@ -56,7 +56,7 @@ export function levelSection() {
   const ring = `<span class="level-ring" style="--p:${(ladder.toNext * 100).toFixed(1)}"${dev}>${ladder.badge ? `<img src="${esc(ladder.badge)}" alt="" loading="lazy" draggable="false">` : ''}</span>`
   const line = `<button class="level-line" data-action="levelLadder" aria-expanded="${open}" title="${esc(t(open ? 'levelClose' : 'levelOpen'))}">${ring}<span class="level-now">Lv${ladder.level}</span>${leftHTML(ladder)}<span class="level-what">${esc(unlocksText(ladder.unlocks) || t('levelNothing'))}</span></button>`
   const rows = open
-    ? `<div class="level-card"><div class="level-ladder" role="list">${ladder.rows
+    ? `<div class="level-card">${meCard(info.me)}<div class="level-ladder" role="list">${ladder.rows
         .map((r) => {
           const tip = t('levelTip')
             .replace('%l', String(r.level))
@@ -126,6 +126,11 @@ clickHandlers.push(async (type, id) => {
     requestAnimationFrame(() => document.querySelector('#levels-now')?.scrollIntoView({ block: 'center' }))
     return true
   }
+  if (type === 'levelPicture') {
+    bigPicture = !bigPicture
+    render()
+    return true
+  }
   if (type === 'levelTry') {
     tries++
     render()
@@ -143,6 +148,32 @@ clickHandlers.push(async (type, id) => {
   }
   return false
 })
+
+// The player's own card, first in what opens under the line: their
+// character's picture (the Overall screen's; pressed, it shows whole, the
+// card's width) beside their nickname and numbers, as the squad's card shows
+// a member's (view-squad.js cardOf). Nothing without the Overall screen.
+let bigPicture = false
+function meCard(me) {
+  if (!me) return ''
+  const n = (v, digits = 0) =>
+    (Number(v) || 0).toLocaleString(state.language === 'ja' ? 'ja-JP' : 'en-US', { maximumFractionDigits: digits })
+  const facts = [
+    me.raids && [t('squadCardRaids'), n(me.raids)],
+    me.kills && [t('squadCardKills'), n(me.kills)],
+    me.sr && [t('squadCardSurvival'), `${n(me.sr, 1)}%`],
+    me.kd && [t('squadCardKD'), n(me.kd, 2)],
+    me.hours && [t('squadCardHours'), `${n(me.hours)}h`],
+  ].filter(Boolean)
+  if (!me.name && !facts.length && !me.picture) return ''
+  const picture = me.picture
+    ? `<button class="level-me-picture ${bigPicture ? 'big' : ''}" data-action="levelPicture" aria-pressed="${bigPicture}" title="${esc(t(bigPicture ? 'levelPictureSmall' : 'levelPictureBig'))}"><img src="${esc(me.picture)}" alt="" draggable="false"></button>`
+    : ''
+  const dl = facts.length
+    ? `<dl>${facts.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl>`
+    : ''
+  return `<div class="level-me ${bigPicture ? 'big' : ''}">${picture}<div class="level-me-text">${me.name ? `<div class="level-me-name">${esc(me.name)}</div>` : ''}${dl}</div></div>`
+}
 
 // The badge pressed with the right button, in the `task dev` build: a level
 // down.
