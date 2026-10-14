@@ -333,3 +333,44 @@ func TestCharacterScreenIsNoTradersTasks(t *testing.T) {
 		}
 	}
 }
+
+// The Gear tab's inventory, a right click's menu open on it, lights the
+// place the Tasks tab had before EFT 1.2.0.0 a little (.38): with its panels
+// it scores over MinScore, but its Tasks tab is not lit.
+func TestHalfLitTabIsNoTasksScreen(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 2560, 1440))
+	for y := 0; y < 1440; y++ {
+		for x := 0; x < 2560; x++ {
+			img.Set(x, y, color.RGBA{18, 20, 19, 255})
+		}
+	}
+	for _, r := range []Rect{Preset2560.LeftPanel, Preset2560.RightPanel} {
+		for y := r.Y; y < r.Y+r.H; y += 20 {
+			for x := r.X; x < r.X+r.W; x++ {
+				img.Set(x, y, color.RGBA{180, 180, 170, 255})
+			}
+		}
+	}
+	tabLabels(img)
+	lit := func(rows int) {
+		r := Preset2560.CharacterAnchor
+		for y := r.Y; y < r.Y+r.H; y++ {
+			for x := r.X; x < r.X+r.W; x++ {
+				c := color.RGBA{18, 20, 19, 255}
+				if y < r.Y+rows {
+					c = color.RGBA{210, 210, 205, 255}
+				}
+				img.Set(x, y, c)
+			}
+		}
+	}
+	lit(23) // .38 of the tab
+	got, err := Analyze(img, Preset2560)
+	if err != nil || got.IsTasks || got.CharacterScore < Preset2560.MinScore {
+		t.Fatalf("half lit tab: result=%+v err=%v", got, err)
+	}
+	lit(40) // .67 of the tab: the Tasks screen
+	if got, err := Analyze(img, Preset2560); err != nil || !got.IsTasks || got.Layout != "character-tasks" {
+		t.Fatalf("lit tab: result=%+v err=%v", got, err)
+	}
+}

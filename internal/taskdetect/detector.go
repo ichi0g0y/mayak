@@ -77,6 +77,13 @@ const (
 	tradingTabDark   = .6
 )
 
+// characterTasksTab is how lit the character screen's Tasks tab is at least
+// on its Tasks screen (.52–.81 on 96 real ones, a few trader screens taken
+// for it among the rest). The Gear tab's inventory, a right click's menu
+// open on it, lights the place the Tasks tab had before EFT 1.2.0.0 (the
+// Achievements tab's now) .38, and its dark panels took it over MinScore.
+const characterTasksTab = .45
+
 // tabRowEdges is the share of edges the character screen's tab labels give
 // TabRow at least (.05–.21 seen, in a raid and out of one). The Flea Market
 // lights its tab where the Tasks tab is, and the main menu a button, with
@@ -267,6 +274,11 @@ func Analyze(img image.Image, p Preset) (Result, error) {
 			if story.edges >= storyTabEdges && characterTabBright >= storyCharacterTab {
 				score = max(score, p.MinScore)
 			}
+		}
+		// Not the Tasks screen with its tab not lit (characterTasksTab): the
+		// trader screen's score stands.
+		if layout == "character-tasks" && characterTabBright < characterTasksTab {
+			score, layout, cropRect = traderScore, "trader-tasks", p.Title
 		}
 	}
 	isTasks := score >= p.MinScore
