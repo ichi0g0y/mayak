@@ -736,11 +736,9 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .level-line{container-type:inline-size;display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:baseline;gap:0 8px;width:100%;padding:6px 8px;border:0;border-radius:8px;background:transparent;color:var(--text);font-weight:400;text-align:left}
 .level-line:hover{background:var(--hover)}
 .level-line[aria-expanded=true]{background:var(--selected)}
-.level-ring{position:relative;grid-row:1/span 2;align-self:center;display:grid;place-items:center;width:38px;height:38px;margin-right:2px}
+.level-ring{position:relative;grid-row:1/span 2;align-self:center;display:grid;place-items:center;width:42px;height:42px;margin-right:2px}
 .level-ring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p) * 1%),var(--border) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px))}
-/* The badges differ in shape (a triangle, a hexagon, a disc): each sits on a dark disc inside the ring, a little smaller, so all read as one round medal. */
-.level-ring::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--surface-2)}
-.level-ring img{position:relative;z-index:1;width:26px;height:26px;object-fit:contain}
+.level-ring img{position:relative;width:35px;height:35px;object-fit:contain}
 /* What the level aimed at unlocks goes right, under that level, not under the level played (it would read as the level played's); it keeps the whole row's width. */
 .level-now{font-size:15px;font-weight:700;line-height:20px;white-space:nowrap}
 .level-left{grid-column:3;grid-row:1;min-width:0;font-size:11.5px;color:var(--text-2);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
