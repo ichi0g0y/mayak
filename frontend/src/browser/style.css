@@ -1550,8 +1550,10 @@ span.trader-avatar.flea .icon{width:17px;height:17px}
 .with-avatar{display:inline-flex;align-items:center;gap:9px;min-width:0}
 .item-row:has(.with-avatar){align-items:center}
 .offer-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:0 10px;min-width:0}
+/* The trader and its loyalty level beside the price; the terms (the level and reputation it takes, the limit) on the line under them, from the name to the right edge, so a long one does not narrow the name. Without terms, the name and the price sit in the middle of the picture. */
 .offer-top>.trader-avatar{grid-column:1;grid-row:1/span 2}
-.offer-top>.offer-trader{grid-column:2;grid-row:1/span 2;align-self:center}
-.offer-top>.offer-price,.offer-top>.offer-barter-tag{grid-column:3;grid-row:1;justify-self:end}
-.offer-top>.offer-notes{grid-column:3;grid-row:2;justify-content:flex-end;text-align:right}
+.offer-top>.offer-trader{grid-column:2;grid-row:1;align-self:end}
+.offer-top>.offer-price,.offer-top>.offer-barter-tag{grid-column:3;grid-row:1;justify-self:end;align-self:end}
+.offer-top>.offer-notes{grid-column:2/-1;grid-row:2;align-self:start}
+.offer-top:not(:has(>.offer-notes))>.offer-trader,.offer-top:not(:has(>.offer-notes))>.offer-price,.offer-top:not(:has(>.offer-notes))>.offer-barter-tag{grid-row:1/span 2;align-self:center}
 span.trader-avatar.initial{display:inline-grid;place-items:center;font-size:13px;font-weight:600;color:var(--text-2)}
