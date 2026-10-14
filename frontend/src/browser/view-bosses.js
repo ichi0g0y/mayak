@@ -92,7 +92,7 @@ export function bossSection() {
     const latest = !info
       ? `<p class="shot-empty">${esc(t('bossesLoading'))}</p>`
       : goon
-        ? `<button class="goon-latest" data-action="bosses" data-fresh="${goonFresh(goon.time)}" title="${esc(goonLabel(goon))}"><span class="goon-dot"></span><span class="goon-name">Goons</span><span class="goon-age" data-goon-time="${esc(goon.time)}">${esc(age(goon.time, state.language))}</span><b>${esc(goon.map)}</b></button>`
+        ? `<button class="goon-latest" data-action="bosses" data-fresh="${goonFresh(goon.time)}" title="${esc(goonLabel(goon) + '\n' + t('goonFreshTip'))}"><span class="goon-dot"></span><span class="goon-name">Goons</span><span class="goon-age" data-goon-time="${esc(goon.time)}">${esc(age(goon.time, state.language))}</span><b>${esc(goon.map)}</b></button>`
         : `<p class="shot-empty">Goons · ${esc(t('noGoons'))}</p>`
     const map = info?.maps.find((m) => m.key === (state.bossMap || info.current))
     const here = !info
@@ -120,7 +120,7 @@ export function bossesPage() {
     .slice(0, 10)
     .map(
       (g, i) =>
-        `<li class="${i === 0 ? 'latest' : ''}" data-fresh="${goonFresh(g.time)}"><span class="goon-dot"></span><b>${esc(g.map)}</b><span class="goon-age" data-goon-time="${esc(g.time)}">${esc(age(g.time, state.language))}</span><time>${esc(clock(g.time))}</time></li>`,
+        `<li class="${i === 0 ? 'latest' : ''}" data-fresh="${goonFresh(g.time)}" title="${esc(t('goonFreshTip'))}"><span class="goon-dot"></span><b>${esc(g.map)}</b><span class="goon-age" data-goon-time="${esc(g.time)}">${esc(age(g.time, state.language))}</span><time>${esc(clock(g.time))}</time></li>`,
     )
     .join('')
   const goonMaps = info.maps

@@ -725,7 +725,7 @@ body[data-sidebar=collapsed] .boss-section-label{border-top:0;margin:4px 0 0;pad
 .level-line[aria-expanded=true]{background:var(--selected)}
 .level-ring{position:relative;grid-row:1/span 2;align-self:center;display:grid;place-items:center;width:38px;height:38px;margin-right:2px}
 .level-ring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p) * 1%),var(--border) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px))}
-.level-ring img{position:relative;width:26px;height:26px;object-fit:contain}
+.level-ring img{position:relative;width:31px;height:31px;object-fit:contain}
 .level-now{font-size:15px;font-weight:700;line-height:20px;white-space:nowrap}
 .level-left{grid-column:3;grid-row:1;min-width:0;font-size:11.5px;color:var(--text-2);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* The amount in full, or short (2.12M) where the line is too narrow for it (widths are the line's inside: the sidebar's less 32px); a million and more needs a wider line. Narrower still (the sidebar near its least), what is left goes under the level. */
