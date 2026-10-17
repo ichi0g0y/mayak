@@ -81,6 +81,10 @@ type Client struct {
 	wikiDone chan struct{}
 	// wikiWaited: a task list has waited for the wiki's first list already.
 	wikiWaited bool
+	// wikiStarted is when the last fetch started; wikiVersion counts the
+	// times the list changed.
+	wikiStarted time.Time
+	wikiVersion int
 }
 
 func NewWithSource(source interface {

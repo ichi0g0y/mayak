@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -56,6 +55,7 @@ func (c *Client) WarmWiki() {
 func (c *Client) startWikiLocked() {
 	if !c.wikiFetching && time.Now().After(c.wikiNext) {
 		c.wikiFetching = true
+		c.wikiStarted = time.Now()
 		c.wikiDone = make(chan struct{})
 		go c.refreshWiki(c.wikiDone)
 	}
@@ -117,21 +117,25 @@ func (c *Client) refreshWiki(done chan struct{}) {
 	titles, err := c.fetchWikiQuestTitles(ctx)
 	c.wikiMu.Lock()
 	c.wikiFetching = false
+	changed := false
 	// A failed fetch keeps the last list (or none) and is tried again soon.
 	if err != nil || len(titles) == 0 {
 		c.wikiNext = time.Now().Add(wikiRetry)
-		close(done)
-		c.wikiMu.Unlock()
-		return
+	} else {
+		c.wikiNext = time.Now().Add(wikiRefresh)
+		changed = !slices.Equal(c.wikiTitles, titles)
+		c.wikiTitles = titles
+		if changed {
+			c.wikiVersion++
+		}
 	}
-	c.wikiNext = time.Now().Add(wikiRefresh)
-	changed := !slices.Equal(c.wikiTitles, titles)
-	c.wikiTitles = titles
-	close(done)
 	c.wikiMu.Unlock()
+	// The task lists are made stale before the waiters go on, so a list they
+	// build has the new tasks.
 	if changed {
 		c.Invalidate()
 	}
+	close(done)
 }
 
 func (c *Client) fetchWikiQuestTitles(ctx context.Context) ([]wikiQuest, error) {
@@ -162,9 +166,22 @@ func (c *Client) fetchWikiQuestTitles(ctx context.Context) ([]wikiQuest, error) 
 	}
 	// Who gives each (the page's "given by"): the Japanese wiki files a task
 	// under its trader. Without it (the pages not read) the tasks still match.
-	givers := c.wikiGivers(ctx, current)
+	// A trader read before is kept: only the pages of tasks new to the list
+	// (or with no trader yet) are read, so a fetch again asks little of the wiki.
+	known := c.knownWikiGivers()
+	var unread []string
 	for _, title := range current {
-		titles = append(titles, wikiQuest{Title: title, Trader: givers[title]})
+		if known[title] == "" {
+			unread = append(unread, title)
+		}
+	}
+	givers := c.wikiGivers(ctx, unread)
+	for _, title := range current {
+		trader := givers[title]
+		if trader == "" {
+			trader = known[title]
+		}
+		titles = append(titles, wikiQuest{Title: title, Trader: trader})
 	}
 	// The story chapters (the Story tab of the Tasks screen: "Tour", "The
 	// Ticket"…) are tasks tarkov.dev's catalog does not carry; the wiki
@@ -180,56 +197,6 @@ func (c *Client) fetchWikiQuestTitles(ctx context.Context) ([]wikiQuest, error) 
 		}
 	}
 	return titles, nil
-}
-
-// givenBy is the trader in a task page's infobox: "|given by =[[Mechanic]]".
-var givenBy = regexp.MustCompile(`(?i)\|\s*given by\s*=\s*\[\[([^\]|]+)`)
-
-// wikiGivers reads who gives each task from the pages, 50 pages a request.
-// A page that fails to come is left out.
-func (c *Client) wikiGivers(ctx context.Context, titles []string) map[string]string {
-	out := map[string]string{}
-	for start := 0; start < len(titles); start += 50 {
-		batch := titles[start:min(start+50, len(titles))]
-		query := url.Values{"action": {"query"}, "prop": {"revisions"}, "rvprop": {"content"}, "rvslots": {"main"}, "titles": {strings.Join(batch, "|")}, "format": {"json"}, "formatversion": {"2"}}
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, wikiAPI+"?"+query.Encode(), nil)
-		if err != nil {
-			return out
-		}
-		req.Header.Set("User-Agent", version.UserAgent())
-		response, err := c.http.Do(req)
-		if err != nil {
-			return out
-		}
-		var body struct {
-			Query struct {
-				Pages []struct {
-					Title     string `json:"title"`
-					Revisions []struct {
-						Slots struct {
-							Main struct {
-								Content string `json:"content"`
-							} `json:"main"`
-						} `json:"slots"`
-					} `json:"revisions"`
-				} `json:"pages"`
-			} `json:"query"`
-		}
-		ok := response.StatusCode == http.StatusOK && json.NewDecoder(response.Body).Decode(&body) == nil
-		response.Body.Close()
-		if !ok {
-			return out
-		}
-		for _, page := range body.Query.Pages {
-			if len(page.Revisions) == 0 {
-				continue
-			}
-			if m := givenBy.FindStringSubmatch(page.Revisions[0].Slots.Main.Content); m != nil {
-				out[page.Title] = strings.TrimSpace(m[1])
-			}
-		}
-	}
-	return out
 }
 
 type wikiMember struct {

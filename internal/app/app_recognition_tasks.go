@@ -63,15 +63,31 @@ func (a *App) recognizeQuest(ctx context.Context, settings config.Settings, crop
 	for i, q := range quests {
 		base[i] = q.Quest
 	}
+	readings := []string{raw}
 	matches := questmatch.Match(raw, base)
 	if settings.OCREngine == "windows" && topConfidence(matches) < .98 {
 		if alternatives, retryErr := (ocr.Windows{Language: ocrLanguage(settings)}).RecognizeAlternatives(ctx, crop); retryErr == nil {
-			raw, matches = bestQuestReading(append([]string{raw}, alternatives...), base)
+			readings = append(readings, alternatives...)
+			raw, matches = bestQuestReading(readings, base)
 		}
 	} else if settings.OCREngine != "windows" && topConfidence(matches) < .9 {
 		// As for items: a weak Tesseract reading gets a second look from Windows OCR.
 		if alternatives, retryErr := (ocr.Windows{Language: ocrLanguage(settings)}).RecognizeAlternatives(ctx, crop); retryErr == nil && len(alternatives) > 0 {
-			raw, matches = bestQuestReading(append([]string{raw}, alternatives...), base)
+			readings = append(readings, alternatives...)
+			raw, matches = bestQuestReading(readings, base)
+		}
+	}
+	// A title read but matching no task may be a task new to the game, whose
+	// wiki page came after the list was fetched: the list is fetched again
+	// (not more often than RecheckWiki allows) and the readings matched again.
+	if topConfidence(matches) < .78 && questmatch.Normalize(raw) != "" && a.questClient.RecheckWiki(ctx) {
+		if again, err := a.questClient.QuestsForMode(ctx, a.effectiveCatalogMode(settings.GameMode)); err == nil {
+			quests = again
+			base = make([]questmatch.Quest, len(quests))
+			for i, q := range quests {
+				base[i] = q.Quest
+			}
+			raw, matches = bestQuestReading(readings, base)
 		}
 	}
 	return questRecognition{raw: raw, quests: quests, matches: matches}, nil
