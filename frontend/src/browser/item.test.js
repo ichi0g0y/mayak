@@ -12,7 +12,18 @@ import {
   itemPageURL,
   names,
   offerNeeds,
+  opensItem,
 } from './item.js'
+
+test('a new item opens the item sidebar, live prices of the item shown do not', () => {
+  const salt = { id: 'a' }
+  assert.equal(opensItem({ id: 'a' }, salt, null), true)
+  assert.equal(opensItem({ id: 'a' }, salt, salt), true)
+  assert.equal(opensItem({ id: 'a', update: true }, salt, salt), false)
+  // One whose first send was missed (a Client given the latest again) is new.
+  assert.equal(opensItem({ id: 'a', update: true }, salt, null), true)
+  assert.equal(opensItem({ id: 'a', update: true }, salt, { id: 'b' }), true)
+})
 
 test('item details are validated before rendering', () => {
   assert.equal(itemInfo(null), null)

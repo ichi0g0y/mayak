@@ -1,6 +1,6 @@
 import * as AppService from '../../bindings/github.com/local/mayak/internal/app/app'
 import { Events, Clipboard, Browser } from '@wailsio/runtime'
-import { itemInfo, clampItemPanel, clampItemPanelHeight, historyPoints, names } from './item.js'
+import { itemInfo, clampItemPanel, clampItemPanelHeight, historyPoints, names, opensItem } from './item.js'
 import {
   browserSections,
   hostSections,
@@ -674,8 +674,8 @@ function display(message, remote = false) {
     if (message.event === 'browser:item') {
       const next = itemInfo(message.args[0])
       if (!next) return
+      if (opensItem(message.args[0], next, item)) itemOpen = true
       item = next
-      itemOpen = true
       loadHistory()
       void persist().catch(() => {})
       update()

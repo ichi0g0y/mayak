@@ -9,6 +9,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 ### Improved
 
 - A new task whose page has just come to the official wiki is now recognized from a screenshot. Before, the wiki's task list was fetched only every 12 hours, so a task added in between was not recognized. Now, when a task name is read but matches no task, the list is fetched again and the name is matched again. To keep the load on the wiki low, this happens at most once every 15 minutes.
+- When an item is read from a screenshot, the item sidebar opens if it was closed. If you close it right after, it now stays closed when the live prices come a moment later.
 
 ## v0.1.46 (2026-10-14)
 

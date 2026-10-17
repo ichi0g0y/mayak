@@ -13,6 +13,10 @@ export const clampItemPanelHeight = (value) =>
   Number.isFinite(value)
     ? Math.round(Math.min(itemPanelHeights.max, Math.max(itemPanelHeights.min, value)))
     : itemPanelHeights.default
+// opensItem tells whether a browser:item (raw, read as next) opens the item
+// sidebar: a new item does, the live prices of the item shown (update,
+// app_item.go itemEvent) do not, so a sidebar closed meanwhile stays closed.
+export const opensItem = (raw, next, shown) => raw?.update !== true || shown?.id !== next.id
 
 const text = (value, max = 160) => (typeof value === 'string' ? value.slice(0, max) : '')
 const count = (value) => (Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0)

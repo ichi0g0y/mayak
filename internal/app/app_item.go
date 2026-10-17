@@ -14,6 +14,14 @@ import (
 	"github.com/local/mayak/internal/model"
 )
 
+// itemEvent is what browser:item carries: the item, and whether it is only
+// the live prices of the item sent a moment before (Update). The sidebar
+// opens for a new item, and an update does not open it again once closed.
+type itemEvent struct {
+	iteminfo.Info
+	Update bool `json:"update,omitempty"`
+}
+
 // showBrowserItem sends the recognized item to the browser's item sidebar:
 // catalog data at once, then again with live prices when they arrive.
 func (a *App) showBrowserItem(mode, id string) {
@@ -31,7 +39,7 @@ func (a *App) showBrowserItem(mode, id string) {
 		a.addLog("Warn", "Item", "Item details are unavailable: "+err.Error())
 		return
 	}
-	a.emitEvent("browser:item", a.itemProgress(info))
+	a.emitEvent("browser:item", itemEvent{Info: a.itemProgress(info)})
 	current, err := a.itemInfo.Current(ctx, mode, id)
 	if err != nil {
 		a.addLog("Debug", "Item", "Live prices are unavailable, using the catalog: "+err.Error())
@@ -39,7 +47,7 @@ func (a *App) showBrowserItem(mode, id string) {
 	if a.latestItemID() != id {
 		return
 	}
-	a.emitEvent("browser:item", a.itemProgress(current))
+	a.emitEvent("browser:item", itemEvent{Info: a.itemProgress(current), Update: true})
 }
 
 // BrowserItemInfo returns current details of an item for the item sidebar's
