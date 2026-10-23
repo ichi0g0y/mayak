@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"strings"
 	"time"
 
 	"github.com/local/mayak/internal/eftdetect"
 	"github.com/local/mayak/internal/sound"
-	"github.com/local/mayak/internal/tracker"
 	"github.com/local/mayak/internal/trackerlog"
 )
 
@@ -98,11 +97,10 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 	if sessions == 0 {
 		return 0, errNoTrackerHistory
 	}
-	updates := make([]tracker.TaskUpdate, 0, len(states))
-	for taskID, state := range states {
-		updates = append(updates, tracker.TaskUpdate{ID: taskID, State: state})
+	updates, skipped := trackerHistoryUpdates(states, a.trackerCatalogTaskIDs(mode))
+	if len(skipped) > 0 {
+		a.addLog("Info", "TarkovTracker", fmt.Sprintf("Past logs of %s (%s): %d task(s) TarkovTracker does not know are not sent: %s", maskProfileID(profileID), mode, len(skipped), strings.Join(skipped, ", ")))
 	}
-	sort.Slice(updates, func(i, j int) bool { return updates[i].ID < updates[j].ID })
 	if len(updates) == 0 {
 		return 0, errNoTrackerHistory
 	}

@@ -4,6 +4,12 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### Fixed
+
+- Sending past logs to TarkovTracker failed as a whole when they had even one task TarkovTracker does not know. Since October 18, TarkovTracker refuses the whole send when it has such a task. Now those tasks are left out, and the log lists them.
+
 ## v0.1.47 (2026-10-17)
 
 ### Improved
