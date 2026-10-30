@@ -76,7 +76,7 @@ func ProfileTaskHistory(root, accountID, profileID, mode string, from time.Time)
 		}
 		parser := TaskParser{}
 		for _, event := range parser.Feed(text) {
-			if event.Kind != TaskChanged {
+			if event.Kind != TaskChanged || !session.played(event.At) {
 				continue
 			}
 			// A notification whose line had no stamp is the session's.
@@ -106,7 +106,7 @@ func sessionTaskStates(sessions []historySession) map[string]string {
 	for _, session := range sessions {
 		parser := TaskParser{}
 		for _, event := range parser.Feed(sessionNotifications(session)) {
-			if event.Kind == TaskChanged {
+			if event.Kind == TaskChanged && session.played(event.At) {
 				states[event.TaskID] = event.TaskState
 			}
 		}
@@ -133,6 +133,30 @@ func sessionNotifications(session historySession) string {
 type historySession struct {
 	path  string
 	start time.Time
+	// spans are when the profile was the one played in the session, and
+	// others whether the session played another one too (a session can
+	// switch mode: PvE, then Seasonal, then PvP).
+	spans  []identitySpan
+	others bool
+}
+
+// identitySpan is a time of a session in which one profile was played:
+// from its profile line to the next mode line or another profile's line
+// (to zero: the session's end).
+type identitySpan struct{ from, to time.Time }
+
+// played reports whether a notification at at belongs to the session's
+// profile. One with no stamp does when the session played no other.
+func (s historySession) played(at time.Time) bool {
+	if at.IsZero() {
+		return !s.others
+	}
+	for _, span := range s.spans {
+		if !at.Before(span.from) && (span.to.IsZero() || at.Before(span.to)) {
+			return true
+		}
+	}
+	return false
 }
 
 func matchingSessions(root, accountID, profileID, mode string) []historySession {
@@ -148,7 +172,11 @@ func matchingSessions(root, accountID, profileID, mode string) []historySession 
 		dir := filepath.Join(root, entry.Name())
 		application := findLog(dir, "application")
 		data, readErr := os.ReadFile(application)
-		if readErr != nil || !containsIdentity(string(data), accountID, profileID, mode) {
+		if readErr != nil {
+			continue
+		}
+		spans, others := identitySpans(string(data), accountID, profileID, mode)
+		if len(spans) == 0 {
 			continue
 		}
 		start := entryTime(entry.Name())
@@ -157,20 +185,43 @@ func matchingSessions(root, accountID, profileID, mode string) []historySession 
 				start = info.ModTime()
 			}
 		}
-		result = append(result, historySession{path: dir, start: start})
+		result = append(result, historySession{path: dir, start: start, spans: spans, others: others})
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].start.Before(result[j].start) })
 	return result
 }
 
-func containsIdentity(text, accountID, profileID, mode string) bool {
-	parser := IdentityParser{}
-	for _, event := range parser.Parse(text) {
-		if event.AccountID == accountID && event.ProfileID == profileID && event.Mode == normalizeMode(mode) {
-			return true
+// identitySpans reads an application log for when the identity was played,
+// and whether another identity was played too, as IdentityParser reads
+// it: a mode line, then the profile lines of that mode.
+func identitySpans(text, accountID, profileID, mode string) (spans []identitySpan, others bool) {
+	want := normalizeMode(mode)
+	var current, profile, account string
+	var at time.Time
+	open := false
+	for _, line := range strings.Split(text, "\n") {
+		if stamp := lineTime(line); !stamp.IsZero() {
+			at = stamp
+		}
+		if match := modePattern.FindStringSubmatch(line); len(match) == 2 {
+			current, profile, account = normalizeMode(match[1]), "", ""
+		} else if match := profilePattern.FindStringSubmatch(line); len(match) == 3 {
+			profile, account = match[1], match[2]
+		} else {
+			continue
+		}
+		played := current == want && profile == profileID && account == accountID
+		if played && !open {
+			spans, open = append(spans, identitySpan{from: at}), true
+		}
+		if !played && open {
+			spans[len(spans)-1].to, open = at, false
+		}
+		if !played && current != "" && profile != "" && account != "" {
+			others = true
 		}
 	}
-	return false
+	return spans, others
 }
 
 func sessionVersion(name string) string {

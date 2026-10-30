@@ -9,6 +9,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 ### Fixed
 
 - Switching the game mode while EFT was running made MAYAK read the profile of the old mode as one of the new mode for a moment, so the TarkovTracker settings could list a profile that does not exist. This no longer happens, and such a profile already listed is removed unless a key is assigned to it.
+- When EFT was switched between game modes in one run, sending its past logs to TarkovTracker sent that run's task changes to every mode played. Now each change goes only to the mode played when it came.
 
 ## v0.1.48 (2026-10-23)
 

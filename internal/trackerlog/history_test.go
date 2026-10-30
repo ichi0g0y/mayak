@@ -115,3 +115,44 @@ func TestProfileTaskHistoryAfterPrestige(t *testing.T) {
 		t.Fatalf("after the Prestige: %#v", states)
 	}
 }
+
+// A session can switch mode (2026-10-07: PvE, Seasonal, then PvE again): a
+// notification belongs to the profile played when it came, not to every
+// profile the session played.
+func TestProfileTaskHistorySplitsASessionByMode(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "log_2026.10.07_7-03-16_1.2.0.0.47888")
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	line := func(at, text string) string {
+		return "2026-10-07 " + at + "|1.2.0.0.47888|Info|application|" + text + "\n"
+	}
+	application := line("07:03:25.908", "Session mode: Pve") +
+		line("07:04:22.946", "CompleteSelectedProfile ProfileId:pve1 AccountId:70") +
+		line("08:07:02.363", "Session mode: PvpSeason") +
+		line("08:07:09.485", "CompleteSelectedProfile ProfileId:szn1 AccountId:70") +
+		line("08:09:33.532", "Session mode: Pve") +
+		line("08:09:41.268", "CompleteSelectedProfile ProfileId:pve1 AccountId:70")
+	notification := func(at, event, task string) string {
+		return "2026-10-07 " + at + "|1.2.0.0.47888|Info|output|backend|WebSocketSharp - message received: NOTIFICATION " + event + " new_message [{\"eventId\":\"" + event + "\",\"message\":{\"type\":12,\"templateId\":\"" + task + " x\"}}]\n"
+	}
+	output := notification("07:50:00.000", "e1", "aaaaaaaaaaaaaaaaaaaaaaaa") +
+		notification("08:08:00.000", "e2", "bbbbbbbbbbbbbbbbbbbbbbbb") +
+		notification("08:08:59.000", "e3", "dddddddddddddddddddddddd") +
+		notification("08:40:00.000", "e4", "cccccccccccccccccccccccc")
+	if err := os.WriteFile(filepath.Join(dir, "application_000.log"), []byte(application), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "output_000.log"), []byte(output), 0600); err != nil {
+		t.Fatal(err)
+	}
+	pve, sessions, _ := ProfileTaskHistory(root, "70", "pve1", "pve", time.Time{})
+	if sessions != 1 || len(pve) != 2 || pve["aaaaaaaaaaaaaaaaaaaaaaaa"] == "" || pve["cccccccccccccccccccccccc"] == "" {
+		t.Fatalf("PvE: %d sessions, %#v", sessions, pve)
+	}
+	seasonal, _, _ := ProfileTaskHistory(root, "70", "szn1", "seasonal", time.Time{})
+	if len(seasonal) != 2 || seasonal["bbbbbbbbbbbbbbbbbbbbbbbb"] == "" || seasonal["dddddddddddddddddddddddd"] == "" {
+		t.Fatalf("Seasonal: %#v", seasonal)
+	}
+}
