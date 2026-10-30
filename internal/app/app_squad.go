@@ -505,11 +505,15 @@ func (a *App) BrowserMapMarkers(name, language, mode string) (mapdata.MapMarkers
 		mode = a.effectiveCatalogMode(a.settings.GameMode)
 	}
 	var taskStates map[string]string
-	if a.status.Tracker.Connection == "connected" {
+	var faction string
+	// TarkovTracker's progress is of the mode played: a map of another
+	// mode is shown without it, as the item sidebar is.
+	if a.status.Tracker.Connection == "connected" && catalogMode(a.status.Tracker.Mode) == mode {
 		taskStates = make(map[string]string, len(a.trackerTasks))
 		for id, s := range a.trackerTasks {
 			taskStates[id] = s
 		}
+		faction = a.trackerFaction
 	}
 	a.mu.RUnlock()
 	if !catalog.ValidMode(mode) {
@@ -519,7 +523,7 @@ func (a *App) BrowserMapMarkers(name, language, mode string) (mapdata.MapMarkers
 	if slices.Contains(locale.Languages, language) {
 		lang = language
 	}
-	key := mode + "|" + name + "|" + lang + "|" + strconv.Itoa(len(taskStates)) + "|" + fmt.Sprint(taskStates != nil)
+	key := mode + "|" + name + "|" + lang + "|" + strconv.Itoa(len(taskStates)) + "|" + fmt.Sprint(taskStates != nil) + "|" + faction
 	mapMarkersMu.Lock()
 	if e, ok := mapMarkersCache[key]; ok && time.Since(e.at) < 10*time.Minute {
 		mapMarkersMu.Unlock()
@@ -528,7 +532,7 @@ func (a *App) BrowserMapMarkers(name, language, mode string) (mapdata.MapMarkers
 	mapMarkersMu.Unlock()
 	ctx, cancel := context.WithTimeout(a.baseContext(), 40*time.Second)
 	defer cancel()
-	var src mapdata.Sources
+	src := mapdata.Sources{Faction: faction}
 	if err := a.catalogClient.Get(ctx, mode, "maps", &src.Maps); err != nil {
 		return mapdata.MapMarkers{}, err
 	}

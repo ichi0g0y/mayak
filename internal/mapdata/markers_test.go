@@ -49,7 +49,8 @@ const tasksFixture = `{"data":{
  "tasks":{"t1":{"id":"t1","name":"t1 name","objectives":[
   {"id":"o1","description":"o1","zones":[{"id":"z1","map":"m1","position":{"x":1,"y":0,"z":1},"outline":[{"x":0,"y":0,"z":0}]},{"id":"z2","map":"m2","position":{"x":1,"y":0,"z":1}}]},
   {"id":"o2","description":"o2","questItem":"q1","possibleLocations":[{"map":"m1","positions":[{"x":5,"y":0,"z":5},{"x":6,"y":0,"z":6}]},{"map":"m2","positions":[{"x":1,"y":0,"z":1}]}]}]},
-  "t2":{"id":"t2","name":"t2 name","objectives":[{"id":"o3","description":"o3","zones":[{"id":"z3","map":"m1","position":{"x":2,"y":0,"z":2}}]}]}},
+  "t2":{"id":"t2","name":"t2 name","objectives":[{"id":"o3","description":"o3","zones":[{"id":"z3","map":"m1","position":{"x":2,"y":0,"z":2}}]}]},
+  "t3":{"id":"t3","name":"t3 name","factionName":"BEAR","objectives":[{"id":"o4","description":"o4","zones":[{"id":"z4","map":"m1","position":{"x":3,"y":0,"z":3}}]}]}},
  "questItems":{"q1":{"name":"q1 Name","iconLink":"q1.webp"}}}}`
 
 func fixtureSources(t *testing.T) Sources {
@@ -69,6 +70,7 @@ func fixtureSources(t *testing.T) Sources {
 	src.TaskNames = Names{Data: map[string]string{"t1 name": "任務 1", "o1": "目的地に行く"}}
 	src.TaskNamesEn = Names{Data: map[string]string{"t2 name": "Task 2", "o3": "Go there", "q1 Name": "Folder"}}
 	src.TaskActive = func(id string) bool { return id == "t1" }
+	src.Faction = "USEC"
 	return src
 }
 
@@ -165,5 +167,28 @@ func TestMarkersFollowTarkovDev(t *testing.T) {
 	}
 	if _, err := Markers(fixtureSources(t), "woods"); err == nil {
 		t.Fatal("a map the catalog lacks gave markers")
+	}
+}
+
+// A task of one faction only (t3, BEAR) is left out for the other faction's
+// player, and kept when the faction is not known.
+func TestMarkersLeaveOutTheOtherFactionsTasks(t *testing.T) {
+	count := func(faction string) int {
+		src := fixtureSources(t)
+		src.Faction = faction
+		mm, err := Markers(src, "customs")
+		if err != nil {
+			t.Fatal(err)
+		}
+		n := 0
+		for _, m := range mm.Markers {
+			if m.Layer == "quest_objective" && m.Detail.TaskID == "t3" {
+				n++
+			}
+		}
+		return n
+	}
+	if usec, bear, unknown := count("USEC"), count("bear"), count(""); usec != 0 || bear != 1 || unknown != 1 {
+		t.Fatalf("t3 markers: USEC %d, BEAR %d, unknown %d", usec, bear, unknown)
 	}
 }

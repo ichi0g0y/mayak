@@ -228,9 +228,12 @@ type CatalogItems struct {
 type CatalogTasks struct {
 	Data struct {
 		Tasks map[string]struct {
-			ID         string `json:"id"`
-			Name       string `json:"name"`
-			Objectives []struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+			// FactionName is "BEAR" or "USEC" for a task of one faction
+			// only, "Any" for both.
+			FactionName string `json:"factionName"`
+			Objectives  []struct {
 				ID          string `json:"id"`
 				Description string `json:"description"`
 				QuestItem   string `json:"questItem"`
@@ -262,7 +265,9 @@ func (n Names) text(key string) string { return n.Data[key] }
 // Sources are the catalog resources the markers come from. MapNames
 // translates the maps' own names (maps_en); ItemNames and TaskNames are in
 // the language shown, with the English ones as a fallback; TaskActive tells
-// a task being done (every task when nil).
+// a task being done (every task when nil); Faction is the player's ("USEC",
+// "BEAR"), whose tasks of the other faction are left out ("" for none left
+// out).
 type Sources struct {
 	Maps                             CatalogMaps
 	Items                            CatalogItems
@@ -270,6 +275,7 @@ type Sources struct {
 	MapNames, ItemNames, ItemNamesEn Names
 	TaskNames, TaskNamesEn           Names
 	TaskActive                       func(taskID string) bool
+	Faction                          string
 }
 
 var errUnknownMap = errors.New("the catalog does not have this map")
@@ -601,6 +607,11 @@ func (b *builder) tasks(m *rawCatalogMap) {
 		if t.ID == "" {
 			t.ID = id
 		}
+		// A task of the other faction is never done: a BEAR and a USEC twin
+		// (Textile, Drip-Out) would both stay active.
+		if b.otherFaction(t.FactionName) {
+			continue
+		}
 		active := b.src.TaskActive == nil || b.src.TaskActive(t.ID)
 		task := b.taskText(t.Name)
 		for _, o := range t.Objectives {
@@ -623,6 +634,15 @@ func (b *builder) tasks(m *rawCatalogMap) {
 			}
 		}
 	}
+}
+
+// otherFaction reports whether a task's faction (factionName) is not the
+// player's, when the player's is known.
+func (b *builder) otherFaction(name string) bool {
+	if b.src.Faction == "" || (!strings.EqualFold(name, "BEAR") && !strings.EqualFold(name, "USEC")) {
+		return false
+	}
+	return !strings.EqualFold(name, b.src.Faction)
 }
 
 func (b *builder) usable(m *rawCatalogMap) {
