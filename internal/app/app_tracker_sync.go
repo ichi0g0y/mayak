@@ -28,6 +28,9 @@ func (a *App) discoverTrackerProfiles() error {
 	a.mu.Lock()
 	document := a.trackerData.Clone()
 	changed := document.RememberProfiles(profiles)
+	if document.ForgetMixedProfiles(profiles) {
+		changed = true
+	}
 	a.mu.Unlock()
 	if changed {
 		if err := a.trackerStore.Save(document); err != nil {

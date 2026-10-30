@@ -193,8 +193,11 @@ type IdentityParser struct {
 func (p *IdentityParser) Parse(text string) []Event {
 	var events []Event
 	for _, line := range strings.Split(text, "\n") {
+		// EFT writes a mode before the profile lines of that mode: the
+		// profile read before belongs to the mode before, not this one.
 		if match := modePattern.FindStringSubmatch(line); len(match) == 2 {
 			p.mode = normalizeMode(match[1])
+			p.profileID, p.accountID = "", ""
 		}
 		if match := profilePattern.FindStringSubmatch(line); len(match) == 3 {
 			p.profileID, p.accountID = match[1], match[2]

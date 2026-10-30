@@ -4,6 +4,12 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### Fixed
+
+- Switching the game mode while EFT was running made MAYAK read the profile of the old mode as one of the new mode for a moment, so the TarkovTracker settings could list a profile that does not exist. This no longer happens, and such a profile already listed is removed unless a key is assigned to it.
+
 ## v0.1.48 (2026-10-23)
 
 ### Fixed

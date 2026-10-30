@@ -15,6 +15,21 @@ func TestIdentityParserCombinesModeAndProfile(t *testing.T) {
 	}
 }
 
+// A session can switch mode (2026-10-07: PvE, then Seasonal): the PvE
+// profile is not reported with the Seasonal mode before the Seasonal
+// profile's line.
+func TestIdentityParserDropsTheProfileOnAModeSwitch(t *testing.T) {
+	parser := &IdentityParser{}
+	events := parser.Parse("2026-10-07 08:04:16.201|x|Info|application|CompleteSelectedProfile ProfileId:pve1 AccountId:70\n" +
+		"2026-10-07 08:07:02.363|x|Info|application|Session mode: PvpSeason\n" +
+		"2026-10-07 08:07:09.485|x|Info|application|PrepareSelectedProfileLocally ProfileId:szn1 AccountId:70\n" +
+		"2026-10-07 08:07:52.442|x|Info|application|Session mode: Pve\n" +
+		"2026-10-07 08:09:41.267|x|Info|application|PrepareSelectedProfileLocally ProfileId:pve1 AccountId:70\n")
+	if len(events) != 2 || events[0].Mode != "seasonal" || events[0].ProfileID != "szn1" || events[1].Mode != "pve" || events[1].ProfileID != "pve1" {
+		t.Fatalf("unexpected events: %+v", events)
+	}
+}
+
 func TestTaskParserHandlesChunkedNotification(t *testing.T) {
 	parser := &TaskParser{}
 	first := "2026|push-notifications|Got notification | ChatMessageReceived\n{\"eventId\":\"evt-1\",\"message\":{\"type\":12,"
