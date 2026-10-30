@@ -106,6 +106,19 @@ func (a *App) SyncTrackerProfileHistory(accountID, profileID, mode string) (int,
 	}
 	ctx, cancel := context.WithTimeout(a.ctx, 45*time.Second)
 	defer cancel()
+	progress, err := a.trackerClient.Progress(ctx, token)
+	if err != nil {
+		a.addLog("Error", "TarkovTracker", "Historical sync failed: "+err.Error())
+		a.toast(Toast{Event: "trackerHistory", Category: ToastTracker, Level: "error", Message: "toastHistoryFailed", Params: map[string]string{"mode": mode, "error": err.Error()}})
+		return 0, err
+	}
+	updates = forwardTaskUpdates(updates, progress)
+	// Nothing new: a recheck after a sync, which is no failure.
+	if len(updates) == 0 {
+		a.addLog("Info", "TarkovTracker", fmt.Sprintf("Past logs of %s (%s): TarkovTracker already has every task state they hold", maskProfileID(profileID), mode))
+		a.markHistorySynced(accountID, profileID, mode)
+		return 0, nil
+	}
 	if err := a.trackerClient.SetTasks(ctx, token, updates); err != nil {
 		a.addLog("Error", "TarkovTracker", "Historical sync failed: "+err.Error())
 		a.toast(Toast{Event: "trackerHistory", Category: ToastTracker, Level: "error", Message: "toastHistoryFailed", Params: map[string]string{"mode": mode, "error": err.Error()}})
