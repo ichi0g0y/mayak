@@ -11,6 +11,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - Switching the game mode while EFT was running made MAYAK read the profile of the old mode as one of the new mode for a moment, so the TarkovTracker settings could list a profile that does not exist. This no longer happens, and such a profile already listed is removed unless a key is assigned to it.
 - When EFT was switched between game modes in one run, sending its past logs to TarkovTracker sent that run's task changes to every mode played. Now each change goes only to the mode played when it came.
 - Sending past logs to TarkovTracker could set a completed task back to not done or failed with an older state from the logs. Now MAYAK reads the progress on TarkovTracker first and never sets a completed task back; a started state is sent only when a failed task was started again.
+- The item sidebar's task list also showed tasks of the other faction (BEAR or USEC) only. Some tasks, like Textile and Drip-Out, come as a twin for each faction, so the other faction's twin looked needed for good. Now it shows only the tasks of the faction TarkovTracker has for you.
 
 ## v0.1.48 (2026-10-23)
 

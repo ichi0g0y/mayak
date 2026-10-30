@@ -128,6 +128,9 @@ type App struct {
 	trackerNamesMu sync.Mutex
 	trackerData    trackerstore.Document
 	trackerTasks   map[string]string
+	// trackerFaction is the PMC faction TarkovTracker has for the profile
+	// ("USEC", "BEAR"), "" when not known.
+	trackerFaction string
 	trackerSyncMu  sync.Mutex
 	logs           *applog.Store
 	lastSounds     map[sound.Kind]recentSound

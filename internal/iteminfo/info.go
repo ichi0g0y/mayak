@@ -123,6 +123,9 @@ type TaskNeed struct {
 	// NormalizedName and WikiLink are what the URLs are made from.
 	NormalizedName string `json:"-"`
 	WikiLink       string `json:"-"`
+	// Faction is "BEAR" or "USEC" for a task of one faction only, "" for
+	// one of both (ForFaction).
+	Faction string `json:"-"`
 }
 
 type HideoutNeed struct {
@@ -375,6 +378,7 @@ func build(snapshot *catalog.Snapshot) (*index, error) {
 				NormalizedName string `json:"normalizedName"`
 				WikiLink       string `json:"wikiLink"`
 				Trader         string `json:"trader"`
+				FactionName    string `json:"factionName"`
 				Objectives     []struct {
 					Type        string   `json:"type"`
 					Items       []string `json:"items"`
@@ -420,7 +424,7 @@ func build(snapshot *catalog.Snapshot) (*index, error) {
 		}
 	}
 	for _, task := range tasks.Data.Tasks {
-		base := TaskNeed{ID: task.ID, Name: localized(taskText.Data, task.Name), Trader: ix.traders[task.Trader], NormalizedName: task.NormalizedName, WikiLink: task.WikiLink}
+		base := TaskNeed{ID: task.ID, Name: localized(taskText.Data, task.Name), Trader: ix.traders[task.Trader], NormalizedName: task.NormalizedName, WikiLink: task.WikiLink, Faction: taskFaction(task.FactionName)}
 		base.Names = ix.names("tasks", task.Name, base.Name)
 		ix.taskByID[task.ID] = base
 		// One row per task and item: "find in raid" and "hand over" objectives

@@ -99,7 +99,7 @@ func (a *App) itemProgress(info iteminfo.Info) iteminfo.Info {
 			hideout[id] = complete
 		}
 	}
-	return iteminfo.Progress(info, tasks, hideout)
+	return iteminfo.ForFaction(iteminfo.Progress(info, tasks, hideout), a.trackerFaction)
 }
 
 // keyUsagePath is the cache of the wiki's key usage, kept with the catalog

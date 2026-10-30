@@ -320,6 +320,7 @@ func (a *App) refreshTrackerIdentity(mode, profileID, accountID string) error {
 	a.status.Tracker.CompletedTasks = completed
 	a.status.Tracker.FailedTasks = failed
 	a.trackerTasks = taskStates
+	a.trackerFaction = progress.Data.PmcFaction
 	a.status.Tracker.LastSync = time.Now().Format(time.RFC3339)
 	a.status.Tracker.LastError = ""
 	status := a.status

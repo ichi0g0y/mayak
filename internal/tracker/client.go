@@ -49,6 +49,8 @@ type Progress struct {
 		} `json:"tasksProgress"`
 		DisplayName string `json:"displayName"`
 		PlayerLevel int    `json:"playerLevel"`
+		// PmcFaction is "USEC" or "BEAR".
+		PmcFaction string `json:"pmcFaction"`
 	} `json:"data"`
 	Meta struct {
 		GameMode string `json:"gameMode"`

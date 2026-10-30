@@ -132,6 +132,7 @@ func latestTrackerProfiles(profiles []trackerstore.Profile) []trackerstore.Profi
 func (a *App) clearTrackerProgressLocked() {
 	a.hideoutProgress = nil
 	a.trackerTasks = make(map[string]string)
+	a.trackerFaction = ""
 	a.status.Tracker.DisplayName = ""
 	a.status.Tracker.UserID = ""
 	a.status.Tracker.PlayerLevel = 0
