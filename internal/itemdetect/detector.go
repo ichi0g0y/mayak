@@ -89,11 +89,24 @@ func Analyze(original image.Image) (Result, error) {
 // stand straight (0 to +11, -14), a stash row has none.
 const iconLean = -35
 
+// maxIconWidth and maxIconHeight bound an item window's magnifier, in
+// pixels: 14 to 16 by 15 to 16 at 1440p (365 headers measured, 2026-11-03),
+// and a pixel more from a smaller screen scaled up. An opened container (a
+// Junk box) has a bigger one, 18 to 19 by 17 to 19, leaning the same way; a
+// dialog's first glyph that leans so (ア of アイテム購入) is 20 to 25 wide, a
+// row of roubles 28 by 20.
+const maxIconWidth, maxIconHeight = 17, 17
+
+// iconLuma is the least brightness of an icon's pixels.
+const iconLuma = 110
+
 // inspectIcon tells an item's window by the icon left of its title: the
 // mean column of its bright pixels' bottom quarter left of their top
-// quarter's by iconLean or more. Without an icon there it is no item's window.
+// quarter's by iconLean or more, no bigger than an item window's magnifier,
+// and grey (an opened container's in front is yellow). Without an icon there
+// it is no item's window.
 func inspectIcon(px imaging.Pixels, w Rect) bool {
-	bright := func(x, y int) bool { return px.Luma(x, y) > 110 }
+	bright := func(x, y int) bool { return px.Luma(x, y) > iconLuma }
 	minX, minY, maxX, maxY := w.X+36, w.Y+30, w.X+5, w.Y+3
 	for y := w.Y + 4; y < w.Y+30 && y < px.Height(); y++ {
 		for x := w.X + 6; x < w.X+36 && x < px.Width(); x++ {
@@ -103,7 +116,7 @@ func inspectIcon(px imaging.Pixels, w Rect) bool {
 			}
 		}
 	}
-	if maxY < minY {
+	if maxY < minY || maxX-minX+1 > maxIconWidth || maxY-minY+1 > maxIconHeight || yellowIcon(px, minX, minY, maxX, maxY) {
 		return false
 	}
 	// The mean column of the bright pixels between two rows, in tenths.
@@ -126,6 +139,22 @@ func inspectIcon(px imaging.Pixels, w Rect) bool {
 	top, okTop := mean(minY, minY+quarter)
 	bottom, okBottom := mean(maxY-quarter, maxY)
 	return okTop && okBottom && bottom-top <= iconLean
+}
+
+// yellowIcon reports whether an icon's bright pixels are yellow, as an
+// opened container's magnifier is while its window is in front (about 167,
+// 153, 76); an item window's is grey (174, 183, 183).
+func yellowIcon(px imaging.Pixels, minX, minY, maxX, maxY int) bool {
+	red, blue := 0, 0
+	for y := minY; y <= maxY; y++ {
+		for x := minX; x <= maxX; x++ {
+			if px.Luma(x, y) > iconLuma {
+				r, _, b := px.RGB(x, y)
+				red, blue = red+int(r), blue+int(b)
+			}
+		}
+	}
+	return blue*10 < red*6
 }
 
 // The "Offer creation" window is 1602 px wide at 1440p; inspect windows

@@ -59,21 +59,26 @@ func syntheticInspectWindow(left, top, width int) *image.RGBA {
 	return img
 }
 
-// magnifier draws an item window's icon left of its title: a ring up to the
-// right and its handle down to the left.
+// magnifier draws an item window's icon left of its title, 14 by 14 px (15
+// to 16 measured): a ring up to the right and its handle down to the left.
 func magnifier(img *image.RGBA, left, top int, c color.Color) {
-	cx, cy := left+24, top+13
-	for y := cy - 6; y <= cy+6; y++ {
-		for x := cx - 6; x <= cx+6; x++ {
+	magnifierOf(img, left+24, top+14, 5, 5, c)
+}
+
+// magnifierOf draws a magnifier: a ring of radius r around (cx, cy) and a
+// handle of n steps down to the left.
+func magnifierOf(img *image.RGBA, cx, cy, r, n int, c color.Color) {
+	for y := cy - r; y <= cy+r; y++ {
+		for x := cx - r; x <= cx+r; x++ {
 			d := (x-cx)*(x-cx) + (y-cy)*(y-cy)
-			if d >= 16 && d <= 36 {
+			if d >= (r-2)*(r-2) && d <= r*r {
 				img.Set(x, y, c)
 			}
 		}
 	}
-	for i := 0; i < 7; i++ {
-		img.Set(cx-5-i, cy+5+i, c)
-		img.Set(cx-4-i, cy+5+i, c)
+	for i := 0; i < n; i++ {
+		img.Set(cx-r+1-i, cy+r-1+i, c)
+		img.Set(cx-r+2-i, cy+r-1+i, c)
 	}
 }
 
@@ -190,16 +195,16 @@ func TestAnalyzeTellsTheItemWindowByItsIcon(t *testing.T) {
 	// Mirrored: the ring up to the left, the handle down to the right.
 	c := color.RGBA{R: 220, G: 210, B: 180, A: 255}
 	cx, cy := left+18, top+13
-	for y := cy - 6; y <= cy+6; y++ {
-		for x := cx - 6; x <= cx+6; x++ {
-			if d := (x-cx)*(x-cx) + (y-cy)*(y-cy); d >= 16 && d <= 36 {
+	for y := cy - 5; y <= cy+5; y++ {
+		for x := cx - 5; x <= cx+5; x++ {
+			if d := (x-cx)*(x-cx) + (y-cy)*(y-cy); d >= 9 && d <= 25 {
 				search.Set(x, y, c)
 			}
 		}
 	}
-	for i := 0; i < 7; i++ {
-		search.Set(cx+5+i, cy+5+i, c)
-		search.Set(cx+4+i, cy+5+i, c)
+	for i := 0; i < 5; i++ {
+		search.Set(cx+4+i, cy+4+i, c)
+		search.Set(cx+3+i, cy+4+i, c)
 	}
 	if result, _ := Analyze(search); result.IsItem {
 		t.Fatalf("the item search taken for an item's window: %+v", result)
@@ -210,8 +215,8 @@ func TestAnalyzeTellsTheItemWindowByItsIcon(t *testing.T) {
 			grid.Set(x, y, color.Black)
 		}
 	}
-	for _, gy := range []int{8, 15, 22} {
-		for _, gx := range []int{12, 19, 26} {
+	for _, gy := range []int{8, 13, 18} {
+		for _, gx := range []int{12, 17, 22} {
 			for y := 0; y < 4; y++ {
 				for x := 0; x < 4; x++ {
 					grid.Set(left+gx+x, top+gy+y, c)
@@ -221,5 +226,50 @@ func TestAnalyzeTellsTheItemWindowByItsIcon(t *testing.T) {
 	}
 	if result, _ := Analyze(grid); result.IsItem {
 		t.Fatalf("the sorting table taken for an item's window: %+v", result)
+	}
+}
+
+// An opened container (a Junk box) has the same header and a magnifier
+// leaning the same way, but bigger, and yellow while its window is in front
+// (2026-11-03): it is no item's window. A dialog's wide first glyph is none
+// either. An item window's magnifier a pixel bigger (a smaller screen scaled
+// up) still is one.
+func TestAnalyzeTellsAnOpenedContainerByItsMagnifier(t *testing.T) {
+	const left, top, width = 689, 114, 1182
+	blank := func(img *image.RGBA) {
+		for y := top + 4; y < top+30; y++ {
+			for x := left + 6; x < left+36; x++ {
+				img.Set(x, y, color.Black)
+			}
+		}
+	}
+	grey := color.RGBA{R: 172, G: 181, B: 181, A: 255}
+	scaled := syntheticInspectWindow(left, top, width)
+	blank(scaled)
+	magnifierOf(scaled, left+24, top+12, 6, 6, grey) // 17 by 17
+	if result, _ := Analyze(scaled); !result.IsItem {
+		t.Fatalf("an item window's magnifier scaled up: %+v", result)
+	}
+	big := syntheticInspectWindow(left, top, width)
+	blank(big)
+	magnifierOf(big, left+24, top+12, 6, 6, grey)
+	big.Set(left+24-11, top+12+10, grey) // 18 by 17, the least measured
+	if result, _ := Analyze(big); result.IsItem {
+		t.Fatalf("a container's bigger magnifier: %+v", result)
+	}
+	yellow := syntheticInspectWindow(left, top, width)
+	blank(yellow)
+	magnifier(yellow, left, top, color.RGBA{R: 167, G: 153, B: 76, A: 255})
+	if result, _ := Analyze(yellow); result.IsItem {
+		t.Fatalf("a container's yellow magnifier: %+v", result)
+	}
+	wide := syntheticInspectWindow(left, top, width)
+	blank(wide)
+	magnifierOf(wide, left+24, top+14, 5, 5, grey)
+	for x := left + 14; x < left+36; x++ {
+		wide.Set(x, top+9, grey)
+	}
+	if result, _ := Analyze(wide); result.IsItem {
+		t.Fatalf("a wide glyph: %+v", result)
 	}
 }

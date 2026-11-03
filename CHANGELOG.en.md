@@ -13,6 +13,7 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 - Sending past logs to TarkovTracker could set a completed task back to not done or failed with an older state from the logs. Now MAYAK reads the progress on TarkovTracker first and never sets a completed task back; a started state is sent only when a failed task was started again.
 - The item sidebar's task list also showed tasks of the other faction (BEAR or USEC) only. Some tasks, like Textile and Drip-Out, come as a twin for each faction, so the other faction's twin looked needed for good. Now it shows only the tasks of the faction TarkovTracker has for you.
 - The squad map's task markers also showed tasks of the other faction (BEAR or USEC) only. Now they show only the tasks of the faction TarkovTracker has for you, and a map of a mode other than the one played no longer takes TarkovTracker's progress.
+- An opened container's window (a Junk box) was taken for an item's details window and opened the item sidebar. Now the magnifier left of the title tells them apart by its size and colour, and only an item's details window is read. Dialogs such as Purchase item are no longer taken for one either.
 
 ## v0.1.48 (2026-10-23)
 
