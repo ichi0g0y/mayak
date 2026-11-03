@@ -37,11 +37,16 @@ type LevelUnlock struct {
 	Image   string `json:"image,omitempty"`
 }
 
-// BrowserPlayerLevels is the level ladder of the mode played.
+// BrowserPlayerLevels is the level ladder of the mode played, PvP's while
+// it is unknown (at start, before the logs tell it; the shell asks again
+// once the mode changes).
 func (a *App) BrowserPlayerLevels() ([]LevelStep, error) {
 	a.mu.RLock()
 	mode := a.effectiveCatalogMode(a.settings.GameMode)
 	a.mu.RUnlock()
+	if !catalog.ValidMode(mode) {
+		mode = "regular"
+	}
 	parent := a.parentContext()
 	ctx, cancel := context.WithTimeout(parent, 60*time.Second)
 	defer cancel()

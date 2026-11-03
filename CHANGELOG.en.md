@@ -4,6 +4,12 @@ What changed in each version of MAYAK, from the user's side. The Japanese versio
 
 Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet points under `### New`, `### Improved` and `### Fixed` (a heading with nothing under it is left out). Changes not released yet collect under `## Nightly` and get a version heading at release time.
 
+## Nightly
+
+### Fixed
+
+- The sidebar's level line was missing while the game mode was not known yet. Now it shows PvP's level table and switches to the mode's own once the mode is known.
+
 ## v0.1.49 (2026-11-03)
 
 ### New
