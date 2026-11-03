@@ -39,6 +39,15 @@ function leftHTML(ladder) {
   return `<span class="level-left ${ladder.left >= 1e6 ? 'big' : ''}" title="${esc(before + full + after)}">${esc(before)}<span class="n-full">${full}</span><span class="n-short">${shortNumber(ladder.left)}</span>${esc(after)}</span>`
 }
 
+// The Prestige's badge left of the level, as the Overall screen showed it
+// (tarkov.dev's picture of it); nothing before a Prestige, or when the
+// badge was not told.
+function prestigeHTML(prestige) {
+  if (!Number.isInteger(prestige) || prestige < 1) return ''
+  const label = `${t('levelPrestige')} ${prestige}`
+  return `<img class="level-prestige" src="https://assets.tarkov.dev/prestige-${prestige}-icon.webp" alt="${esc(label)}" title="${esc(label)}" loading="lazy" draggable="false">`
+}
+
 export function levelSection() {
   // The Host's own level: a Client has no Overall screen of its own. Nothing
   // shows before the Overall screen is read, nor past the last level.
@@ -54,7 +63,8 @@ export function levelSection() {
   // the text's).
   const dev = devInstance ? ` data-action="levelTry" title="${esc(t('levelTry'))}"` : ''
   const ring = `<span class="level-ring" style="--p:${(ladder.toNext * 100).toFixed(1)}"${dev}>${ladder.badge ? `<img src="${esc(ladder.badge)}" alt="" loading="lazy" draggable="false">` : ''}</span>`
-  const line = `<button class="level-line" data-action="levelLadder" aria-expanded="${open}" title="${esc(t(open ? 'levelClose' : 'levelOpen'))}">${ring}<span class="level-now">Lv${ladder.level}</span>${leftHTML(ladder)}<span class="level-what">${esc(unlocksText(ladder.unlocks) || t('levelNothing'))}</span></button>`
+  const prestige = prestigeHTML(info.me?.prestige)
+  const line = `<button class="level-line ${prestige ? 'prestige' : ''}" data-action="levelLadder" aria-expanded="${open}" title="${esc(t(open ? 'levelClose' : 'levelOpen'))}">${ring}<span class="level-now">Lv${ladder.level}</span>${prestige}${leftHTML(ladder)}<span class="level-what">${esc(unlocksText(ladder.unlocks) || t('levelNothing'))}</span></button>`
   const rows = open
     ? `<div class="level-card">${meCard(info.me)}<div class="level-ladder" role="list">${ladder.rows
         .map((r) => {
@@ -159,6 +169,7 @@ function meCard(me) {
   const n = (v, digits = 0) =>
     (Number(v) || 0).toLocaleString(state.language === 'ja' ? 'ja-JP' : 'en-US', { maximumFractionDigits: digits })
   const facts = [
+    me.prestige > 0 && [t('levelPrestige'), n(me.prestige)],
     me.raids && [t('squadCardRaids'), n(me.raids)],
     me.kills && [t('squadCardKills'), n(me.kills)],
     me.sr && [t('squadCardSurvival'), `${n(me.sr, 1)}%`],

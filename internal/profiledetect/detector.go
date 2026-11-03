@@ -37,6 +37,9 @@ type Result struct {
 	Rows []image.Image
 	// Panel is the whole left panel, for a picture of the character.
 	Panel image.Image
+	// Prestige is the PRESTIGE box under the faction's badge, with the
+	// Prestige's badge in it (PrestigeLevel).
+	Prestige image.Image
 }
 
 // The places on the screen (2560×1440).
@@ -49,8 +52,10 @@ var (
 	level     = image.Rect(125, 90, 260, 180)
 	levelInk  = image.Rect(130, 95, 255, 175)
 	levelRoom = image.Rect(260, 95, 330, 175)
-	// The faction's badge.
-	badge = image.Rect(55, 245, 160, 370)
+	// The faction's badge, and the PRESTIGE box under it (its badge, below
+	// the box's title).
+	badge         = image.Rect(55, 245, 160, 370)
+	prestigeBadge = image.Rect(25, 420, 190, 580)
 	// The stats beside the level, in two columns of lines.
 	statsLeft  = image.Rect(585, 0, 682, 0)
 	statsRight = image.Rect(682, 0, 848, 0)
@@ -107,6 +112,7 @@ func Analyze(img image.Image) (Result, error) {
 		IsProfile: true,
 		Level:     crop(smooth, level),
 		Panel:     crop(smooth, panel),
+		Prestige:  crop(smooth, prestigeBadge),
 	}
 	for i, line := range statLines {
 		if i < 3 {

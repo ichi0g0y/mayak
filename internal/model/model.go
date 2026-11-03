@@ -41,8 +41,11 @@ type Position struct {
 // and the stats beside the level. Picture: a picture of the character's
 // panel was kept with it (profile.jpg).
 type PlayerProfile struct {
-	Name         string  `json:"name,omitempty"`
-	Level        int     `json:"level,omitempty"`
+	Name  string `json:"name,omitempty"`
+	Level int    `json:"level,omitempty"`
+	// Prestige is the Prestige its badge shows (1 to 6), 0 when none was
+	// told.
+	Prestige     int     `json:"prestige,omitempty"`
 	Exp          int     `json:"exp,omitempty"`
 	Raids        int     `json:"raids,omitempty"`
 	Kills        int     `json:"kills,omitempty"`

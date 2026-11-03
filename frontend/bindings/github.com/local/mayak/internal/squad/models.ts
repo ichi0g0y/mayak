@@ -131,6 +131,7 @@ export class Position {
 export class Profile {
     "name"?: string;
     "level"?: number;
+    "prestige"?: number;
     "raids"?: number;
     "kills"?: number;
     "sr"?: number;

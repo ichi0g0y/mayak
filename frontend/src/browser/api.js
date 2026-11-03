@@ -770,6 +770,7 @@ function hostStatus(s) {
       sr: Number(p.survivalRate) || 0,
       kd: Number(p.kd) || 0,
       hours: Number(p.hours) || 0,
+      prestige: Number.isInteger(p.prestige) ? p.prestige : 0,
       picture: !!p.picture,
     }
   }

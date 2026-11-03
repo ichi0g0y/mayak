@@ -129,6 +129,7 @@ function cardOf(m) {
   const number = (v, digits = 0) => (Number(v) || 0).toLocaleString(state.language, { maximumFractionDigits: digits })
   const facts = [
     (p.level || tr.level) && [t('squadCardLevel'), String(p.level || tr.level)],
+    p.prestige > 0 && [t('levelPrestige'), String(p.prestige)],
     p.raids && [t('squadCardRaids'), number(p.raids)],
     p.kills && [t('squadCardKills'), number(p.kills)],
     p.sr && [t('squadCardSurvival'), `${number(p.sr, 1)}%`],

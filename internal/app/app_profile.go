@@ -147,7 +147,17 @@ func (a *App) handleProfileScreenshot(ctx context.Context, sequence uint64, path
 	profile := model.PlayerProfile{
 		Name: profiledetect.Vote(names), Level: profiledetect.Vote(levels), Exp: profiledetect.Vote(exps),
 		Raids: voted.Raids, Kills: voted.Kills, SurvivalRate: voted.SurvivalRate, KD: voted.KD, Hours: voted.Hours,
-		At: time.Now().UTC().Format(time.RFC3339),
+		Prestige: profiledetect.PrestigeLevel(detected.Prestige, a.prestigeIconsFor(ctx, settings)),
+		At:       time.Now().UTC().Format(time.RFC3339),
+	}
+	// A badge not told this time (the panel covered) is the one told
+	// before, of the same character: a Prestige is never taken back.
+	if profile.Prestige == 0 {
+		a.mu.RLock()
+		if before := a.status.Profile; before != nil && before.Name != "" && before.Name == profile.Name {
+			profile.Prestige = before.Prestige
+		}
+		a.mu.RUnlock()
 	}
 	sure := false
 	if steps := a.levelSteps(ctx, settings); profile.Exp > 0 && len(steps) > 0 {
@@ -192,7 +202,7 @@ func (a *App) handleProfileScreenshot(ctx context.Context, sequence uint64, path
 	status := a.status
 	a.mu.Unlock()
 	a.emitStatus(status)
-	a.addLog("Info", "Profile", fmt.Sprintf("Read the Overall screen: %s, level %d (%d exp), %d raids, K/D %.2f", profile.Name, profile.Level, profile.Exp, profile.Raids, profile.KD))
+	a.addLog("Info", "Profile", fmt.Sprintf("Read the Overall screen: %s, level %d (%d exp), Prestige %d, %d raids, K/D %.2f", profile.Name, profile.Level, profile.Exp, profile.Prestige, profile.Raids, profile.KD))
 	a.toast(Toast{Event: "profile", Category: ToastRecognition, Level: "success", Message: "toastProfileRead", Params: map[string]string{"name": profile.Name, "level": fmt.Sprint(profile.Level)}})
 	a.squadUpdateProfile()
 	if sure {
@@ -366,7 +376,7 @@ func (a *App) squadProfile() *squad.Profile {
 	if p == nil {
 		return nil
 	}
-	out := &squad.Profile{Name: p.Name, Level: p.Level, Raids: p.Raids, Kills: p.Kills, SurvivalRate: p.SurvivalRate, KD: p.KD, Hours: p.Hours}
+	out := &squad.Profile{Name: p.Name, Level: p.Level, Prestige: p.Prestige, Raids: p.Raids, Kills: p.Kills, SurvivalRate: p.SurvivalRate, KD: p.KD, Hours: p.Hours}
 	if at, err := time.Parse(time.RFC3339, p.At); err == nil && p.Picture {
 		out.Picture = at.Unix()
 	}

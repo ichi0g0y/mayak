@@ -65,6 +65,7 @@ type Report struct {
 type Profile struct {
 	Name         string  `json:"name,omitempty"`
 	Level        int     `json:"level,omitempty"`
+	Prestige     int     `json:"prestige,omitempty"`
 	Raids        int     `json:"raids,omitempty"`
 	Kills        int     `json:"kills,omitempty"`
 	SurvivalRate float64 `json:"sr,omitempty"`

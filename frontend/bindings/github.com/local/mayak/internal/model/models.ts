@@ -312,6 +312,12 @@ export class LogEntry {
 export class PlayerProfile {
     "name"?: string;
     "level"?: number;
+
+    /**
+     * Prestige is the Prestige its badge shows (1 to 6), 0 when none was
+     * told.
+     */
+    "prestige"?: number;
     "exp"?: number;
     "raids"?: number;
     "kills"?: number;

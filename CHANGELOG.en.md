@@ -6,6 +6,10 @@ Format: newest version first, a `## v0.1.8 (2026-09-26)` heading and bullet poin
 
 ## Nightly
 
+### New
+
+- The Prestige is read from the character's Overall screenshot too. The sidebar's level line shows the Prestige's badge left of the level, and your own card and the squad members' cards show the Prestige.
+
 ### Fixed
 
 - Switching the game mode while EFT was running made MAYAK read the profile of the old mode as one of the new mode for a moment, so the TarkovTracker settings could list a profile that does not exist. This no longer happens, and such a profile already listed is removed unless a key is assigned to it.
